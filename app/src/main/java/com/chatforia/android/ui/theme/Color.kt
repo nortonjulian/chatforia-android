@@ -1,4 +1,4 @@
-package com.example.app.ui.theme
+package com.chatforia.android.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
