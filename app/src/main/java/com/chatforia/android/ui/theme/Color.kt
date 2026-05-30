@@ -2,10 +2,19 @@ package com.chatforia.android.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// CHATFORIA DAWN THEME
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val ChatforiaAccent = Color(0xFFFFB300)
+val ChatforiaTitleAccent = Color(0xFFB56E00)
+
+val ChatforiaScreenBackground = Color(0xFFFFF7F0)
+val ChatforiaCardBackground = Color(0xFFFFFFFF)
+val ChatforiaBorder = Color(0xFFF1E3D8)
+
+val ChatforiaPrimaryText = Color(0xFF241510)
+val ChatforiaSecondaryText = Color(0xFF745E53)
+
+val ChatforiaTabSelected = Color(0xFFFFB300)
+val ChatforiaTabUnselected = Color(0xFFA78B7A)
+
+val ChatforiaHighlightedSurface = Color(0xFFFFF4D0)

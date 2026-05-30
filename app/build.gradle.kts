@@ -5,16 +5,23 @@ plugins {
 
 android {
     namespace = "com.chatforia.android"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
+    android {
+        namespace = "com.chatforia.android"
+        compileSdk = 35
+
+        defaultConfig {
+            applicationId = "com.chatforia.android"
+            minSdk = 26
+            targetSdk = 35
+            versionCode = 1
+            versionName = "1.0"
         }
     }
 
     defaultConfig {
         applicationId = "com.chatforia.android"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -48,6 +55,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation("androidx.compose.material:material-icons-extended")
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
