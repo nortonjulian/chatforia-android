@@ -1,5 +1,7 @@
 package com.chatforia.android
 
+import com.chatforia.android.ui.components.ChatforiaAction
+import com.chatforia.android.ui.components.ChatforiaActionPill
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -16,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.foundation.background
 
 enum class CallsSegment {
     Recents,
@@ -67,6 +71,7 @@ fun CallsScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(ChatforiaColors.screenBackground)
             .padding(horizontal = 16.dp)
     ) {
         Row(
@@ -79,22 +84,18 @@ fun CallsScreen() {
             Text(
                 text = "Calls",
                 fontSize = 34.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = ChatforiaColors.primaryText
             )
 
-            Surface(
-                shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                tonalElevation = 2.dp
-            ) {
-                IconButton(onClick = {}) {
-                    Icon(
-                        Icons.Default.Dialpad,
-                        contentDescription = "Open dial pad",
-                        tint = MaterialTheme.colorScheme.primary
+            ChatforiaActionPill(
+                actions = listOf(
+                    ChatforiaAction(
+                        icon = Icons.Default.Dialpad,
+                        contentDescription = "Open dial pad"
                     )
-                }
-            }
+                )
+            )
         }
 
         SingleChoiceSegmentedButtonRow(
@@ -103,15 +104,46 @@ fun CallsScreen() {
             SegmentedButton(
                 selected = selectedSegment == CallsSegment.Recents,
                 onClick = { selectedSegment = CallsSegment.Recents },
-                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+
+                shape = SegmentedButtonDefaults.itemShape(
+                    index = 0,
+                    count = 2
+                ),
+
+                colors = SegmentedButtonDefaults.colors(
+                    activeContainerColor = ChatforiaColors.highlightedSurface,
+                    activeContentColor = ChatforiaColors.primaryText,
+
+                    inactiveContainerColor = ChatforiaColors.cardBackground,
+                    inactiveContentColor = ChatforiaColors.secondaryText
+                ),
+
                 label = { Text("Recents") }
             )
 
             SegmentedButton(
                 selected = selectedSegment == CallsSegment.Voicemail,
-                onClick = { selectedSegment = CallsSegment.Voicemail },
-                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                label = { Text("Voicemail") }
+
+                onClick = {
+                    selectedSegment = CallsSegment.Voicemail
+                },
+
+                shape = SegmentedButtonDefaults.itemShape(
+                    index = 1,
+                    count = 2
+                ),
+
+                colors = SegmentedButtonDefaults.colors(
+                    activeContainerColor = ChatforiaColors.highlightedSurface,
+                    activeContentColor = ChatforiaColors.primaryText,
+
+                    inactiveContainerColor = ChatforiaColors.cardBackground,
+                    inactiveContentColor = ChatforiaColors.secondaryText
+                ),
+
+                label = {
+                    Text("Voicemail")
+                }
             )
         }
 
@@ -121,6 +153,7 @@ fun CallsScreen() {
             CallsSegment.Recents -> {
                 Surface(
                     shape = RoundedCornerShape(28.dp),
+                    color = ChatforiaColors.cardBackground,
                     tonalElevation = 2.dp,
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -143,7 +176,10 @@ fun CallsScreen() {
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No voicemails yet")
+                    Text(
+                        "No voicemails yet",
+                        color = ChatforiaColors.secondaryText
+                    )
                 }
             }
         }
@@ -165,13 +201,15 @@ private fun CallPreviewRow(call: CallPreview) {
         }
 
         val statusColor =
-            if (call.isMissed) MaterialTheme.colorScheme.error
-            else MaterialTheme.colorScheme.onSurfaceVariant
+            if (call.isMissed)
+                MaterialTheme.colorScheme.error
+            else
+                ChatforiaColors.secondaryText
 
         Surface(
             modifier = Modifier.size(42.dp),
             shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surface
+            color = ChatforiaColors.highlightedSurface
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
@@ -189,7 +227,11 @@ private fun CallPreviewRow(call: CallPreview) {
                 call.name,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = if (call.isMissed) FontWeight.Bold else FontWeight.SemiBold,
-                color = if (call.isMissed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+                color =
+                    if (call.isMissed)
+                        MaterialTheme.colorScheme.error
+                    else
+                        ChatforiaColors.primaryText
             )
 
             Row {
@@ -211,7 +253,7 @@ private fun CallPreviewRow(call: CallPreview) {
             Text(
                 call.timestamp,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = ChatforiaColors.secondaryText
             )
         }
 
@@ -219,7 +261,11 @@ private fun CallPreviewRow(call: CallPreview) {
             if (call.canVideo) {
                 FilledIconButton(
                     onClick = {},
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(36.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = ChatforiaColors.highlightedSurface,
+                        contentColor = ChatforiaColors.accent
+                    )
                 ) {
                     Icon(Icons.Default.Videocam, contentDescription = "Video call")
                 }
@@ -228,7 +274,11 @@ private fun CallPreviewRow(call: CallPreview) {
             if (call.canPhone) {
                 FilledIconButton(
                     onClick = {},
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(36.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = ChatforiaColors.highlightedSurface,
+                        contentColor = ChatforiaColors.accent
+                    )
                 ) {
                     Icon(Icons.Default.Call, contentDescription = "Call")
                 }

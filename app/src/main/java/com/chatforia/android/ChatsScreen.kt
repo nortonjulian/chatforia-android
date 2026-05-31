@@ -20,6 +20,9 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.Icon
+import com.chatforia.android.ui.components.ChatforiaAction
+import com.chatforia.android.ui.components.ChatforiaActionPill
+import com.chatforia.android.ui.components.ChatforiaAvatar
 
 data class ChatPreview(
     val title: String,
@@ -64,44 +67,26 @@ fun ChatsScreen() {
                 color = ChatforiaColors.primaryText
             )
 
-            Surface(
-                shape = RoundedCornerShape(28.dp),
-                color = ChatforiaColors.highlightedSurface,
-                tonalElevation = 2.dp
-            ) {
-
-                Row(
-                    modifier = Modifier.padding(
-                        horizontal = 14.dp,
-                        vertical = 8.dp
+            ChatforiaActionPill(
+                actions = listOf(
+                    ChatforiaAction(
+                        icon = Icons.Default.Add,
+                        contentDescription = "Start chat"
                     ),
-                    horizontalArrangement = Arrangement.spacedBy(18.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = "Start chat",
-                        tint = ChatforiaColors.accent
+                    ChatforiaAction(
+                        icon = Icons.Default.Refresh,
+                        contentDescription = "Refresh"
+                    ),
+                    ChatforiaAction(
+                        icon = Icons.Default.AutoAwesome,
+                        contentDescription = "Ria"
+                    ),
+                    ChatforiaAction(
+                        icon = Icons.Default.Shuffle,
+                        contentDescription = "Random chat"
                     )
-
-                    Icon(
-                        Icons.Default.Refresh,
-                        contentDescription = "Refresh",
-                        tint = ChatforiaColors.accent
-                    )
-
-                    Icon(
-                        Icons.Default.AutoAwesome,
-                        contentDescription = "Ria",
-                        tint = ChatforiaColors.accent
-                    )
-
-                    Icon(
-                        Icons.Default.Shuffle,
-                        contentDescription = "Random chat",
-                        tint = ChatforiaColors.accent
-                    )
-                }
-            }
+                )
+            )
         }
 
         OutlinedTextField(
@@ -182,18 +167,13 @@ private fun ChatPreviewRow(chat: ChatPreview) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 14.dp),
+            .padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Surface(
-            modifier = Modifier.size(44.dp),
-            shape = MaterialTheme.shapes.large,
-            color = ChatforiaColors.highlightedSurface
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text(chat.title.first().uppercase())
-            }
-        }
+        ChatforiaAvatar(
+            name = chat.title,
+            size = 48.dp
+        )
 
         Spacer(modifier = Modifier.width(12.dp))
 
