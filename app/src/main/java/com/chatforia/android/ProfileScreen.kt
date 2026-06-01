@@ -34,9 +34,13 @@ import androidx.compose.ui.unit.sp
 import com.chatforia.android.ui.theme.ChatforiaColors
 import androidx.compose.material.icons.filled.AutoAwesome
 import com.chatforia.android.ui.components.ChatforiaSectionCard
+import com.chatforia.android.auth.UserDto
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(
+    user: UserDto,
+    onLogout: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -53,7 +57,7 @@ fun ProfileScreen() {
             modifier = Modifier.padding(top = 20.dp, bottom = 18.dp)
         )
 
-        ProfileHeaderCard()
+        ProfileHeaderCard(user)
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -65,7 +69,7 @@ fun ProfileScreen() {
             ProfileRow(
                 icon = Icons.Default.Person,
                 title = "Username",
-                subtitle = "julian"
+                subtitle = user.username ?: "Unknown"
             )
 
             HorizontalDivider(color = ChatforiaColors.border)
@@ -73,7 +77,7 @@ fun ProfileScreen() {
             ProfileRow(
                 icon = Icons.Default.Email,
                 title = "Email",
-                subtitle = "julian@example.com"
+                subtitle = user.email ?: "No email"
             )
 
             HorizontalDivider(color = ChatforiaColors.border)
@@ -81,7 +85,7 @@ fun ProfileScreen() {
             ProfileRow(
                 icon = Icons.Default.Star,
                 title = "Plan",
-                subtitle = "Free"
+                subtitle = user.plan ?: "Free"
             )
         }
 
@@ -122,7 +126,7 @@ fun ProfileScreen() {
             ProfileRow(
                 icon = Icons.Default.Language,
                 title = "Language",
-                subtitle = "English",
+                subtitle = user.preferredLanguage ?: "English",
                 showChevron = true
             )
 
@@ -131,7 +135,7 @@ fun ProfileScreen() {
             ProfileRow(
                 icon = Icons.Default.Settings,
                 title = "Appearance",
-                subtitle = "Dawn",
+                subtitle = user.theme ?: "Dawn",
                 showChevron = true
             )
 
@@ -148,7 +152,7 @@ fun ProfileScreen() {
         Spacer(modifier = Modifier.height(20.dp))
 
         OutlinedButton(
-            onClick = {},
+            onClick = onLogout,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.outlinedButtonColors(
@@ -168,7 +172,9 @@ fun ProfileScreen() {
 }
 
 @Composable
-private fun ProfileHeaderCard() {
+private fun ProfileHeaderCard(
+    user: UserDto
+) {
     Surface(
         shape = RoundedCornerShape(28.dp),
         color = ChatforiaColors.cardBackground,
@@ -186,7 +192,11 @@ private fun ProfileHeaderCard() {
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
-                        text = "J",
+                        text =
+                            user.username
+                                ?.firstOrNull()
+                                ?.uppercase()
+                                ?: "?",
                         fontSize = 30.sp,
                         fontWeight = FontWeight.Bold,
                         color = ChatforiaColors.primaryText
@@ -197,14 +207,14 @@ private fun ProfileHeaderCard() {
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = "julian",
+                text = user.username ?: "Unknown",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = ChatforiaColors.primaryText
             )
 
             Text(
-                text = "julian@example.com",
+                text = user.email ?: "No email",
                 style = MaterialTheme.typography.bodyMedium,
                 color = ChatforiaColors.secondaryText
             )
@@ -212,7 +222,10 @@ private fun ProfileHeaderCard() {
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "FREE",
+                text =
+                    user.plan
+                        ?.uppercase()
+                        ?: "FREE",
                 style = MaterialTheme.typography.labelMedium,
                 color = ChatforiaColors.accent,
                 fontWeight = FontWeight.Bold

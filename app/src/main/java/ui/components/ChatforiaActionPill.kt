@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.foundation.clickable
 
 data class ChatforiaAction(
     val icon: ImageVector,
@@ -34,10 +35,16 @@ fun ChatforiaActionPill(
             horizontalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             actions.forEach { action ->
+
                 Icon(
                     imageVector = action.icon,
                     contentDescription = action.contentDescription,
-                    tint = ChatforiaColors.accent
+                    tint = ChatforiaColors.accent,
+
+                    modifier =
+                        Modifier.clickable {
+                            action.onClick()
+                        }
                 )
             }
         }

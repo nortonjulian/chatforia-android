@@ -20,6 +20,24 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBarItemDefaults
 import com.chatforia.android.ui.theme.ChatforiaColors
+import com.chatforia.android.auth.AuthState
+import com.chatforia.android.auth.LoginScreen
+import com.chatforia.android.auth.*
+import com.chatforia.android.network.ApiClient
+import com.chatforia.android.auth.GoogleAuthClient
+import com.chatforia.android.chats.ChatsScreen
+import com.chatforia.android.chats.ChatsRepository
+import com.chatforia.android.chats.ChatsViewModel
+import com.chatforia.android.messages.MessagesRepository
+import com.chatforia.android.messages.ChatThreadViewModel
+import com.chatforia.android.socket.SocketManager
+
+enum class AppTab {
+    CHATS,
+    CALLS,
+    CONTACTS,
+    PROFILE
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,16 +45,145 @@ class MainActivity : ComponentActivity() {
 
 
         setContent {
+
             ChatforiaTheme {
-                ChatforiaApp()
+
+                val tokenStorage =
+                    remember {
+                        TokenStorage(applicationContext)
+                    }
+
+                val apiClient =
+                    remember {
+                        ApiClient(tokenStorage)
+                    }
+
+                val repository =
+                    remember {
+                        AuthRepository(
+                            apiClient,
+                            tokenStorage
+                        )
+                    }
+
+                val authViewModel =
+                    remember {
+                        AuthViewModel(repository)
+                    }
+
+                val authState by
+                authViewModel.state.collectAsState()
+
+                when (authState) {
+
+                    AuthState.Loading ->
+                        Text("Loading...")
+
+                    AuthState.LoggedOut ->
+                        LoginScreen(
+                            onLogin = { identifier, password ->
+                                authViewModel.login(identifier, password)
+                            },
+                            onGoogleLogin = {
+                                val googleAuthClient =
+                                    GoogleAuthClient(applicationContext)
+
+                                val idToken =
+                                    googleAuthClient.getIdToken()
+
+                                authViewModel.loginWithGoogle(idToken)
+                            }
+                        )
+
+                    is AuthState.LoggedIn -> {
+                        val loggedInState =
+                            authState as AuthState.LoggedIn
+
+                        ChatforiaApp(
+                            user = loggedInState.user,
+                            apiClient = apiClient,
+                            tokenStorage = tokenStorage,
+                            onLogout = {
+                                authViewModel.logout()
+                            }
+                        )
+                    }
+
+                    is AuthState.NeedsOnboarding -> {
+                        val onboardingState =
+                            authState as AuthState.NeedsOnboarding
+
+                        val settingsRepository =
+                            remember {
+                                SettingsRepository(apiClient)
+                            }
+
+                        OnboardingScreen(
+                            user = onboardingState.user,
+                            settingsRepository = settingsRepository,
+                            onUserUpdated = { updatedUser ->
+                                authViewModel.replaceCurrentUser(updatedUser)
+                            },
+                            onComplete = { completedUser ->
+                                authViewModel.markOnboardingComplete(completedUser)
+                            }
+                        )
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun ChatforiaApp() {
-    var selectedTab by remember { mutableStateOf("Chats") }
+fun ChatforiaApp(
+    user: UserDto,
+    apiClient: ApiClient,
+    tokenStorage: TokenStorage,
+    onLogout: () -> Unit
+) {
+    var selectedTab by remember {
+        mutableStateOf(AppTab.CHATS)
+    }
+
+    val chatsRepository =
+        remember {
+            ChatsRepository(apiClient)
+        }
+
+    val chatsViewModel =
+        remember {
+            ChatsViewModel(chatsRepository)
+        }
+
+    val messagesRepository =
+        remember {
+            MessagesRepository(apiClient)
+        }
+
+    val chatThreadViewModel =
+        remember {
+            ChatThreadViewModel(messagesRepository)
+        }
+
+    val socketManager =
+        remember {
+            SocketManager()
+        }
+
+    LaunchedEffect(user.id) {
+        val token = tokenStorage.read()
+
+        if (!token.isNullOrBlank()) {
+            socketManager.connect(token)
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            socketManager.disconnect()
+        }
+    }
 
     Scaffold(
 
@@ -46,8 +193,10 @@ fun ChatforiaApp() {
             ) {
 
                 NavigationBarItem(
-                    selected = selectedTab == "Chats",
-                    onClick = { selectedTab = "Chats" },
+                    selected = selectedTab == AppTab.CHATS,
+                    onClick = {
+                        selectedTab = AppTab.CHATS
+                    },
 
                     label = { Text("Chats") },
 
@@ -69,8 +218,8 @@ fun ChatforiaApp() {
                 )
 
                 NavigationBarItem(
-                    selected = selectedTab == "Calls",
-                    onClick = { selectedTab = "Calls" },
+                    selected = selectedTab == AppTab.CALLS,
+                    onClick = { selectedTab = AppTab.CALLS },
 
                     label = { Text("Calls") },
 
@@ -89,8 +238,8 @@ fun ChatforiaApp() {
                 )
 
                 NavigationBarItem(
-                    selected = selectedTab == "Contacts",
-                    onClick = { selectedTab = "Contacts" },
+                    selected = selectedTab == AppTab.CONTACTS,
+                    onClick = { selectedTab = AppTab.CONTACTS },
 
                     label = { Text("Contacts") },
 
@@ -109,8 +258,8 @@ fun ChatforiaApp() {
                 )
 
                 NavigationBarItem(
-                    selected = selectedTab == "Profile",
-                    onClick = { selectedTab = "Profile" },
+                    selected = selectedTab == AppTab.PROFILE,
+                    onClick = { selectedTab = AppTab.PROFILE },
 
                     label = { Text("Profile") },
 
@@ -132,10 +281,26 @@ fun ChatforiaApp() {
     ) { padding ->
         Box(modifier = Modifier.padding(padding)) {
             when (selectedTab) {
-                "Chats" -> ChatsScreen()
-                "Calls" -> CallsScreen()
-                "Contacts" -> ContactsScreen()
-                "Profile" -> ProfileScreen()
+
+                AppTab.CHATS ->
+                    ChatsScreen(
+                        viewModel = chatsViewModel,
+                        threadViewModel = chatThreadViewModel,
+                        currentUserId = user.id,
+                        socketManager = socketManager
+                    )
+
+                AppTab.CALLS ->
+                    CallsScreen()
+
+                AppTab.CONTACTS ->
+                    ContactsScreen()
+
+                AppTab.PROFILE ->
+                    ProfileScreen(
+                        user = user,
+                        onLogout = onLogout
+                    )
             }
         }
     }

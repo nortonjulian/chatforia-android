@@ -1,4 +1,4 @@
-package com.chatforia.android
+package com.chatforia.android.chats
 
 import com.chatforia.android.ui.theme.ChatforiaColors
 import androidx.compose.foundation.background
@@ -23,27 +23,93 @@ import androidx.compose.material3.Icon
 import com.chatforia.android.ui.components.ChatforiaAction
 import com.chatforia.android.ui.components.ChatforiaActionPill
 import com.chatforia.android.ui.components.ChatforiaAvatar
-
-data class ChatPreview(
-    val title: String,
-    val subtitle: String,
-    val timestamp: String,
-    val unreadCount: Int = 0
-)
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import androidx.compose.foundation.clickable
+import com.chatforia.android.messages.ChatThreadScreen
+import com.chatforia.android.messages.ChatThreadViewModel
+import com.chatforia.android.socket.SocketManager
 
 @Composable
-fun ChatsScreen() {
-    var searchText by remember { mutableStateOf("") }
+fun ChatsScreen(
+    viewModel: ChatsViewModel,
+    threadViewModel: ChatThreadViewModel,
+    currentUserId: Int?,
+    socketManager: SocketManager
+) {
+    var searchText by remember {
+        mutableStateOf("")
+    }
 
-    val conversations = listOf(
-        ChatPreview("Ria", "How can I help?", "Now", 1),
-        ChatPreview("Welcome to Chatforia", "Start your first conversation", "Today"),
-        ChatPreview("Random Chat", "Meet someone new", "Today")
-    )
+    var selectedConversation by remember {
+        mutableStateOf<ConversationDto?>(null)
+    }
 
-    val filtered = conversations.filter {
-        it.title.contains(searchText, ignoreCase = true) ||
-                it.subtitle.contains(searchText, ignoreCase = true)
+    val conversations by
+    viewModel.conversations.collectAsState()
+
+    val isLoading by
+    viewModel.isLoading.collectAsState()
+
+    val error by
+    viewModel.error.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadConversations()
+    }
+
+    LaunchedEffect(socketManager) {
+        socketManager.messageUpserts.collect { messageJson ->
+            viewModel.applyRealtimeMessageJson(messageJson)
+        }
+    }
+
+    LaunchedEffect(conversations) {
+        conversations
+            .filter { it.kind.equals("chat", ignoreCase = true) }
+            .mapNotNull { it.id }
+            .forEach { roomId ->
+                socketManager.joinRoom(roomId)
+            }
+    }
+
+    val filtered =
+        conversations.filter {
+
+            val title =
+                it.displayName
+                    ?: it.title
+
+            val lastText =
+                it.last?.text
+                    ?: ""
+
+            title.contains(
+                searchText,
+                ignoreCase = true
+            ) ||
+                    lastText.contains(
+                        searchText,
+                        ignoreCase = true
+                    )
+        }
+
+    selectedConversation?.let { room ->
+
+        ChatThreadScreen(
+            conversation = room,
+            viewModel = threadViewModel,
+            currentUserId = currentUserId,
+            socketManager = socketManager,
+            onBack = {
+                selectedConversation = null
+                viewModel.loadConversations()
+            }
+        )
+
+        return
     }
 
     Column(
@@ -75,7 +141,10 @@ fun ChatsScreen() {
                     ),
                     ChatforiaAction(
                         icon = Icons.Default.Refresh,
-                        contentDescription = "Refresh"
+                        contentDescription = "Refresh",
+                        onClick = {
+                            viewModel.loadConversations()
+                        }
                     ),
                     ChatforiaAction(
                         icon = Icons.Default.AutoAwesome,
@@ -136,7 +205,13 @@ fun ChatsScreen() {
                     modifier = Modifier.padding(12.dp)
                 ) {
                     items(filtered) { chat ->
-                        ChatPreviewRow(chat)
+                        ConversationRow(
+                            conversation = chat,
+
+                            onClick = {
+                                selectedConversation = chat
+                            }
+                        )
                         HorizontalDivider()
                     }
                 }
@@ -162,32 +237,102 @@ fun ChatsScreen() {
     }
 }
 
+private fun formatConversationTime(
+    isoString: String?
+): String {
+    if (isoString.isNullOrBlank()) {
+        return ""
+    }
+
+    return try {
+        val instant =
+            Instant.parse(isoString)
+
+        val zone =
+            ZoneId.systemDefault()
+
+        val date =
+            instant.atZone(zone).toLocalDate()
+
+        val today =
+            LocalDate.now(zone)
+
+        when (date) {
+            today -> "Today"
+            today.minusDays(1) -> "Yesterday"
+            else ->
+                date.format(
+                    DateTimeFormatter.ofPattern("MMM d")
+                )
+        }
+    } catch (error: Exception) {
+        ""
+    }
+}
+
 @Composable
-private fun ChatPreviewRow(chat: ChatPreview) {
+private fun ConversationRow(
+    conversation: ConversationDto,
+    onClick: () -> Unit
+) {
+    val title =
+        conversation.displayName
+            ?: conversation.title
+
+    val subtitle =
+        conversation.last?.text
+            ?: if (conversation.last?.hasMedia == true) {
+                "[media]"
+            } else {
+                "No messages yet"
+            }
+
+    val timestamp =
+        formatConversationTime(
+            conversation.last?.at
+                ?: conversation.updatedAt
+        )
+
+    val unreadCount =
+        conversation.unreadCount ?: 0
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable {
+                onClick()
+            }
             .padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         ChatforiaAvatar(
-            name = chat.title,
+            name = title,
             size = 48.dp
         )
 
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(chat.title, style = MaterialTheme.typography.titleMedium)
-            Text(chat.subtitle, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
 
         Column(horizontalAlignment = Alignment.End) {
-            Text(chat.timestamp, style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = timestamp,
+                style = MaterialTheme.typography.bodySmall
+            )
 
-            if (chat.unreadCount > 0) {
+            if (unreadCount > 0) {
                 Badge {
-                    Text(chat.unreadCount.toString())
+                    Text(unreadCount.toString())
                 }
             }
         }
