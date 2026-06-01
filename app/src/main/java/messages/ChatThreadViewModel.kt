@@ -2,12 +2,13 @@ package com.chatforia.android.messages
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.chatforia.android.socket.SocketManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import com.chatforia.android.socket.SocketManager
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import java.util.UUID
 
 class ChatThreadViewModel(
     private val repository: MessagesRepository
@@ -46,16 +47,7 @@ class ChatThreadViewModel(
                         return@collect
                     }
 
-                    _messages.value =
-                        (_messages.value + incoming)
-                            .distinctBy { message ->
-                                if (message.id > 0) {
-                                    "id-${message.id}"
-                                } else {
-                                    "local-${message.createdAt}-${message.sender.id}"
-                                }
-                            }
-                            .sortedBy { it.createdAt }
+                    mergeIncomingMessage(incoming)
 
                 } catch (e: Exception) {
                     println("❌ Failed to decode realtime message: ${e.message}")
@@ -72,9 +64,11 @@ class ChatThreadViewModel(
             try {
                 _messages.value =
                     repository.loadMessages(roomId)
-                        .sortedBy { it.createdAt }
+                        .sortedWith(messageSorter())
+
             } catch (e: Exception) {
                 _error.value = e.message ?: "Failed to load messages."
+
             } finally {
                 _isLoading.value = false
             }
@@ -83,7 +77,9 @@ class ChatThreadViewModel(
 
     fun sendMessage(
         roomId: Int,
-        text: String
+        text: String,
+        currentUserId: Int? = null,
+        currentUsername: String? = null
     ) {
         viewModelScope.launch {
             val trimmed = text.trim()
@@ -92,24 +88,126 @@ class ChatThreadViewModel(
                 return@launch
             }
 
+            val clientMessageId =
+                UUID.randomUUID().toString()
+
+            val optimistic =
+                MessageDto(
+                    id = -kotlin.math.abs(clientMessageId.hashCode()),
+                    rawContent = trimmed,
+                    translatedForMe = null,
+                    createdAt = java.time.Instant.now().toString(),
+                    sender = SenderDto(
+                        id = currentUserId ?: 0,
+                        username = currentUsername
+                    ),
+                    chatRoomId = roomId,
+                    clientMessageId = clientMessageId,
+                    optimistic = true,
+                    failed = false
+                )
+
+            mergeIncomingMessage(optimistic)
+
             _isSending.value = true
             _error.value = null
 
             try {
-                repository.sendMessage(
-                    roomId = roomId,
-                    text = trimmed
-                )
+                val saved =
+                    repository.sendMessage(
+                        roomId = roomId,
+                        text = trimmed,
+                        clientMessageId = clientMessageId
+                    )
 
-                _messages.value =
-                    repository.loadMessages(roomId)
-                        .sortedBy { it.createdAt }
+                if (saved != null) {
+                    mergeIncomingMessage(saved)
+                }
 
             } catch (e: Exception) {
+                markMessageFailed(clientMessageId)
                 _error.value = e.message ?: "Failed to send message."
+
             } finally {
                 _isSending.value = false
             }
+        }
+    }
+
+    private fun mergeIncomingMessage(
+        incoming: MessageDto
+    ) {
+        val incomingId =
+            if (incoming.id > 0) incoming.id else null
+
+        val incomingClientId =
+            incoming.clientMessageId
+
+        val current =
+            _messages.value.toMutableList()
+
+        val index =
+            current.indexOfFirst { existing ->
+                val sameId =
+                    incomingId != null &&
+                            existing.id == incomingId
+
+                val sameClientId =
+                    !incomingClientId.isNullOrBlank() &&
+                            existing.clientMessageId == incomingClientId
+
+                sameId || sameClientId
+            }
+
+        if (index >= 0) {
+            current[index] =
+                current[index].copy(
+                    id =
+                        if (incoming.id > 0) incoming.id else current[index].id,
+                    rawContent =
+                        incoming.rawContent ?: current[index].rawContent,
+                    translatedForMe =
+                        incoming.translatedForMe ?: current[index].translatedForMe,
+                    createdAt =
+                        incoming.createdAt.ifBlank { current[index].createdAt },
+                    sender = incoming.sender,
+                    chatRoomId =
+                        incoming.chatRoomId ?: current[index].chatRoomId,
+                    clientMessageId =
+                        incoming.clientMessageId ?: current[index].clientMessageId,
+                    optimistic = false,
+                    failed = false
+                )
+        } else {
+            current.add(incoming)
+        }
+
+        _messages.value =
+            current.sortedWith(messageSorter())
+    }
+
+    private fun markMessageFailed(
+        clientMessageId: String
+    ) {
+        _messages.value =
+            _messages.value.map { message ->
+                if (message.clientMessageId == clientMessageId) {
+                    message.copy(
+                        optimistic = false,
+                        failed = true
+                    )
+                } else {
+                    message
+                }
+            }
+    }
+
+    private fun messageSorter():
+            Comparator<MessageDto> {
+        return compareBy<MessageDto> { message ->
+            message.createdAt
+        }.thenBy { message ->
+            message.id
         }
     }
 }

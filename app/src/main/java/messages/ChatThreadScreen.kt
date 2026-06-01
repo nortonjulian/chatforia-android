@@ -231,7 +231,8 @@ fun ChatThreadScreen(
                             conversation.id?.let { roomId ->
                                 viewModel.sendMessage(
                                     roomId = roomId,
-                                    text = trimmed
+                                    text = trimmed,
+                                    currentUserId = currentUserId
                                 )
 
                                 draft = ""

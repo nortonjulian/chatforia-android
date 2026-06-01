@@ -21,7 +21,9 @@ data class MessageDto(
 
     val sender: SenderDto,
 
-    val chatRoomId: Int? = null
+    val chatRoomId: Int? = null,
+
+    val clientMessageId: String? = null
 )
 
 @Serializable

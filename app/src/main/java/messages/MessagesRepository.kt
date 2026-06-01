@@ -20,44 +20,57 @@ class MessagesRepository(
     }
 
     @Serializable
-    private data class SendMessageRequest(
-        val chatRoomId: Int,
-        val content: String,
-        val clientMessageId: String
-    )
+    private data class SendMessageEnvelope(
+        val message: MessageDto? = null,
+        val item: MessageDto? = null,
+        val shaped: MessageDto? = null
+    ) {
+        val resolved: MessageDto?
+            get() = message ?: item ?: shaped
+    }
 
     suspend fun sendMessage(
         roomId: Int,
-        text: String
-    ) {
+        text: String,
+        clientMessageId: String = UUID.randomUUID().toString()
+    ): MessageDto? {
         val bodyJson =
             json.encodeToString(
                 SendMessageRequest(
                     chatRoomId = roomId,
                     content = text,
-                    clientMessageId = UUID.randomUUID().toString()
+                    clientMessageId = clientMessageId
                 )
             )
 
-        withContext(Dispatchers.IO) {
-            apiClient.sendRaw(
-                ApiRequest(
-                    path = "messages",
-                    method = HttpMethod.POST,
-                    bodyJson = bodyJson,
-                    requiresAuth = true
+        val responseText =
+            withContext(Dispatchers.IO) {
+                apiClient.sendRaw(
+                    ApiRequest(
+                        path = "messages",
+                        method = HttpMethod.POST,
+                        bodyJson = bodyJson,
+                        requiresAuth = true
+                    )
                 )
-            )
+            }
+
+        return try {
+            json.decodeFromString<SendMessageEnvelope>(responseText).resolved
+        } catch (_: Exception) {
+            try {
+                json.decodeFromString<MessageDto>(responseText)
+            } catch (_: Exception) {
+                null
+            }
         }
     }
 
     suspend fun loadMessages(
         roomId: Int
     ): List<MessageDto> {
-
         val response: MessagesResponse =
             withContext(Dispatchers.IO) {
-
                 apiClient.send(
                     ApiRequest(
                         path = "messages/$roomId",
