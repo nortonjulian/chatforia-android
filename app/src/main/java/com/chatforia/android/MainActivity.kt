@@ -287,6 +287,7 @@ fun ChatforiaApp(
                         viewModel = chatsViewModel,
                         threadViewModel = chatThreadViewModel,
                         currentUserId = user.id,
+                        currentUsername = user.username,
                         socketManager = socketManager
                     )
 

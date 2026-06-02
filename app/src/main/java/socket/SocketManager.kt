@@ -1,5 +1,6 @@
 package com.chatforia.android.socket
 
+import android.util.Log
 import com.chatforia.android.network.Environment
 import io.socket.client.IO
 import io.socket.client.Socket
@@ -11,60 +12,91 @@ import org.json.JSONObject
 import java.net.URI
 
 class SocketManager {
-
     private var socket: Socket? = null
     private val joinedRoomIds = mutableSetOf<Int>()
 
-    private val _messageUpserts =
-        MutableSharedFlow<String>(
-            replay = 0,
-            extraBufferCapacity = 64
-        )
+    private val _messageUpserts = MutableSharedFlow<String>(extraBufferCapacity = 64)
+    val messageUpserts: SharedFlow<String> = _messageUpserts.asSharedFlow()
 
-    val messageUpserts: SharedFlow<String> =
-        _messageUpserts.asSharedFlow()
+    private val _messageAcks = MutableSharedFlow<String>(extraBufferCapacity = 64)
+    val messageAcks: SharedFlow<String> = _messageAcks.asSharedFlow()
+
+    private val _messageEdited = MutableSharedFlow<String>(extraBufferCapacity = 64)
+    val messageEdited: SharedFlow<String> = _messageEdited.asSharedFlow()
+
+    private val _messageDeleted = MutableSharedFlow<String>(extraBufferCapacity = 64)
+    val messageDeleted: SharedFlow<String> = _messageDeleted.asSharedFlow()
+
+    private val _messageExpired = MutableSharedFlow<String>(extraBufferCapacity = 64)
+    val messageExpired: SharedFlow<String> = _messageExpired.asSharedFlow()
 
     fun connect(token: String) {
         if (token.isBlank()) return
 
         val options = IO.Options().apply {
             path = "/socket.io"
-            transports = arrayOf("websocket")
+            transports = arrayOf("websocket", "polling")
             reconnection = true
             reconnectionAttempts = Int.MAX_VALUE
-            reconnectionDelay = 1000
-            query = "token=$token"
+            reconnectionDelay = 500
+            auth = mapOf("token" to token)
         }
 
+        socket?.off()
         socket?.disconnect()
 
-        socket = IO.socket(
-            URI.create(Environment.API_BASE_URL),
-            options
-        )
+        socket = IO.socket(URI.create(Environment.API_BASE_URL), options)
 
         socket?.on(Socket.EVENT_CONNECT) {
-            println("✅ Android socket connected")
-
-            joinedRoomIds.forEach { roomId ->
-                emitJoinRoom(roomId)
-            }
+            Log.d("ChatforiaSocket", "✅ Android socket connected ${socket?.id()}")
+            emitJoinRooms()
         }
 
-        socket?.on(Socket.EVENT_DISCONNECT) {
-            println("⚠️ Android socket disconnected")
+        socket?.on(Socket.EVENT_DISCONNECT) { args ->
+            Log.d("ChatforiaSocket", "⚠️ Android socket disconnected ${args.joinToString()}")
         }
 
         socket?.on(Socket.EVENT_CONNECT_ERROR) { args ->
-            println("❌ Android socket connect error: ${args.joinToString()}")
+            Log.e("ChatforiaSocket", "❌ connect error: ${args.joinToString()}")
         }
 
         socket?.on("message:upsert") { args ->
-            val messageJson = extractMessageJson(args)
+            Log.d("ChatforiaSocket", "📨 message:upsert ${args.joinToString()}")
 
-            if (messageJson != null) {
-                _messageUpserts.tryEmit(messageJson)
-            }
+            extractMessageJson(args)
+                ?.let { _messageUpserts.tryEmit(it) }
+        }
+
+        socket?.on("message:ack") { args ->
+            Log.d("ChatforiaSocket", "✅ message:ack ${args.joinToString()}")
+
+            args.firstOrNull()
+                ?.let { _messageAcks.tryEmit(it.toString()) }
+        }
+
+        socket?.on("message:edited") { args ->
+            Log.d("ChatforiaSocket", "✏️ message:edited ${args.joinToString()}")
+
+            extractMessageJson(args)
+                ?.let { _messageEdited.tryEmit(it) }
+        }
+
+        socket?.on("message:deleted") { args ->
+            Log.d("ChatforiaSocket", "🗑️ message:deleted ${args.joinToString()}")
+
+            args.firstOrNull()
+                ?.let { _messageDeleted.tryEmit(it.toString()) }
+        }
+
+        socket?.on("message:expired") { args ->
+            Log.d("ChatforiaSocket", "⏳ message:expired ${args.joinToString()}")
+
+            args.firstOrNull()
+                ?.let { _messageExpired.tryEmit(it.toString()) }
+        }
+
+        socket?.onAnyIncoming { args ->
+            Log.d("ChatforiaSocket", "📥 incoming ${args.joinToString()}")
         }
 
         socket?.connect()
@@ -79,25 +111,23 @@ class SocketManager {
 
     fun joinRoom(roomId: Int) {
         joinedRoomIds.add(roomId)
-        emitJoinRoom(roomId)
+        emitJoinRooms()
     }
 
-    fun leaveRoom(roomId: Int) {
-        joinedRoomIds.remove(roomId)
-
-        val payload = JSONObject()
-            .put("roomId", roomId)
-
-        socket?.emit("leaveRoom", payload)
+    fun joinRooms(roomIds: List<Int>) {
+        joinedRoomIds.addAll(roomIds)
+        emitJoinRooms()
     }
 
-    private fun emitJoinRoom(roomId: Int) {
-        val payload = JSONObject()
-            .put("roomId", roomId)
+    private fun emitJoinRooms() {
+        if (joinedRoomIds.isEmpty()) return
 
-        socket?.emit("joinRoom", payload)
+        val roomIds = joinedRoomIds.toList()
+        val ids = JSONArray(roomIds.map { it.toString() })
 
-        println("📡 Android joined room $roomId")
+        Log.d("ChatforiaSocket", "📡 joining rooms $roomIds")
+
+        socket?.emit("join:rooms", ids)
     }
 
     private fun extractMessageJson(args: Array<Any>): String? {
@@ -119,7 +149,7 @@ class SocketManager {
             }
 
             else -> {
-                println("⚠️ Unsupported message:upsert payload: $first")
+                Log.w("ChatforiaSocket", "⚠️ Unsupported socket payload: $first")
                 null
             }
         }

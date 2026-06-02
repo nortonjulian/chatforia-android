@@ -34,6 +34,7 @@ fun ChatThreadScreen(
     conversation: ConversationDto,
     viewModel: ChatThreadViewModel,
     currentUserId: Int?,
+    currentUsername: String?,
     socketManager: SocketManager,
     onBack: () -> Unit
 ) {
@@ -207,7 +208,9 @@ fun ChatThreadScreen(
 
                                     viewModel.sendMessage(
                                         roomId = roomId,
-                                        text = trimmed
+                                        text = trimmed,
+                                        currentUserId = currentUserId,
+                                        currentUsername = currentUsername
                                     )
 
                                     draft = ""
@@ -232,7 +235,8 @@ fun ChatThreadScreen(
                                 viewModel.sendMessage(
                                     roomId = roomId,
                                     text = trimmed,
-                                    currentUserId = currentUserId
+                                    currentUserId = currentUserId,
+                                    currentUsername = currentUsername
                                 )
 
                                 draft = ""
@@ -265,62 +269,117 @@ private fun MessageBubble(
     message: MessageDto,
     isMine: Boolean
 ) {
+    val isDeleted = message.deletedForAll == true
 
+    val displayText =
+        when {
+            isDeleted -> "This message was deleted"
+
+            !message.decryptedContent.isNullOrBlank() ->
+                message.decryptedContent
+
+            !message.translatedForMe.isNullOrBlank() ->
+                message.translatedForMe
+
+            !message.rawContent.isNullOrBlank() ->
+                message.rawContent
+
+            !message.content.isNullOrBlank() ->
+                message.content
+
+            message.attachments.isNotEmpty() ->
+                "Media attachment"
+
+            message.attachmentsInline.isNotEmpty() ->
+                "Media attachment"
+
+            !message.contentCiphertext.isNullOrBlank() ->
+                "[encrypted or unsupported message]"
+
+            else -> ""
+        }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-
         horizontalArrangement =
-            if (isMine) {
-                Arrangement.End
-            } else {
-                Arrangement.Start
-            }
+            if (isMine) Arrangement.End else Arrangement.Start
     ) {
-
         Surface(
-
             shape =
                 RoundedCornerShape(
                     topStart = 18.dp,
                     topEnd = 18.dp,
-
-                    bottomStart =
-                        if (isMine) 18.dp else 4.dp,
-
-                    bottomEnd =
-                        if (isMine) 4.dp else 18.dp
+                    bottomStart = if (isMine) 18.dp else 4.dp,
+                    bottomEnd = if (isMine) 4.dp else 18.dp
                 ),
-
             color =
                 if (isMine) {
                     ChatforiaColors.accent
                 } else {
                     ChatforiaColors.cardBackground
                 },
-
-            modifier =
-                Modifier.widthIn(max = 300.dp)
-
+            modifier = Modifier.widthIn(max = 300.dp)
         ) {
+            Column(
+                modifier = Modifier.padding(12.dp)
+            ) {
+                Text(
+                    text = displayText,
+                    color =
+                        if (isMine) {
+                            MaterialTheme.colorScheme.onPrimary
+                        } else {
+                            ChatforiaColors.primaryText
+                        }
+                )
 
-            Text(
+                if (message.editedAt != null && !isDeleted) {
+                    Text(
+                        text = "Edited",
+                        style = MaterialTheme.typography.labelSmall,
+                        color =
+                            if (isMine) {
+                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.75f)
+                            } else {
+                                ChatforiaColors.secondaryText
+                            }
+                    )
+                }
 
-                text =
-                    message.rawContent
-                        ?: message.translatedForMe
-                        ?: "[encrypted or unsupported message]",
+                if (message.optimistic) {
+                    Text(
+                        text = "Sending…",
+                        style = MaterialTheme.typography.labelSmall,
+                        color =
+                            if (isMine) {
+                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.75f)
+                            } else {
+                                ChatforiaColors.secondaryText
+                            }
+                    )
+                }
 
-                modifier =
-                    Modifier.padding(12.dp),
+                if (message.failed) {
+                    Text(
+                        text = "Failed to send",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
 
-                color =
-                    if (isMine) {
-                        MaterialTheme.colorScheme.onPrimary
-                    } else {
-                        ChatforiaColors.primaryText
-                    }
-            )
+                if (message.expiresAt != null && !isDeleted) {
+                    Text(
+                        text = "Disappearing message",
+                        style = MaterialTheme.typography.labelSmall,
+                        color =
+                            if (isMine) {
+                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.75f)
+                            } else {
+                                ChatforiaColors.secondaryText
+                            }
+                    )
+                }
+            }
         }
     }
 }

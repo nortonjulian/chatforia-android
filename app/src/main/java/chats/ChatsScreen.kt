@@ -37,6 +37,7 @@ fun ChatsScreen(
     viewModel: ChatsViewModel,
     threadViewModel: ChatThreadViewModel,
     currentUserId: Int?,
+    currentUsername: String?,
     socketManager: SocketManager
 ) {
     var searchText by remember {
@@ -102,6 +103,7 @@ fun ChatsScreen(
             conversation = room,
             viewModel = threadViewModel,
             currentUserId = currentUserId,
+            currentUsername = currentUsername,
             socketManager = socketManager,
             onBack = {
                 selectedConversation = null

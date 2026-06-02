@@ -8,5 +8,8 @@ data class SendMessageRequest(
     val content: String? = null,
     val contentCiphertext: String? = null,
     val encryptedKeys: Map<String, String>? = null,
-    val clientMessageId: String
+    val encryptionVersion: Int? = null,
+    val clientMessageId: String,
+    val expireSeconds: Int = 0,
+    val attachmentsInline: List<AttachmentDto> = emptyList()
 )

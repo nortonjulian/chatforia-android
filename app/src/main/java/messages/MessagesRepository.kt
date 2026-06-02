@@ -82,4 +82,45 @@ class MessagesRepository(
 
         return response.items
     }
+
+    suspend fun markReadBulk(roomId: Int, limit: Int = 50) {
+        val bodyJson = json.encodeToString(
+            ReadBulkRequest(
+                chatRoomId = roomId,
+                limit = limit
+            )
+        )
+
+        withContext(Dispatchers.IO) {
+            apiClient.sendRaw(
+                ApiRequest(
+                    path = "messages/read-bulk",
+                    method = HttpMethod.POST,
+                    bodyJson = bodyJson,
+                    requiresAuth = true
+                )
+            )
+        }
+    }
+
+    suspend fun loadDeltas(roomId: Int, sinceId: Int): List<MessageDto> {
+        val response: MessagesResponse =
+            withContext(Dispatchers.IO) {
+                apiClient.send(
+                    ApiRequest(
+                        path = "messages/$roomId/deltas?sinceId=$sinceId",
+                        method = HttpMethod.GET,
+                        requiresAuth = true
+                    )
+                )
+            }
+
+        return response.items
+    }
 }
+
+@Serializable
+data class ReadBulkRequest(
+    val chatRoomId: Int,
+    val limit: Int = 50
+)

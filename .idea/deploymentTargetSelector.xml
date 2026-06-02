@@ -4,7 +4,7 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-06-01T01:26:15.198198Z">
+        <DropdownSelection timestamp="2026-06-02T16:22:26.826340Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=/Users/juliannorton/.android/avd/Chatforia_Pixel_x86_Bob.avd" />
