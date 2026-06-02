@@ -57,11 +57,19 @@ fun ChatThreadScreen(
     }
 
     LaunchedEffect(conversation.id) {
-        conversation.id?.let { roomId: Int ->
-            viewModel.loadMessages(roomId)
+        conversation.id?.let { roomId ->
+
+            val userId = currentUserId ?: return@let
+
+            viewModel.loadMessages(
+                roomId = roomId,
+                currentUserId = userId
+            )
+
             viewModel.connectRealtime(
                 roomId = roomId,
-                socketManager = socketManager
+                socketManager = socketManager,
+                currentUserId = userId
             )
         }
     }
@@ -294,7 +302,7 @@ private fun MessageBubble(
                 "Media attachment"
 
             !message.contentCiphertext.isNullOrBlank() ->
-                "[encrypted or unsupported message]"
+                "Unable to decrypt this older message."
 
             else -> ""
         }

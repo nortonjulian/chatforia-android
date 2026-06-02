@@ -2,6 +2,8 @@ package com.chatforia.android.messages
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.chatforia.android.crypto.KeyStorage
+import com.chatforia.android.crypto.MessageDecryptor
 import com.chatforia.android.socket.SocketManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,7 +14,9 @@ import kotlinx.serialization.json.Json
 import java.util.UUID
 
 class ChatThreadViewModel(
-    private val repository: MessagesRepository
+    private val repository: MessagesRepository,
+    private val keyStorage: KeyStorage,
+    private val messageDecryptor: MessageDecryptor = MessageDecryptor()
 ) : ViewModel() {
 
     private val _messages = MutableStateFlow<List<MessageDto>>(emptyList())
@@ -36,7 +40,8 @@ class ChatThreadViewModel(
 
     fun connectRealtime(
         roomId: Int,
-        socketManager: SocketManager
+        socketManager: SocketManager,
+        currentUserId: Int
     ) {
         if (activeRealtimeRoomId == roomId) {
             socketManager.joinRoom(roomId)
@@ -44,7 +49,6 @@ class ChatThreadViewModel(
         }
 
         activeRealtimeRoomId = roomId
-
         socketManager.joinRoom(roomId)
 
         viewModelScope.launch {
@@ -56,7 +60,7 @@ class ChatThreadViewModel(
                         return@collect
                     }
 
-                    mergeIncomingMessage(incoming)
+                    mergeIncomingMessage(decryptForDisplay(incoming, currentUserId))
                 } catch (e: Exception) {
                     println("❌ Failed to decode message:upsert: ${e.message}")
                 }
@@ -88,7 +92,7 @@ class ChatThreadViewModel(
                         return@collect
                     }
 
-                    mergeIncomingMessage(incoming)
+                    mergeIncomingMessage(decryptForDisplay(incoming, currentUserId))
                 } catch (e: Exception) {
                     println("❌ Failed to decode message:edited: ${e.message}")
                 }
@@ -108,7 +112,10 @@ class ChatThreadViewModel(
         }
     }
 
-    fun loadMessages(roomId: Int) {
+    fun loadMessages(
+        roomId: Int,
+        currentUserId: Int
+    ) {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
@@ -116,6 +123,7 @@ class ChatThreadViewModel(
             try {
                 val loaded =
                     repository.loadMessages(roomId)
+                        .map { decryptForDisplay(it, currentUserId) }
                         .sortedWith(messageSorter())
 
                 _messages.value = loaded
@@ -128,7 +136,9 @@ class ChatThreadViewModel(
                         .maxOrNull()
 
                 if (highestId != null) {
-                    val deltas = repository.loadDeltas(roomId, highestId)
+                    val deltas =
+                        repository.loadDeltas(roomId, highestId)
+                            .map { decryptForDisplay(it, currentUserId) }
 
                     deltas.forEach { incoming ->
                         mergeIncomingMessage(incoming)
@@ -137,7 +147,6 @@ class ChatThreadViewModel(
 
             } catch (e: Exception) {
                 _error.value = e.message ?: "Failed to load messages."
-
             } finally {
                 _isLoading.value = false
             }
@@ -153,9 +162,7 @@ class ChatThreadViewModel(
         viewModelScope.launch {
             val trimmed = text.trim()
 
-            if (trimmed.isEmpty()) {
-                return@launch
-            }
+            if (trimmed.isEmpty()) return@launch
 
             val clientMessageId = UUID.randomUUID().toString()
 
@@ -165,6 +172,7 @@ class ChatThreadViewModel(
                     rawContent = trimmed,
                     content = trimmed,
                     translatedForMe = null,
+                    decryptedContent = trimmed,
                     createdAt = java.time.Instant.now().toString(),
                     sender = SenderDto(
                         id = currentUserId ?: 0,
@@ -190,16 +198,52 @@ class ChatThreadViewModel(
                     )
 
                 if (saved != null) {
-                    mergeIncomingMessage(saved)
+                    val display =
+                        if (currentUserId != null) {
+                            decryptForDisplay(saved, currentUserId)
+                        } else {
+                            saved
+                        }
+
+                    mergeIncomingMessage(display)
                 }
 
             } catch (e: Exception) {
                 markMessageFailed(clientMessageId)
                 _error.value = e.message ?: "Failed to send message."
-
             } finally {
                 _isSending.value = false
             }
+        }
+    }
+
+    private fun decryptForDisplay(
+        message: MessageDto,
+        currentUserId: Int
+    ): MessageDto {
+        val privateKey = keyStorage.readPrivateKey()
+
+        println("🔐 hasPrivateKey=${keyStorage.hasPrivateKey()}")
+
+        println(
+            "🔐 msg=${message.id} " +
+                    "hasCipher=${!message.contentCiphertext.isNullOrBlank()} " +
+                    "hasKey=${!message.encryptedKeyForMe.isNullOrBlank() || !message.encryptedKeys.isNullOrEmpty()}"
+        )
+
+        val decrypted =
+            messageDecryptor.decryptMessageOrNull(
+                message = message,
+                currentUserPrivateKeyB64 = privateKey,
+                currentUserId = currentUserId
+            )
+
+        println("🔐 decryptResult=${decrypted?.take(50)}")
+
+        return if (!decrypted.isNullOrBlank()) {
+            message.copy(decryptedContent = decrypted)
+        } else {
+            message
         }
     }
 
@@ -222,10 +266,7 @@ class ChatThreadViewModel(
             }.sortedWith(messageSorter())
     }
 
-    private fun applyDeletedOrExpiredPayload(
-        payloadJson: String,
-        roomId: Int
-    ) {
+    private fun applyDeletedOrExpiredPayload(payloadJson: String, roomId: Int) {
         try {
             val payload = json.decodeFromString<MessageLifecyclePayload>(payloadJson)
 
@@ -241,7 +282,8 @@ class ChatThreadViewModel(
                             deletedForAll = true,
                             deletedAt = payload.deletedAt ?: message.deletedAt,
                             rawContent = "",
-                            content = ""
+                            content = "",
+                            decryptedContent = ""
                         )
                     } else {
                         message
@@ -254,21 +296,14 @@ class ChatThreadViewModel(
     }
 
     private fun mergeIncomingMessage(incoming: MessageDto) {
-        val incomingId =
-            if (incoming.id > 0) incoming.id else null
+        val incomingId = if (incoming.id > 0) incoming.id else null
+        val incomingClientId = incoming.clientMessageId
 
-        val incomingClientId =
-            incoming.clientMessageId
-
-        val current =
-            _messages.value.toMutableList()
+        val current = _messages.value.toMutableList()
 
         val index =
             current.indexOfFirst { existing ->
-                val sameId =
-                    incomingId != null &&
-                            existing.id == incomingId
-
+                val sameId = incomingId != null && existing.id == incomingId
                 val sameClientId =
                     !incomingClientId.isNullOrBlank() &&
                             existing.clientMessageId == incomingClientId
@@ -281,51 +316,29 @@ class ChatThreadViewModel(
 
             current[index] =
                 existing.copy(
-                    id =
-                        if (incoming.id > 0) incoming.id else existing.id,
-                    rawContent =
-                        incoming.rawContent ?: existing.rawContent,
-                    content =
-                        incoming.content ?: existing.content,
-                    translatedForMe =
-                        incoming.translatedForMe ?: existing.translatedForMe,
-                    decryptedContent =
-                        incoming.decryptedContent ?: existing.decryptedContent,
-                    contentCiphertext =
-                        incoming.contentCiphertext ?: existing.contentCiphertext,
-                    encryptedKeyForMe =
-                        incoming.encryptedKeyForMe ?: existing.encryptedKeyForMe,
-                    encryptedKeys =
-                        incoming.encryptedKeys ?: existing.encryptedKeys,
-                    encryptionVersion =
-                        incoming.encryptionVersion ?: existing.encryptionVersion,
-                    createdAt =
-                        incoming.createdAt.ifBlank { existing.createdAt },
-                    expiresAt =
-                        incoming.expiresAt ?: existing.expiresAt,
-                    editedAt =
-                        incoming.editedAt ?: existing.editedAt,
-                    deletedAt =
-                        incoming.deletedAt ?: existing.deletedAt,
-                    deletedForAll =
-                        incoming.deletedForAll ?: existing.deletedForAll,
-                    deletedBySender =
-                        incoming.deletedBySender ?: existing.deletedBySender,
-                    revision =
-                        incoming.revision ?: existing.revision,
+                    id = if (incoming.id > 0) incoming.id else existing.id,
+                    rawContent = incoming.rawContent ?: existing.rawContent,
+                    content = incoming.content ?: existing.content,
+                    translatedForMe = incoming.translatedForMe ?: existing.translatedForMe,
+                    decryptedContent = incoming.decryptedContent ?: existing.decryptedContent,
+                    contentCiphertext = incoming.contentCiphertext ?: existing.contentCiphertext,
+                    encryptedKeyForMe = incoming.encryptedKeyForMe ?: existing.encryptedKeyForMe,
+                    encryptedKeys = incoming.encryptedKeys ?: existing.encryptedKeys,
+                    encryptionVersion = incoming.encryptionVersion ?: existing.encryptionVersion,
+                    createdAt = incoming.createdAt.ifBlank { existing.createdAt },
+                    expiresAt = incoming.expiresAt ?: existing.expiresAt,
+                    editedAt = incoming.editedAt ?: existing.editedAt,
+                    deletedAt = incoming.deletedAt ?: existing.deletedAt,
+                    deletedForAll = incoming.deletedForAll ?: existing.deletedForAll,
+                    deletedBySender = incoming.deletedBySender ?: existing.deletedBySender,
+                    revision = incoming.revision ?: existing.revision,
                     sender = incoming.sender,
-                    senderId =
-                        incoming.senderId ?: existing.senderId,
-                    chatRoomId =
-                        incoming.chatRoomId ?: existing.chatRoomId,
-                    clientMessageId =
-                        incoming.clientMessageId ?: existing.clientMessageId,
-                    readBy =
-                        if (incoming.readBy.isNotEmpty()) incoming.readBy else existing.readBy,
-                    attachments =
-                        if (incoming.attachments.isNotEmpty()) incoming.attachments else existing.attachments,
-                    attachmentsInline =
-                        if (incoming.attachmentsInline.isNotEmpty()) incoming.attachmentsInline else existing.attachmentsInline,
+                    senderId = incoming.senderId ?: existing.senderId,
+                    chatRoomId = incoming.chatRoomId ?: existing.chatRoomId,
+                    clientMessageId = incoming.clientMessageId ?: existing.clientMessageId,
+                    readBy = if (incoming.readBy.isNotEmpty()) incoming.readBy else existing.readBy,
+                    attachments = if (incoming.attachments.isNotEmpty()) incoming.attachments else existing.attachments,
+                    attachmentsInline = if (incoming.attachmentsInline.isNotEmpty()) incoming.attachmentsInline else existing.attachmentsInline,
                     optimistic = false,
                     failed = false
                 )
@@ -333,8 +346,7 @@ class ChatThreadViewModel(
             current.add(incoming)
         }
 
-        _messages.value =
-            current.sortedWith(messageSorter())
+        _messages.value = current.sortedWith(messageSorter())
     }
 
     private fun markMessageFailed(clientMessageId: String) {
@@ -352,11 +364,8 @@ class ChatThreadViewModel(
     }
 
     private fun messageSorter(): Comparator<MessageDto> {
-        return compareBy<MessageDto> { message ->
-            message.createdAt
-        }.thenBy { message ->
-            message.id
-        }
+        return compareBy<MessageDto> { it.createdAt }
+            .thenBy { it.id }
     }
 }
 

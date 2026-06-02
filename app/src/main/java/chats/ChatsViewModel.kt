@@ -101,12 +101,21 @@ class ChatsViewModel(
             current[index]
 
         val previewText =
-            message.rawContent
+            message.decryptedContent
                 ?.takeIf { it.isNotBlank() }
                 ?: message.translatedForMe
                     ?.takeIf { it.isNotBlank() }
-                ?: conversation.last?.text
-                ?: "[encrypted or unsupported message]"
+                ?: message.rawContent
+                    ?.takeIf { it.isNotBlank() }
+                ?: message.content
+                    ?.takeIf { it.isNotBlank() }
+                ?: if (!message.contentCiphertext.isNullOrBlank()) {
+                    "[encrypted message]"
+                } else if (message.attachments.isNotEmpty() || message.attachmentsInline.isNotEmpty()) {
+                    "[media]"
+                } else {
+                    conversation.last?.text ?: "[unsupported message]"
+                }
 
         val timestamp =
             message.createdAt

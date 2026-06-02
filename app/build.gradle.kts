@@ -58,6 +58,12 @@ dependencies {
         exclude(group = "org.json", module = "json")
     }
 
+    implementation("com.goterl:lazysodium-android:5.1.0") {
+        exclude(group = "net.java.dev.jna", module = "jna")
+    }
+
+    implementation("net.java.dev.jna:jna:4.5.1@aar")
+
     implementation("androidx.credentials:credentials:1.7.0-alpha02")
     implementation("androidx.credentials:credentials-play-services-auth:1.7.0-alpha02")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")

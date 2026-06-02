@@ -31,6 +31,8 @@ import com.chatforia.android.chats.ChatsViewModel
 import com.chatforia.android.messages.MessagesRepository
 import com.chatforia.android.messages.ChatThreadViewModel
 import com.chatforia.android.socket.SocketManager
+import com.chatforia.android.crypto.KeyStorage
+import androidx.compose.ui.platform.LocalContext
 
 enum class AppTab {
     CHATS,
@@ -161,9 +163,14 @@ fun ChatforiaApp(
             MessagesRepository(apiClient)
         }
 
+    val context = LocalContext.current
+
     val chatThreadViewModel =
         remember {
-            ChatThreadViewModel(messagesRepository)
+            ChatThreadViewModel(
+                repository = messagesRepository,
+                keyStorage = KeyStorage(context)
+            )
         }
 
     val socketManager =
@@ -300,6 +307,7 @@ fun ChatforiaApp(
                 AppTab.PROFILE ->
                     ProfileScreen(
                         user = user,
+                        apiClient = apiClient,
                         onLogout = onLogout
                     )
             }
