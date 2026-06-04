@@ -29,7 +29,7 @@ class MessageDecryptor {
 
         val encryptedKeyForMe =
             message.encryptedKeyForMe
-                ?: message.encryptedKeys?.values?.firstOrNull()
+                ?: message.encryptedKeys?.get(currentUserId.toString())
                 ?: return null
 
         if (message.id == 653 || message.id == 654) {

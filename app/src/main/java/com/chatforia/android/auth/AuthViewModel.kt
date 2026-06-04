@@ -5,9 +5,11 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import com.chatforia.android.crypto.AccountKeyManager
 
 class AuthViewModel(
-    private val repository: AuthRepository
+    private val repository: AuthRepository,
+    private val accountKeyManager: AccountKeyManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<AuthState>(AuthState.Loading)
@@ -18,19 +20,60 @@ class AuthViewModel(
         bootstrap()
     }
 
+    private suspend fun prepareEncryptionKeys(user: UserDto): UserDto {
+        accountKeyManager.ensureLocalKeysExist(
+            serverPublicKey = user.publicKey
+        ) { publicKey ->
+            repository.rotateEncryptionKey(publicKey)
+        }
+
+        return repository.fetchMe()
+    }
+
     fun bootstrap() {
         _state.value = AuthState.Loading
 
         viewModelScope.launch {
             val user = repository.bootstrap()
 
+            if (user == null) {
+                _state.value = AuthState.LoggedOut
+                return@launch
+            }
+
+            val preparedUser =
+                try {
+                    prepareEncryptionKeys(user)
+                } catch (e: Exception) {
+                    user
+                }
+
             _state.value =
                 when {
-                    user == null -> AuthState.LoggedOut
-                    needsOnboarding(user) -> AuthState.NeedsOnboarding(user)
-                    else -> AuthState.LoggedIn(user)
+                    needsOnboarding(preparedUser) -> AuthState.NeedsOnboarding(preparedUser)
+                    else -> AuthState.LoggedIn(preparedUser)
                 }
         }
+    }
+
+    suspend fun resetEncryptionAndLogin(
+        identifier: String,
+        password: String
+    ) {
+        val user = repository.login(identifier, password)
+
+        accountKeyManager.resetAccountEncryption { publicKey ->
+            repository.rotateEncryptionKey(publicKey)
+        }
+
+        val refreshedUser = repository.fetchMe()
+
+        _state.value =
+            if (needsOnboarding(refreshedUser)) {
+                AuthState.NeedsOnboarding(refreshedUser)
+            } else {
+                AuthState.LoggedIn(refreshedUser)
+            }
     }
 
     suspend fun login(
@@ -38,26 +81,27 @@ class AuthViewModel(
         password: String
     ) {
         val user = repository.login(identifier, password)
+        val preparedUser = prepareEncryptionKeys(user)
 
         _state.value =
-            if (needsOnboarding(user)) {
-                AuthState.NeedsOnboarding(user)
+            if (needsOnboarding(preparedUser)) {
+                AuthState.NeedsOnboarding(preparedUser)
             } else {
-                AuthState.LoggedIn(user)
+                AuthState.LoggedIn(preparedUser)
             }
     }
 
     suspend fun loginWithGoogle(
         idToken: String
     ) {
-        val user =
-            repository.loginWithGoogle(idToken)
+        val user = repository.loginWithGoogle(idToken)
+        val preparedUser = prepareEncryptionKeys(user)
 
         _state.value =
-            if (needsOnboarding(user)) {
-                AuthState.NeedsOnboarding(user)
+            if (needsOnboarding(preparedUser)) {
+                AuthState.NeedsOnboarding(preparedUser)
             } else {
-                AuthState.LoggedIn(user)
+                AuthState.LoggedIn(preparedUser)
             }
     }
 

@@ -26,32 +26,143 @@ import androidx.compose.material.icons.filled.KeyboardArrowRight
 import com.chatforia.android.ui.components.ChatforiaAvatar
 import com.chatforia.android.ui.components.ChatforiaAction
 import com.chatforia.android.ui.components.ChatforiaActionPill
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.chatforia.android.contacts.ContactsViewModel
+import com.chatforia.android.contacts.ContactDto
+import androidx.compose.foundation.clickable
+import com.chatforia.android.contacts.ContactDetailScreen
+import com.chatforia.android.messages.ChatThreadScreen
+import com.chatforia.android.messages.ChatThreadViewModel
+import com.chatforia.android.socket.SocketManager
+import com.chatforia.android.contacts.AddContactScreen
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
 
-data class ContactPreview(
-    val name: String,
-    val subtitle: String,
-    val favorite: Boolean = false,
-    val externalPhone: String? = null
-)
+import com.chatforia.android.contacts.PhoneContactsReader
+
+import androidx.compose.material.icons.filled.PersonAdd
 
 @Composable
-fun ContactsScreen() {
-    var searchText by remember { mutableStateOf("") }
+fun ContactsScreen(
+    viewModel: ContactsViewModel,
+    threadViewModel: ChatThreadViewModel,
+    currentUserId: Int?,
+    currentUsername: String?,
+    socketManager: SocketManager
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
-    var contacts by remember {
-        mutableStateOf(
-            listOf(
-                ContactPreview(
-                    name = "John Appleseed",
-                    subtitle = "+18885551212"
-                )
-            )
-        )
+    val context = LocalContext.current
+
+    val coroutineScope = rememberCoroutineScope()
+
+    val permissionLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { granted ->
+
+            if (granted) {
+                val reader = PhoneContactsReader(context)
+
+                coroutineScope.launch {
+
+                    val contacts =
+                        reader.readContacts()
+
+                    viewModel.importPhoneContacts(
+                        contacts
+                    )
+                }
+            }
+        }
+
+    val searchText = state.searchText
+    val contacts = state.contacts
+
+    var selectedContact by remember {
+        mutableStateOf<ContactDto?>(null)
     }
 
-    val filteredContacts = contacts.filter {
-        it.name.contains(searchText, ignoreCase = true) ||
-                it.subtitle.contains(searchText, ignoreCase = true)
+    var showingAddContact by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadContacts()
+    }
+
+    val filteredContacts = contacts
+
+    val openedConversation = state.openedConversation
+
+    if (showingAddContact) {
+        AddContactScreen(
+            onSaveUsername = { username, alias, favorite ->
+                viewModel.saveUsernameContact(username, alias, favorite)
+                showingAddContact = false
+            },
+            onSaveExternal = { phone, name, alias, favorite ->
+                viewModel.saveExternalContact(phone, name, alias, favorite)
+                showingAddContact = false
+            },
+            onBack = {
+                showingAddContact = false
+            }
+        )
+
+        return
+    }
+
+    openedConversation?.let { conversation ->
+        ChatThreadScreen(
+            conversation = conversation,
+            viewModel = threadViewModel,
+            currentUserId = currentUserId,
+            currentUsername = currentUsername,
+            socketManager = socketManager,
+            onBack = {
+                viewModel.clearOpenedConversation()
+            }
+        )
+
+        return
+    }
+
+    selectedContact?.let { contact ->
+
+        ContactDetailScreen(
+            contact = contact,
+            displayName = viewModel.displayName(contact),
+            subtitle = viewModel.subtitle(contact),
+
+            onMessage = {
+                viewModel.openDirectChat(contact)
+            },
+
+            onCall = {
+                // TODO
+            },
+
+            onVideo = {
+                // TODO
+            },
+
+            onDelete = {
+                viewModel.deleteContact(contact)
+                selectedContact = null
+            },
+
+            onBack = {
+                selectedContact = null
+            }
+        )
+
+        return
     }
 
     Column(
@@ -78,11 +189,47 @@ fun ContactsScreen() {
                 actions = listOf(
                     ChatforiaAction(
                         icon = Icons.Default.Add,
-                        contentDescription = "Add contact"
+                        contentDescription = "Add contact",
+                        onClick = {
+                            showingAddContact = true
+                        }
+                    ),
+                    ChatforiaAction(
+                        icon = Icons.Default.PersonAdd,
+                        contentDescription = "Import contacts",
+                        onClick = {
+
+                            val permissionGranted =
+                                ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.READ_CONTACTS
+                                ) == PackageManager.PERMISSION_GRANTED
+
+                            if (permissionGranted) {
+                                val reader =
+                                    PhoneContactsReader(context)
+
+                                coroutineScope.launch {
+                                    val contacts =
+                                        reader.readContacts()
+
+                                    viewModel.importPhoneContacts(
+                                        contacts
+                                    )
+                                }
+                            } else {
+                                permissionLauncher.launch(
+                                    Manifest.permission.READ_CONTACTS
+                                )
+                            }
+                        }
                     ),
                     ChatforiaAction(
                         icon = Icons.Default.Refresh,
-                        contentDescription = "Refresh"
+                        contentDescription = "Refresh",
+                        onClick = {
+                            viewModel.loadContacts()
+                        }
                     )
                 )
             )
@@ -90,7 +237,9 @@ fun ContactsScreen() {
 
         ChatforiaSearchField(
             value = searchText,
-            onValueChange = { searchText = it },
+            onValueChange = {
+                viewModel.updateSearchText(it)
+            },
             placeholder = "Search contacts",
             modifier = Modifier.fillMaxWidth()
         )
@@ -122,7 +271,13 @@ fun ContactsScreen() {
                     modifier = Modifier.padding(12.dp)
                 ) {
                     items(filteredContacts) { contact ->
-                        ContactPreviewRow(contact)
+                        ContactPreviewRow(
+                            contact = contact,
+                            viewModel = viewModel,
+                            onClick = {
+                                selectedContact = contact
+                            }
+                        )
                         HorizontalDivider(color = ChatforiaColors.border)
                     }
                 }
@@ -132,15 +287,22 @@ fun ContactsScreen() {
 }
 
 @Composable
-private fun ContactPreviewRow(contact: ContactPreview) {
+private fun ContactPreviewRow(
+    contact: ContactDto,
+    viewModel: ContactsViewModel,
+    onClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable {
+                onClick()
+            }
             .padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         ChatforiaAvatar(
-            name = contact.name,
+            name = viewModel.displayName(contact),
             size = 48.dp
         )
 
@@ -149,7 +311,7 @@ private fun ContactPreviewRow(contact: ContactPreview) {
         Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = contact.name,
+                    text = viewModel.displayName(contact),
                     style = MaterialTheme.typography.titleMedium,
                     color = ChatforiaColors.primaryText
                 )
@@ -167,7 +329,7 @@ private fun ContactPreviewRow(contact: ContactPreview) {
             }
 
             Text(
-                text = contact.subtitle,
+                text = viewModel.subtitle(contact),
                 style = MaterialTheme.typography.bodyMedium,
                 color = ChatforiaColors.secondaryText
             )

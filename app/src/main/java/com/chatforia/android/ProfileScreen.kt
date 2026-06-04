@@ -43,21 +43,36 @@ import com.chatforia.android.crypto.KeySetupViewModel
 import com.chatforia.android.crypto.KeyStorage
 import com.chatforia.android.crypto.RemoteKeyBackupRepository
 import com.chatforia.android.network.ApiClient
+import com.chatforia.android.auth.AuthRepository
+import com.chatforia.android.crypto.AccountKeyManager
 
 @Composable
 fun ProfileScreen(
     user: UserDto,
     apiClient: ApiClient,
+    authRepository: AuthRepository,
     onLogout: () -> Unit
 ) {
     val context = LocalContext.current
+
+    val keyStorage =
+        remember {
+            KeyStorage(context)
+        }
+
+    val accountKeyManager =
+        remember {
+            AccountKeyManager(keyStorage)
+        }
 
     val keySetupViewModel =
         remember {
             KeySetupViewModel(
                 remoteKeyBackupRepository =
                     RemoteKeyBackupRepository(apiClient),
-                keyStorage = KeyStorage(context),
+                keyStorage = keyStorage,
+                authRepository = authRepository,
+                accountKeyManager = accountKeyManager,
                 keyBackupCrypto = KeyBackupCrypto()
             )
         }

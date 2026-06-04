@@ -33,6 +33,9 @@ import com.chatforia.android.messages.ChatThreadViewModel
 import com.chatforia.android.socket.SocketManager
 import com.chatforia.android.crypto.KeyStorage
 import androidx.compose.ui.platform.LocalContext
+import com.chatforia.android.crypto.AccountKeyManager
+import com.chatforia.android.contacts.ContactsRepository
+import com.chatforia.android.contacts.ContactsViewModel
 
 enum class AppTab {
     CHATS,
@@ -68,9 +71,22 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
+                val keyStorage =
+                    remember {
+                        KeyStorage(applicationContext)
+                    }
+
+                val accountKeyManager =
+                    remember {
+                        AccountKeyManager(keyStorage)
+                    }
+
                 val authViewModel =
                     remember {
-                        AuthViewModel(repository)
+                        AuthViewModel(
+                            repository = repository,
+                            accountKeyManager = accountKeyManager
+                        )
                     }
 
                 val authState by
@@ -94,6 +110,9 @@ class MainActivity : ComponentActivity() {
                                     googleAuthClient.getIdToken()
 
                                 authViewModel.loginWithGoogle(idToken)
+                            },
+                            onResetEncryption = { identifier, password ->
+                                authViewModel.resetEncryptionAndLogin(identifier, password)
                             }
                         )
 
@@ -105,6 +124,7 @@ class MainActivity : ComponentActivity() {
                             user = loggedInState.user,
                             apiClient = apiClient,
                             tokenStorage = tokenStorage,
+                            authRepository = repository,
                             onLogout = {
                                 authViewModel.logout()
                             }
@@ -142,6 +162,7 @@ fun ChatforiaApp(
     user: UserDto,
     apiClient: ApiClient,
     tokenStorage: TokenStorage,
+    authRepository: AuthRepository,
     onLogout: () -> Unit
 ) {
     var selectedTab by remember {
@@ -156,6 +177,16 @@ fun ChatforiaApp(
     val chatsViewModel =
         remember {
             ChatsViewModel(chatsRepository)
+        }
+
+    val contactsRepository =
+        remember {
+            ContactsRepository(apiClient)
+        }
+
+    val contactsViewModel =
+        remember {
+            ContactsViewModel(contactsRepository)
         }
 
     val messagesRepository =
@@ -302,12 +333,18 @@ fun ChatforiaApp(
                     CallsScreen()
 
                 AppTab.CONTACTS ->
-                    ContactsScreen()
-
+                    ContactsScreen(
+                        viewModel = contactsViewModel,
+                        threadViewModel = chatThreadViewModel,
+                        currentUserId = user.id,
+                        currentUsername = user.username,
+                        socketManager = socketManager
+                    )
                 AppTab.PROFILE ->
                     ProfileScreen(
                         user = user,
                         apiClient = apiClient,
+                        authRepository = authRepository,
                         onLogout = onLogout
                     )
             }

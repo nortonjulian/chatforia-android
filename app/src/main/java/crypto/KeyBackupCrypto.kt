@@ -9,11 +9,71 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
+import java.security.SecureRandom
+import kotlinx.serialization.encodeToString
 
 class KeyBackupCrypto {
     private val json = Json {
         ignoreUnknownKeys = true
         explicitNulls = false
+    }
+
+    fun createRemoteBackup(
+        publicKey: String,
+        privateKey: String,
+        password: String
+    ): RemoteKeyBackupUploadPayload {
+        if (publicKey.isBlank() || privateKey.isBlank()) {
+            throw IllegalArgumentException("Missing keypair for backup")
+        }
+
+        if (password.trim().length < 8) {
+            throw IllegalArgumentException("Recovery Passcode must be at least 8 characters.")
+        }
+
+        val iterations = 250_000
+        val salt = randomBytes(16)
+        val iv = randomBytes(12)
+
+        val saltB64 = Base64.encodeToString(salt, Base64.NO_WRAP)
+        val ivB64 = Base64.encodeToString(iv, Base64.NO_WRAP)
+
+        val aesKey =
+            deriveBackupAesKey(
+                password = password.trim(),
+                saltB64 = saltB64,
+                iterations = iterations
+            )
+
+        val plaintext =
+            json.encodeToString(
+                RestoredKeyPair(
+                    publicKey = publicKey,
+                    privateKey = privateKey
+                )
+            )
+
+        val ciphertextB64 =
+            aesGcmEncrypt(
+                key = aesKey,
+                iv = iv,
+                plaintext = plaintext
+            )
+
+        return RemoteKeyBackupUploadPayload(
+            publicKey = publicKey,
+            encryptedPrivateKeyBundle =
+                json.encodeToString(
+                    EncryptedPrivateKeyPayload(
+                        ivB64 = ivB64,
+                        ctB64 = ciphertextB64
+                    )
+                ),
+            privateKeyWrapSalt = saltB64,
+            privateKeyWrapKdf = "PBKDF2-SHA256",
+            privateKeyWrapIterations = iterations,
+            privateKeyWrapVersion = 1
+        )
     }
 
     fun decryptRemoteBackup(
@@ -46,7 +106,7 @@ class KeyBackupCrypto {
 
         val aesKey =
             deriveBackupAesKey(
-                password = password,
+                password = password.trim(),
                 saltB64 = saltB64,
                 iterations = iterations
             )
@@ -111,6 +171,30 @@ class KeyBackupCrypto {
         return plaintext.toString(StandardCharsets.UTF_8)
     }
 
+    private fun aesGcmEncrypt(
+        key: SecretKeySpec,
+        iv: ByteArray,
+        plaintext: String
+    ): String {
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        val gcmSpec = GCMParameterSpec(128, iv)
+
+        cipher.init(Cipher.ENCRYPT_MODE, key, gcmSpec)
+
+        val ciphertext =
+            cipher.doFinal(
+                plaintext.toByteArray(StandardCharsets.UTF_8)
+            )
+
+        return Base64.encodeToString(ciphertext, Base64.NO_WRAP)
+    }
+
+    private fun randomBytes(size: Int): ByteArray {
+        val bytes = ByteArray(size)
+        SecureRandom().nextBytes(bytes)
+        return bytes
+    }
+
     private fun decodeB64Any(value: String): ByteArray {
         var normalized =
             value.trim()
@@ -131,6 +215,16 @@ class KeyBackupCrypto {
 data class EncryptedPrivateKeyPayload(
     val ivB64: String,
     val ctB64: String
+)
+
+@Serializable
+data class RemoteKeyBackupUploadPayload(
+    val publicKey: String,
+    val encryptedPrivateKeyBundle: String,
+    val privateKeyWrapSalt: String,
+    val privateKeyWrapKdf: String,
+    val privateKeyWrapIterations: Int,
+    val privateKeyWrapVersion: Int
 )
 
 @Serializable

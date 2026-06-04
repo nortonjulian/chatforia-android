@@ -25,7 +25,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CardDefaults
+import com.chatforia.android.ui.theme.ChatforiaColors
 @Composable
 fun KeySetupScreen(
     viewModel: KeySetupViewModel,
@@ -37,6 +39,14 @@ fun KeySetupScreen(
         mutableStateOf("")
     }
 
+    var confirmPassword by remember {
+        mutableStateOf("")
+    }
+
+    var showResetDialog by remember {
+        mutableStateOf(false)
+    }
+
     LaunchedEffect(Unit) {
         viewModel.refreshBackupStatus()
     }
@@ -45,7 +55,10 @@ fun KeySetupScreen(
         modifier =
             modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = ChatforiaColors.cardBackground
+        )
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -79,42 +92,111 @@ fun KeySetupScreen(
 
             Divider()
 
-            Text(
-                text = "Restore from backup",
-                style = MaterialTheme.typography.titleMedium
-            )
+            when {
 
-            OutlinedTextField(
-                value = backupPassword,
-                onValueChange = { backupPassword = it },
-                label = {
-                    Text("Backup password")
-                },
-                visualTransformation = PasswordVisualTransformation(),
-                enabled = !state.isRestoring,
-                modifier = Modifier.fillMaxWidth()
-            )
+                state.hasLocalPrivateKey -> {
 
-            Button(
-                onClick = {
-                    viewModel.restoreFromRemoteBackup(backupPassword)
-                },
-                enabled =
-                    backupPassword.length >= 6 &&
-                            !state.isRestoring &&
-                            state.hasRemoteBackup,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (state.isRestoring) {
-                    CircularProgressIndicator()
-                } else {
-                    Text("Restore encryption key")
+                    Text(
+                        text = if (state.hasRemoteBackup) {
+                            "Recovery Backup"
+                        } else {
+                            "Create Recovery Backup"
+                        },
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    OutlinedTextField(
+                        value = backupPassword,
+                        onValueChange = { backupPassword = it },
+                        label = { Text("Recovery Passcode") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    OutlinedTextField(
+                        value = confirmPassword,
+                        onValueChange = { confirmPassword = it },
+                        label = { Text("Confirm Recovery Passcode") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Button(
+                        onClick = {
+                            viewModel.createRemoteBackup(
+                                backupPassword
+                            )
+                        },
+                        enabled =
+                            backupPassword.length >= 8 &&
+                                    backupPassword == confirmPassword &&
+                                    !state.isCreatingBackup,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (state.isCreatingBackup) {
+                            CircularProgressIndicator()
+                        } else {
+                            Text(
+                                if (state.hasRemoteBackup) {
+                                    "Update Recovery Backup"
+                                } else {
+                                    "Create Recovery Backup"
+                                }
+                            )
+                        }
+                    }
+                }
+
+                state.hasRemoteBackup -> {
+                    Text(
+                        text = "Restore encrypted chats",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    OutlinedTextField(
+                        value = backupPassword,
+                        onValueChange = { backupPassword = it },
+                        label = { Text("Recovery Passcode") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        enabled = !state.isRestoring,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Button(
+                        onClick = {
+                            viewModel.restoreFromRemoteBackup(backupPassword)
+                        },
+                        enabled =
+                            backupPassword.length >= 8 &&
+                                    !state.isRestoring,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (state.isRestoring) {
+                            CircularProgressIndicator()
+                        } else {
+                            Text("Restore Chats")
+                        }
+                    }
+                }
+
+                else -> {
+
+                    Text(
+                        text = "No recovery backup found",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Text(
+                        text =
+                            "Open Chatforia on a device that can already read your encrypted chats and create a Recovery Passcode there."
+                    )
                 }
             }
 
+
             if (!state.hasRemoteBackup && !state.isCheckingBackup) {
                 Text(
-                    text = "No account backup was found. You can still create a new encryption key later, but older encrypted messages may remain locked.",
+                    text = "No Recovery Backup found yet. Create one from this device so you can restore chats on iOS, Android, and web.",
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -151,7 +233,69 @@ fun KeySetupScreen(
                 }
             }
 
+            Divider()
+
+            Text(
+                text = "Reset Encryption",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Text(
+                text =
+                    "Only use this if you have lost all trusted devices and cannot restore your original key."
+            )
+
+            Button(
+                onClick = {
+                    showResetDialog = true
+                }
+            ) {
+                Text("Reset Encryption")
+            }
+
             Spacer(modifier = Modifier.height(4.dp))
         }
     }
+
+    if (showResetDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showResetDialog = false
+            },
+
+            title = {
+                Text("Reset Encryption?")
+            },
+
+            text = {
+                Text(
+                    "This will permanently replace your encryption key.\n\n" +
+                            "Encrypted chats protected by your old key may no longer be readable.\n\n" +
+                            "Only continue if you have lost all trusted devices and cannot restore your Recovery Backup."
+                )
+            },
+
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showResetDialog = false
+                        viewModel.resetEncryption()
+                    }
+                ) {
+                    Text("Reset Encryption")
+                }
+            },
+
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showResetDialog = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
+

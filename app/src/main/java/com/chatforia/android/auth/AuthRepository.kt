@@ -87,6 +87,26 @@ class AuthRepository(
         return response.user
     }
 
+    suspend fun rotateEncryptionKey(publicKey: String) {
+        val bodyJson = json.encodeToString(
+            RotateEncryptionKeyRequest(
+                publicKey = publicKey,
+                invalidateExistingBackup = true
+            )
+        )
+
+        withContext(Dispatchers.IO) {
+            apiClient.sendRaw(
+                ApiRequest(
+                    path = "auth/keys/rotate",
+                    method = HttpMethod.POST,
+                    bodyJson = bodyJson,
+                    requiresAuth = true
+                )
+            )
+        }
+    }
+
     suspend fun bootstrap(): UserDto? {
         val token = tokenStorage.read()
 
@@ -106,3 +126,9 @@ class AuthRepository(
         tokenStorage.clear()
     }
 }
+
+@kotlinx.serialization.Serializable
+data class RotateEncryptionKeyRequest(
+    val publicKey: String,
+    val invalidateExistingBackup: Boolean = true
+)

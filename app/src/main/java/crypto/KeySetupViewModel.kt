@@ -5,10 +5,13 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import com.chatforia.android.auth.AuthRepository
 
 class KeySetupViewModel(
     private val remoteKeyBackupRepository: RemoteKeyBackupRepository,
     private val keyStorage: KeyStorage,
+    private val authRepository: AuthRepository,
+    private val accountKeyManager: AccountKeyManager,
     private val keyBackupCrypto: KeyBackupCrypto = KeyBackupCrypto()
 ) : ViewModel() {
 
@@ -62,8 +65,20 @@ class KeySetupViewModel(
                 val restored =
                     keyBackupCrypto.decryptRemoteBackup(
                         backup = backup,
-                        password = password
+                        password = password.trim()
                     )
+
+                val serverUser = authRepository.fetchMe()
+                val serverPublicKey = serverUser.publicKey?.trim().orEmpty()
+                val restoredPublicKey = restored.publicKey.trim()
+
+                if (serverPublicKey.isBlank()) {
+                    throw Exception("This account does not have a server encryption key.")
+                }
+
+                if (restoredPublicKey != serverPublicKey) {
+                    throw Exception("The restored encryption key does not match this account.")
+                }
 
                 keyStorage.saveKeyPair(
                     publicKey = restored.publicKey,
@@ -75,7 +90,7 @@ class KeySetupViewModel(
                         isRestoring = false,
                         hasLocalPrivateKey = true,
                         hasRemoteBackup = true,
-                        successMessage = "Encryption key restored."
+                        successMessage = "Encrypted chats restored."
                     )
 
             } catch (e: Exception) {
@@ -84,6 +99,89 @@ class KeySetupViewModel(
                         isRestoring = false,
                         hasLocalPrivateKey = keyStorage.hasPrivateKey(),
                         error = e.message ?: "Failed to restore encryption key."
+                    )
+            }
+        }
+    }
+
+    fun resetEncryption() {
+        viewModelScope.launch {
+
+            _state.value =
+                _state.value.copy(
+                    error = null,
+                    successMessage = null
+                )
+
+            try {
+
+                accountKeyManager.resetAccountEncryption { publicKey ->
+                    authRepository.rotateEncryptionKey(publicKey)
+                }
+
+                _state.value =
+                    _state.value.copy(
+                        hasLocalPrivateKey = true,
+                        hasRemoteBackup = false,
+                        successMessage =
+                            "Encryption reset. Create a new Recovery Backup."
+                    )
+
+                refreshBackupStatus()
+
+            } catch (e: Exception) {
+
+                _state.value =
+                    _state.value.copy(
+                        error =
+                            e.message
+                                ?: "Failed to reset encryption."
+                    )
+            }
+        }
+    }
+
+    fun createRemoteBackup(password: String) {
+        viewModelScope.launch {
+            _state.value =
+                _state.value.copy(
+                    isCreatingBackup = true,
+                    error = null,
+                    successMessage = null
+                )
+
+            try {
+                val publicKey =
+                    keyStorage.readPublicKey()
+                        ?: throw Exception("No local public key found.")
+
+                val privateKey =
+                    keyStorage.readPrivateKey()
+                        ?: throw Exception("No local private key found.")
+
+                val payload =
+                    keyBackupCrypto.createRemoteBackup(
+                        publicKey = publicKey,
+                        privateKey = privateKey,
+                        password = password
+                    )
+
+                remoteKeyBackupRepository.uploadBackup(payload)
+
+                _state.value =
+                    _state.value.copy(
+                        isCreatingBackup = false,
+                        hasLocalPrivateKey = true,
+                        hasRemoteBackup = true,
+                        successMessage = "Recovery Backup created."
+                    )
+
+            } catch (e: Exception) {
+                _state.value =
+                    _state.value.copy(
+                        isCreatingBackup = false,
+                        hasLocalPrivateKey = keyStorage.hasPrivateKey(),
+                        error = e.message ?: "Failed to create Recovery Backup."
                     )
             }
         }
@@ -98,6 +196,8 @@ class KeySetupViewModel(
                 successMessage = "Local encryption keys removed.",
                 error = null
             )
+
+        refreshBackupStatus()
     }
 }
 
@@ -106,6 +206,7 @@ data class KeySetupState(
     val hasRemoteBackup: Boolean = false,
     val isCheckingBackup: Boolean = false,
     val isRestoring: Boolean = false,
+    val isCreatingBackup: Boolean = false,
     val error: String? = null,
     val successMessage: String? = null
 )

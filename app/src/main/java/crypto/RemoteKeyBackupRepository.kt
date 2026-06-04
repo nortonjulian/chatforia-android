@@ -6,6 +6,7 @@ import com.chatforia.android.network.HttpMethod
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 
 class RemoteKeyBackupRepository(
     private val apiClient: ApiClient
@@ -33,6 +34,34 @@ class RemoteKeyBackupRepository(
         )
 
         if (!response.hasBackup) return null
+
+        return response.keys
+    }
+
+    suspend fun uploadBackup(
+        payload: RemoteKeyBackupUploadPayload
+    ): RemoteKeyBackupDto? {
+        val bodyJson =
+            apiClient.json.encodeToString(payload)
+
+        val raw =
+            withContext(Dispatchers.IO) {
+                apiClient.sendRaw(
+                    ApiRequest(
+                        path = "auth/keys/backup",
+                        method = HttpMethod.POST,
+                        bodyJson = bodyJson,
+                        requiresAuth = true
+                    )
+                )
+            }
+
+        println("🔑 RAW BACKUP UPLOAD RESPONSE = $raw")
+
+        val response =
+            apiClient.json.decodeFromString<RemoteKeyBackupResponse>(raw)
+
+        println("🔑 PARSED BACKUP UPLOAD RESPONSE = $response")
 
         return response.keys
     }

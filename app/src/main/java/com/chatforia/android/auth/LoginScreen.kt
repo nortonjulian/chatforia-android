@@ -19,7 +19,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun LoginScreen(
     onLogin: suspend (String, String) -> Unit,
-    onGoogleLogin: suspend () -> Unit
+    onGoogleLogin: suspend () -> Unit,
+    onResetEncryption: suspend (String, String) -> Unit
 ) {
     var identifier by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -171,15 +172,50 @@ fun LoginScreen(
                     shape = RoundedCornerShape(18.dp)
                 )
 
-                errorMessage?.let {
+                errorMessage?.let { message ->
+
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = it,
+                        text = message,
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    if (
+                        message.contains(
+                            "missing your encryption key",
+                            ignoreCase = true
+                        )
+                    ) {
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    isLoading = true
+
+                                    try {
+                                        onResetEncryption(
+                                            identifier.trim(),
+                                            password
+                                        )
+                                    } catch (error: Exception) {
+                                        errorMessage =
+                                            error.message ?: "Failed to reset encryption."
+                                    } finally {
+                                        isLoading = false
+                                    }
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = canLogin
+                        ) {
+                            Text("Reset Encryption")
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(22.dp))

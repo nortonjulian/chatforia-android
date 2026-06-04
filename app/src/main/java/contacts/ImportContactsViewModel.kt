@@ -1,0 +1,4 @@
+package contacts
+
+class ImportContactsViewModel {
+}
