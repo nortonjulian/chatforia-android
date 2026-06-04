@@ -8,6 +8,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import java.net.URLEncoder
+import com.chatforia.android.messages.SmsStartThreadRequest
+import com.chatforia.android.messages.SmsStartThreadResponse
 
 class ContactsRepository(
     private val apiClient: ApiClient
@@ -53,6 +55,29 @@ class ContactsRepository(
         }
     }
 
+    suspend fun startSmsThread(
+        phone: String,
+        contactId: Int? = null
+    ): SmsStartThreadResponse {
+        val bodyJson =
+            apiClient.json.encodeToString(
+                SmsStartThreadRequest(
+                    phone = phone,
+                    contactId = contactId
+                )
+            )
+
+        return withContext(Dispatchers.IO) {
+            apiClient.send(
+                ApiRequest(
+                    path = "sms/threads/start",
+                    method = HttpMethod.POST,
+                    bodyJson = bodyJson,
+                    requiresAuth = true
+                )
+            )
+        }
+    }
     suspend fun saveUserContact(
         userId: Int,
         alias: String? = null,

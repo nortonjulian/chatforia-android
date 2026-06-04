@@ -12,6 +12,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import java.util.UUID
+import com.chatforia.android.chats.ConversationDto
 
 class ChatThreadViewModel(
     private val repository: MessagesRepository,
@@ -154,7 +155,7 @@ class ChatThreadViewModel(
     }
 
     fun sendMessage(
-        roomId: Int,
+        conversation: ConversationDto,
         text: String,
         currentUserId: Int? = null,
         currentUsername: String? = null
@@ -178,7 +179,7 @@ class ChatThreadViewModel(
                         id = currentUserId ?: 0,
                         username = currentUsername
                     ),
-                    chatRoomId = roomId,
+                    chatRoomId = conversation.id,
                     clientMessageId = clientMessageId,
                     optimistic = true,
                     failed = false
@@ -190,22 +191,44 @@ class ChatThreadViewModel(
             _error.value = null
 
             try {
-                val saved =
-                    repository.sendMessage(
-                        roomId = roomId,
-                        text = trimmed,
-                        clientMessageId = clientMessageId
+                if (conversation.kind == "sms") {
+                    val to =
+                        conversation.phone?.trim()?.takeIf { it.isNotBlank() }
+                            ?: throw Exception("Missing SMS phone number.")
+
+                    repository.sendSms(
+                        to = to,
+                        text = trimmed
                     )
 
-                if (saved != null) {
-                    val display =
-                        if (currentUserId != null) {
-                            decryptForDisplay(saved, currentUserId)
-                        } else {
-                            saved
-                        }
+                    mergeIncomingMessage(
+                        optimistic.copy(
+                            optimistic = false,
+                            failed = false
+                        )
+                    )
+                } else {
+                    val roomId =
+                        conversation.id
+                            ?: throw Exception("Missing chat room.")
 
-                    mergeIncomingMessage(display)
+                    val saved =
+                        repository.sendMessage(
+                            roomId = roomId,
+                            text = trimmed,
+                            clientMessageId = clientMessageId
+                        )
+
+                    if (saved != null) {
+                        val display =
+                            if (currentUserId != null) {
+                                decryptForDisplay(saved, currentUserId)
+                            } else {
+                                saved
+                            }
+
+                        mergeIncomingMessage(display)
+                    }
                 }
 
             } catch (e: Exception) {

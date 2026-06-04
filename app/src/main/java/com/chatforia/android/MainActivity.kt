@@ -36,6 +36,8 @@ import androidx.compose.ui.platform.LocalContext
 import com.chatforia.android.crypto.AccountKeyManager
 import com.chatforia.android.contacts.ContactsRepository
 import com.chatforia.android.contacts.ContactsViewModel
+import com.chatforia.android.contacts.InviteRepository
+import com.chatforia.android.chats.StartChatViewModel
 
 enum class AppTab {
     CHATS,
@@ -189,6 +191,16 @@ fun ChatforiaApp(
             ContactsViewModel(contactsRepository)
         }
 
+    val startChatViewModel =
+        remember {
+            StartChatViewModel(contactsRepository)
+        }
+
+    val inviteRepository =
+        remember {
+            InviteRepository(apiClient)
+        }
+
     val messagesRepository =
         remember {
             MessagesRepository(apiClient)
@@ -335,6 +347,8 @@ fun ChatforiaApp(
                 AppTab.CONTACTS ->
                     ContactsScreen(
                         viewModel = contactsViewModel,
+                        startChatViewModel = startChatViewModel,
+                        inviteRepository = inviteRepository,
                         threadViewModel = chatThreadViewModel,
                         currentUserId = user.id,
                         currentUsername = user.username,

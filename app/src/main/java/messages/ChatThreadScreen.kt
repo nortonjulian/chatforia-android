@@ -215,7 +215,7 @@ fun ChatThreadScreen(
                                 conversation.id?.let { roomId ->
 
                                     viewModel.sendMessage(
-                                        roomId = roomId,
+                                        conversation = conversation,
                                         text = trimmed,
                                         currentUserId = currentUserId,
                                         currentUsername = currentUsername
@@ -241,7 +241,7 @@ fun ChatThreadScreen(
                         if (trimmed.isNotEmpty()) {
                             conversation.id?.let { roomId ->
                                 viewModel.sendMessage(
-                                    roomId = roomId,
+                                    conversation = conversation,
                                     text = trimmed,
                                     currentUserId = currentUserId,
                                     currentUsername = currentUsername

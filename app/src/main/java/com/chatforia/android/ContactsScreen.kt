@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -42,14 +41,23 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
-
+import com.chatforia.android.contacts.InviteFriendsScreen
+import com.chatforia.android.contacts.InviteRepository
+import androidx.compose.material.icons.filled.PersonAdd
 import com.chatforia.android.contacts.PhoneContactsReader
 
-import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Contacts
+import androidx.compose.material.icons.filled.Share
+import com.chatforia.android.contacts.PhoneContactDto
+import com.chatforia.android.contacts.ImportPhoneContactsScreen
+import com.chatforia.android.StartChatView
+import com.chatforia.android.chats.StartChatViewModel
 
 @Composable
 fun ContactsScreen(
     viewModel: ContactsViewModel,
+    startChatViewModel: StartChatViewModel,
+    inviteRepository: InviteRepository,
     threadViewModel: ChatThreadViewModel,
     currentUserId: Int?,
     currentUsername: String?,
@@ -57,9 +65,19 @@ fun ContactsScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    val startChatState by startChatViewModel.state.collectAsStateWithLifecycle()
+
     val context = LocalContext.current
 
     val coroutineScope = rememberCoroutineScope()
+
+    var showingImportContacts by remember {
+        mutableStateOf(false)
+    }
+
+    var phoneContactsToImport by remember {
+        mutableStateOf<List<PhoneContactDto>>(emptyList())
+    }
 
     val permissionLauncher =
         rememberLauncherForActivityResult(
@@ -74,9 +92,8 @@ fun ContactsScreen(
                     val contacts =
                         reader.readContacts()
 
-                    viewModel.importPhoneContacts(
-                        contacts
-                    )
+                    phoneContactsToImport = contacts
+                    showingImportContacts = true
                 }
             }
         }
@@ -92,6 +109,14 @@ fun ContactsScreen(
         mutableStateOf(false)
     }
 
+    var showingInviteFriends by remember {
+        mutableStateOf(false)
+    }
+
+    var showingNewChat by remember {
+        mutableStateOf(false)
+    }
+
     LaunchedEffect(Unit) {
         viewModel.loadContacts()
     }
@@ -99,6 +124,32 @@ fun ContactsScreen(
     val filteredContacts = contacts
 
     val openedConversation = state.openedConversation
+
+    if (showingNewChat) {
+        startChatState.openedConversation?.let { conversation ->
+            ChatThreadScreen(
+                conversation = conversation,
+                viewModel = threadViewModel,
+                currentUserId = currentUserId,
+                currentUsername = currentUsername,
+                socketManager = socketManager,
+                onBack = {
+                    startChatViewModel.clearOpenedConversation()
+                }
+            )
+
+            return
+        }
+
+        StartChatView(
+            viewModel = startChatViewModel,
+            onBack = {
+                showingNewChat = false
+            }
+        )
+
+        return
+    }
 
     if (showingAddContact) {
         AddContactScreen(
@@ -112,6 +163,37 @@ fun ContactsScreen(
             },
             onBack = {
                 showingAddContact = false
+            }
+        )
+
+        return
+    }
+
+    if (showingInviteFriends) {
+        InviteFriendsScreen(
+            repository = inviteRepository,
+            currentUsername = currentUsername,
+            onBack = {
+                showingInviteFriends = false
+            }
+        )
+
+        return
+    }
+
+    if (showingImportContacts) {
+        ImportPhoneContactsScreen(
+            contacts = phoneContactsToImport,
+            isImporting = state.isImportingContacts,
+            onImportSelected = { selectedContacts ->
+                viewModel.importPhoneContacts(
+                    selectedContacts
+                )
+
+                showingImportContacts = false
+            },
+            onBack = {
+                showingImportContacts = false
             }
         )
 
@@ -189,14 +271,21 @@ fun ContactsScreen(
                 actions = listOf(
                     ChatforiaAction(
                         icon = Icons.Default.Add,
+                        contentDescription = "New chat",
+                        onClick = {
+                            showingNewChat = true
+                        }
+                    ),
+                    ChatforiaAction(
+                        icon = Icons.Default.PersonAdd,
                         contentDescription = "Add contact",
                         onClick = {
                             showingAddContact = true
                         }
                     ),
                     ChatforiaAction(
-                        icon = Icons.Default.PersonAdd,
-                        contentDescription = "Import contacts",
+                        icon = Icons.Default.Contacts,
+                        contentDescription = "Import from phone",
                         onClick = {
 
                             val permissionGranted =
@@ -213,9 +302,8 @@ fun ContactsScreen(
                                     val contacts =
                                         reader.readContacts()
 
-                                    viewModel.importPhoneContacts(
-                                        contacts
-                                    )
+                                    phoneContactsToImport = contacts
+                                    showingImportContacts = true
                                 }
                             } else {
                                 permissionLauncher.launch(
@@ -225,12 +313,12 @@ fun ContactsScreen(
                         }
                     ),
                     ChatforiaAction(
-                        icon = Icons.Default.Refresh,
-                        contentDescription = "Refresh",
+                        icon = Icons.Default.Share,
+                        contentDescription = "Invite friends",
                         onClick = {
-                            viewModel.loadContacts()
+                            showingInviteFriends = true
                         }
-                    )
+                    ),
                 )
             )
         }
@@ -243,6 +331,26 @@ fun ContactsScreen(
             placeholder = "Search contacts",
             modifier = Modifier.fillMaxWidth()
         )
+
+        state.importMessage?.let { message ->
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = message,
+                color = ChatforiaColors.accent,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        state.error?.let { error ->
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = error,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
 
         Spacer(modifier = Modifier.height(20.dp))
 

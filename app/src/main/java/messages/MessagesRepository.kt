@@ -9,6 +9,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.UUID
+import com.chatforia.android.messages.SendSmsRequest
+import com.chatforia.android.messages.SendSmsResponse
 
 class MessagesRepository(
     private val apiClient: ApiClient
@@ -83,6 +85,29 @@ class MessagesRepository(
         return response.items
     }
 
+    suspend fun sendSms(
+        to: String,
+        text: String
+    ): SendSmsResponse {
+        val bodyJson =
+            json.encodeToString(
+                SendSmsRequest(
+                    to = to,
+                    body = text
+                )
+            )
+
+        return withContext(Dispatchers.IO) {
+            apiClient.send(
+                ApiRequest(
+                    path = "sms/send",
+                    method = HttpMethod.POST,
+                    bodyJson = bodyJson,
+                    requiresAuth = true
+                )
+            )
+        }
+    }
     suspend fun markReadBulk(roomId: Int, limit: Int = 50) {
         val bodyJson = json.encodeToString(
             ReadBulkRequest(

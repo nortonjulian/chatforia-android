@@ -20,6 +20,7 @@ class ContactsViewModel(
                 _state.value.copy(
                     isLoading = true,
                     error = null,
+                    importMessage = null,
                     searchText = query ?: _state.value.searchText
                 )
 
@@ -67,7 +68,8 @@ class ContactsViewModel(
                         contacts =
                             _state.value.contacts.filterNot {
                                 it.id == contact.id
-                            }
+                            },
+                        importMessage = null
                     )
 
             } catch (e: Exception) {
@@ -226,16 +228,30 @@ class ContactsViewModel(
                 )
 
             try {
+                if (phoneContacts.isEmpty()) {
+                    _state.value =
+                        _state.value.copy(
+                            isImportingContacts = false,
+                            importMessage = "No phone contacts found."
+                        )
+                    return@launch
+                }
                 val response =
                     repository.importContacts(phoneContacts)
+
+                val count = response.importedCount
 
                 _state.value =
                     _state.value.copy(
                         isImportingContacts = false,
-                        importMessage = "Imported ${response.importedCount} contacts."
+                        contacts = response.items,
+                        importMessage =
+                            if (count == 1) {
+                                "Imported 1 contact."
+                            } else {
+                                "Imported $count contacts."
+                            }
                     )
-
-                loadContacts()
 
             } catch (e: Exception) {
                 _state.value =

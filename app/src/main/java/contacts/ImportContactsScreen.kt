@@ -1,4 +1,0 @@
-package contacts
-
-class ImportContactsScreen {
-}
