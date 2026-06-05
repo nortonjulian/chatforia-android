@@ -19,11 +19,22 @@ import kotlin.math.abs
 class ChatThreadViewModel(
     private val repository: MessagesRepository,
     private val keyStorage: KeyStorage,
+    private val queueStorage: MessageQueueStorage,
     private val messageDecryptor: MessageDecryptor = MessageDecryptor()
 ) : ViewModel() {
 
-    private val _messages = MutableStateFlow<List<MessageDto>>(emptyList())
-    val messages: StateFlow<List<MessageDto>> = _messages
+    private val messageStore = MessageStore()
+
+    private val messageQueueManager =
+        MessageQueueManager(
+            repository = repository,
+            messageStore = messageStore,
+            queueStorage = queueStorage,
+            scope = viewModelScope
+        )
+
+    val messages: StateFlow<List<MessageDto>>
+        get() = messageStore.messages
 
     private val _smsMessages = MutableStateFlow<List<SmsMessageDto>>(emptyList())
     val smsMessages: StateFlow<List<SmsMessageDto>> = _smsMessages
@@ -44,26 +55,36 @@ class ChatThreadViewModel(
 
     private var activeRealtimeRoomId: Int? = null
     private var smsRealtimeConnected = false
+    private var realtimeCollectorsStarted = false
 
     fun connectRealtime(
         roomId: Int,
         socketManager: SocketManager,
         currentUserId: Int
     ) {
-        if (activeRealtimeRoomId == roomId) {
-            socketManager.joinRoom(roomId)
-            return
-        }
-
         activeRealtimeRoomId = roomId
         socketManager.joinRoom(roomId)
+
+        if (realtimeCollectorsStarted) return
+        realtimeCollectorsStarted = true
+
+        viewModelScope.launch {
+            socketManager.socketConnected.collect {
+                val activeRoomId = activeRealtimeRoomId ?: return@collect
+
+                recoverMissingMessages(
+                    roomId = activeRoomId,
+                    currentUserId = currentUserId
+                )
+            }
+        }
 
         viewModelScope.launch {
             socketManager.messageAcks.collect { ackJson ->
                 try {
                     val ack = json.decodeFromString<MessageAckDto>(ackJson)
 
-                    if (ack.chatRoomId != null && ack.chatRoomId != roomId) {
+                    if (ack.chatRoomId != null && ack.chatRoomId != activeRealtimeRoomId) {
                         return@collect
                     }
 
@@ -79,11 +100,11 @@ class ChatThreadViewModel(
                 try {
                     val incoming = json.decodeFromString<MessageDto>(messageJson)
 
-                    if (incoming.chatRoomId != null && incoming.chatRoomId != roomId) {
+                    if (incoming.chatRoomId != null && incoming.chatRoomId != activeRealtimeRoomId) {
                         return@collect
                     }
 
-                    mergeIncomingMessage(
+                    messageStore.upsert(
                         decryptForDisplay(
                             message = incoming,
                             currentUserId = currentUserId
@@ -100,11 +121,11 @@ class ChatThreadViewModel(
                 try {
                     val incoming = json.decodeFromString<MessageDto>(messageJson)
 
-                    if (incoming.chatRoomId != null && incoming.chatRoomId != roomId) {
+                    if (incoming.chatRoomId != null && incoming.chatRoomId != activeRealtimeRoomId) {
                         return@collect
                     }
 
-                    mergeIncomingMessage(
+                    messageStore.upsert(
                         decryptForDisplay(
                             message = incoming,
                             currentUserId = currentUserId
@@ -118,18 +139,22 @@ class ChatThreadViewModel(
 
         viewModelScope.launch {
             socketManager.messageDeleted.collect { payloadJson ->
+                val activeRoomId = activeRealtimeRoomId ?: return@collect
+
                 applyDeletedOrExpiredPayload(
                     payloadJson = payloadJson,
-                    roomId = roomId
+                    roomId = activeRoomId
                 )
             }
         }
 
         viewModelScope.launch {
             socketManager.messageExpired.collect { payloadJson ->
+                val activeRoomId = activeRealtimeRoomId ?: return@collect
+
                 applyDeletedOrExpiredPayload(
                     payloadJson = payloadJson,
-                    roomId = roomId
+                    roomId = activeRoomId
                 )
             }
         }
@@ -187,7 +212,7 @@ class ChatThreadViewModel(
                     }
                     .sortedWith(messageSorter())
 
-                _messages.value = loaded
+                messageStore.replaceAll(loaded)
 
                 repository.markReadBulk(roomId)
 
@@ -211,7 +236,7 @@ class ChatThreadViewModel(
                         }
 
                     deltas.forEach { incoming ->
-                        mergeIncomingMessage(incoming)
+                        messageStore.upsert(incoming)
                     }
                 }
             } catch (e: Exception) {
@@ -241,7 +266,8 @@ class ChatThreadViewModel(
 
     fun sendMedia(
         conversation: ConversationDto,
-        mediaUrls: List<String>
+        mediaUrls: List<String>,
+        text: String = ""
     ) {
         viewModelScope.launch {
             if (mediaUrls.isEmpty()) return@launch
@@ -259,7 +285,8 @@ class ChatThreadViewModel(
 
             sendChatMedia(
                 conversation = conversation,
-                mediaUrls = mediaUrls
+                mediaUrls = mediaUrls,
+                text = text
             )
         }
     }
@@ -292,6 +319,82 @@ class ChatThreadViewModel(
                 currentUserId = currentUserId,
                 currentUsername = currentUsername
             )
+        }
+    }
+
+    fun deleteMessage(
+        message: MessageDto,
+        deleteForEveryone: Boolean
+    ) {
+        viewModelScope.launch {
+            try {
+                repository.deleteMessage(
+                    messageId = message.id,
+                    deleteForEveryone = deleteForEveryone
+                )
+
+                if (deleteForEveryone) {
+                    messageStore.markDeleted(
+                        messageId = message.id,
+                        deletedAt = Instant.now().toString()
+                    )
+                } else {
+                    messageStore.remove(message.id)
+                }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Failed to delete message."
+            }
+        }
+    }
+
+    fun editMessage(
+        message: MessageDto,
+        text: String,
+        gifUrl: String? = null
+    ) {
+        viewModelScope.launch {
+            val trimmed = text.trim()
+
+            try {
+                val updated =
+                    repository.editMessage(
+                        messageId = message.id,
+                        text = trimmed
+                    )
+
+                messageStore.upsert(
+                    updated ?: message.copy(
+                        rawContent = trimmed,
+                        content = trimmed,
+                        decryptedContent = trimmed,
+                        editedAt = Instant.now().toString()
+                    )
+                )
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Failed to edit message."
+            }
+        }
+    }
+
+    fun reportMessage(
+        message: MessageDto,
+        reason: String,
+        details: String,
+        contextCount: Int,
+        blockAfterReport: Boolean
+    ) {
+        viewModelScope.launch {
+            try {
+                repository.reportMessage(
+                    messageId = message.id,
+                    reason = reason,
+                    details = details,
+                    contextCount = contextCount,
+                    blockAfterReport = blockAfterReport
+                )
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Failed to submit report."
+            }
         }
     }
 
@@ -386,56 +489,54 @@ class ChatThreadViewModel(
 
     private suspend fun sendChatMedia(
         conversation: ConversationDto,
-        mediaUrls: List<String>
+        mediaUrls: List<String>,
+        text: String = ""
     ) {
+        val roomId = conversation.id
+            ?: throw Exception("Missing chat room.")
+
         val clientMessageId = UUID.randomUUID().toString()
+
+        val captionText = text.trim().takeIf { it.isNotBlank() }
 
         val attachments =
             mediaUrls.map { url ->
                 AttachmentDto(
                     kind = inferAttachmentKind(url),
                     url = url,
-                    mimeType = inferMimeType(url)
+                    mimeType = inferMimeType(url),
+                    caption = captionText
                 )
             }
 
         val optimistic = MessageDto(
             id = -abs(clientMessageId.hashCode()),
-            rawContent = "",
-            content = "",
+            rawContent = text.ifBlank { null },
+            content = text.ifBlank { null },
             translatedForMe = null,
-            decryptedContent = "",
+            decryptedContent = text.ifBlank { null },
             createdAt = Instant.now().toString(),
             sender = SenderDto(id = 0, username = null),
-            chatRoomId = conversation.id,
+            chatRoomId = roomId,
             clientMessageId = clientMessageId,
             attachmentsInline = attachments,
             optimistic = true,
             failed = false
         )
 
-        mergeIncomingMessage(optimistic)
 
-        try {
-            val roomId = conversation.id
-                ?: throw Exception("Missing chat room.")
+        messageStore.upsert(optimistic)
 
-            val saved = repository.sendMessage(
-                roomId = roomId,
-                text = "",
+        messageQueueManager.enqueue(
+            QueuedMessageJob(
                 clientMessageId = clientMessageId,
+                roomId = roomId,
+                text = text,
                 attachmentsInline = attachments
             )
+        )
 
-            if (saved != null) {
-                mergeIncomingMessage(saved)
-            }
-        } catch (e: Exception) {
-            markMessageFailed(clientMessageId)
-            _error.value = e.message ?: "Failed to send media."
-        } finally {
-            _isSending.value = false
-        }
+        _isSending.value = false
     }
 
     private suspend fun sendChatMessage(
@@ -444,6 +545,9 @@ class ChatThreadViewModel(
         currentUserId: Int?,
         currentUsername: String?
     ) {
+        val roomId = conversation.id
+            ?: throw Exception("Missing chat room.")
+
         val clientMessageId = UUID.randomUUID().toString()
 
         val optimistic = MessageDto(
@@ -457,42 +561,23 @@ class ChatThreadViewModel(
                 id = currentUserId ?: 0,
                 username = currentUsername
             ),
-            chatRoomId = conversation.id,
+            chatRoomId = roomId,
             clientMessageId = clientMessageId,
             optimistic = true,
             failed = false
         )
 
-        mergeIncomingMessage(optimistic)
+        messageStore.upsert(optimistic)
 
-        try {
-            val roomId = conversation.id
-                ?: throw Exception("Missing chat room.")
-
-            val saved = repository.sendMessage(
+        messageQueueManager.enqueue(
+            QueuedMessageJob(
+                clientMessageId = clientMessageId,
                 roomId = roomId,
-                text = text,
-                clientMessageId = clientMessageId
+                text = text
             )
+        )
 
-            if (saved != null) {
-                val display = if (currentUserId != null) {
-                    decryptForDisplay(
-                        message = saved,
-                        currentUserId = currentUserId
-                    )
-                } else {
-                    saved
-                }
-
-                mergeIncomingMessage(display)
-            }
-        } catch (e: Exception) {
-            markMessageFailed(clientMessageId)
-            _error.value = e.message ?: "Failed to send message."
-        } finally {
-            _isSending.value = false
-        }
+        _isSending.value = false
     }
 
     private fun decryptForDisplay(
@@ -517,21 +602,12 @@ class ChatThreadViewModel(
     private fun applyAck(ack: MessageAckDto) {
         val clientMessageId = ack.clientMessageId ?: return
 
-        _messages.value = _messages.value
-            .map { message ->
-                if (message.clientMessageId == clientMessageId) {
-                    message.copy(
-                        id = ack.id ?: message.id,
-                        chatRoomId = ack.chatRoomId ?: message.chatRoomId,
-                        createdAt = ack.createdAt ?: message.createdAt,
-                        optimistic = false,
-                        failed = false
-                    )
-                } else {
-                    message
-                }
-            }
-            .sortedWith(messageSorter())
+        messageStore.upsertAck(
+            id = ack.id,
+            clientMessageId = clientMessageId,
+            chatRoomId = ack.chatRoomId,
+            createdAt = ack.createdAt
+        )
     }
 
     private fun applyDeletedOrExpiredPayload(
@@ -547,83 +623,13 @@ class ChatThreadViewModel(
 
             val messageId = payload.id ?: payload.messageId ?: return
 
-            _messages.value = _messages.value.map { message ->
-                if (message.id == messageId) {
-                    message.copy(
-                        deletedForAll = true,
-                        deletedAt = payload.deletedAt ?: message.deletedAt,
-                        rawContent = "",
-                        content = "",
-                        decryptedContent = ""
-                    )
-                } else {
-                    message
-                }
-            }
+            messageStore.markDeleted(
+                messageId = messageId,
+                deletedAt = payload.deletedAt
+            )
         } catch (e: Exception) {
             println("❌ Failed to decode message lifecycle payload: ${e.message}")
         }
-    }
-
-    private fun mergeIncomingMessage(incoming: MessageDto) {
-        val incomingId = incoming.id.takeIf { it > 0 }
-        val incomingClientId = incoming.clientMessageId
-
-        val current = _messages.value.toMutableList()
-
-        val index = current.indexOfFirst { existing ->
-            val sameId = incomingId != null && existing.id == incomingId
-
-            val sameClientId =
-                !incomingClientId.isNullOrBlank() &&
-                        existing.clientMessageId == incomingClientId
-
-            sameId || sameClientId
-        }
-
-        if (index >= 0) {
-            val existing = current[index]
-
-            current[index] = existing.copy(
-                id = if (incoming.id > 0) incoming.id else existing.id,
-                rawContent = incoming.rawContent ?: existing.rawContent,
-                content = incoming.content ?: existing.content,
-                translatedForMe = incoming.translatedForMe ?: existing.translatedForMe,
-                decryptedContent = incoming.decryptedContent ?: existing.decryptedContent,
-                contentCiphertext = incoming.contentCiphertext ?: existing.contentCiphertext,
-                encryptedKeyForMe = incoming.encryptedKeyForMe ?: existing.encryptedKeyForMe,
-                encryptedKeys = incoming.encryptedKeys ?: existing.encryptedKeys,
-                encryptionVersion = incoming.encryptionVersion ?: existing.encryptionVersion,
-                createdAt = incoming.createdAt.ifBlank { existing.createdAt },
-                expiresAt = incoming.expiresAt ?: existing.expiresAt,
-                editedAt = incoming.editedAt ?: existing.editedAt,
-                deletedAt = incoming.deletedAt ?: existing.deletedAt,
-                deletedForAll = incoming.deletedForAll ?: existing.deletedForAll,
-                deletedBySender = incoming.deletedBySender ?: existing.deletedBySender,
-                revision = incoming.revision ?: existing.revision,
-                sender = incoming.sender,
-                senderId = incoming.senderId ?: existing.senderId,
-                chatRoomId = incoming.chatRoomId ?: existing.chatRoomId,
-                clientMessageId = incoming.clientMessageId ?: existing.clientMessageId,
-                readBy = if (incoming.readBy.isNotEmpty()) incoming.readBy else existing.readBy,
-                attachments = if (incoming.attachments.isNotEmpty()) {
-                    incoming.attachments
-                } else {
-                    existing.attachments
-                },
-                attachmentsInline = if (incoming.attachmentsInline.isNotEmpty()) {
-                    incoming.attachmentsInline
-                } else {
-                    existing.attachmentsInline
-                },
-                optimistic = false,
-                failed = false
-            )
-        } else {
-            current.add(incoming)
-        }
-
-        _messages.value = current.sortedWith(messageSorter())
     }
 
     private fun mergeIncomingSms(incoming: SmsMessageDto) {
@@ -695,16 +701,35 @@ class ChatThreadViewModel(
         }
     }
 
-    private fun markMessageFailed(clientMessageId: String) {
-        _messages.value = _messages.value.map { message ->
-            if (message.clientMessageId == clientMessageId) {
-                message.copy(
-                    optimistic = false,
-                    failed = true
-                )
-            } else {
-                message
+    private suspend fun recoverMissingMessages(
+        roomId: Int,
+        currentUserId: Int
+    ) {
+        val highestId = messages.value
+            .mapNotNull { message ->
+                if (message.id > 0) message.id else null
             }
+            .maxOrNull()
+            ?: return
+
+        val deltas = repository
+            .loadDeltas(
+                roomId = roomId,
+                sinceId = highestId
+            )
+            .map { message ->
+                decryptForDisplay(
+                    message = message,
+                    currentUserId = currentUserId
+                )
+            }
+
+        deltas.forEach { incoming ->
+            messageStore.upsert(incoming)
+        }
+
+        if (deltas.isNotEmpty()) {
+            repository.markReadBulk(roomId)
         }
     }
 

@@ -159,10 +159,110 @@ class MessagesRepository(
 
         return response.items
     }
+
+    suspend fun deleteMessage(
+        messageId: Int,
+        deleteForEveryone: Boolean
+    ) {
+        val scope = if (deleteForEveryone) "all" else "me"
+
+        withContext(Dispatchers.IO) {
+            apiClient.sendRaw(
+                ApiRequest(
+                    path = "messages/$messageId?scope=$scope",
+                    method = HttpMethod.DELETE,
+                    requiresAuth = true
+                )
+            )
+        }
+    }
+
+    suspend fun editMessage(
+        messageId: Int,
+        text: String
+    ): MessageDto? {
+        val bodyJson =
+            json.encodeToString(
+                EditMessageRequest(
+                    content = text
+                )
+            )
+
+        val responseText =
+            withContext(Dispatchers.IO) {
+                apiClient.sendRaw(
+                    ApiRequest(
+                        path = "messages/$messageId",
+                        method = HttpMethod.PATCH,
+                        bodyJson = bodyJson,
+                        requiresAuth = true
+                    )
+                )
+            }
+
+        return try {
+            json.decodeFromString<SendMessageEnvelope>(responseText).resolved
+        } catch (_: Exception) {
+            try {
+                json.decodeFromString<MessageDto>(responseText)
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
+
+    suspend fun reportMessage(
+        messageId: Int,
+        reason: String,
+        details: String?,
+        contextCount: Int,
+        blockAfterReport: Boolean
+    ): ReportMessageResponse {
+        val bodyJson =
+            json.encodeToString(
+                ReportMessageRequest(
+                    messageId = messageId,
+                    reason = reason,
+                    details = details?.trim()?.takeIf { it.isNotBlank() },
+                    contextCount = contextCount,
+                    blockAfterReport = blockAfterReport
+                )
+            )
+
+        return withContext(Dispatchers.IO) {
+            apiClient.send(
+                ApiRequest(
+                    path = "reports",
+                    method = HttpMethod.POST,
+                    bodyJson = bodyJson,
+                    requiresAuth = true
+                )
+            )
+        }
+    }
 }
 
 @Serializable
 data class ReadBulkRequest(
     val chatRoomId: Int,
     val limit: Int = 50
+)
+
+@Serializable
+data class EditMessageRequest(
+    val content: String
+)
+
+@Serializable
+data class ReportMessageRequest(
+    val messageId: Int,
+    val reason: String,
+    val details: String? = null,
+    val contextCount: Int = 10,
+    val blockAfterReport: Boolean = true
+)
+
+@Serializable
+data class ReportMessageResponse(
+    val success: Boolean
 )

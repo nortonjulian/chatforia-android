@@ -52,20 +52,18 @@ private fun AttachmentCard(
 
     when {
         kind == "GIF" || mime == "image/gif" -> {
-            ImageAttachment(url = url, caption = attachment.caption)
+            ImageAttachment(url = url)
         }
 
         kind == "IMAGE" || mime.startsWith("image/") -> {
             ImageAttachment(
-                url = attachment.thumbUrl ?: url,
-                caption = attachment.caption
+                url = attachment.thumbUrl ?: url
             )
         }
 
         kind == "VIDEO" || mime.startsWith("video/") -> {
             VideoAttachment(
                 url = attachment.thumbUrl ?: url,
-                caption = attachment.caption
             )
         }
 
@@ -91,77 +89,51 @@ private fun AttachmentCard(
 
 @Composable
 private fun ImageAttachment(
-    url: String,
-    caption: String?
+    url: String
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        AsyncImage(
-            model = url,
-            contentDescription = caption ?: "Image attachment",
-            modifier = Modifier
-                .widthIn(max = 260.dp)
-                .heightIn(max = 260.dp)
-                .clip(RoundedCornerShape(18.dp))
-                .background(ChatforiaColors.cardBackground),
-            contentScale = ContentScale.Fit
-        )
-
-        if (!caption.isNullOrBlank()) {
-            Text(
-                text = caption,
-                style = MaterialTheme.typography.labelMedium,
-                color = ChatforiaColors.secondaryText
-            )
-        }
-    }
+    AsyncImage(
+        model = url,
+        contentDescription = "Image attachment",
+        modifier = Modifier
+            .width(260.dp)
+            .height(190.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(ChatforiaColors.cardBackground),
+        contentScale = ContentScale.Crop
+    )
 }
 
 @Composable
 private fun VideoAttachment(
-    url: String,
-    caption: String?
+    url: String
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+    Box(
+        modifier = Modifier
+            .width(240.dp)
+            .height(180.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(ChatforiaColors.cardBackground)
+            .clickable { },
+        contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .width(240.dp)
-                .height(180.dp)
-                .clip(RoundedCornerShape(18.dp))
-                .background(ChatforiaColors.cardBackground)
-                .clickable { },
-            contentAlignment = Alignment.Center
+        AsyncImage(
+            model = url,
+            contentDescription = "Video attachment",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+
+        Surface(
+            shape = RoundedCornerShape(999.dp),
+            color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.55f)
         ) {
-            AsyncImage(
-                model = url,
-                contentDescription = caption ?: "Video attachment",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-
-            Surface(
-                shape = RoundedCornerShape(999.dp),
-                color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.55f)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = "Play video",
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .size(30.dp)
-                )
-            }
-        }
-
-        if (!caption.isNullOrBlank()) {
-            Text(
-                text = caption,
-                style = MaterialTheme.typography.labelMedium,
-                color = ChatforiaColors.secondaryText
+            Icon(
+                imageVector = Icons.Default.PlayArrow,
+                contentDescription = "Play video",
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier
+                    .padding(12.dp)
+                    .size(30.dp)
             )
         }
     }

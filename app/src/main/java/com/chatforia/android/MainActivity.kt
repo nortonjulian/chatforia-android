@@ -40,6 +40,7 @@ import com.chatforia.android.contacts.InviteRepository
 import com.chatforia.android.chats.StartChatViewModel
 import com.chatforia.android.tenor.TenorRepository
 import com.chatforia.android.upload.UploadRepository
+import com.chatforia.android.messages.MessageQueueStorage
 
 enum class AppTab {
     CHATS,
@@ -227,7 +228,8 @@ fun ChatforiaApp(
         remember {
             ChatThreadViewModel(
                 repository = messagesRepository,
-                keyStorage = KeyStorage(context)
+                keyStorage = KeyStorage(context),
+                queueStorage = MessageQueueStorage(context)
             )
         }
 

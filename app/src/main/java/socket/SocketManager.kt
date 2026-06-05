@@ -30,6 +30,9 @@ class SocketManager {
     private val _messageExpired = MutableSharedFlow<String>(extraBufferCapacity = 64)
     val messageExpired: SharedFlow<String> = _messageExpired.asSharedFlow()
 
+    private val _socketConnected = MutableSharedFlow<Unit>(extraBufferCapacity = 16)
+    val socketConnected: SharedFlow<Unit> = _socketConnected.asSharedFlow()
+
     private val _smsMessages =
         MutableSharedFlow<String>(extraBufferCapacity = 64)
 
@@ -56,6 +59,7 @@ class SocketManager {
         socket?.on(Socket.EVENT_CONNECT) {
             Log.d("ChatforiaSocket", "✅ Android socket connected ${socket?.id()}")
             emitJoinRooms()
+            _socketConnected.tryEmit(Unit)
         }
 
         socket?.on(Socket.EVENT_DISCONNECT) { args ->

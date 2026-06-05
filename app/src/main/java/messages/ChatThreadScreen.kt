@@ -38,6 +38,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.rememberCoroutineScope
 import com.chatforia.android.upload.UploadRepository
 import kotlinx.coroutines.launch
+import androidx.compose.ui.draw.clip
+import coil.compose.AsyncImage
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.ui.graphics.Color
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,9 +61,22 @@ fun ChatThreadScreen(
     val isSending by viewModel.isSending.collectAsState()
     val error by viewModel.error.collectAsState()
 
+    var pendingGifUrl by remember { mutableStateOf<String?>(null) }
+    var pendingGifPreviewUrl by remember { mutableStateOf<String?>(null) }
+
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val listState = rememberLazyListState()
+
+    var deletingMessage by remember { mutableStateOf<MessageDto?>(null) }
+    var editingMessage by remember { mutableStateOf<MessageDto?>(null) }
+
+    var reportingMessage by remember { mutableStateOf<MessageDto?>(null) }
+
+    var showEditSheet by remember { mutableStateOf(false) }
+    var editDraft by remember { mutableStateOf("") }
+    var editGifUrl by remember { mutableStateOf<String?>(null) }
+    var showEditGifPicker by remember { mutableStateOf(false) }
 
     var draft by remember { mutableStateOf("") }
     var showMediaPicker by remember { mutableStateOf(false) }
@@ -214,7 +231,35 @@ fun ChatThreadScreen(
                                 items(chatMessages) { message ->
                                     ChatMessageRow(
                                         message = message,
-                                        isMine = message.sender.id == currentUserId
+                                        isMine = message.sender.id == currentUserId,
+                                        onEdit = { selected ->
+                                            editingMessage = selected
+
+                                            editDraft =
+                                                selected.decryptedContent
+                                                    ?: selected.translatedForMe
+                                                            ?: selected.rawContent
+                                                            ?: selected.content
+                                                            ?: selected.attachments.firstOrNull { !it.caption.isNullOrBlank() }?.caption
+                                                            ?: selected.attachmentsInline.firstOrNull { !it.caption.isNullOrBlank() }?.caption
+                                                            ?: ""
+
+                                            editGifUrl =
+                                                (selected.attachments + selected.attachmentsInline)
+                                                    .firstOrNull {
+                                                        it.kind.uppercase() == "GIF" ||
+                                                                it.mimeType.orEmpty().lowercase() == "image/gif"
+                                                    }
+                                                    ?.url
+
+                                            showEditSheet = true
+                                        },
+                                        onDelete = { selected ->
+                                            deletingMessage = selected
+                                        },
+                                        onReport = { selected ->
+                                            reportingMessage = selected
+                                        }
                                     )
                                 }
                             }
@@ -230,6 +275,76 @@ fun ChatThreadScreen(
                     text = error ?: "",
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            if (pendingGifPreviewUrl != null) {
+                Box(
+                    modifier = Modifier
+                        .padding(bottom = 8.dp)
+                        .width(180.dp)
+                        .height(130.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(ChatforiaColors.cardBackground)
+                ) {
+                    AsyncImage(
+                        model = pendingGifPreviewUrl,
+                        contentDescription = "Selected GIF",
+                        modifier = Modifier.fillMaxSize()
+                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(999.dp),
+                        color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.65f),
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(6.dp)
+                    ) {
+                        IconButton(
+                            onClick = {
+                                pendingGifUrl = null
+                                pendingGifPreviewUrl = null
+                            },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Remove GIF",
+                                tint = Color.White,
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (showEditSheet && editingMessage != null) {
+                EditMessageSheet(
+                    initialText = editDraft,
+                    initialGifUrl = editGifUrl,
+                    onCancel = {
+                        showEditSheet = false
+                        editingMessage = null
+                        editDraft = ""
+                        editGifUrl = null
+                    },
+                    onSave = { text, gifUrl ->
+                        editingMessage?.let { message ->
+                            viewModel.editMessage(
+                                message = message,
+                                text = text,
+                                gifUrl = gifUrl
+                            )
+                        }
+
+                        showEditSheet = false
+                        editingMessage = null
+                        editDraft = ""
+                        editGifUrl = null
+                    },
+                    onGifTap = {
+                        showEditGifPicker = true
+                    }
                 )
             }
 
@@ -262,12 +377,15 @@ fun ChatThreadScreen(
                         onSend = {
                             sendDraftMessage(
                                 draft = draft,
+                                pendingGifUrl = pendingGifUrl,
                                 conversation = conversation,
                                 viewModel = viewModel,
                                 currentUserId = currentUserId,
                                 currentUsername = currentUsername,
                                 onSent = {
                                     draft = ""
+                                    pendingGifUrl = null
+                                    pendingGifPreviewUrl = null
                                     focusManager.clearFocus()
                                     keyboardController?.hide()
                                 }
@@ -282,19 +400,22 @@ fun ChatThreadScreen(
                     onClick = {
                         sendDraftMessage(
                             draft = draft,
+                            pendingGifUrl = pendingGifUrl,
                             conversation = conversation,
                             viewModel = viewModel,
                             currentUserId = currentUserId,
                             currentUsername = currentUsername,
                             onSent = {
                                 draft = ""
+                                pendingGifUrl = null
+                                pendingGifPreviewUrl = null
                                 focusManager.clearFocus()
                                 keyboardController?.hide()
                             }
                         )
                     },
                     enabled =
-                        draft.trim().isNotEmpty() &&
+                        (draft.trim().isNotEmpty() || pendingGifUrl != null) &&
                                 conversation.id != null &&
                                 !isSending
                 ) {
@@ -307,6 +428,44 @@ fun ChatThreadScreen(
                         Text("Send")
                     }
                 }
+            }
+            if (deletingMessage != null) {
+                AlertDialog(
+                    onDismissRequest = { deletingMessage = null },
+                    title = { Text("Delete message?") },
+                    text = { Text("Choose how you want to delete this message.") },
+                    confirmButton = {
+                        val canDeleteForEveryone =
+                            deletingMessage?.let { message ->
+                                message.sender.id == currentUserId &&
+                                        message.deletedForAll != true &&
+                                        message.isWithinActionWindow()
+                            } == true
+
+                        if (canDeleteForEveryone) {
+                            TextButton(
+                                onClick = {
+                                    deletingMessage?.let {
+                                        viewModel.deleteMessage(it, deleteForEveryone = true)
+                                    }
+                                    deletingMessage = null
+                                }
+                            ) {
+                                Text("Delete for everyone")
+                            }
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = {
+                                deletingMessage?.let { viewModel.deleteMessage(it, deleteForEveryone = false) }
+                                deletingMessage = null
+                            }
+                        ) {
+                            Text("Delete for me")
+                        }
+                    }
+                )
             }
 
             if (showMediaPicker) {
@@ -337,6 +496,19 @@ fun ChatThreadScreen(
                 )
             }
 
+            if (showEditGifPicker) {
+                GifPickerSheet(
+                    tenorRepository = tenorRepository,
+                    onDismiss = {
+                        showEditGifPicker = false
+                    },
+                    onGifSelected = { gif ->
+                        editGifUrl = gif.url
+                        showEditGifPicker = false
+                    }
+                )
+            }
+
             if (showGifPicker) {
                 GifPickerSheet(
                     tenorRepository = tenorRepository,
@@ -345,11 +517,30 @@ fun ChatThreadScreen(
                     },
                     onGifSelected = { gif ->
                         showGifPicker = false
+                        pendingGifUrl = gif.url
+                        pendingGifPreviewUrl = gif.previewUrl ?: gif.url
+                    }
+                )
+            }
 
-                        viewModel.sendMedia(
-                            conversation = conversation,
-                            mediaUrls = listOf(gif.url)
-                        )
+            if (reportingMessage != null) {
+                ReportMessageSheet(
+                    message = reportingMessage!!,
+                    onCancel = {
+                        reportingMessage = null
+                    },
+                    onSubmit = { reason, details, contextCount, blockAfterReport ->
+                        reportingMessage?.let { message ->
+                            viewModel.reportMessage(
+                                message = message,
+                                reason = reason,
+                                details = details,
+                                contextCount = contextCount,
+                                blockAfterReport = blockAfterReport
+                            )
+                        }
+
+                        reportingMessage = null
                     }
                 )
             }
@@ -359,6 +550,7 @@ fun ChatThreadScreen(
 
 private fun sendDraftMessage(
     draft: String,
+    pendingGifUrl: String?,
     conversation: ConversationDto,
     viewModel: ChatThreadViewModel,
     currentUserId: Int?,
@@ -367,15 +559,23 @@ private fun sendDraftMessage(
 ) {
     val trimmed = draft.trim()
 
-    if (trimmed.isEmpty()) return
+    if (trimmed.isEmpty() && pendingGifUrl == null) return
     if (conversation.id == null) return
 
-    viewModel.sendMessage(
-        conversation = conversation,
-        text = trimmed,
-        currentUserId = currentUserId,
-        currentUsername = currentUsername
-    )
+    if (pendingGifUrl != null) {
+        viewModel.sendMedia(
+            conversation = conversation,
+            mediaUrls = listOf(pendingGifUrl),
+            text = trimmed
+        )
+    } else {
+        viewModel.sendMessage(
+            conversation = conversation,
+            text = trimmed,
+            currentUserId = currentUserId,
+            currentUsername = currentUsername
+        )
+    }
 
     onSent()
 }
@@ -458,3 +658,4 @@ private fun SmsMessageBubble(
         }
     }
 }
+
