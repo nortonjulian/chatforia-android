@@ -34,14 +34,16 @@ class MessagesRepository(
     suspend fun sendMessage(
         roomId: Int,
         text: String,
-        clientMessageId: String = UUID.randomUUID().toString()
+        clientMessageId: String = UUID.randomUUID().toString(),
+        attachmentsInline: List<AttachmentDto> = emptyList()
     ): MessageDto? {
         val bodyJson =
             json.encodeToString(
                 SendMessageRequest(
                     chatRoomId = roomId,
-                    content = text,
-                    clientMessageId = clientMessageId
+                    content = text.ifBlank { null },
+                    clientMessageId = clientMessageId,
+                    attachmentsInline = attachmentsInline
                 )
             )
 

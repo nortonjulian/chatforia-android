@@ -244,14 +244,20 @@ class ChatThreadViewModel(
         mediaUrls: List<String>
     ) {
         viewModelScope.launch {
+            if (mediaUrls.isEmpty()) return@launch
 
-            if (mediaUrls.isEmpty()) {
+            _isSending.value = true
+            _error.value = null
+
+            if (conversation.kind == "sms") {
+                sendSmsMedia(
+                    conversation = conversation,
+                    mediaUrls = mediaUrls
+                )
                 return@launch
             }
 
-            _isSending.value = true
-
-            sendSmsMedia(
+            sendChatMedia(
                 conversation = conversation,
                 mediaUrls = mediaUrls
             )
@@ -374,6 +380,60 @@ class ChatThreadViewModel(
 
         } finally {
 
+            _isSending.value = false
+        }
+    }
+
+    private suspend fun sendChatMedia(
+        conversation: ConversationDto,
+        mediaUrls: List<String>
+    ) {
+        val clientMessageId = UUID.randomUUID().toString()
+
+        val attachments =
+            mediaUrls.map { url ->
+                AttachmentDto(
+                    kind = inferAttachmentKind(url),
+                    url = url,
+                    mimeType = inferMimeType(url)
+                )
+            }
+
+        val optimistic = MessageDto(
+            id = -abs(clientMessageId.hashCode()),
+            rawContent = "",
+            content = "",
+            translatedForMe = null,
+            decryptedContent = "",
+            createdAt = Instant.now().toString(),
+            sender = SenderDto(id = 0, username = null),
+            chatRoomId = conversation.id,
+            clientMessageId = clientMessageId,
+            attachmentsInline = attachments,
+            optimistic = true,
+            failed = false
+        )
+
+        mergeIncomingMessage(optimistic)
+
+        try {
+            val roomId = conversation.id
+                ?: throw Exception("Missing chat room.")
+
+            val saved = repository.sendMessage(
+                roomId = roomId,
+                text = "",
+                clientMessageId = clientMessageId,
+                attachmentsInline = attachments
+            )
+
+            if (saved != null) {
+                mergeIncomingMessage(saved)
+            }
+        } catch (e: Exception) {
+            markMessageFailed(clientMessageId)
+            _error.value = e.message ?: "Failed to send media."
+        } finally {
             _isSending.value = false
         }
     }
@@ -598,6 +658,41 @@ class ChatThreadViewModel(
         }
 
         _smsMessages.value = current.sortedWith(smsMessageSorter())
+    }
+
+    private fun inferAttachmentKind(url: String): String {
+        val lower = url.lowercase()
+
+        return when {
+            lower.contains(".gif") -> "GIF"
+            lower.contains(".mp4") ||
+                    lower.contains(".mov") ||
+                    lower.contains(".webm") -> "VIDEO"
+            lower.contains(".mp3") ||
+                    lower.contains(".m4a") ||
+                    lower.contains(".wav") ||
+                    lower.contains(".aac") -> "AUDIO"
+            else -> "IMAGE"
+        }
+    }
+
+    private fun inferMimeType(url: String): String? {
+        val lower = url.lowercase()
+
+        return when {
+            lower.contains(".gif") -> "image/gif"
+            lower.contains(".jpg") || lower.contains(".jpeg") -> "image/jpeg"
+            lower.contains(".png") -> "image/png"
+            lower.contains(".webp") -> "image/webp"
+            lower.contains(".mp4") -> "video/mp4"
+            lower.contains(".mov") -> "video/quicktime"
+            lower.contains(".webm") -> "video/webm"
+            lower.contains(".mp3") -> "audio/mpeg"
+            lower.contains(".m4a") -> "audio/m4a"
+            lower.contains(".wav") -> "audio/wav"
+            lower.contains(".aac") -> "audio/aac"
+            else -> null
+        }
     }
 
     private fun markMessageFailed(clientMessageId: String) {
