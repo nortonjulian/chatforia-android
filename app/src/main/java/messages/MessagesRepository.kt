@@ -85,15 +85,30 @@ class MessagesRepository(
         return response.items
     }
 
+
+    suspend fun loadSmsThread(threadId: Int): SmsThreadDto {
+        return withContext(Dispatchers.IO) {
+            apiClient.send(
+                ApiRequest(
+                    path = "sms/threads/$threadId",
+                    method = HttpMethod.GET,
+                    requiresAuth = true
+                )
+            )
+        }
+    }
+
     suspend fun sendSms(
         to: String,
-        text: String
+        body: String? = null,
+        mediaUrls: List<String> = emptyList()
     ): SendSmsResponse {
         val bodyJson =
             json.encodeToString(
                 SendSmsRequest(
                     to = to,
-                    body = text
+                    body = body,
+                    mediaUrls = mediaUrls
                 )
             )
 

@@ -52,6 +52,8 @@ import com.chatforia.android.contacts.PhoneContactDto
 import com.chatforia.android.contacts.ImportPhoneContactsScreen
 import com.chatforia.android.StartChatView
 import com.chatforia.android.chats.StartChatViewModel
+import com.chatforia.android.tenor.TenorRepository
+import com.chatforia.android.upload.UploadRepository
 
 @Composable
 fun ContactsScreen(
@@ -61,7 +63,9 @@ fun ContactsScreen(
     threadViewModel: ChatThreadViewModel,
     currentUserId: Int?,
     currentUsername: String?,
-    socketManager: SocketManager
+    socketManager: SocketManager,
+    tenorRepository: TenorRepository,
+    uploadRepository: UploadRepository
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -133,6 +137,8 @@ fun ContactsScreen(
                 currentUserId = currentUserId,
                 currentUsername = currentUsername,
                 socketManager = socketManager,
+                tenorRepository = tenorRepository,
+                uploadRepository = uploadRepository,
                 onBack = {
                     startChatViewModel.clearOpenedConversation()
                 }
@@ -207,6 +213,8 @@ fun ContactsScreen(
             currentUserId = currentUserId,
             currentUsername = currentUsername,
             socketManager = socketManager,
+            uploadRepository = uploadRepository,
+            tenorRepository = tenorRepository,
             onBack = {
                 viewModel.clearOpenedConversation()
             }

@@ -1,32 +1,43 @@
 package com.chatforia.android.messages
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.chatforia.android.chats.ConversationDto
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import com.chatforia.android.ui.theme.ChatforiaColors
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
+import com.chatforia.android.chats.ConversationDto
+import com.chatforia.android.pickers.GifPickerSheet
+import com.chatforia.android.pickers.MediaPickerSheet
 import com.chatforia.android.socket.SocketManager
+import com.chatforia.android.ui.theme.ChatforiaColors
+import com.chatforia.android.tenor.TenorRepository
+
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.rememberCoroutineScope
+import com.chatforia.android.upload.UploadRepository
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,90 +47,129 @@ fun ChatThreadScreen(
     currentUserId: Int?,
     currentUsername: String?,
     socketManager: SocketManager,
+    uploadRepository: UploadRepository,
+    tenorRepository: TenorRepository,
     onBack: () -> Unit
 ) {
-
-    val messages by viewModel.messages.collectAsState()
-
+    val chatMessages by viewModel.messages.collectAsState()
+    val smsMessages by viewModel.smsMessages.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-
     val isSending by viewModel.isSending.collectAsState()
+    val error by viewModel.error.collectAsState()
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
-
-    val error by viewModel.error.collectAsState()
-
     val listState = rememberLazyListState()
 
-    var draft by remember {
-        mutableStateOf("")
-    }
+    var draft by remember { mutableStateOf("") }
+    var showMediaPicker by remember { mutableStateOf(false) }
+    var showGifPicker by remember { mutableStateOf(false) }
 
-    LaunchedEffect(conversation.id) {
-        conversation.id?.let { roomId ->
+    val isThreadEmpty =
+        if (conversation.kind == "sms") {
+            smsMessages.isEmpty()
+        } else {
+            chatMessages.isEmpty()
+        }
 
-            val userId = currentUserId ?: return@let
+    val scope = rememberCoroutineScope()
 
-            viewModel.loadMessages(
-                roomId = roomId,
-                currentUserId = userId
-            )
+    val photoPicker =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.PickVisualMedia()
+        ) { uri ->
+            if (uri == null) return@rememberLauncherForActivityResult
 
-            viewModel.connectRealtime(
-                roomId = roomId,
-                socketManager = socketManager,
-                currentUserId = userId
-            )
+            scope.launch {
+                val uploaded = uploadRepository.uploadMedia(uri)
+
+                viewModel.sendMedia(
+                    conversation = conversation,
+                    mediaUrls = listOf(uploaded.url)
+                )
+            }
+        }
+
+    val videoPicker =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.PickVisualMedia()
+        ) { uri ->
+            if (uri == null) return@rememberLauncherForActivityResult
+
+            scope.launch {
+                val uploaded = uploadRepository.uploadMedia(uri)
+
+                viewModel.sendMedia(
+                    conversation = conversation,
+                    mediaUrls = listOf(uploaded.url)
+                )
+            }
+        }
+
+    LaunchedEffect(conversation.id, conversation.kind, currentUserId) {
+        val userId = currentUserId ?: return@LaunchedEffect
+
+        viewModel.loadConversation(
+            conversation = conversation,
+            currentUserId = userId
+        )
+
+        if (conversation.kind == "sms") {
+            viewModel.connectSmsRealtime(socketManager)
+        } else {
+            conversation.id?.let { roomId ->
+                viewModel.connectRealtime(
+                    roomId = roomId,
+                    socketManager = socketManager,
+                    currentUserId = userId
+                )
+            }
         }
     }
 
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.lastIndex)
+    LaunchedEffect(chatMessages.size, smsMessages.size) {
+        val itemCount =
+            if (conversation.kind == "sms") {
+                smsMessages.size
+            } else {
+                chatMessages.size
+            }
+
+        if (itemCount > 0) {
+            listState.animateScrollToItem(itemCount - 1)
         }
     }
 
     Scaffold(
-
         topBar = {
-
             TopAppBar(
-
                 title = {
                     Text(
                         conversation.displayName
                             ?: conversation.title
+                            ?: "Chat"
                     )
                 },
-
                 navigationIcon = {
-
-                    IconButton(
-                        onClick = onBack
-                    ) {
-
+                    IconButton(onClick = onBack) {
                         Icon(
-                            Icons.Default.ArrowBack,
+                            imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
                 }
             )
         }
-
     ) { padding ->
 
         Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(ChatforiaColors.screenBackground)
-                    .padding(padding)
-                    .imePadding()
-                    .padding(12.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .background(ChatforiaColors.screenBackground)
+                .padding(padding)
+                .imePadding()
+                .padding(12.dp)
         ) {
-
             Box(
                 modifier = Modifier.weight(1f)
             ) {
@@ -135,7 +185,7 @@ fun ChatThreadScreen(
                         }
                     }
 
-                    messages.isEmpty() -> {
+                    isThreadEmpty -> {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
@@ -153,14 +203,20 @@ fun ChatThreadScreen(
                                 Alignment.Bottom
                             )
                         ) {
-                            items(messages) { message ->
-                                val isMine =
-                                    message.sender.id == currentUserId
-
-                                MessageBubble(
-                                    message = message,
-                                    isMine = isMine
-                                )
+                            if (conversation.kind == "sms") {
+                                items(smsMessages) { message ->
+                                    SmsMessageBubble(
+                                        message = message,
+                                        isMine = message.isOutgoing
+                                    )
+                                }
+                            } else {
+                                items(chatMessages) { message ->
+                                    ChatMessageRow(
+                                        message = message,
+                                        isMine = message.sender.id == currentUserId
+                                    )
+                                }
                             }
                         }
                     }
@@ -181,53 +237,41 @@ fun ChatThreadScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                IconButton(
+                    onClick = { showMediaPicker = true }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Attach"
+                    )
+                }
 
                 OutlinedTextField(
                     value = draft,
-
-                    onValueChange = {
-                        draft = it
-                    },
-
+                    onValueChange = { draft = it },
                     modifier = Modifier.weight(1f),
-
                     placeholder = {
                         Text("Message")
                     },
-
                     shape = RoundedCornerShape(24.dp),
-
                     singleLine = true,
-
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Send
                     ),
-
                     keyboardActions = KeyboardActions(
-
                         onSend = {
-
-                            val trimmed =
-                                draft.trim()
-
-                            if (trimmed.isNotEmpty()) {
-
-                                conversation.id?.let { roomId ->
-
-                                    viewModel.sendMessage(
-                                        conversation = conversation,
-                                        text = trimmed,
-                                        currentUserId = currentUserId,
-                                        currentUsername = currentUsername
-                                    )
-
+                            sendDraftMessage(
+                                draft = draft,
+                                conversation = conversation,
+                                viewModel = viewModel,
+                                currentUserId = currentUserId,
+                                currentUsername = currentUsername,
+                                onSent = {
                                     draft = ""
-
                                     focusManager.clearFocus()
-
                                     keyboardController?.hide()
                                 }
-                            }
+                            )
                         }
                     )
                 )
@@ -236,22 +280,18 @@ fun ChatThreadScreen(
 
                 Button(
                     onClick = {
-                        val trimmed = draft.trim()
-
-                        if (trimmed.isNotEmpty()) {
-                            conversation.id?.let { roomId ->
-                                viewModel.sendMessage(
-                                    conversation = conversation,
-                                    text = trimmed,
-                                    currentUserId = currentUserId,
-                                    currentUsername = currentUsername
-                                )
-
+                        sendDraftMessage(
+                            draft = draft,
+                            conversation = conversation,
+                            viewModel = viewModel,
+                            currentUserId = currentUserId,
+                            currentUsername = currentUsername,
+                            onSent = {
                                 draft = ""
                                 focusManager.clearFocus()
                                 keyboardController?.hide()
                             }
-                        }
+                        )
                     },
                     enabled =
                         draft.trim().isNotEmpty() &&
@@ -268,44 +308,85 @@ fun ChatThreadScreen(
                     }
                 }
             }
+
+            if (showMediaPicker) {
+                MediaPickerSheet(
+                    onDismiss = { showMediaPicker = false },
+                    onPickPhoto = {
+                        showMediaPicker = false
+
+                        photoPicker.launch(
+                            PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                            )
+                        )
+                    },
+                    onPickVideo = {
+                        showMediaPicker = false
+
+                        videoPicker.launch(
+                            PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.VideoOnly
+                            )
+                        )
+                    },
+                    onPickGif = {
+                        showMediaPicker = false
+                        showGifPicker = true
+                    }
+                )
+            }
+
+            if (showGifPicker) {
+                GifPickerSheet(
+                    tenorRepository = tenorRepository,
+                    onDismiss = {
+                        showGifPicker = false
+                    },
+                    onGifSelected = { gif ->
+                        showGifPicker = false
+
+                        viewModel.sendMedia(
+                            conversation = conversation,
+                            mediaUrls = listOf(gif.url)
+                        )
+                    }
+                )
+            }
         }
     }
 }
 
+private fun sendDraftMessage(
+    draft: String,
+    conversation: ConversationDto,
+    viewModel: ChatThreadViewModel,
+    currentUserId: Int?,
+    currentUsername: String?,
+    onSent: () -> Unit
+) {
+    val trimmed = draft.trim()
+
+    if (trimmed.isEmpty()) return
+    if (conversation.id == null) return
+
+    viewModel.sendMessage(
+        conversation = conversation,
+        text = trimmed,
+        currentUserId = currentUserId,
+        currentUsername = currentUsername
+    )
+
+    onSent()
+}
+
+
 @Composable
-private fun MessageBubble(
-    message: MessageDto,
+private fun SmsMessageBubble(
+    message: SmsMessageDto,
     isMine: Boolean
 ) {
-    val isDeleted = message.deletedForAll == true
-
-    val displayText =
-        when {
-            isDeleted -> "This message was deleted"
-
-            !message.decryptedContent.isNullOrBlank() ->
-                message.decryptedContent
-
-            !message.translatedForMe.isNullOrBlank() ->
-                message.translatedForMe
-
-            !message.rawContent.isNullOrBlank() ->
-                message.rawContent
-
-            !message.content.isNullOrBlank() ->
-                message.content
-
-            message.attachments.isNotEmpty() ->
-                "Media attachment"
-
-            message.attachmentsInline.isNotEmpty() ->
-                "Media attachment"
-
-            !message.contentCiphertext.isNullOrBlank() ->
-                "Unable to decrypt this older message."
-
-            else -> ""
-        }
+    val displayText = message.displayFallbackText
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -313,13 +394,12 @@ private fun MessageBubble(
             if (isMine) Arrangement.End else Arrangement.Start
     ) {
         Surface(
-            shape =
-                RoundedCornerShape(
-                    topStart = 18.dp,
-                    topEnd = 18.dp,
-                    bottomStart = if (isMine) 18.dp else 4.dp,
-                    bottomEnd = if (isMine) 4.dp else 18.dp
-                ),
+            shape = RoundedCornerShape(
+                topStart = 18.dp,
+                topEnd = 18.dp,
+                bottomStart = if (isMine) 18.dp else 4.dp,
+                bottomEnd = if (isMine) 4.dp else 18.dp
+            ),
             color =
                 if (isMine) {
                     ChatforiaColors.accent
@@ -340,19 +420,6 @@ private fun MessageBubble(
                             ChatforiaColors.primaryText
                         }
                 )
-
-                if (message.editedAt != null && !isDeleted) {
-                    Text(
-                        text = "Edited",
-                        style = MaterialTheme.typography.labelSmall,
-                        color =
-                            if (isMine) {
-                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.75f)
-                            } else {
-                                ChatforiaColors.secondaryText
-                            }
-                    )
-                }
 
                 if (message.optimistic) {
                     Text(
@@ -375,9 +442,9 @@ private fun MessageBubble(
                     )
                 }
 
-                if (message.expiresAt != null && !isDeleted) {
+                if (message.editedAt != null) {
                     Text(
-                        text = "Disappearing message",
+                        text = "Edited",
                         style = MaterialTheme.typography.labelSmall,
                         color =
                             if (isMine) {

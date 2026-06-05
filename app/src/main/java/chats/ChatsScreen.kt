@@ -31,6 +31,8 @@ import androidx.compose.foundation.clickable
 import com.chatforia.android.messages.ChatThreadScreen
 import com.chatforia.android.messages.ChatThreadViewModel
 import com.chatforia.android.socket.SocketManager
+import com.chatforia.android.tenor.TenorRepository
+import com.chatforia.android.upload.UploadRepository
 
 @Composable
 fun ChatsScreen(
@@ -38,7 +40,9 @@ fun ChatsScreen(
     threadViewModel: ChatThreadViewModel,
     currentUserId: Int?,
     currentUsername: String?,
-    socketManager: SocketManager
+    socketManager: SocketManager,
+    tenorRepository: TenorRepository,
+    uploadRepository: UploadRepository
 ) {
     var searchText by remember {
         mutableStateOf("")
@@ -105,6 +109,8 @@ fun ChatsScreen(
             currentUserId = currentUserId,
             currentUsername = currentUsername,
             socketManager = socketManager,
+            uploadRepository = uploadRepository,
+            tenorRepository = tenorRepository,
             onBack = {
                 selectedConversation = null
                 viewModel.loadConversations()

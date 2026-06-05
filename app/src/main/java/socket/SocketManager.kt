@@ -30,6 +30,12 @@ class SocketManager {
     private val _messageExpired = MutableSharedFlow<String>(extraBufferCapacity = 64)
     val messageExpired: SharedFlow<String> = _messageExpired.asSharedFlow()
 
+    private val _smsMessages =
+        MutableSharedFlow<String>(extraBufferCapacity = 64)
+
+    val smsMessages: SharedFlow<String> =
+        _smsMessages.asSharedFlow()
+
     fun connect(token: String) {
         if (token.isBlank()) return
 
@@ -95,6 +101,16 @@ class SocketManager {
                 ?.let { _messageExpired.tryEmit(it.toString()) }
         }
 
+        socket?.on("sms:message:new") { args ->
+            Log.d(
+                "ChatforiaSocket",
+                "📱 sms:message:new ${args.joinToString()}"
+            )
+
+            extractSmsJson(args)
+                ?.let { _smsMessages.tryEmit(it) }
+        }
+
         socket?.onAnyIncoming { args ->
             Log.d("ChatforiaSocket", "📥 incoming ${args.joinToString()}")
         }
@@ -150,6 +166,31 @@ class SocketManager {
 
             else -> {
                 Log.w("ChatforiaSocket", "⚠️ Unsupported socket payload: $first")
+                null
+            }
+        }
+    }
+
+    private fun extractSmsJson(
+        args: Array<Any>
+    ): String? {
+        val first = args.firstOrNull()
+
+        return when (first) {
+
+            is JSONObject -> {
+                first.toString()
+            }
+
+            is JSONArray -> {
+                first.optJSONObject(0)?.toString()
+            }
+
+            else -> {
+                Log.w(
+                    "ChatforiaSocket",
+                    "⚠️ Unsupported SMS payload: $first"
+                )
                 null
             }
         }

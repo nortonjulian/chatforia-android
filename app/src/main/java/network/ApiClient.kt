@@ -8,6 +8,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import com.chatforia.android.upload.UploadImageResponse
 
 class ApiClient(
     private val tokenStorage: TokenStorage
@@ -87,6 +90,59 @@ class ApiClient(
         }
 
         return decode(
+            if (responseBody.isBlank()) "{}" else responseBody
+        )
+    }
+
+    fun uploadMultipart(
+        path: String,
+        fileFieldName: String,
+        filename: String,
+        mimeType: String,
+        bytes: ByteArray,
+        requiresAuth: Boolean = true
+    ): UploadImageResponse {
+        val url = "${Environment.API_BASE_URL}/${path.trimStart('/')}"
+
+        val builder = Request.Builder()
+            .url(url)
+            .addHeader("Accept", "application/json")
+
+        if (requiresAuth) {
+            val token = tokenStorage.read()
+                ?: throw Exception("Unauthorized")
+
+            builder.addHeader("Authorization", "Bearer $token")
+        }
+
+        val fileBody =
+            bytes.toRequestBody(mimeType.toMediaType())
+
+        val multipartBody =
+            MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart(
+                    fileFieldName,
+                    filename,
+                    fileBody
+                )
+                .build()
+
+        val response =
+            client.newCall(
+                builder
+                    .post(multipartBody)
+                    .build()
+            ).execute()
+
+        val responseBody =
+            response.body?.string().orEmpty()
+
+        if (!response.isSuccessful) {
+            throw Exception("HTTP ${response.code}: $responseBody")
+        }
+
+        return json.decodeFromString<UploadImageResponse>(
             if (responseBody.isBlank()) "{}" else responseBody
         )
     }

@@ -38,6 +38,8 @@ import com.chatforia.android.contacts.ContactsRepository
 import com.chatforia.android.contacts.ContactsViewModel
 import com.chatforia.android.contacts.InviteRepository
 import com.chatforia.android.chats.StartChatViewModel
+import com.chatforia.android.tenor.TenorRepository
+import com.chatforia.android.upload.UploadRepository
 
 enum class AppTab {
     CHATS,
@@ -206,7 +208,20 @@ fun ChatforiaApp(
             MessagesRepository(apiClient)
         }
 
+    val tenorRepository =
+        remember {
+            TenorRepository(apiClient)
+        }
+
     val context = LocalContext.current
+
+    val uploadRepository =
+        remember {
+            UploadRepository(
+                apiClient = apiClient,
+                context = context
+            )
+        }
 
     val chatThreadViewModel =
         remember {
@@ -338,7 +353,9 @@ fun ChatforiaApp(
                         threadViewModel = chatThreadViewModel,
                         currentUserId = user.id,
                         currentUsername = user.username,
-                        socketManager = socketManager
+                        socketManager = socketManager,
+                        tenorRepository = tenorRepository,
+                        uploadRepository = uploadRepository
                     )
 
                 AppTab.CALLS ->
@@ -352,7 +369,9 @@ fun ChatforiaApp(
                         threadViewModel = chatThreadViewModel,
                         currentUserId = user.id,
                         currentUsername = user.username,
-                        socketManager = socketManager
+                        socketManager = socketManager,
+                        tenorRepository = tenorRepository,
+                        uploadRepository = uploadRepository
                     )
                 AppTab.PROFILE ->
                     ProfileScreen(

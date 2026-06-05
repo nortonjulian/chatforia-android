@@ -9,9 +9,19 @@ data class SmsStartThreadRequest(
 )
 
 @Serializable
+data class SmsStartThreadResponse(
+    val id: Int,
+    val contactPhone: String? = null,
+    val displayName: String? = null,
+    val contactName: String? = null,
+    val updatedAt: String? = null
+)
+
+@Serializable
 data class SendSmsRequest(
     val to: String,
-    val body: String
+    val body: String? = null,
+    val mediaUrls: List<String> = emptyList()
 )
 
 @Serializable
@@ -21,12 +31,4 @@ data class SendSmsResponse(
     val provider: String? = null,
     val messageSid: String? = null,
     val clientRef: String? = null
-)
-@Serializable
-data class SmsStartThreadResponse(
-    val id: Int,
-    val contactPhone: String? = null,
-    val displayName: String? = null,
-    val contactName: String? = null,
-    val updatedAt: String? = null
 )
