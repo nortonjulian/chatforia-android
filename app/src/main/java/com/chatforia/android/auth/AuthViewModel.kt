@@ -122,6 +122,11 @@ class AuthViewModel(
         _state.value = AuthState.LoggedIn(user)
     }
 
+    fun setError(message: String) {
+        println(message)
+        _state.value = AuthState.LoggedOut
+    }
+
     fun logout() {
         repository.logout()
         _state.value = AuthState.LoggedOut

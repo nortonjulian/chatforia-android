@@ -1,12 +1,12 @@
 package com.chatforia.android
 
-import com.chatforia.android.ui.components.ChatforiaAction
-import com.chatforia.android.ui.components.ChatforiaActionPill
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Dialpad
 import androidx.compose.material.icons.filled.PhoneCallback
 import androidx.compose.material.icons.filled.PhoneForwarded
 import androidx.compose.material.icons.filled.PhoneMissed
@@ -18,55 +18,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.chatforia.android.calls.CallDto
+import com.chatforia.android.calls.CallsSegment
+import com.chatforia.android.calls.CallsViewModel
 import com.chatforia.android.ui.theme.ChatforiaColors
-import androidx.compose.foundation.background
-
-enum class CallsSegment {
-    Recents,
-    Voicemail
-}
-
-data class CallPreview(
-    val name: String,
-    val direction: String,
-    val status: String,
-    val duration: String?,
-    val timestamp: String,
-    val isMissed: Boolean = false,
-    val isOutgoing: Boolean = false,
-    val canVideo: Boolean = true,
-    val canPhone: Boolean = true
-)
+import com.chatforia.android.voicemail.VoicemailInboxScreen
+import com.chatforia.android.voicemail.VoicemailViewModel
 
 @Composable
-fun CallsScreen() {
-    var selectedSegment by remember { mutableStateOf(CallsSegment.Recents) }
+fun CallsScreen(
+    callsViewModel: CallsViewModel,
+    voicemailViewModel: VoicemailViewModel,
+    onStartAudioCall: (CallDto) -> Unit = {},
+    onStartVideoCall: (CallDto) -> Unit = {}
+) {
+    var selectedSegment by remember {
+        mutableStateOf(CallsSegment.Recents)
+    }
 
-    val calls = listOf(
-        CallPreview(
-            name = "Ria",
-            direction = "Incoming",
-            status = "Completed",
-            duration = "4:23",
-            timestamp = "May 30, 2:30 PM"
-        ),
-        CallPreview(
-            name = "bob",
-            direction = "Outgoing",
-            status = "Completed",
-            duration = "1:02",
-            timestamp = "May 29, 9:14 PM",
-            isOutgoing = true
-        ),
-        CallPreview(
-            name = "Random Chat",
-            direction = "Incoming",
-            status = "Missed",
-            duration = null,
-            timestamp = "May 28, 7:45 PM",
-            isMissed = true
-        )
-    )
+    val callsState by callsViewModel.state.collectAsState()
+
+    LaunchedEffect(Unit) {
+        callsViewModel.loadCalls()
+    }
 
     Column(
         modifier = Modifier
@@ -74,29 +48,13 @@ fun CallsScreen() {
             .background(ChatforiaColors.screenBackground)
             .padding(horizontal = 16.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 20.dp, bottom = 18.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Calls",
-                fontSize = 34.sp,
-                fontWeight = FontWeight.Bold,
-                color = ChatforiaColors.primaryText
-            )
-
-            ChatforiaActionPill(
-                actions = listOf(
-                    ChatforiaAction(
-                        icon = Icons.Default.Dialpad,
-                        contentDescription = "Open dial pad"
-                    )
-                )
-            )
-        }
+        Text(
+            text = "Calls",
+            fontSize = 34.sp,
+            fontWeight = FontWeight.Bold,
+            color = ChatforiaColors.primaryText,
+            modifier = Modifier.padding(top = 20.dp, bottom = 18.dp)
+        )
 
         SingleChoiceSegmentedButtonRow(
             modifier = Modifier.fillMaxWidth()
@@ -104,46 +62,15 @@ fun CallsScreen() {
             SegmentedButton(
                 selected = selectedSegment == CallsSegment.Recents,
                 onClick = { selectedSegment = CallsSegment.Recents },
-
-                shape = SegmentedButtonDefaults.itemShape(
-                    index = 0,
-                    count = 2
-                ),
-
-                colors = SegmentedButtonDefaults.colors(
-                    activeContainerColor = ChatforiaColors.highlightedSurface,
-                    activeContentColor = ChatforiaColors.primaryText,
-
-                    inactiveContainerColor = ChatforiaColors.cardBackground,
-                    inactiveContentColor = ChatforiaColors.secondaryText
-                ),
-
+                shape = SegmentedButtonDefaults.itemShape(0, 2),
                 label = { Text("Recents") }
             )
 
             SegmentedButton(
                 selected = selectedSegment == CallsSegment.Voicemail,
-
-                onClick = {
-                    selectedSegment = CallsSegment.Voicemail
-                },
-
-                shape = SegmentedButtonDefaults.itemShape(
-                    index = 1,
-                    count = 2
-                ),
-
-                colors = SegmentedButtonDefaults.colors(
-                    activeContainerColor = ChatforiaColors.highlightedSurface,
-                    activeContentColor = ChatforiaColors.primaryText,
-
-                    inactiveContainerColor = ChatforiaColors.cardBackground,
-                    inactiveContentColor = ChatforiaColors.secondaryText
-                ),
-
-                label = {
-                    Text("Voicemail")
-                }
+                onClick = { selectedSegment = CallsSegment.Voicemail },
+                shape = SegmentedButtonDefaults.itemShape(1, 2),
+                label = { Text("Voicemail") }
             )
         }
 
@@ -151,19 +78,44 @@ fun CallsScreen() {
 
         when (selectedSegment) {
             CallsSegment.Recents -> {
+                if (callsState.isLoading) {
+                    CircularProgressIndicator()
+                }
+
+                if (callsState.error != null) {
+                    Text(
+                        callsState.error ?: "",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+
                 Surface(
                     shape = RoundedCornerShape(28.dp),
                     color = ChatforiaColors.cardBackground,
                     tonalElevation = 2.dp,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(
-                        modifier = Modifier.padding(12.dp)
-                    ) {
-                        calls.forEachIndexed { index, call ->
-                            CallPreviewRow(call)
+                    if (callsState.calls.isEmpty() && !callsState.isLoading) {
+                        Text(
+                            "No calls yet",
+                            modifier = Modifier.padding(20.dp),
+                            color = ChatforiaColors.secondaryText
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.padding(12.dp)
+                        ) {
+                            items(callsState.calls) { call ->
+                                CallHistoryRow(
+                                    call = call,
+                                    onStartAudioCall = {
+                                        onStartAudioCall(call)
+                                    },
+                                    onStartVideoCall = {
+                                        onStartVideoCall(call)
+                                    }
+                                )
 
-                            if (index != calls.lastIndex) {
                                 HorizontalDivider()
                             }
                         }
@@ -172,40 +124,37 @@ fun CallsScreen() {
             }
 
             CallsSegment.Voicemail -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "No voicemails yet",
-                        color = ChatforiaColors.secondaryText
-                    )
-                }
+                VoicemailInboxScreen(
+                    viewModel = voicemailViewModel
+                )
             }
         }
     }
 }
 
 @Composable
-private fun CallPreviewRow(call: CallPreview) {
+private fun CallHistoryRow(
+    call: CallDto,
+    onStartAudioCall: () -> Unit,
+    onStartVideoCall: () -> Unit
+) {
+    val status = call.status ?: ""
+    val isMissed = status.uppercase() == "MISSED"
+    val isOutgoing = call.direction?.uppercase() == "OUTGOING"
+
+    val icon =
+        when {
+            isMissed -> Icons.Default.PhoneMissed
+            isOutgoing -> Icons.Default.PhoneForwarded
+            else -> Icons.Default.PhoneCallback
+        }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 14.dp),
         verticalAlignment = Alignment.Top
     ) {
-        val icon = when {
-            call.isMissed -> Icons.Default.PhoneMissed
-            call.isOutgoing -> Icons.Default.PhoneForwarded
-            else -> Icons.Default.PhoneCallback
-        }
-
-        val statusColor =
-            if (call.isMissed)
-                MaterialTheme.colorScheme.error
-            else
-                ChatforiaColors.secondaryText
-
         Surface(
             modifier = Modifier.size(42.dp),
             shape = MaterialTheme.shapes.large,
@@ -214,8 +163,12 @@ private fun CallPreviewRow(call: CallPreview) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     icon,
-                    contentDescription = call.status,
-                    tint = statusColor
+                    contentDescription = status,
+                    tint =
+                        if (isMissed)
+                            MaterialTheme.colorScheme.error
+                        else
+                            ChatforiaColors.secondaryText
                 )
             }
         }
@@ -224,64 +177,58 @@ private fun CallPreviewRow(call: CallPreview) {
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                call.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = if (call.isMissed) FontWeight.Bold else FontWeight.SemiBold,
+                call.displayName
+                    ?: call.phoneNumber
+                    ?: "Unknown",
+                fontWeight =
+                    if (isMissed)
+                        FontWeight.Bold
+                    else
+                        FontWeight.SemiBold,
                 color =
-                    if (call.isMissed)
+                    if (isMissed)
                         MaterialTheme.colorScheme.error
                     else
                         ChatforiaColors.primaryText
             )
 
-            Row {
-                Text(
-                    "${call.direction} • ${call.status}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = statusColor
-                )
-
-                if (call.duration != null) {
-                    Text(
-                        " • ${call.duration}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = statusColor
-                    )
-                }
-            }
+            Text(
+                listOfNotNull(
+                    call.direction,
+                    call.status,
+                    call.durationSec?.let { "${it}s" }
+                ).joinToString(" • "),
+                color = ChatforiaColors.secondaryText
+            )
 
             Text(
-                call.timestamp,
+                call.createdAt ?: call.startedAt ?: "",
                 style = MaterialTheme.typography.bodySmall,
                 color = ChatforiaColors.secondaryText
             )
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (call.canVideo) {
-                FilledIconButton(
-                    onClick = {},
-                    modifier = Modifier.size(36.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = ChatforiaColors.highlightedSurface,
-                        contentColor = ChatforiaColors.accent
-                    )
-                ) {
-                    Icon(Icons.Default.Videocam, contentDescription = "Video call")
-                }
+            FilledIconButton(
+                onClick = onStartVideoCall,
+                modifier = Modifier.size(36.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = ChatforiaColors.highlightedSurface,
+                    contentColor = ChatforiaColors.accent
+                )
+            ) {
+                Icon(Icons.Default.Videocam, contentDescription = "Video call")
             }
 
-            if (call.canPhone) {
-                FilledIconButton(
-                    onClick = {},
-                    modifier = Modifier.size(36.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = ChatforiaColors.highlightedSurface,
-                        contentColor = ChatforiaColors.accent
-                    )
-                ) {
-                    Icon(Icons.Default.Call, contentDescription = "Call")
-                }
+            FilledIconButton(
+                onClick = onStartAudioCall,
+                modifier = Modifier.size(36.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = ChatforiaColors.highlightedSurface,
+                    contentColor = ChatforiaColors.accent
+                )
+            ) {
+                Icon(Icons.Default.Call, contentDescription = "Call")
             }
         }
     }

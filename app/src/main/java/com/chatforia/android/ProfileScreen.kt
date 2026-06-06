@@ -52,6 +52,12 @@ import com.chatforia.android.auth.SettingsRepository
 import com.chatforia.android.auth.SettingsViewModel
 import androidx.compose.material3.Button
 import androidx.compose.material3.Switch
+import com.chatforia.android.crypto.LinkedDevicesScreen
+import com.chatforia.android.crypto.LinkedDevicesViewModel
+import com.chatforia.android.crypto.DevicePairingScreen
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.setValue
 
 @Composable
 fun ProfileScreen(
@@ -60,6 +66,7 @@ fun ProfileScreen(
     authRepository: AuthRepository,
     onLogout: () -> Unit,
     settingsRepository: SettingsRepository,
+    linkedDevicesViewModel: LinkedDevicesViewModel,
     onUserUpdated: (UserDto) -> Unit,
 ) {
     val context = LocalContext.current
@@ -80,6 +87,14 @@ fun ProfileScreen(
 
     val settingsState by settingsViewModel.state.collectAsState()
 
+    var showLinkedDevices by remember {
+        mutableStateOf(false)
+    }
+
+    var showDevicePairing by remember {
+        mutableStateOf(false)
+    }
+
     LaunchedEffect(user.id) {
         settingsViewModel.load(user)
     }
@@ -95,6 +110,27 @@ fun ProfileScreen(
                 keyBackupCrypto = KeyBackupCrypto()
             )
         }
+
+    if (showLinkedDevices) {
+
+        LinkedDevicesScreen(
+            viewModel = linkedDevicesViewModel
+        )
+
+        return
+    }
+
+    if (showDevicePairing) {
+
+        DevicePairingScreen(
+            onOpenLinkedDevices = {
+                showDevicePairing = false
+                showLinkedDevices = true
+            }
+        )
+
+        return
+    }
 
     Column(
         modifier = Modifier
@@ -189,6 +225,30 @@ fun ProfileScreen(
 
             KeySetupScreen(
                 viewModel = keySetupViewModel
+            )
+
+            HorizontalDivider(color = ChatforiaColors.border)
+
+            ProfileRow(
+                icon = Icons.Default.Security,
+                title = "Linked Devices",
+                subtitle = "Manage trusted devices",
+                showChevron = true,
+                onClick = {
+                    showLinkedDevices = true
+                }
+            )
+
+            HorizontalDivider(color = ChatforiaColors.border)
+
+            ProfileRow(
+                icon = Icons.Default.Phone,
+                title = "Pair New Device",
+                subtitle = "Approve a new device",
+                showChevron = true,
+                onClick = {
+                    showDevicePairing = true
+                }
             )
 
             ProfileRow(
@@ -398,11 +458,19 @@ private fun ProfileRow(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
     subtitle: String,
-    showChevron: Boolean = false
+    showChevron: Boolean = false,
+    onClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable { onClick() }
+                } else {
+                    Modifier
+                }
+            )
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

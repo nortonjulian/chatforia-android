@@ -41,6 +41,17 @@ import com.chatforia.android.chats.StartChatViewModel
 import com.chatforia.android.tenor.TenorRepository
 import com.chatforia.android.upload.UploadRepository
 import com.chatforia.android.messages.MessageQueueStorage
+import com.chatforia.android.calls.IncomingCallSheet
+import com.chatforia.android.calls.AndroidCallState
+import com.chatforia.android.calls.AndroidCallManager
+import com.chatforia.android.calls.CallService
+import com.chatforia.android.calls.VideoCallRepository
+import com.chatforia.android.calls.CallHistoryRepository
+import com.chatforia.android.calls.CallsViewModel
+import com.chatforia.android.voicemail.VoicemailRepository
+import com.chatforia.android.voicemail.VoicemailViewModel
+import com.chatforia.android.crypto.LinkedDevicesRepository
+import com.chatforia.android.crypto.LinkedDevicesViewModel
 
 enum class AppTab {
     CHATS,
@@ -108,13 +119,19 @@ class MainActivity : ComponentActivity() {
                                 authViewModel.login(identifier, password)
                             },
                             onGoogleLogin = {
-                                val googleAuthClient =
-                                    GoogleAuthClient(applicationContext)
+                                try {
+                                    val googleAuthClient =
+                                        GoogleAuthClient(applicationContext)
 
-                                val idToken =
-                                    googleAuthClient.getIdToken()
+                                    val idToken =
+                                        googleAuthClient.getIdToken()
 
-                                authViewModel.loginWithGoogle(idToken)
+                                    authViewModel.loginWithGoogle(idToken)
+                                } catch (e: Exception) {
+                                    authViewModel.setError(
+                                        "Google sign-in is not available on this device. Try email login instead."
+                                    )
+                                }
                             },
                             onResetEncryption = { identifier, password ->
                                 authViewModel.resetEncryptionAndLogin(identifier, password)
@@ -222,6 +239,26 @@ fun ChatforiaApp(
         SettingsRepository(apiClient)
     }
 
+    val callService = remember {
+        CallService(apiClient)
+    }
+
+    val videoCallRepository = remember {
+        VideoCallRepository(apiClient)
+    }
+
+    val callHistoryRepository = remember {
+        CallHistoryRepository(apiClient)
+    }
+
+    val voicemailRepository = remember {
+        VoicemailRepository(apiClient)
+    }
+
+    val linkedDevicesRepository = remember {
+        LinkedDevicesRepository(apiClient)
+    }
+
     val context = LocalContext.current
 
     val uploadRepository =
@@ -246,6 +283,42 @@ fun ChatforiaApp(
             SocketManager()
         }
 
+    val callsViewModel =
+        remember {
+            CallsViewModel(
+                callHistoryRepository = callHistoryRepository,
+                callService = callService,
+                socketManager = socketManager
+            )
+        }
+
+    val voicemailViewModel =
+        remember {
+            VoicemailViewModel(
+                repository = voicemailRepository,
+                socketManager = socketManager
+            )
+        }
+
+    val linkedDevicesViewModel =
+        remember {
+            LinkedDevicesViewModel(
+                linkedDevicesRepository
+            )
+        }
+
+    val androidCallManager =
+        remember {
+            AndroidCallManager(
+                socketManager = socketManager,
+                callService = callService,
+                videoRepository = videoCallRepository
+            )
+        }
+
+    val callState by
+    androidCallManager.state.collectAsState()
+
     LaunchedEffect(user.id) {
         val token = tokenStorage.read()
 
@@ -258,6 +331,24 @@ fun ChatforiaApp(
         onDispose {
             socketManager.disconnect()
         }
+    }
+
+
+    when (val state = callState) {
+
+        is AndroidCallState.Ringing -> {
+            IncomingCallSheet(
+                payload = state.payload,
+                onAccept = {
+                    androidCallManager.acceptIncoming(user)
+                },
+                onDecline = {
+                    androidCallManager.declineIncoming()
+                }
+            )
+        }
+
+        else -> Unit
     }
 
     Scaffold(
@@ -369,7 +460,10 @@ fun ChatforiaApp(
                     )
 
                 AppTab.CALLS ->
-                    CallsScreen()
+                    CallsScreen(
+                        callsViewModel = callsViewModel,
+                        voicemailViewModel = voicemailViewModel
+                    )
 
                 AppTab.CONTACTS ->
                     ContactsScreen(
@@ -389,6 +483,7 @@ fun ChatforiaApp(
                         apiClient = apiClient,
                         authRepository = authRepository,
                         settingsRepository = settingsRepository,
+                        linkedDevicesViewModel = linkedDevicesViewModel,
                         onUserUpdated = onUserUpdated,
                         onLogout = onLogout
                     )

@@ -33,6 +33,21 @@ class SocketManager {
     private val _socketConnected = MutableSharedFlow<Unit>(extraBufferCapacity = 16)
     val socketConnected: SharedFlow<Unit> = _socketConnected.asSharedFlow()
 
+    private val _incomingCalls = MutableSharedFlow<String>(extraBufferCapacity = 64)
+    val incomingCalls: SharedFlow<String> = _incomingCalls.asSharedFlow()
+
+    private val _callEnded = MutableSharedFlow<String>(extraBufferCapacity = 64)
+    val callEnded: SharedFlow<String> = _callEnded.asSharedFlow()
+
+    private val _incomingVideoCalls = MutableSharedFlow<String>(extraBufferCapacity = 64)
+    val incomingVideoCalls: SharedFlow<String> = _incomingVideoCalls.asSharedFlow()
+
+    private val _videoCallEnded = MutableSharedFlow<String>(extraBufferCapacity = 64)
+    val videoCallEnded: SharedFlow<String> = _videoCallEnded.asSharedFlow()
+
+    private val _voicemailEvents = MutableSharedFlow<String>(extraBufferCapacity = 64)
+    val voicemailEvents: SharedFlow<String> = _voicemailEvents.asSharedFlow()
+
     private val _messageReads =
         MutableSharedFlow<String>(extraBufferCapacity = 64)
 
@@ -129,6 +144,34 @@ class SocketManager {
 
         socket?.onAnyIncoming { args ->
             Log.d("ChatforiaSocket", "📥 incoming ${args.joinToString()}")
+        }
+
+        socket?.on("call:incoming") { args ->
+            args.firstOrNull()?.let { _incomingCalls.tryEmit(it.toString()) }
+        }
+
+        socket?.on("call:ended") { args ->
+            args.firstOrNull()?.let { _callEnded.tryEmit(it.toString()) }
+        }
+
+        socket?.on("video:incoming") { args ->
+            args.firstOrNull()?.let { _incomingVideoCalls.tryEmit(it.toString()) }
+        }
+
+        socket?.on("video:ended") { args ->
+            args.firstOrNull()?.let { _videoCallEnded.tryEmit(it.toString()) }
+        }
+
+        socket?.on("voicemail:new") { args ->
+            args.firstOrNull()?.let { _voicemailEvents.tryEmit(it.toString()) }
+        }
+
+        socket?.on("voicemail:updated") { args ->
+            args.firstOrNull()?.let { _voicemailEvents.tryEmit(it.toString()) }
+        }
+
+        socket?.on("voicemail:deleted") { args ->
+            args.firstOrNull()?.let { _voicemailEvents.tryEmit(it.toString()) }
         }
 
         socket?.connect()
