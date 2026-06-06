@@ -125,12 +125,11 @@ class MessagesRepository(
             )
         }
     }
-    suspend fun markReadBulk(roomId: Int, limit: Int = 50) {
+    suspend fun markReadBulk(ids: List<Int>) {
+        if (ids.isEmpty()) return
+
         val bodyJson = json.encodeToString(
-            ReadBulkRequest(
-                chatRoomId = roomId,
-                limit = limit
-            )
+            ReadBulkRequest(ids = ids)
         )
 
         withContext(Dispatchers.IO) {
@@ -244,8 +243,7 @@ class MessagesRepository(
 
 @Serializable
 data class ReadBulkRequest(
-    val chatRoomId: Int,
-    val limit: Int = 50
+    val ids: List<Int>
 )
 
 @Serializable

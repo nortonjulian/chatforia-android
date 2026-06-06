@@ -130,6 +130,9 @@ class MainActivity : ComponentActivity() {
                             apiClient = apiClient,
                             tokenStorage = tokenStorage,
                             authRepository = repository,
+                            onUserUpdated = { updatedUser ->
+                                authViewModel.replaceCurrentUser(updatedUser)
+                            },
                             onLogout = {
                                 authViewModel.logout()
                             }
@@ -168,6 +171,7 @@ fun ChatforiaApp(
     apiClient: ApiClient,
     tokenStorage: TokenStorage,
     authRepository: AuthRepository,
+    onUserUpdated: (UserDto) -> Unit,
     onLogout: () -> Unit
 ) {
     var selectedTab by remember {
@@ -213,6 +217,10 @@ fun ChatforiaApp(
         remember {
             TenorRepository(apiClient)
         }
+
+    val settingsRepository = remember {
+        SettingsRepository(apiClient)
+    }
 
     val context = LocalContext.current
 
@@ -380,6 +388,8 @@ fun ChatforiaApp(
                         user = user,
                         apiClient = apiClient,
                         authRepository = authRepository,
+                        settingsRepository = settingsRepository,
+                        onUserUpdated = onUserUpdated,
                         onLogout = onLogout
                     )
             }

@@ -158,6 +158,12 @@ class ChatThreadViewModel(
                 )
             }
         }
+
+        viewModelScope.launch {
+            socketManager.messageReads.collect { payloadJson ->
+                applyMessageReadPayload(payloadJson)
+            }
+        }
     }
 
     fun connectSmsRealtime(socketManager: SocketManager) {
@@ -214,7 +220,12 @@ class ChatThreadViewModel(
 
                 messageStore.replaceAll(loaded)
 
-                repository.markReadBulk(roomId)
+                repository.markReadBulk(
+                    ids = loaded
+                        .filter { it.id > 0 }
+                        .filter { it.sender.id != currentUserId }
+                        .map { it.id }
+                )
 
                 val highestId = loaded
                     .mapNotNull { message ->
@@ -580,6 +591,22 @@ class ChatThreadViewModel(
         _isSending.value = false
     }
 
+    private fun applyMessageReadPayload(payloadJson: String) {
+        try {
+            val payload = json.decodeFromString<MessageReadPayload>(payloadJson)
+
+            val messageId = payload.messageId ?: return
+            val reader = payload.reader ?: return
+
+            messageStore.addReadBy(
+                messageId = messageId,
+                reader = reader
+            )
+        } catch (e: Exception) {
+            println("❌ Failed to decode message_read: ${e.message}")
+        }
+    }
+
     private fun decryptForDisplay(
         message: MessageDto,
         currentUserId: Int
@@ -729,7 +756,12 @@ class ChatThreadViewModel(
         }
 
         if (deltas.isNotEmpty()) {
-            repository.markReadBulk(roomId)
+            repository.markReadBulk(
+                ids = deltas
+                    .filter { it.id > 0 }
+                    .filter { it.sender.id != currentUserId }
+                    .map { it.id }
+            )
         }
     }
 
@@ -759,4 +791,11 @@ data class MessageLifecyclePayload(
     val chatRoomId: Int? = null,
     val roomId: Int? = null,
     val deletedAt: String? = null
+)
+
+@Serializable
+data class MessageReadPayload(
+    val messageId: Int? = null,
+    val reader: SenderDto? = null,
+    val readAt: String? = null
 )

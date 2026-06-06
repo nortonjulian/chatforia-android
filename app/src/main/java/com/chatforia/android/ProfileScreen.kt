@@ -45,13 +45,22 @@ import com.chatforia.android.crypto.RemoteKeyBackupRepository
 import com.chatforia.android.network.ApiClient
 import com.chatforia.android.auth.AuthRepository
 import com.chatforia.android.crypto.AccountKeyManager
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import com.chatforia.android.auth.SettingsRepository
+import com.chatforia.android.auth.SettingsViewModel
+import androidx.compose.material3.Button
+import androidx.compose.material3.Switch
 
 @Composable
 fun ProfileScreen(
     user: UserDto,
     apiClient: ApiClient,
     authRepository: AuthRepository,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    settingsRepository: SettingsRepository,
+    onUserUpdated: (UserDto) -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -64,6 +73,16 @@ fun ProfileScreen(
         remember {
             AccountKeyManager(keyStorage)
         }
+
+    val settingsViewModel = remember {
+        SettingsViewModel(settingsRepository)
+    }
+
+    val settingsState by settingsViewModel.state.collectAsState()
+
+    LaunchedEffect(user.id) {
+        settingsViewModel.load(user)
+    }
 
     val keySetupViewModel =
         remember {
@@ -186,6 +205,62 @@ fun ProfileScreen(
                 title = "Security",
                 subtitle = "Encryption key protected",
                 showChevron = true
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        ChatforiaSectionCard(title = "Privacy") {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Read Receipts",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = ChatforiaColors.primaryText
+                    )
+
+                    Text(
+                        text = "Let others see when you've read messages",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = ChatforiaColors.secondaryText
+                    )
+                }
+
+                Switch(
+                    checked = settingsState.showReadReceipts,
+                    onCheckedChange = { enabled ->
+                        settingsViewModel.update {
+                            it.copy(showReadReceipts = enabled)
+                        }
+                    }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                settingsViewModel.save(
+                    onUserUpdated = onUserUpdated
+                )
+            },
+            enabled = !settingsState.isSaving,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Text(
+                if (settingsState.isSaving)
+                    "Saving..."
+                else
+                    "Save Settings"
             )
         }
 

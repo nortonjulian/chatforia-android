@@ -152,6 +152,26 @@ class MessageStore {
         return _deliveryStates.value[clientMessageId]
     }
 
+    fun addReadBy(messageId: Int, reader: SenderDto) {
+        _messages.update { current ->
+            current.map { message ->
+                if (message.id != messageId) {
+                    message
+                } else {
+                    val alreadyRead = message.readBy.any { it.id == reader.id }
+
+                    if (alreadyRead) {
+                        message
+                    } else {
+                        message.copy(
+                            readBy = message.readBy + reader
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     private fun List<MessageDto>.upsertMessage(
         incoming: MessageDto
     ): List<MessageDto> {

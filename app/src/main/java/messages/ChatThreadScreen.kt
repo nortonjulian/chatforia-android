@@ -72,6 +72,7 @@ fun ChatThreadScreen(
     var editingMessage by remember { mutableStateOf<MessageDto?>(null) }
 
     var reportingMessage by remember { mutableStateOf<MessageDto?>(null) }
+    var receiptMessage by remember { mutableStateOf<MessageDto?>(null) }
 
     var showEditSheet by remember { mutableStateOf(false) }
     var editDraft by remember { mutableStateOf("") }
@@ -259,6 +260,9 @@ fun ChatThreadScreen(
                                         },
                                         onReport = { selected ->
                                             reportingMessage = selected
+                                        },
+                                        onMessageInfo = { selected ->
+                                            receiptMessage = selected
                                         }
                                     )
                                 }
@@ -541,6 +545,17 @@ fun ChatThreadScreen(
                         }
 
                         reportingMessage = null
+                    }
+                )
+            }
+
+            if (receiptMessage != null) {
+                MessageReceiptSheet(
+                    message = receiptMessage!!,
+                    currentUserId = currentUserId,
+                    isGroupRoom = conversation.isGroup == true,
+                    onDismiss = {
+                        receiptMessage = null
                     }
                 )
             }

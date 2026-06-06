@@ -26,7 +26,7 @@ data class UserDto(
     val onboardingCompletedAt: String? = null,
 
     val allowExplicitContent: Boolean? = null,
-    val enableReadReceipts: Boolean? = null,
+    val showReadReceipts: Boolean? = null,
     val autoDeleteSeconds: Int? = null,
 
     val privacyBlurEnabled: Boolean? = null,

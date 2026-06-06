@@ -20,7 +20,8 @@ fun ChatMessageRow(
     isMine: Boolean,
     onEdit: ((MessageDto) -> Unit)? = null,
     onDelete: ((MessageDto) -> Unit)? = null,
-    onReport: ((MessageDto) -> Unit)? = null
+    onReport: ((MessageDto) -> Unit)? = null,
+    onMessageInfo: ((MessageDto) -> Unit)? = null
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
@@ -125,6 +126,16 @@ fun ChatMessageRow(
                     onClick = {
                         showMenu = false
                         onReport?.invoke(message)
+                    }
+                )
+            }
+
+            if (isMine && message.deletedForAll != true) {
+                DropdownMenuItem(
+                    text = { Text("Message Info") },
+                    onClick = {
+                        showMenu = false
+                        onMessageInfo?.invoke(message)
                     }
                 )
             }

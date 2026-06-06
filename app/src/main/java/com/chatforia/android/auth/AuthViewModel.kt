@@ -128,11 +128,6 @@ class AuthViewModel(
     }
 
     private fun needsOnboarding(user: UserDto): Boolean {
-        val onboardingIncomplete =
-            user.onboardingCompletedAt
-                ?.trim()
-                .isNullOrEmpty()
-
         val languageMissing =
             user.preferredLanguage
                 ?.trim()
@@ -148,8 +143,6 @@ class AuthViewModel(
             username.startsWith("user_") ||
                     username.startsWith("pending_")
 
-        return onboardingIncomplete ||
-                languageMissing ||
-                hasTemporaryUsername
+        return languageMissing || hasTemporaryUsername
     }
 }
