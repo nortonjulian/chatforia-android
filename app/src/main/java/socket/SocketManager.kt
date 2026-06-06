@@ -60,6 +60,24 @@ class SocketManager {
     val smsMessages: SharedFlow<String> =
         _smsMessages.asSharedFlow()
 
+    private val _randomChatMatched =
+        MutableSharedFlow<String>(extraBufferCapacity = 64)
+
+    val randomChatMatched: SharedFlow<String> =
+        _randomChatMatched.asSharedFlow()
+
+    private val _randomChatWaiting =
+        MutableSharedFlow<String>(extraBufferCapacity = 64)
+
+    val randomChatWaiting: SharedFlow<String> =
+        _randomChatWaiting.asSharedFlow()
+
+    private val _randomChatError =
+        MutableSharedFlow<String>(extraBufferCapacity = 64)
+
+    val randomChatError: SharedFlow<String> =
+        _randomChatError.asSharedFlow()
+
     fun connect(token: String) {
         if (token.isBlank()) return
 
@@ -174,6 +192,24 @@ class SocketManager {
             args.firstOrNull()?.let { _voicemailEvents.tryEmit(it.toString()) }
         }
 
+        socket?.on("random:waiting") { args ->
+            args.firstOrNull()?.let {
+                _randomChatWaiting.tryEmit(it.toString())
+            }
+        }
+
+        socket?.on("random:matched") { args ->
+            args.firstOrNull()?.let {
+                _randomChatMatched.tryEmit(it.toString())
+            }
+        }
+
+        socket?.on("random:error") { args ->
+            args.firstOrNull()?.let {
+                _randomChatError.tryEmit(it.toString())
+            }
+        }
+
         socket?.connect()
     }
 
@@ -192,6 +228,14 @@ class SocketManager {
     fun joinRooms(roomIds: List<Int>) {
         joinedRoomIds.addAll(roomIds)
         emitJoinRooms()
+    }
+
+    fun startRandomChat() {
+        socket?.emit("random:start")
+    }
+
+    fun cancelRandomChat() {
+        socket?.emit("random:cancel")
     }
 
     private fun emitJoinRooms() {

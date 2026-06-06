@@ -1,0 +1,4 @@
+package sounds
+
+class AppMessageTones {
+}

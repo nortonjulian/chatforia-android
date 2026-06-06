@@ -30,7 +30,16 @@ data class SettingsUiState(
 
     val isSaving: Boolean = false,
     val error: String? = null,
-    val success: String? = null
+    val success: String? = null,
+
+    val ageBand: String? = null,
+    val wantsAgeFilter: Boolean = true,
+    val randomChatAllowedBands: List<String> = emptyList(),
+
+    val voicemailEnabled: Boolean = true,
+    val voicemailAutoDeleteDays: Int? = null,
+    val voicemailForwardEmail: String = "",
+    val voicemailGreetingText: String = "",
 )
 
 class SettingsViewModel(
@@ -43,8 +52,9 @@ class SettingsViewModel(
     fun load(user: UserDto) {
         _state.value = SettingsUiState(
             preferredLanguage = user.preferredLanguage ?: "en",
-            autoTranslate = false,
-            showOriginalWithTranslation = false,
+            autoTranslate = user.autoTranslate ?: false,
+            showOriginalWithTranslation =
+                user.showOriginalWithTranslation ?: false,
             theme = user.theme ?: "dawn",
             allowExplicitContent = user.allowExplicitContent ?: false,
             showReadReceipts =
@@ -55,11 +65,33 @@ class SettingsViewModel(
             privacyHoldToReveal = user.privacyHoldToReveal ?: false,
             notifyOnCopy = user.notifyOnCopy ?: false,
             foriaRemember = user.foriaRemember ?: true,
-            enableSmartReplies = user.smartRepliesEnabled ?: true,
-            maskAIProfanity = user.profanityMaskEnabled ?: false,
-            messageTone = user.messageSound ?: user.tone ?: "Default.mp3",
+            enableSmartReplies =
+                user.enableSmartReplies
+                    ?: user.smartRepliesEnabled
+                    ?: true,
+
+            maskAIProfanity =
+                user.maskAIProfanity
+                    ?: user.profanityMaskEnabled
+                    ?: false,
+
+            messageTone =
+                user.messageTone
+                    ?: user.messageSound
+                    ?: user.tone
+                    ?: "Default.mp3",
             ringtone = user.ringtone ?: "Classic.mp3",
-            soundVolume = user.soundVolume?.toInt() ?: 70
+            soundVolume = user.soundVolume?.toInt() ?: 70,
+            ageBand = user.ageBand,
+            wantsAgeFilter = user.wantsAgeFilter ?: true,
+            randomChatAllowedBands = user.randomChatAllowedBands ?: emptyList(),
+
+            voicemailEnabled = user.voicemailEnabled ?: true,
+            voicemailAutoDeleteDays = user.voicemailAutoDeleteDays,
+            voicemailForwardEmail =
+                user.voicemailForwardEmail ?: user.email ?: "",
+            voicemailGreetingText =
+                user.voicemailGreetingText ?: user.voicemailGreeting ?: "",
         )
     }
 
@@ -91,7 +123,21 @@ class SettingsViewModel(
                         maskAIProfanity = current.maskAIProfanity,
                         messageTone = current.messageTone,
                         ringtone = current.ringtone,
-                        soundVolume = current.soundVolume
+                        soundVolume = current.soundVolume,
+                        ageBand = current.ageBand,
+                        wantsAgeFilter = current.wantsAgeFilter,
+                        randomChatAllowedBands =
+                            current.randomChatAllowedBands,
+
+                        voicemailEnabled = current.voicemailEnabled,
+                        voicemailAutoDeleteDays =
+                            current.voicemailAutoDeleteDays,
+                        voicemailForwardEmail =
+                            current.voicemailForwardEmail,
+                        voicemailGreetingText =
+                            current.voicemailGreetingText,
+
+                        uiLanguage = current.preferredLanguage,
                     )
                 )
 

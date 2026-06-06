@@ -18,7 +18,10 @@ data class CallDto(
     val startedAt: String? = null,
     val answeredAt: String? = null,
     val endedAt: String? = null,
-    val createdAt: String? = null
+    val createdAt: String? = null,
+    val externalPhone: String? = null,
+    val fromLabel: String? = null,
+    val toLabel: String? = null,
 )
 
 @Serializable

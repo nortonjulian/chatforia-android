@@ -193,12 +193,53 @@ fun OnboardingScreen(
                                     val updated =
                                         settingsRepository.updateSettings(
                                             SettingsUpdateRequest(
-                                                preferredLanguage =
-                                                    selectedLanguage,
-                                                uiLanguage =
-                                                    selectedLanguage,
+                                                preferredLanguage = selectedLanguage,
+                                                uiLanguage = selectedLanguage,
+
+                                                autoTranslate = currentUser.autoTranslate ?: false,
+                                                showOriginalWithTranslation =
+                                                    currentUser.showOriginalWithTranslation ?: false,
+
+                                                theme = currentUser.theme ?: "dawn",
+                                                allowExplicitContent = currentUser.allowExplicitContent ?: false,
+                                                showReadReceipts = currentUser.showReadReceipts ?: false,
+                                                autoDeleteSeconds = currentUser.autoDeleteSeconds ?: 0,
+
+                                                privacyBlurEnabled = currentUser.privacyBlurEnabled ?: false,
+                                                privacyBlurOnUnfocus = currentUser.privacyBlurOnUnfocus ?: false,
+                                                privacyHoldToReveal = currentUser.privacyHoldToReveal ?: false,
+                                                notifyOnCopy = currentUser.notifyOnCopy ?: false,
+
+                                                foriaRemember = currentUser.foriaRemember ?: true,
+
+                                                voicemailEnabled = currentUser.voicemailEnabled ?: true,
+                                                voicemailAutoDeleteDays = currentUser.voicemailAutoDeleteDays,
                                                 voicemailForwardEmail =
-                                                    currentUser.email.orEmpty()
+                                                    currentUser.voicemailForwardEmail
+                                                        ?: currentUser.email.orEmpty(),
+                                                voicemailGreetingText =
+                                                    currentUser.voicemailGreetingText
+                                                        ?: currentUser.voicemailGreeting
+                                                        ?: "",
+
+                                                enableSmartReplies =
+                                                    currentUser.enableSmartReplies
+                                                        ?: currentUser.smartRepliesEnabled
+                                                        ?: true,
+
+                                                maskAIProfanity =
+                                                    currentUser.maskAIProfanity
+                                                        ?: currentUser.profanityMaskEnabled
+                                                        ?: false,
+
+                                                messageTone =
+                                                    currentUser.messageTone
+                                                        ?: currentUser.messageSound
+                                                        ?: currentUser.tone
+                                                        ?: "Default.mp3",
+
+                                                ringtone = currentUser.ringtone ?: "Classic.mp3",
+                                                soundVolume = currentUser.soundVolume?.toInt() ?: 70
                                             )
                                         )
 

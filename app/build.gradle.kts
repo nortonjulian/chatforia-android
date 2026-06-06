@@ -64,6 +64,9 @@ dependencies {
         exclude(group = "net.java.dev.jna", module = "jna")
     }
 
+    implementation("com.twilio:voice-android:6.9.0")
+    implementation("com.twilio:video-android:7.8.0")
+
     implementation("net.java.dev.jna:jna:4.5.1@aar")
 
     implementation("androidx.credentials:credentials:1.7.0-alpha02")

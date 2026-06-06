@@ -18,6 +18,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material3.Icon
+import androidx.compose.ui.text.style.TextAlign
+import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.Alignment
 
 data class VoicemailUiState(
     val items: List<VoicemailDto> = emptyList(),
@@ -96,18 +101,8 @@ fun VoicemailInboxScreen(
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
-        Text(
-            "Voicemail",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
         if (state.isLoading) {
             CircularProgressIndicator()
         }
@@ -120,24 +115,23 @@ fun VoicemailInboxScreen(
         }
 
         if (state.items.isEmpty() && !state.isLoading) {
-            Text("No voicemails yet.")
-        }
+            EmptyVoicemailState()
+        } else {
+            LazyColumn {
+                items(state.items) { item ->
+                    VoicemailRow(
+                        item = item,
+                        onPlay = { viewModel.select(item) },
+                        onDelete = { viewModel.delete(item.id) }
+                    )
 
-        LazyColumn {
-            items(state.items) { item ->
-                VoicemailRow(
-                    item = item,
-                    onPlay = { viewModel.select(item) },
-                    onDelete = { viewModel.delete(item.id) }
-                )
-
-                HorizontalDivider()
+                    HorizontalDivider()
+                }
             }
         }
 
         state.selected?.let {
             Spacer(modifier = Modifier.height(16.dp))
-
             VoicemailPlayerScreen(voicemail = it)
         }
     }
@@ -185,5 +179,41 @@ private fun VoicemailRow(
         IconButton(onClick = onDelete) {
             Icon(Icons.Default.Delete, contentDescription = "Delete voicemail")
         }
+    }
+}
+
+@Composable
+private fun EmptyVoicemailState() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            Icons.Default.GraphicEq,
+            contentDescription = null,
+            tint = ChatforiaColors.accent,
+            modifier = Modifier.size(44.dp)
+        )
+
+        Spacer(modifier = Modifier.height(18.dp))
+
+        Text(
+            text = "No voicemails yet.",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = ChatforiaColors.primaryText
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "When someone leaves you a voicemail,\nit will show up here.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = ChatforiaColors.secondaryText,
+            textAlign = TextAlign.Center
+        )
     }
 }

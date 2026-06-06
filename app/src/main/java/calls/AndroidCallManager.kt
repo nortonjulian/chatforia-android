@@ -14,8 +14,8 @@ class AndroidCallManager(
     private val socketManager: SocketManager,
     private val callService: CallService,
     private val videoRepository: VideoCallRepository,
-    private val voiceManager: TwilioVoiceManager = TwilioVoiceManager(),
-    private val videoManager: TwilioVideoManager = TwilioVideoManager()
+    private val voiceManager: TwilioVoiceManager,
+    private val videoManager: TwilioVideoManager
 ) : ViewModel() {
 
     private val json = Json {
@@ -66,6 +66,39 @@ class AndroidCallManager(
                 _state.value =
                     AndroidCallState.Failed(
                         e.message ?: "Failed to start audio call."
+                    )
+            }
+        }
+    }
+
+    fun startPhoneCall(phoneNumber: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val callId =
+                    callService.startExternalCall(phoneNumber)
+
+                val token = callService.fetchVoiceToken()
+
+                val session =
+                    CallSession(
+                        callId = callId,
+                        displayName = phoneNumber,
+                        isVideo = false
+                    )
+
+                _state.value = AndroidCallState.Connecting(session)
+
+                voiceManager.startCall(
+                    accessToken = token.token,
+                    to = phoneNumber
+                )
+
+                _state.value = AndroidCallState.Active(session)
+
+            } catch (e: Exception) {
+                _state.value =
+                    AndroidCallState.Failed(
+                        e.message ?: "Failed to start phone call."
                     )
             }
         }

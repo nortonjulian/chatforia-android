@@ -11,7 +11,7 @@ class CallHistoryRepository(
         val response: CallsResponse =
             apiClient.send(
                 ApiRequest(
-                    path = "calls",
+                    path = "calls/history",
                     method = HttpMethod.GET,
                     requiresAuth = true
                 )

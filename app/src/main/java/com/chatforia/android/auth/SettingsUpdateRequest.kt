@@ -27,7 +27,7 @@ data class SettingsUpdateRequest(
     val voicemailForwardEmail: String = "",
     val voicemailGreetingText: String = "",
 
-    val uiLanguage: String? = preferredLanguage,
+    val uiLanguage: String? = null,
 
     val messageTone: String? = "Default.mp3",
     val ringtone: String? = "Classic.mp3",

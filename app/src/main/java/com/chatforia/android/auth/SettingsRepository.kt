@@ -62,4 +62,16 @@ class SettingsRepository(
             )
         }
     }
+
+    suspend fun deleteAccount() {
+        withContext(Dispatchers.IO) {
+            apiClient.send<Unit>(
+                ApiRequest(
+                    path = "users/me",
+                    method = HttpMethod.DELETE,
+                    requiresAuth = true
+                )
+            )
+        }
+    }
 }

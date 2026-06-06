@@ -50,6 +50,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import com.chatforia.android.auth.SettingsRepository
 import com.chatforia.android.auth.SettingsViewModel
+import com.chatforia.android.auth.LanguageSelectionView
 import androidx.compose.material3.Button
 import androidx.compose.material3.Switch
 import com.chatforia.android.crypto.LinkedDevicesScreen
@@ -58,6 +59,18 @@ import com.chatforia.android.crypto.DevicePairingScreen
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.setValue
+import com.chatforia.android.billing.UpgradeView
+import com.chatforia.android.billing.PlanView
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.ui.graphics.Color
+import com.chatforia.android.sounds.SoundSettingsView
 
 @Composable
 fun ProfileScreen(
@@ -85,6 +98,8 @@ fun ProfileScreen(
         SettingsViewModel(settingsRepository)
     }
 
+    val scope = rememberCoroutineScope()
+
     val settingsState by settingsViewModel.state.collectAsState()
 
     var showLinkedDevices by remember {
@@ -94,6 +109,12 @@ fun ProfileScreen(
     var showDevicePairing by remember {
         mutableStateOf(false)
     }
+
+    var showPlan by remember { mutableStateOf(false) }
+
+    var showUpgrade by remember { mutableStateOf(false) }
+
+    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(user.id) {
         settingsViewModel.load(user)
@@ -132,6 +153,57 @@ fun ProfileScreen(
         return
     }
 
+    if (showUpgrade) {
+        UpgradeView(
+            apiClient = apiClient,
+            onClose = { showUpgrade = false }
+        )
+        return
+    }
+
+    if (showPlan) {
+        PlanView(
+            user = user,
+            onBack = { showPlan = false },
+            onUpgrade = {
+                showPlan = false
+                showUpgrade = true
+            }
+        )
+        return
+    }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Delete Account") },
+            text = { Text("This action cannot be undone. Are you sure you want to delete your account?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirm = false
+
+                        scope.launch {
+                            try {
+                                settingsRepository.deleteAccount()
+                                onLogout()
+                            } catch (e: Exception) {
+                                println("Failed to delete account: ${e.message}")
+                            }
+                        }
+                    }
+                ) {
+                    Text("Delete", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -152,7 +224,9 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        UpgradeCard()
+        UpgradeCard(
+            onClick = { showUpgrade = true }
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -186,8 +260,9 @@ fun ProfileScreen(
             ProfileRow(
                 icon = Icons.Default.CreditCard,
                 title = "Plan & Billing",
-                subtitle = "Current plan: Free",
-                showChevron = true
+                subtitle = "Current plan: ${user.plan ?: "Free"}",
+                showChevron = true,
+                onClick = { showPlan = true }
             )
         }
 
@@ -214,14 +289,48 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         ChatforiaSectionCard(title = "Settings") {
-            ProfileRow(
-                icon = Icons.Default.Language,
-                title = "Language",
-                subtitle = user.preferredLanguage ?: "English",
-                showChevron = true
+            Text(
+                text = "Preferred Language",
+                style = MaterialTheme.typography.bodyLarge,
+                color = ChatforiaColors.primaryText
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            LanguageSelectionView(
+                selectedLanguage = settingsState.preferredLanguage,
+                onLanguageChange = { code ->
+                    settingsViewModel.update {
+                        it.copy(preferredLanguage = code)
+                    }
+                }
             )
 
             HorizontalDivider(color = ChatforiaColors.border)
+
+            SettingSwitchRow(
+                title = "Auto-translate messages",
+                subtitle = "Automatically translate messages into your preferred language.",
+                checked = settingsState.autoTranslate,
+                onCheckedChange = { enabled ->
+                    settingsViewModel.update {
+                        it.copy(autoTranslate = enabled)
+                    }
+                }
+            )
+
+            HorizontalDivider(color = ChatforiaColors.border)
+
+            SettingSwitchRow(
+                title = "Show original with translation",
+                subtitle = "Show the original message alongside the translation.",
+                checked = settingsState.showOriginalWithTranslation,
+                onCheckedChange = { enabled ->
+                    settingsViewModel.update {
+                        it.copy(showOriginalWithTranslation = enabled)
+                    }
+                }
+            )
 
             KeySetupScreen(
                 viewModel = keySetupViewModel
@@ -256,6 +365,56 @@ fun ProfileScreen(
                 title = "Appearance",
                 subtitle = user.theme ?: "Dawn",
                 showChevron = true
+            )
+
+            HorizontalDivider(color = ChatforiaColors.border)
+
+            SoundSettingsView(
+                currentPlan = user.plan,
+                state = settingsState,
+                onMessageToneChange = { tone ->
+                    settingsViewModel.update {
+                        it.copy(messageTone = tone)
+                    }
+                },
+                onRingtoneChange = { ringtone ->
+                    settingsViewModel.update {
+                        it.copy(ringtone = ringtone)
+                    }
+                },
+                onVolumeChange = { volume ->
+                    settingsViewModel.update {
+                        it.copy(soundVolume = volume)
+                    }
+                },
+                onUpgradeRequired = {
+                    showUpgrade = true
+                }
+            )
+
+            HorizontalDivider(color = ChatforiaColors.border)
+
+            SoundSettingsView(
+                currentPlan = user.plan,
+                state = settingsState,
+                onMessageToneChange = { tone ->
+                    settingsViewModel.update {
+                        it.copy(messageTone = tone)
+                    }
+                },
+                onRingtoneChange = { ringtone ->
+                    settingsViewModel.update {
+                        it.copy(ringtone = ringtone)
+                    }
+                },
+                onVolumeChange = { volume ->
+                    settingsViewModel.update {
+                        it.copy(soundVolume = volume)
+                    }
+                },
+                onUpgradeRequired = {
+                    showUpgrade = true
+                }
             )
 
             HorizontalDivider(color = ChatforiaColors.border)
@@ -306,6 +465,19 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        ChatforiaSectionCard(title = "Legal & Support") {
+            LegalSupportRow("Privacy Policy", "https://chatforia.com/privacy")
+            HorizontalDivider(color = ChatforiaColors.border)
+
+            LegalSupportRow("Terms of Service", "https://chatforia.com/legal/terms")
+            HorizontalDivider(color = ChatforiaColors.border)
+
+            LegalSupportRow("SMS Policy", "https://chatforia.com/legal/sms")
+            HorizontalDivider(color = ChatforiaColors.border)
+
+            LegalSupportRow("Contact Support", "mailto:support@chatforia.com")
+        }
+
         Button(
             onClick = {
                 settingsViewModel.save(
@@ -322,6 +494,20 @@ fun ProfileScreen(
                 else
                     "Save Settings"
             )
+        }
+
+        Button(
+            onClick = { showDeleteConfirm = true },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = androidx.compose.ui.graphics.Color(0xFFFFE1E1),
+                contentColor = androidx.compose.ui.graphics.Color(0xFFFF3B3B)
+            )
+        ) {
+            Icon(Icons.Default.Delete, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Delete Account")
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -410,12 +596,16 @@ private fun ProfileHeaderCard(
 }
 
 @Composable
-private fun UpgradeCard() {
+private fun UpgradeCard(
+    onClick: () -> Unit
+) {
     Surface(
         shape = RoundedCornerShape(18.dp),
         color = ChatforiaColors.cardBackground,
         tonalElevation = 2.dp,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -504,5 +694,71 @@ private fun ProfileRow(
                 tint = ChatforiaColors.secondaryText
             )
         }
+    }
+}
+
+@Composable
+private fun SettingSwitchRow(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = ChatforiaColors.primaryText
+            )
+
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = ChatforiaColors.secondaryText
+            )
+        }
+
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange
+        )
+    }
+}
+
+@Composable
+private fun LegalSupportRow(
+    title: String,
+    url: String
+) {
+    val context = LocalContext.current
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                context.startActivity(intent)
+            }
+            .padding(vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            color = ChatforiaColors.primaryText,
+            modifier = Modifier.weight(1f)
+        )
+
+        Icon(
+            imageVector = Icons.Default.OpenInNew,
+            contentDescription = "Open",
+            tint = ChatforiaColors.secondaryText
+        )
     }
 }

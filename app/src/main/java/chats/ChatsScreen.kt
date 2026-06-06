@@ -33,16 +33,34 @@ import com.chatforia.android.messages.ChatThreadViewModel
 import com.chatforia.android.socket.SocketManager
 import com.chatforia.android.tenor.TenorRepository
 import com.chatforia.android.upload.UploadRepository
+import com.chatforia.android.network.ApiClient
+import com.chatforia.android.ria.RiaChatScreen
+import com.chatforia.android.ria.RiaChatViewModel
+import com.chatforia.android.ria.RiaRepository
 
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.ExperimentalMaterial3Api
+import com.chatforia.android.random.RandomChatViewModel
+import com.chatforia.android.random.RandomMatchingView
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatsScreen(
     viewModel: ChatsViewModel,
     threadViewModel: ChatThreadViewModel,
+    randomChatViewModel: RandomChatViewModel,
     currentUserId: Int?,
     currentUsername: String?,
     socketManager: SocketManager,
     tenorRepository: TenorRepository,
-    uploadRepository: UploadRepository
+    uploadRepository: UploadRepository,
+    apiClient: ApiClient,
 ) {
     var searchText by remember {
         mutableStateOf("")
@@ -51,6 +69,15 @@ fun ChatsScreen(
     var selectedConversation by remember {
         mutableStateOf<ConversationDto?>(null)
     }
+
+    var showRia by remember { mutableStateOf(false) }
+
+    var showRandomMatching by remember {
+        mutableStateOf(false)
+    }
+
+    val randomState by
+    randomChatViewModel.state.collectAsState()
 
     val conversations by
     viewModel.conversations.collectAsState()
@@ -78,6 +105,19 @@ fun ChatsScreen(
             .forEach { roomId ->
                 socketManager.joinRoom(roomId)
             }
+    }
+
+    LaunchedEffect(randomState.session) {
+        val session = randomState.session ?: return@LaunchedEffect
+
+        showRandomMatching = false
+
+        selectedConversation =
+            conversations.firstOrNull {
+                it.id == session.roomId
+            }
+
+        viewModel.loadConversations()
     }
 
     val filtered =
@@ -120,6 +160,23 @@ fun ChatsScreen(
         return
     }
 
+    if (showRia) {
+        val riaViewModel = remember {
+            RiaChatViewModel(
+                RiaRepository(apiClient)
+            )
+        }
+
+        RiaChatScreen(
+            viewModel = riaViewModel,
+            memoryEnabled = true,
+            filterProfanity = false,
+            onClose = { showRia = false }
+        )
+
+        return
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -156,11 +213,18 @@ fun ChatsScreen(
                     ),
                     ChatforiaAction(
                         icon = Icons.Default.AutoAwesome,
-                        contentDescription = "Ria"
+                        contentDescription = "Ria",
+                        onClick = {
+                            showRia = true
+                        }
                     ),
                     ChatforiaAction(
                         icon = Icons.Default.Shuffle,
-                        contentDescription = "Random chat"
+                        contentDescription = "Random chat",
+                        onClick = {
+                            showRandomMatching = true
+                            randomChatViewModel.startSearch()
+                        }
                     )
                 )
             )
@@ -242,6 +306,23 @@ fun ChatsScreen(
         }
 
         Spacer(modifier = Modifier.height(12.dp))
+    }
+
+    if (showRandomMatching) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                randomChatViewModel.cancelSearch()
+                showRandomMatching = false
+            }
+        ) {
+            RandomMatchingView(
+                error = randomState.error,
+                onCancel = {
+                    randomChatViewModel.cancelSearch()
+                    showRandomMatching = false
+                }
+            )
+        }
     }
 }
 

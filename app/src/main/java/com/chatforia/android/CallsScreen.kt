@@ -24,19 +24,36 @@ import com.chatforia.android.calls.CallsViewModel
 import com.chatforia.android.ui.theme.ChatforiaColors
 import com.chatforia.android.voicemail.VoicemailInboxScreen
 import com.chatforia.android.voicemail.VoicemailViewModel
+import androidx.compose.material.icons.filled.Dialpad
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material3.IconButton
+import com.chatforia.android.calls.DialPadSheet
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CallsScreen(
     callsViewModel: CallsViewModel,
     voicemailViewModel: VoicemailViewModel,
     onStartAudioCall: (CallDto) -> Unit = {},
-    onStartVideoCall: (CallDto) -> Unit = {}
+    onStartVideoCall: (CallDto) -> Unit = {},
+    onDialNumber: (String) -> Unit = {}
 ) {
     var selectedSegment by remember {
         mutableStateOf(CallsSegment.Recents)
     }
 
+    var showDialer by remember {
+        mutableStateOf(false)
+    }
+
     val callsState by callsViewModel.state.collectAsState()
+
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
 
     LaunchedEffect(Unit) {
         callsViewModel.loadCalls()
@@ -48,13 +65,32 @@ fun CallsScreen(
             .background(ChatforiaColors.screenBackground)
             .padding(horizontal = 16.dp)
     ) {
-        Text(
-            text = "Calls",
-            fontSize = 34.sp,
-            fontWeight = FontWeight.Bold,
-            color = ChatforiaColors.primaryText,
-            modifier = Modifier.padding(top = 20.dp, bottom = 18.dp)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp, bottom = 18.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Calls",
+                fontSize = 34.sp,
+                fontWeight = FontWeight.Bold,
+                color = ChatforiaColors.primaryText
+            )
+
+            IconButton(
+                onClick = {
+                    showDialer = true
+                }
+            ) {
+                Icon(
+                    Icons.Default.Dialpad,
+                    contentDescription = "Open dial pad",
+                    tint = ChatforiaColors.accent
+                )
+            }
+        }
 
         SingleChoiceSegmentedButtonRow(
             modifier = Modifier.fillMaxWidth()
@@ -63,6 +99,12 @@ fun CallsScreen(
                 selected = selectedSegment == CallsSegment.Recents,
                 onClick = { selectedSegment = CallsSegment.Recents },
                 shape = SegmentedButtonDefaults.itemShape(0, 2),
+                colors = SegmentedButtonDefaults.colors(
+                    activeContainerColor = ChatforiaColors.highlightedSurface,
+                    activeContentColor = ChatforiaColors.primaryText,
+                    inactiveContainerColor = ChatforiaColors.cardBackground,
+                    inactiveContentColor = ChatforiaColors.primaryText
+                ),
                 label = { Text("Recents") }
             )
 
@@ -70,6 +112,12 @@ fun CallsScreen(
                 selected = selectedSegment == CallsSegment.Voicemail,
                 onClick = { selectedSegment = CallsSegment.Voicemail },
                 shape = SegmentedButtonDefaults.itemShape(1, 2),
+                colors = SegmentedButtonDefaults.colors(
+                    activeContainerColor = ChatforiaColors.highlightedSurface,
+                    activeContentColor = ChatforiaColors.primaryText,
+                    inactiveContainerColor = ChatforiaColors.cardBackground,
+                    inactiveContentColor = ChatforiaColors.primaryText
+                ),
                 label = { Text("Voicemail") }
             )
         }
@@ -96,11 +144,7 @@ fun CallsScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     if (callsState.calls.isEmpty() && !callsState.isLoading) {
-                        Text(
-                            "No calls yet",
-                            modifier = Modifier.padding(20.dp),
-                            color = ChatforiaColors.secondaryText
-                        )
+                        EmptyCallsState()
                     } else {
                         LazyColumn(
                             modifier = Modifier.padding(12.dp)
@@ -128,6 +172,26 @@ fun CallsScreen(
                     viewModel = voicemailViewModel
                 )
             }
+        }
+    }
+
+    if (showDialer) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showDialer = false
+            },
+            sheetState = sheetState,
+            containerColor = ChatforiaColors.screenBackground
+        ) {
+            DialPadSheet(
+                onDismiss = {
+                    showDialer = false
+                },
+                onCall = { number ->
+                    showDialer = false
+                    onDialNumber(number)
+                }
+            )
         }
     }
 }
@@ -179,6 +243,9 @@ private fun CallHistoryRow(
             Text(
                 call.displayName
                     ?: call.phoneNumber
+                    ?: call.externalPhone
+                    ?: call.toLabel
+                    ?: call.fromLabel
                     ?: "Unknown",
                 fontWeight =
                     if (isMissed)
@@ -192,17 +259,31 @@ private fun CallHistoryRow(
                         ChatforiaColors.primaryText
             )
 
+            val friendlyStatus =
+                when (call.status?.uppercase()) {
+                    "INITIATED" -> "Calling…"
+                    "RINGING" -> "Ringing"
+                    "ACTIVE" -> "Connected"
+                    "ENDED" -> "Completed"
+                    "MISSED" -> "Missed"
+                    "DECLINED" -> "Declined"
+                    "FAILED" -> "Failed"
+                    else -> call.status
+                }
+
             Text(
                 listOfNotNull(
-                    call.direction,
-                    call.status,
+                    call.direction?.replaceFirstChar {
+                        it.uppercase()
+                    },
+                    friendlyStatus,
                     call.durationSec?.let { "${it}s" }
                 ).joinToString(" • "),
                 color = ChatforiaColors.secondaryText
             )
 
             Text(
-                call.createdAt ?: call.startedAt ?: "",
+                friendlyCallTime(call.createdAt ?: call.startedAt),
                 style = MaterialTheme.typography.bodySmall,
                 color = ChatforiaColors.secondaryText
             )
@@ -231,5 +312,70 @@ private fun CallHistoryRow(
                 Icon(Icons.Default.Call, contentDescription = "Call")
             }
         }
+    }
+}
+
+@Composable
+private fun EmptyCallsState() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 180.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            Icons.Default.Phone,
+            contentDescription = null,
+            tint = ChatforiaColors.accent,
+            modifier = Modifier.size(44.dp)
+        )
+
+        Spacer(modifier = Modifier.height(18.dp))
+
+        Text(
+            text = "No calls yet",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = ChatforiaColors.primaryText
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Your recent calls will show up here.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = ChatforiaColors.secondaryText
+        )
+    }
+}
+
+private fun friendlyCallTime(value: String?): String {
+    if (value.isNullOrBlank()) return ""
+
+    return try {
+        val instant = java.time.Instant.parse(value)
+        val zone = java.time.ZoneId.systemDefault()
+        val dateTime = instant.atZone(zone)
+        val now = java.time.ZonedDateTime.now(zone)
+
+        val time =
+            dateTime.format(
+                java.time.format.DateTimeFormatter.ofPattern("h:mm a")
+            )
+
+        when {
+            dateTime.toLocalDate() == now.toLocalDate() ->
+                "Today, $time"
+
+            dateTime.toLocalDate() == now.minusDays(1).toLocalDate() ->
+                "Yesterday, $time"
+
+            else ->
+                dateTime.format(
+                    java.time.format.DateTimeFormatter.ofPattern("MMM d, h:mm a")
+                )
+        }
+    } catch (_: Exception) {
+        value
     }
 }

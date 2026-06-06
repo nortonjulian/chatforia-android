@@ -52,6 +52,15 @@ import com.chatforia.android.voicemail.VoicemailRepository
 import com.chatforia.android.voicemail.VoicemailViewModel
 import com.chatforia.android.crypto.LinkedDevicesRepository
 import com.chatforia.android.crypto.LinkedDevicesViewModel
+import com.chatforia.android.calls.AudioCallScreen
+import com.chatforia.android.calls.VideoCallScreen
+import com.chatforia.android.calls.TwilioVoiceManager
+import com.chatforia.android.calls.TwilioVideoManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.chatforia.android.calls.CallPermissionHelper
+import androidx.compose.material3.MaterialTheme
+import com.chatforia.android.random.RandomChatViewModel
 
 enum class AppTab {
     CHATS,
@@ -283,6 +292,11 @@ fun ChatforiaApp(
             SocketManager()
         }
 
+    val randomChatViewModel =
+        remember {
+            RandomChatViewModel(socketManager)
+        }
+
     val callsViewModel =
         remember {
             CallsViewModel(
@@ -308,11 +322,13 @@ fun ChatforiaApp(
         }
 
     val androidCallManager =
-        remember {
+        remember(context) {
             AndroidCallManager(
                 socketManager = socketManager,
                 callService = callService,
-                videoRepository = videoCallRepository
+                videoRepository = videoCallRepository,
+                voiceManager = TwilioVoiceManager(context),
+                videoManager = TwilioVideoManager(context)
             )
         }
 
@@ -336,6 +352,13 @@ fun ChatforiaApp(
 
     when (val state = callState) {
 
+        is AndroidCallState.Failed -> {
+            Text(
+                text = state.message,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+
         is AndroidCallState.Ringing -> {
             IncomingCallSheet(
                 payload = state.payload,
@@ -346,6 +369,52 @@ fun ChatforiaApp(
                     androidCallManager.declineIncoming()
                 }
             )
+        }
+
+        is AndroidCallState.Active -> {
+
+            if (state.session.isVideo) {
+
+                VideoCallScreen(
+                    session = state.session,
+
+                    onToggleMute = {
+                        androidCallManager.toggleMute()
+                    },
+
+                    onToggleCamera = {
+                        androidCallManager.toggleCamera()
+                    },
+
+                    onFlipCamera = {
+                        androidCallManager.flipCamera()
+                    },
+
+                    onEndCall = {
+                        androidCallManager.endCall()
+                    }
+                )
+
+                return
+            }
+
+            AudioCallScreen(
+                session = state.session,
+
+                onToggleMute = {
+                    androidCallManager.toggleMute()
+                },
+
+                onToggleSpeaker = {
+                    androidCallManager.toggleSpeaker()
+                },
+
+                onEndCall = {
+                    androidCallManager.endCall()
+                }
+            )
+
+            return
         }
 
         else -> Unit
@@ -452,17 +521,22 @@ fun ChatforiaApp(
                     ChatsScreen(
                         viewModel = chatsViewModel,
                         threadViewModel = chatThreadViewModel,
+                        randomChatViewModel = randomChatViewModel,
                         currentUserId = user.id,
                         currentUsername = user.username,
                         socketManager = socketManager,
                         tenorRepository = tenorRepository,
-                        uploadRepository = uploadRepository
+                        uploadRepository = uploadRepository,
+                        apiClient = apiClient
                     )
 
                 AppTab.CALLS ->
                     CallsScreen(
                         callsViewModel = callsViewModel,
-                        voicemailViewModel = voicemailViewModel
+                        voicemailViewModel = voicemailViewModel,
+                        onDialNumber = { number ->
+                            androidCallManager.startPhoneCall(number)
+                        }
                     )
 
                 AppTab.CONTACTS ->

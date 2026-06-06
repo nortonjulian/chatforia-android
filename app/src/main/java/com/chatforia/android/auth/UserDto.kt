@@ -19,6 +19,8 @@ data class UserDto(
 
     val preferredLanguage: String? = null,
     val uiLanguage: String? = null,
+    val autoTranslate: Boolean? = null,
+    val showOriginalWithTranslation: Boolean? = null,
     val theme: String? = null,
     val avatarUrl: String? = null,
 
@@ -34,16 +36,26 @@ data class UserDto(
     val privacyHoldToReveal: Boolean? = null,
     val notifyOnCopy: Boolean? = null,
 
+    val ageBand: String? = null,
+    val wantsAgeFilter: Boolean? = null,
+    val randomChatAllowedBands: List<String>? = null,
+
     val foriaRemember: Boolean? = null,
+    val enableSmartReplies: Boolean? = null,
     val smartRepliesEnabled: Boolean? = null,
+    val maskAIProfanity: Boolean? = null,
     val profanityMaskEnabled: Boolean? = null,
 
     val tone: String? = null,
-    val ringtone: String? = null,
+    val messageTone: String? = null,
     val messageSound: String? = null,
+    val ringtone: String? = null,
     val soundVolume: Double? = null,
 
     val voicemailEnabled: Boolean? = null,
+    val voicemailAutoDeleteDays: Int? = null,
+    val voicemailForwardEmail: String? = null,
+    val voicemailGreetingText: String? = null,
     val voicemailGreeting: String? = null,
 
     val createdAt: String? = null,
