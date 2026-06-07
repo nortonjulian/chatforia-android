@@ -39,4 +39,33 @@ class UploadRepository(
             )
         }
     }
+
+    suspend fun uploadAvatar(
+        uri: Uri
+    ): com.chatforia.android.auth.AvatarResponse {
+        val bytes =
+            withContext(Dispatchers.IO) {
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    input.readBytes()
+                } ?: throw Exception("Could not read selected image.")
+            }
+
+        val mimeType =
+            context.contentResolver.getType(uri)
+                ?: "image/jpeg"
+
+        val filename =
+            "avatar-${UUID.randomUUID()}.jpg"
+
+        return withContext(Dispatchers.IO) {
+            apiClient.uploadMultipartTyped(
+                path = "users/me/avatar",
+                fileFieldName = "avatar",
+                filename = filename,
+                mimeType = mimeType,
+                bytes = bytes,
+                requiresAuth = true
+            )
+        }
+    }
 }

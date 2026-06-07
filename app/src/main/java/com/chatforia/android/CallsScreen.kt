@@ -31,6 +31,8 @@ import androidx.compose.material3.IconButton
 import com.chatforia.android.calls.DialPadSheet
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,7 +102,11 @@ fun CallsScreen(
                 onClick = { selectedSegment = CallsSegment.Recents },
                 shape = SegmentedButtonDefaults.itemShape(0, 2),
                 colors = SegmentedButtonDefaults.colors(
-                    activeContainerColor = ChatforiaColors.highlightedSurface,
+                    activeContainerColor =
+                        if (ChatforiaColors.screenBackground.luminance() > 0.5f)
+                            Color(0xFFFFE7A6)
+                        else
+                            Color(0xFF24334F),
                     activeContentColor = ChatforiaColors.primaryText,
                     inactiveContainerColor = ChatforiaColors.cardBackground,
                     inactiveContentColor = ChatforiaColors.primaryText
@@ -113,7 +119,11 @@ fun CallsScreen(
                 onClick = { selectedSegment = CallsSegment.Voicemail },
                 shape = SegmentedButtonDefaults.itemShape(1, 2),
                 colors = SegmentedButtonDefaults.colors(
-                    activeContainerColor = ChatforiaColors.highlightedSurface,
+                    activeContainerColor =
+                        if (ChatforiaColors.screenBackground.luminance() > 0.5f)
+                            Color(0xFFFFE7A6)
+                        else
+                            Color(0xFF24334F),
                     activeContentColor = ChatforiaColors.primaryText,
                     inactiveContainerColor = ChatforiaColors.cardBackground,
                     inactiveContentColor = ChatforiaColors.primaryText
@@ -222,7 +232,11 @@ private fun CallHistoryRow(
         Surface(
             modifier = Modifier.size(42.dp),
             shape = MaterialTheme.shapes.large,
-            color = ChatforiaColors.highlightedSurface
+            color =
+                if (ChatforiaColors.screenBackground.luminance() > 0.5f)
+                    Color(0xFFFFF1C9)
+                else
+                    Color(0xFF123A4A)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
@@ -294,7 +308,11 @@ private fun CallHistoryRow(
                 onClick = onStartVideoCall,
                 modifier = Modifier.size(36.dp),
                 colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = ChatforiaColors.highlightedSurface,
+                    containerColor =
+                        if (ChatforiaColors.screenBackground.luminance() > 0.5f)
+                            Color(0xFFFFF1C9)
+                        else
+                            Color(0xFF123A4A),
                     contentColor = ChatforiaColors.accent
                 )
             ) {
@@ -305,7 +323,11 @@ private fun CallHistoryRow(
                 onClick = onStartAudioCall,
                 modifier = Modifier.size(36.dp),
                 colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = ChatforiaColors.highlightedSurface,
+                    containerColor =
+                        if (ChatforiaColors.screenBackground.luminance() > 0.5f)
+                            Color(0xFFFFF1C9)
+                        else
+                            Color(0xFF123A4A),
                     contentColor = ChatforiaColors.accent
                 )
             ) {

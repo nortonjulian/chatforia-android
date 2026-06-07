@@ -7,7 +7,7 @@ data class SettingsUpdateRequest(
     val preferredLanguage: String? = null,
     val autoTranslate: Boolean = false,
     val showOriginalWithTranslation: Boolean = false,
-    val theme: String? = "dawn",
+    val theme: String? = "Dawn",
     val allowExplicitContent: Boolean = false,
     val showReadReceipts: Boolean = false,
     val autoDeleteSeconds: Int = 0,

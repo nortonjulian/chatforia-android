@@ -61,6 +61,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import com.chatforia.android.calls.CallPermissionHelper
 import androidx.compose.material3.MaterialTheme
 import com.chatforia.android.random.RandomChatViewModel
+import androidx.compose.runtime.SideEffect
 
 enum class AppTab {
     CHATS,
@@ -202,6 +203,10 @@ fun ChatforiaApp(
 ) {
     var selectedTab by remember {
         mutableStateOf(AppTab.CHATS)
+    }
+
+    SideEffect {
+        ChatforiaColors.applyTheme(user.theme ?: "dawn")
     }
 
     val chatsRepository =

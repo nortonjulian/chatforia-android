@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chatforia.android.ui.theme.ChatforiaColors
 import androidx.compose.material.icons.filled.Backspace
+import androidx.compose.material3.OutlinedTextFieldDefaults
 
 @Composable
 fun DialPadSheet(
@@ -82,6 +83,17 @@ fun DialPadSheet(
             textStyle = LocalTextStyle.current.copy(
                 fontSize = 28.sp,
                 textAlign = TextAlign.Center
+            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = ChatforiaColors.primaryText,
+                unfocusedTextColor = ChatforiaColors.primaryText,
+                focusedPlaceholderColor = ChatforiaColors.secondaryText,
+                unfocusedPlaceholderColor = ChatforiaColors.secondaryText,
+                focusedContainerColor = ChatforiaColors.screenBackground,
+                unfocusedContainerColor = ChatforiaColors.screenBackground,
+                focusedBorderColor = ChatforiaColors.border,
+                unfocusedBorderColor = ChatforiaColors.border,
+                cursorColor = ChatforiaColors.accent
             )
         )
 
@@ -125,7 +137,7 @@ fun DialPadSheet(
             enabled = number.isNotBlank(),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(62.dp),
+                .height(54.dp),
             shape = RoundedCornerShape(32.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = ChatforiaColors.accent
@@ -153,7 +165,7 @@ private fun DialKey(
 ) {
     Surface(
         onClick = onClick,
-        modifier = modifier.height(72.dp),
+        modifier = modifier.height(64.dp),
         shape = RoundedCornerShape(20.dp),
         color = ChatforiaColors.cardBackground,
         tonalElevation = 1.dp
@@ -164,7 +176,7 @@ private fun DialKey(
         ) {
             Text(
                 number,
-                fontSize = 32.sp,
+                fontSize = 28.sp,
                 fontWeight = FontWeight.Medium,
                 color = ChatforiaColors.primaryText
             )

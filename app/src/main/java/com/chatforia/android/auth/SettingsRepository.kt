@@ -74,4 +74,16 @@ class SettingsRepository(
             )
         }
     }
+
+    suspend fun removeAvatar(): AvatarResponse {
+        return withContext(Dispatchers.IO) {
+            apiClient.send(
+                ApiRequest(
+                    path = "users/me/avatar",
+                    method = HttpMethod.DELETE,
+                    requiresAuth = true
+                )
+            )
+        }
+    }
 }

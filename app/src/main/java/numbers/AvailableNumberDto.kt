@@ -1,0 +1,4 @@
+package numbers
+
+class AvailableNumberDto {
+}

@@ -200,7 +200,7 @@ fun OnboardingScreen(
                                                 showOriginalWithTranslation =
                                                     currentUser.showOriginalWithTranslation ?: false,
 
-                                                theme = currentUser.theme ?: "dawn",
+                                                theme = currentUser.theme ?: "Dawn",
                                                 allowExplicitContent = currentUser.allowExplicitContent ?: false,
                                                 showReadReceipts = currentUser.showReadReceipts ?: false,
                                                 autoDeleteSeconds = currentUser.autoDeleteSeconds ?: 0,

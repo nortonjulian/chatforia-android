@@ -81,7 +81,12 @@ fun SoundSettingsView(
             Slider(
                 value = state.soundVolume.toFloat(),
                 onValueChange = { onVolumeChange(it.toInt()) },
-                valueRange = 0f..100f
+                valueRange = 0f..100f,
+                colors = SliderDefaults.colors(
+                    thumbColor = ChatforiaColors.accent,
+                    activeTrackColor = ChatforiaColors.accent,
+                    inactiveTrackColor = ChatforiaColors.highlightedSurface
+                )
             )
         }
     }

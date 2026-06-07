@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -28,6 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 @Composable
 fun KeySetupScreen(
     viewModel: KeySetupViewModel,
@@ -90,7 +92,7 @@ fun KeySetupScreen(
                 CircularProgressIndicator()
             }
 
-            Divider()
+            HorizontalDivider(color = ChatforiaColors.border)
 
             when {
 
@@ -110,7 +112,16 @@ fun KeySetupScreen(
                         onValueChange = { backupPassword = it },
                         label = { Text("Recovery Passcode") },
                         visualTransformation = PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = ChatforiaColors.primaryText,
+                            unfocusedTextColor = ChatforiaColors.primaryText,
+                            focusedLabelColor = ChatforiaColors.secondaryText,
+                            unfocusedLabelColor = ChatforiaColors.secondaryText,
+                            focusedBorderColor = ChatforiaColors.border,
+                            unfocusedBorderColor = ChatforiaColors.border,
+                            cursorColor = ChatforiaColors.accent
+                        )
                     )
 
                     OutlinedTextField(
@@ -118,7 +129,16 @@ fun KeySetupScreen(
                         onValueChange = { confirmPassword = it },
                         label = { Text("Confirm Recovery Passcode") },
                         visualTransformation = PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = ChatforiaColors.primaryText,
+                            unfocusedTextColor = ChatforiaColors.primaryText,
+                            focusedLabelColor = ChatforiaColors.secondaryText,
+                            unfocusedLabelColor = ChatforiaColors.secondaryText,
+                            focusedBorderColor = ChatforiaColors.border,
+                            unfocusedBorderColor = ChatforiaColors.border,
+                            cursorColor = ChatforiaColors.accent
+                        )
                     )
 
                     Button(
@@ -127,6 +147,10 @@ fun KeySetupScreen(
                                 backupPassword
                             )
                         },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = ChatforiaColors.accent,
+                            contentColor = ChatforiaColors.buttonForeground
+                        ),
                         enabled =
                             backupPassword.length >= 8 &&
                                     backupPassword == confirmPassword &&
@@ -150,7 +174,8 @@ fun KeySetupScreen(
                 state.hasRemoteBackup -> {
                     Text(
                         text = "Restore encrypted chats",
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        color = ChatforiaColors.primaryText
                     )
 
                     OutlinedTextField(
@@ -159,7 +184,16 @@ fun KeySetupScreen(
                         label = { Text("Recovery Passcode") },
                         visualTransformation = PasswordVisualTransformation(),
                         enabled = !state.isRestoring,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = ChatforiaColors.primaryText,
+                            unfocusedTextColor = ChatforiaColors.primaryText,
+                            focusedLabelColor = ChatforiaColors.secondaryText,
+                            unfocusedLabelColor = ChatforiaColors.secondaryText,
+                            focusedBorderColor = ChatforiaColors.border,
+                            unfocusedBorderColor = ChatforiaColors.border,
+                            cursorColor = ChatforiaColors.accent
+                        )
                     )
 
                     Button(
@@ -216,7 +250,8 @@ fun KeySetupScreen(
             }
 
             if (state.hasLocalPrivateKey) {
-                Divider()
+
+                HorizontalDivider(color = ChatforiaColors.border)
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -233,26 +268,31 @@ fun KeySetupScreen(
                 }
             }
 
-            Divider()
+            HorizontalDivider(color = ChatforiaColors.border)
 
             Text(
                 text = "Reset Encryption",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                color = ChatforiaColors.primaryText
             )
 
             Text(
-                text =
-                    "Only use this if you have lost all trusted devices and cannot restore your original key."
+                text = "Only use this if you have lost all trusted devices and cannot restore your original key.",
+                color = ChatforiaColors.secondaryText
             )
+
 
             Button(
                 onClick = {
                     showResetDialog = true
-                }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ChatforiaColors.accent,
+                    contentColor = ChatforiaColors.buttonForeground
+                )
             ) {
                 Text("Reset Encryption")
             }
-
             Spacer(modifier = Modifier.height(4.dp))
         }
     }

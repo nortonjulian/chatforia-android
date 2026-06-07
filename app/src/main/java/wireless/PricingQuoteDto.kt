@@ -1,0 +1,4 @@
+package wireless
+
+class PricingQuoteDto {
+}

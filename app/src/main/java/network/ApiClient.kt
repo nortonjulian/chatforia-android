@@ -146,4 +146,52 @@ class ApiClient(
             if (responseBody.isBlank()) "{}" else responseBody
         )
     }
+
+    fun <T> uploadMultipartTyped(
+        path: String,
+        fileFieldName: String,
+        filename: String,
+        mimeType: String,
+        bytes: ByteArray,
+        requiresAuth: Boolean = true
+    ): T {
+        val url = "${Environment.API_BASE_URL}/${path.trimStart('/')}"
+
+        val builder = Request.Builder()
+            .url(url)
+            .addHeader("Accept", "application/json")
+
+        if (requiresAuth) {
+            val token = tokenStorage.read()
+                ?: throw Exception("Unauthorized")
+
+            builder.addHeader("Authorization", "Bearer $token")
+        }
+
+        val fileBody = bytes.toRequestBody(mimeType.toMediaType())
+
+        val multipartBody = MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart(
+                fileFieldName,
+                filename,
+                fileBody
+            )
+            .build()
+
+        val response = client.newCall(
+            builder.post(multipartBody).build()
+        ).execute()
+
+        val responseBody = response.body?.string().orEmpty()
+
+        if (!response.isSuccessful) {
+            throw Exception("HTTP ${response.code}: $responseBody")
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        return json.decodeFromString<UploadImageResponse>(
+            if (responseBody.isBlank()) "{}" else responseBody
+        ) as T
+    }
 }

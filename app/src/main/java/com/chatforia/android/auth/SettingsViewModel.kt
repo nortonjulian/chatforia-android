@@ -20,7 +20,7 @@ data class SettingsUiState(
     val privacyHoldToReveal: Boolean = false,
     val notifyOnCopy: Boolean = false,
 
-    val foriaRemember: Boolean = true,
+    val riaRemember: Boolean = true,
     val enableSmartReplies: Boolean = true,
     val maskAIProfanity: Boolean = false,
 
@@ -64,7 +64,7 @@ class SettingsViewModel(
             privacyBlurOnUnfocus = user.privacyBlurOnUnfocus ?: false,
             privacyHoldToReveal = user.privacyHoldToReveal ?: false,
             notifyOnCopy = user.notifyOnCopy ?: false,
-            foriaRemember = user.foriaRemember ?: true,
+            riaRemember = user.foriaRemember ?: true,
             enableSmartReplies =
                 user.enableSmartReplies
                     ?: user.smartRepliesEnabled
@@ -118,7 +118,7 @@ class SettingsViewModel(
                         privacyBlurOnUnfocus = current.privacyBlurOnUnfocus,
                         privacyHoldToReveal = current.privacyHoldToReveal,
                         notifyOnCopy = current.notifyOnCopy,
-                        foriaRemember = current.foriaRemember,
+                        foriaRemember = current.riaRemember,
                         enableSmartReplies = current.enableSmartReplies,
                         maskAIProfanity = current.maskAIProfanity,
                         messageTone = current.messageTone,

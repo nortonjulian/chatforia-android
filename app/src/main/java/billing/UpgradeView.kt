@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import com.chatforia.android.network.ApiClient
 import com.chatforia.android.ui.theme.ChatforiaColors
 import kotlinx.coroutines.launch
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun UpgradeView(
@@ -180,7 +182,11 @@ private fun HeroSection() {
         Surface(
             modifier = Modifier.size(86.dp),
             shape = CircleShape,
-            color = ChatforiaColors.highlightedSurface
+            color =
+                if (ChatforiaColors.screenBackground.luminance() > 0.5f)
+                    Color(0xFFFFF4D0)
+                else
+                    Color(0xFF121933)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
@@ -224,12 +230,18 @@ private fun UpgradePlanCard(
     highlighted: Boolean,
     onClick: () -> Unit
 ) {
+    val premiumCardBackground =
+        if (ChatforiaColors.screenBackground.luminance() > 0.5f)
+            Color(0xFFFFF7D6)
+        else
+            Color(0xFF121933)
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         color =
             if (highlighted)
-                ChatforiaColors.highlightedSurface
+                premiumCardBackground
             else
                 ChatforiaColors.cardBackground,
         tonalElevation = if (highlighted) 6.dp else 2.dp

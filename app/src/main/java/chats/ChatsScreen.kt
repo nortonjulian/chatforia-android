@@ -247,7 +247,12 @@ fun ChatsScreen(
                 focusedContainerColor = ChatforiaColors.cardBackground,
                 unfocusedContainerColor = ChatforiaColors.cardBackground,
                 focusedBorderColor = ChatforiaColors.border,
-                unfocusedBorderColor = ChatforiaColors.border
+                unfocusedBorderColor = ChatforiaColors.border,
+                focusedTextColor = ChatforiaColors.primaryText,
+                unfocusedTextColor = ChatforiaColors.primaryText,
+                focusedPlaceholderColor = ChatforiaColors.secondaryText,
+                unfocusedPlaceholderColor = ChatforiaColors.secondaryText,
+                cursorColor = ChatforiaColors.accent
             ),
 
             modifier = Modifier.fillMaxWidth(),
@@ -284,7 +289,7 @@ fun ChatsScreen(
                                 selectedConversation = chat
                             }
                         )
-                        HorizontalDivider()
+                        HorizontalDivider(color = ChatforiaColors.border)
                     }
                 }
             }
@@ -404,19 +409,22 @@ private fun ConversationRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                color = ChatforiaColors.primaryText
             )
 
             Text(
                 text = subtitle,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = ChatforiaColors.secondaryText
             )
         }
 
         Column(horizontalAlignment = Alignment.End) {
             Text(
                 text = timestamp,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
+                color = ChatforiaColors.secondaryText
             )
 
             if (unreadCount > 0) {
