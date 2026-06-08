@@ -42,7 +42,7 @@ fun ChatforiaActionPill(
                 Icon(
                     imageVector = action.icon,
                     contentDescription = action.contentDescription,
-                    tint = BrandActionPillIcon,
+                    tint = ChatforiaColors.accent,
                     modifier = Modifier.clickable {
                         action.onClick()
                     }

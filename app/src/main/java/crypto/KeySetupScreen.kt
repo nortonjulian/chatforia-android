@@ -30,6 +30,16 @@ import com.chatforia.android.ui.theme.ChatforiaColors
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.shape.RoundedCornerShape
 @Composable
 fun KeySetupScreen(
     viewModel: KeySetupViewModel,
@@ -68,7 +78,8 @@ fun KeySetupScreen(
         ) {
             Text(
                 text = "Encryption",
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                color = ChatforiaColors.primaryText
             )
 
             Text(
@@ -263,7 +274,10 @@ fun KeySetupScreen(
                             backupPassword = ""
                         }
                     ) {
-                        Text("Clear local key")
+                        Text(
+                            "Clear local key",
+                            color = ChatforiaColors.accent
+                        )
                     }
                 }
             }
@@ -282,18 +296,29 @@ fun KeySetupScreen(
             )
 
 
-            Button(
-                onClick = {
-                    showResetDialog = true
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = ChatforiaColors.accent,
-                    contentColor = ChatforiaColors.buttonForeground
-                )
+            Box(
+                modifier = Modifier
+                    .height(44.dp)
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(
+                                ChatforiaColors.buttonStart,
+                                ChatforiaColors.buttonEnd
+                            )
+                        )
+                    )
+                    .clickable {
+                        showResetDialog = true
+                    }
+                    .padding(horizontal = 22.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Text("Reset Encryption")
+                Text(
+                    text = "Reset Encryption",
+                    color = ChatforiaColors.buttonForeground
+                )
             }
-            Spacer(modifier = Modifier.height(4.dp))
         }
     }
 

@@ -48,15 +48,21 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.chatforia.android.random.RandomChatViewModel
 import com.chatforia.android.random.RandomMatchingView
-
+import com.chatforia.android.auth.UserDto
+import com.chatforia.android.calls.AndroidCallManager
+import com.chatforia.android.StartChatView
+import com.chatforia.android.chats.StartChatViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatsScreen(
     viewModel: ChatsViewModel,
     threadViewModel: ChatThreadViewModel,
+    startChatViewModel: StartChatViewModel,
     randomChatViewModel: RandomChatViewModel,
     currentUserId: Int?,
     currentUsername: String?,
+    currentUser: UserDto,
+    androidCallManager: AndroidCallManager,
     socketManager: SocketManager,
     tenorRepository: TenorRepository,
     uploadRepository: UploadRepository,
@@ -73,6 +79,10 @@ fun ChatsScreen(
     var showRia by remember { mutableStateOf(false) }
 
     var showRandomMatching by remember {
+        mutableStateOf(false)
+    }
+
+    var showStartChat by remember {
         mutableStateOf(false)
     }
 
@@ -148,6 +158,8 @@ fun ChatsScreen(
             viewModel = threadViewModel,
             currentUserId = currentUserId,
             currentUsername = currentUsername,
+            currentUser = currentUser,
+            androidCallManager = androidCallManager,
             socketManager = socketManager,
             uploadRepository = uploadRepository,
             tenorRepository = tenorRepository,
@@ -172,6 +184,17 @@ fun ChatsScreen(
             memoryEnabled = true,
             filterProfanity = false,
             onClose = { showRia = false }
+        )
+
+        return
+    }
+
+    if (showStartChat) {
+        StartChatView(
+            viewModel = startChatViewModel,
+            onBack = {
+                showStartChat = false
+            }
         )
 
         return
@@ -202,7 +225,10 @@ fun ChatsScreen(
                 actions = listOf(
                     ChatforiaAction(
                         icon = Icons.Default.Add,
-                        contentDescription = "Start chat"
+                        contentDescription = "New chat",
+                        onClick = {
+                            showStartChat = true
+                        }
                     ),
                     ChatforiaAction(
                         icon = Icons.Default.Refresh,

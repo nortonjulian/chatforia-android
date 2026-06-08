@@ -205,7 +205,7 @@ fun ChatforiaApp(
         mutableStateOf(AppTab.CHATS)
     }
 
-    SideEffect {
+    LaunchedEffect(user.theme) {
         ChatforiaColors.applyTheme(user.theme ?: "dawn")
     }
 
@@ -298,8 +298,11 @@ fun ChatforiaApp(
         }
 
     val randomChatViewModel =
-        remember {
-            RandomChatViewModel(socketManager)
+        remember(user.id) {
+            RandomChatViewModel(
+                socketManager = socketManager,
+                currentUserId = user.id
+            )
         }
 
     val callsViewModel =
@@ -529,9 +532,12 @@ fun ChatforiaApp(
                         randomChatViewModel = randomChatViewModel,
                         currentUserId = user.id,
                         currentUsername = user.username,
+                        currentUser = user,
+                        androidCallManager = androidCallManager,
                         socketManager = socketManager,
                         tenorRepository = tenorRepository,
                         uploadRepository = uploadRepository,
+                        startChatViewModel = startChatViewModel,
                         apiClient = apiClient
                     )
 
@@ -552,6 +558,8 @@ fun ChatforiaApp(
                         threadViewModel = chatThreadViewModel,
                         currentUserId = user.id,
                         currentUsername = user.username,
+                        currentUser = user,
+                        androidCallManager = androidCallManager,
                         socketManager = socketManager,
                         tenorRepository = tenorRepository,
                         uploadRepository = uploadRepository

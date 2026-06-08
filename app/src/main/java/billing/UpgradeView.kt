@@ -23,6 +23,8 @@ import com.chatforia.android.ui.theme.ChatforiaColors
 import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.Brush
 
 @Composable
 fun UpgradeView(
@@ -328,14 +330,26 @@ private fun UpgradePlanCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            Button(
-                onClick = onClick,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            listOf(
+                                ChatforiaColors.buttonStart,
+                                ChatforiaColors.buttonEnd
+                            )
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .clickable(onClick = onClick),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "Upgrade",
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = ChatforiaColors.buttonForeground
                 )
             }
         }

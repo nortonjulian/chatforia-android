@@ -78,6 +78,24 @@ class SocketManager {
     val randomChatError: SharedFlow<String> =
         _randomChatError.asSharedFlow()
 
+    private val _randomChatMessages =
+        MutableSharedFlow<String>(extraBufferCapacity = 64)
+
+    val randomChatMessages: SharedFlow<String> =
+        _randomChatMessages.asSharedFlow()
+
+    private val _randomChatEnded =
+        MutableSharedFlow<String>(extraBufferCapacity = 64)
+
+    val randomChatEnded: SharedFlow<String> =
+        _randomChatEnded.asSharedFlow()
+
+    private val _randomFriendAccepted =
+        MutableSharedFlow<String>(extraBufferCapacity = 64)
+
+    val randomFriendAccepted: SharedFlow<String> =
+        _randomFriendAccepted.asSharedFlow()
+
     fun connect(token: String) {
         if (token.isBlank()) return
 
@@ -198,6 +216,24 @@ class SocketManager {
             }
         }
 
+        socket?.on("random:message") { args ->
+            args.firstOrNull()?.let {
+                _randomChatMessages.tryEmit(it.toString())
+            }
+        }
+
+        socket?.on("random:ended") { args ->
+            args.firstOrNull()?.let {
+                _randomChatEnded.tryEmit(it.toString())
+            }
+        }
+
+        socket?.on("random:friend_accepted") { args ->
+            args.firstOrNull()?.let {
+                _randomFriendAccepted.tryEmit(it.toString())
+            }
+        }
+
         socket?.on("random:matched") { args ->
             args.firstOrNull()?.let {
                 _randomChatMatched.tryEmit(it.toString())
@@ -231,11 +267,28 @@ class SocketManager {
     }
 
     fun startRandomChat() {
-        socket?.emit("random:start")
+        socket?.emit("random:join")
     }
 
     fun cancelRandomChat() {
-        socket?.emit("random:cancel")
+        socket?.emit("random:leave")
+    }
+
+    fun sendRandomMessage(roomId: Int, text: String) {
+        socket?.emit("random:message", JSONObject().apply {
+            put("roomId", roomId)
+            put("content", text)
+        })
+    }
+
+    fun skipRandomChat() {
+        socket?.emit("random:skip")
+    }
+
+    fun requestRandomFriend(roomId: Int) {
+        socket?.emit("random:add_friend", JSONObject().apply {
+            put("roomId", roomId)
+        })
     }
 
     private fun emitJoinRooms() {

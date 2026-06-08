@@ -54,6 +54,8 @@ import com.chatforia.android.StartChatView
 import com.chatforia.android.chats.StartChatViewModel
 import com.chatforia.android.tenor.TenorRepository
 import com.chatforia.android.upload.UploadRepository
+import com.chatforia.android.auth.UserDto
+import com.chatforia.android.calls.AndroidCallManager
 
 @Composable
 fun ContactsScreen(
@@ -63,6 +65,8 @@ fun ContactsScreen(
     threadViewModel: ChatThreadViewModel,
     currentUserId: Int?,
     currentUsername: String?,
+    currentUser: UserDto,
+    androidCallManager: AndroidCallManager,
     socketManager: SocketManager,
     tenorRepository: TenorRepository,
     uploadRepository: UploadRepository
@@ -136,11 +140,13 @@ fun ContactsScreen(
                 viewModel = threadViewModel,
                 currentUserId = currentUserId,
                 currentUsername = currentUsername,
+                currentUser = currentUser,
+                androidCallManager = androidCallManager,
                 socketManager = socketManager,
-                tenorRepository = tenorRepository,
                 uploadRepository = uploadRepository,
+                tenorRepository = tenorRepository,
                 onBack = {
-                    startChatViewModel.clearOpenedConversation()
+                    showingNewChat = false
                 }
             )
 
@@ -212,11 +218,13 @@ fun ContactsScreen(
             viewModel = threadViewModel,
             currentUserId = currentUserId,
             currentUsername = currentUsername,
+            currentUser = currentUser,
+            androidCallManager = androidCallManager,
             socketManager = socketManager,
             uploadRepository = uploadRepository,
             tenorRepository = tenorRepository,
             onBack = {
-                viewModel.clearOpenedConversation()
+                showingNewChat = false
             }
         )
 

@@ -1,6 +1,8 @@
 package com.chatforia.android.messages
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -8,12 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.chatforia.android.messages.MessageDto
 import com.chatforia.android.ui.theme.ChatforiaColors
 
 @Composable
@@ -26,74 +29,62 @@ fun MessageBubble(
     val displayText =
         when {
             isDeleted -> "This message was deleted"
-
-            !message.decryptedContent.isNullOrBlank() ->
-                message.decryptedContent
-
-            !message.translatedForMe.isNullOrBlank() ->
-                message.translatedForMe
-
-            !message.rawContent.isNullOrBlank() ->
-                message.rawContent
-
-            !message.content.isNullOrBlank() ->
-                message.content
-
-            message.attachments.isNotEmpty() ->
-                ""
-
-            message.attachmentsInline.isNotEmpty() ->
-                ""
-
-            !message.contentCiphertext.isNullOrBlank() ->
-                "Unable to decrypt this older message."
-
+            !message.decryptedContent.isNullOrBlank() -> message.decryptedContent
+            !message.translatedForMe.isNullOrBlank() -> message.translatedForMe
+            !message.rawContent.isNullOrBlank() -> message.rawContent
+            !message.content.isNullOrBlank() -> message.content
+            message.attachments.isNotEmpty() -> ""
+            message.attachmentsInline.isNotEmpty() -> ""
+            !message.contentCiphertext.isNullOrBlank() -> "Unable to decrypt this older message."
             else -> ""
         }
 
+    val bubbleShape = RoundedCornerShape(
+        topStart = 18.dp,
+        topEnd = 18.dp,
+        bottomStart = if (isMine) 18.dp else 4.dp,
+        bottomEnd = if (isMine) 4.dp else 18.dp
+    )
+
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement =
-            if (isMine) Arrangement.End else Arrangement.Start
+        horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start
     ) {
-        Surface(
-            shape = RoundedCornerShape(
-                topStart = 18.dp,
-                topEnd = 18.dp,
-                bottomStart = if (isMine) 18.dp else 4.dp,
-                bottomEnd = if (isMine) 4.dp else 18.dp
-            ),
-            color =
-                if (isMine) {
-                    ChatforiaColors.accent
-                } else {
-                    ChatforiaColors.cardBackground
-                },
-            modifier = Modifier.widthIn(max = 300.dp)
+        Box(
+            modifier = Modifier
+                .widthIn(max = 300.dp)
+                .clip(bubbleShape)
+                .background(
+                    if (isMine) {
+                        Brush.horizontalGradient(
+                            listOf(
+                                ChatforiaColors.outgoingBubbleStart,
+                                ChatforiaColors.outgoingBubbleEnd
+                            )
+                        )
+                    } else {
+                        Brush.horizontalGradient(
+                            listOf(
+                                ChatforiaColors.cardBackground,
+                                ChatforiaColors.cardBackground
+                            )
+                        )
+                    }
+                )
         ) {
             Column(
                 modifier = Modifier.padding(12.dp)
             ) {
                 Text(
                     text = displayText,
-                    color =
-                        if (isMine) {
-                            MaterialTheme.colorScheme.onPrimary
-                        } else {
-                            ChatforiaColors.primaryText
-                        }
+                    color = if (isMine) Color.White else ChatforiaColors.primaryText
                 )
 
                 if (message.editedAt != null && !isDeleted) {
                     Text(
                         text = "Edited",
                         style = MaterialTheme.typography.labelSmall,
-                        color =
-                            if (isMine) {
-                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.75f)
-                            } else {
-                                ChatforiaColors.secondaryText
-                            }
+                        color = if (isMine) Color.White.copy(alpha = 0.75f) else ChatforiaColors.secondaryText
                     )
                 }
 
@@ -101,12 +92,7 @@ fun MessageBubble(
                     Text(
                         text = "Sending…",
                         style = MaterialTheme.typography.labelSmall,
-                        color =
-                            if (isMine) {
-                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.75f)
-                            } else {
-                                ChatforiaColors.secondaryText
-                            }
+                        color = if (isMine) Color.White.copy(alpha = 0.75f) else ChatforiaColors.secondaryText
                     )
                 }
 
@@ -122,12 +108,7 @@ fun MessageBubble(
                     Text(
                         text = "Disappearing message",
                         style = MaterialTheme.typography.labelSmall,
-                        color =
-                            if (isMine) {
-                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.75f)
-                            } else {
-                                ChatforiaColors.secondaryText
-                            }
+                        color = if (isMine) Color.White.copy(alpha = 0.75f) else ChatforiaColors.secondaryText
                     )
                 }
             }

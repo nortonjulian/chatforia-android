@@ -697,6 +697,8 @@ fun ProfileScreen(
             LegalSupportRow("Contact Support", "mailto:support@chatforia.com")
         }
 
+        Spacer(modifier = Modifier.height(18.dp))
+
         Box(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center

@@ -42,6 +42,13 @@ import androidx.compose.ui.draw.clip
 import coil.compose.AsyncImage
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Videocam
+import com.chatforia.android.auth.UserDto
+import com.chatforia.android.calls.AndroidCallManager
+import com.chatforia.android.ui.components.ChatforiaAction
+import com.chatforia.android.ui.components.ChatforiaActionPill
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +57,8 @@ fun ChatThreadScreen(
     viewModel: ChatThreadViewModel,
     currentUserId: Int?,
     currentUsername: String?,
+    currentUser: UserDto,
+    androidCallManager: AndroidCallManager,
     socketManager: SocketManager,
     uploadRepository: UploadRepository,
     tenorRepository: TenorRepository,
@@ -82,6 +91,9 @@ fun ChatThreadScreen(
     var draft by remember { mutableStateOf("") }
     var showMediaPicker by remember { mutableStateOf(false) }
     var showGifPicker by remember { mutableStateOf(false) }
+
+    var showSearchSheet by remember { mutableStateOf(false) }
+    var threadSearchText by remember { mutableStateOf("") }
 
     val isThreadEmpty =
         if (conversation.kind == "sms") {
@@ -175,6 +187,67 @@ fun ChatThreadScreen(
                             contentDescription = "Back"
                         )
                     }
+                },
+                actions = {
+                    ChatforiaActionPill(
+                        modifier = Modifier.padding(end = 10.dp),
+                        actions = listOf(
+                            ChatforiaAction(
+                                icon = Icons.Default.Search,
+                                contentDescription = "Search",
+                                onClick = {
+                                    showSearchSheet = true
+                                }
+                            ),
+                            ChatforiaAction(
+                                icon = Icons.Default.Call,
+                                contentDescription = "Audio Call",
+                                onClick = {
+                                    conversation.phone?.let { phone ->
+                                        androidCallManager.startPhoneCall(phone)
+                                        return@ChatforiaAction
+                                    }
+
+                                    val callee = conversation.avatarUsers
+                                        ?.firstOrNull { it.id != currentUser.id }
+
+                                    if (callee != null) {
+                                        androidCallManager.startAudioCall(
+                                            calleeId = callee.id,
+                                            displayName = callee.displayName
+                                                ?: callee.username
+                                                ?: conversation.displayName
+                                                ?: conversation.title
+                                        )
+                                    }
+                                }
+                            ),
+                            ChatforiaAction(
+                                icon = Icons.Default.Videocam,
+                                contentDescription = "Video Call",
+                                onClick = {
+                                    val callee = conversation.avatarUsers
+                                        ?.firstOrNull { it.id != currentUser.id }
+
+                                    if (
+                                        conversation.kind != "sms" &&
+                                        conversation.isGroup != true &&
+                                        callee != null
+                                    ) {
+                                        androidCallManager.startVideoCall(
+                                            currentUser = currentUser,
+                                            calleeId = callee.id,
+                                            displayName = callee.displayName
+                                                ?: callee.username
+                                                ?: conversation.displayName
+                                                ?: conversation.title,
+                                            chatRoomId = conversation.id
+                                        )
+                                    }
+                                }
+                            )
+                        )
+                    )
                 }
             )
         }
@@ -498,6 +571,46 @@ fun ChatThreadScreen(
                         showGifPicker = true
                     }
                 )
+            }
+
+            if (showSearchSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        showSearchSheet = false
+                        threadSearchText = ""
+                    }
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(420.dp)
+                            .padding(horizontal = 24.dp, vertical = 20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Search in chat",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = ChatforiaColors.primaryText
+                        )
+
+                        Spacer(modifier = Modifier.height(32.dp))
+
+                        OutlinedTextField(
+                            value = threadSearchText,
+                            onValueChange = { threadSearchText = it },
+                            placeholder = { Text("Search messages") },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = null
+                                )
+                            },
+                            singleLine = true,
+                            shape = RoundedCornerShape(28.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
             }
 
             if (showEditGifPicker) {

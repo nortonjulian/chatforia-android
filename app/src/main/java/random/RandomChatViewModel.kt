@@ -9,7 +9,8 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 class RandomChatViewModel(
-    private val socketManager: SocketManager
+    private val socketManager: SocketManager,
+    private val currentUserId: Int
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RandomChatUiState())
@@ -81,5 +82,76 @@ class RandomChatViewModel(
                 )
             }
         }
+
+        viewModelScope.launch {
+            socketManager.randomChatMessages.collect { raw ->
+                try {
+                    val json = JSONObject(raw)
+
+                    val message = RandomChatMessage(
+                        id = json.optString(
+                            "createdAt",
+                            System.currentTimeMillis().toString()
+                        ),
+                        text = json.optString("content"),
+                        isMine = json.optInt("senderId") == currentUserId
+                    )
+
+                    _state.value = _state.value.copy(
+                        messages = _state.value.messages + message
+                    )
+                } catch (_: Exception) {
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            socketManager.randomChatEnded.collect {
+                _state.value = RandomChatUiState(
+                    error = "Random chat ended."
+                )
+            }
+        }
+
+        viewModelScope.launch {
+            socketManager.randomFriendAccepted.collect {
+                val session = _state.value.session ?: return@collect
+
+                _state.value = _state.value.copy(
+                    session = session.copy(partnerRequestedFriend = true)
+                )
+            }
+        }
     }
+
+    fun sendMessage(text: String) {
+        val session = _state.value.session ?: return
+
+        socketManager.sendRandomMessage(
+            roomId = session.roomId,
+            text = text
+        )
+    }
+
+    fun skip() {
+        socketManager.skipRandomChat()
+        _state.value = RandomChatUiState(isSearching = true)
+        socketManager.startRandomChat()
+    }
+
+    fun requestFriend() {
+        val session = _state.value.session ?: return
+        socketManager.requestRandomFriend(session.roomId)
+
+        _state.value = _state.value.copy(
+            session = session.copy(iRequestedFriend = true)
+        )
+    }
+
+    fun endChat() {
+        socketManager.skipRandomChat()
+        _state.value = RandomChatUiState()
+    }
+
 }
+

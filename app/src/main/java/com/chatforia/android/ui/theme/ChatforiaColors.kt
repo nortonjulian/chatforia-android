@@ -19,6 +19,11 @@ object ChatforiaColors {
     val buttonEnd: Color get() = palette.buttonEnd
     val buttonForeground: Color get() = readableTextFor(buttonEnd)
 
+    val avatarBackground: Color get() = palette.avatarBackground
+    val avatarForeground: Color get() = palette.avatarForeground
+    val outgoingBubbleStart: Color get() = palette.outgoingBubbleStart
+    val outgoingBubbleEnd: Color get() = palette.outgoingBubbleEnd
+
     fun applyTheme(code: String?) {
         palette = themePalette(code ?: "dawn")
     }
@@ -33,7 +38,11 @@ data class ChatforiaPalette(
     val accent: Color,
     val highlightedSurface: Color,
     val buttonStart: Color,
-    val buttonEnd: Color
+    val buttonEnd: Color,
+    val avatarBackground: Color,
+    val avatarForeground: Color,
+    val outgoingBubbleStart: Color,
+    val outgoingBubbleEnd: Color
 )
 
 private fun readableTextFor(background: Color): Color {
@@ -58,9 +67,13 @@ private fun themePalette(code: String): ChatforiaPalette {
             primaryText = Color(0xFFEEF2FF),
             secondaryText = Color(0xFFA3AED0),
             accent = Color(0xFF3CF9FF),
-            highlightedSurface = Color(0xFFFEF3C7),
+            highlightedSurface = Color(0xFF1A2446),
             buttonStart = Color(0xFF6A3CC1),
-            buttonEnd = Color(0xFF00C2A8)
+            buttonEnd = Color(0xFF00C2A8),
+            avatarBackground = Color(0xFF0B3A52),
+            avatarForeground = Color(0xFF4FF6FF),
+            outgoingBubbleStart = Color(0xFF7562FF),
+            outgoingBubbleEnd = Color(0xFF35F3FF)
         )
 
         "amoled" -> ChatforiaPalette(
@@ -72,7 +85,11 @@ private fun themePalette(code: String): ChatforiaPalette {
             accent = Color(0xFF7C3AED),
             highlightedSurface = Color(0xFF171717),
             buttonStart = Color(0xFF7C3AED),
-            buttonEnd = Color(0xFF5B21B6)
+            buttonEnd = Color(0xFF5B21B6),
+            avatarBackground = Color(0xFF171717),
+            avatarForeground = Color(0xFF7C3AED),
+            outgoingBubbleStart = Color(0xFF7C3AED),
+            outgoingBubbleEnd = Color(0xFF7C3AED)
         )
 
         "aurora" -> ChatforiaPalette(
@@ -84,7 +101,11 @@ private fun themePalette(code: String): ChatforiaPalette {
             accent = Color(0xFF29D39A),
             highlightedSurface = Color(0xFF133C36),
             buttonStart = Color(0xFF00C2A8),
-            buttonEnd = Color(0xFF29D39A)
+            buttonEnd = Color(0xFF29D39A),
+            avatarBackground = Color(0xFF133C36),
+            avatarForeground = Color(0xFF29D39A),
+            outgoingBubbleStart = Color(0xFF29D39A),
+            outgoingBubbleEnd = Color(0xFF29D39A)
         )
 
         "neon" -> ChatforiaPalette(
@@ -96,7 +117,11 @@ private fun themePalette(code: String): ChatforiaPalette {
             accent = Color(0xFF3CF9FF),
             highlightedSurface = Color(0xFF142536),
             buttonStart = Color(0xFF3CF9FF),
-            buttonEnd = Color(0xFF6A3CC1)
+            buttonEnd = Color(0xFF6A3CC1),
+            avatarBackground = Color(0xFF142536),
+            avatarForeground = Color(0xFF3CF9FF),
+            outgoingBubbleStart = Color(0xFF3CF9FF),
+            outgoingBubbleEnd = Color(0xFF3CF9FF)
         )
 
         "sunset" -> ChatforiaPalette(
@@ -108,7 +133,11 @@ private fun themePalette(code: String): ChatforiaPalette {
             accent = Color(0xFFFF9800),
             highlightedSurface = Color(0xFFFFF4D8),
             buttonStart = Color(0xFFFFB300),
-            buttonEnd = Color(0xFFFF9800)
+            buttonEnd = Color(0xFFFF9800),
+            avatarBackground = Color(0xFFFFF4D8),
+            avatarForeground = Color(0xFFFF9800),
+            outgoingBubbleStart = Color(0xFFFF9800),
+            outgoingBubbleEnd = Color(0xFFFF9800)
         )
 
         "solarized" -> ChatforiaPalette(
@@ -120,7 +149,11 @@ private fun themePalette(code: String): ChatforiaPalette {
             accent = Color(0xFFB58900),
             highlightedSurface = Color(0xFFFDF0C0),
             buttonStart = Color(0xFFB58900),
-            buttonEnd = Color(0xFFCB4B16)
+            buttonEnd = Color(0xFFCB4B16),
+            avatarBackground = Color(0xFFFDF0C0),
+            avatarForeground = Color(0xFFB58900),
+            outgoingBubbleStart = Color(0xFFB58900),
+            outgoingBubbleEnd = Color(0xFFB58900)
         )
 
         "velvet" -> ChatforiaPalette(
@@ -132,7 +165,11 @@ private fun themePalette(code: String): ChatforiaPalette {
             accent = Color(0xFFE91E63),
             highlightedSurface = Color(0xFF35162E),
             buttonStart = Color(0xFFE91E63),
-            buttonEnd = Color(0xFFFFB300)
+            buttonEnd = Color(0xFFFFB300),
+            avatarBackground = Color(0xFF35162E),
+            avatarForeground = Color(0xFFE91E63),
+            outgoingBubbleStart = Color(0xFFE91E63),
+            outgoingBubbleEnd = Color(0xFFE91E63)
         )
 
         else -> ChatforiaPalette(
@@ -144,7 +181,11 @@ private fun themePalette(code: String): ChatforiaPalette {
             accent = Color(0xFFFFB300),
             highlightedSurface = Color(0xFFFFF4D0),
             buttonStart = Color(0xFFFFB300),
-            buttonEnd = Color(0xFFFF9800)
+            buttonEnd = Color(0xFFFF9800),
+            avatarBackground = Color(0xFFFFF4D0),
+            avatarForeground = Color(0xFFFFB300),
+            outgoingBubbleStart = Color(0xFFFFB300),
+            outgoingBubbleEnd = Color(0xFFFFB300)
         )
     }
 }
