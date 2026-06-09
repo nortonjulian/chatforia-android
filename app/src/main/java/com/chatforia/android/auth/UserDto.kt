@@ -40,7 +40,7 @@ data class UserDto(
     val wantsAgeFilter: Boolean? = null,
     val randomChatAllowedBands: List<String>? = null,
 
-    val foriaRemember: Boolean? = null,
+    val riaRemember: Boolean? = null,
     val enableSmartReplies: Boolean? = null,
     val smartRepliesEnabled: Boolean? = null,
     val maskAIProfanity: Boolean? = null,
@@ -57,6 +57,15 @@ data class UserDto(
     val voicemailForwardEmail: String? = null,
     val voicemailGreetingText: String? = null,
     val voicemailGreeting: String? = null,
+
+    val a11yUiFont: String? = null,
+    val a11yVisualAlerts: Boolean? = null,
+    val a11yVibrate: Boolean? = null,
+    val a11yFlashOnCall: Boolean? = null,
+    val a11yLiveCaptions: Boolean? = null,
+    val a11yVoiceNoteSTT: Boolean? = null,
+    val a11yCaptionFont: String? = null,
+    val a11yCaptionBg: String? = null,
 
     val createdAt: String? = null,
     val updatedAt: String? = null

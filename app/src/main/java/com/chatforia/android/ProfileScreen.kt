@@ -92,6 +92,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.luminance
 import com.chatforia.android.sounds.AudioPlayerService
+import androidx.compose.material.icons.filled.Accessibility
 
 @Composable
 fun ProfileScreen(
@@ -132,6 +133,8 @@ fun ProfileScreen(
     var avatarError by remember { mutableStateOf<String?>(null) }
 
     var showThemePicker by remember { mutableStateOf(false) }
+
+    var showAccessibility by remember { mutableStateOf(false) }
 
     val avatarPickerLauncher =
         rememberLauncherForActivityResult(
@@ -269,6 +272,24 @@ fun ProfileScreen(
         WirelessHomeView(
             apiClient = apiClient,
             onBack = { showWireless = false }
+        )
+        return
+    }
+
+    if (showAccessibility) {
+        AccessibilitySettingsScreen(
+            state = settingsState,
+            onBack = { showAccessibility = false },
+            onUpdate = { nextState ->
+                settingsViewModel.update { nextState }
+            },
+            onSave = {
+                settingsViewModel.saveAccessibility(onUserUpdated)
+            },
+            onUpgradeRequired = {
+                showAccessibility = false
+                showUpgrade = true
+            }
         )
         return
     }
@@ -500,6 +521,18 @@ fun ProfileScreen(
             )
 
             HorizontalDivider(color = ChatforiaColors.border)
+
+            HorizontalDivider(color = ChatforiaColors.border)
+
+            ProfileRow(
+                icon = Icons.Default.Accessibility,
+                title = "Accessibility",
+                subtitle = "Visual alerts, captions, and voice note accessibility",
+                showChevron = true,
+                onClick = {
+                    showAccessibility = true
+                }
+            )
 
             SoundSettingsView(
                 currentPlan = user.plan,

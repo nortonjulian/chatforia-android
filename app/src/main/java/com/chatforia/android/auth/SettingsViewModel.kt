@@ -18,6 +18,15 @@ data class SettingsUiState(
     val showReadReceipts: Boolean = false,
     val autoDeleteSeconds: Int = 0,
 
+    val a11yUiFont: String = "md",
+    val a11yVisualAlerts: Boolean = false,
+    val a11yVibrate: Boolean = false,
+    val a11yFlashOnCall: Boolean = false,
+    val a11yLiveCaptions: Boolean = false,
+    val a11yVoiceNoteSTT: Boolean = false,
+    val a11yCaptionFont: String = "lg",
+    val a11yCaptionBg: String = "dark",
+
     val privacyBlurEnabled: Boolean = false,
     val privacyBlurOnUnfocus: Boolean = false,
     val privacyHoldToReveal: Boolean = false,
@@ -70,7 +79,7 @@ class SettingsViewModel(
             privacyBlurOnUnfocus = user.privacyBlurOnUnfocus ?: false,
             privacyHoldToReveal = user.privacyHoldToReveal ?: false,
             notifyOnCopy = user.notifyOnCopy ?: false,
-            riaRemember = user.foriaRemember ?: true,
+            riaRemember = user.riaRemember ?: true,
             enableSmartReplies =
                 user.enableSmartReplies
                     ?: user.smartRepliesEnabled
@@ -100,7 +109,51 @@ class SettingsViewModel(
                 user.voicemailForwardEmail ?: user.email ?: "",
             voicemailGreetingText =
                 user.voicemailGreetingText ?: user.voicemailGreeting ?: "",
+
+            a11yUiFont = user.a11yUiFont ?: "md",
+            a11yVisualAlerts = user.a11yVisualAlerts ?: false,
+            a11yVibrate = user.a11yVibrate ?: false,
+            a11yFlashOnCall = user.a11yFlashOnCall ?: false,
+            a11yLiveCaptions = user.a11yLiveCaptions ?: false,
+            a11yVoiceNoteSTT = user.a11yVoiceNoteSTT ?: false,
+            a11yCaptionFont = user.a11yCaptionFont ?: "lg",
+            a11yCaptionBg = user.a11yCaptionBg ?: "dark",
         )
+    }
+
+    fun saveAccessibility(onUserUpdated: (UserDto) -> Unit) {
+        viewModelScope.launch {
+            val current = _state.value
+            _state.value = current.copy(isSaving = true, error = null, success = null)
+
+            try {
+                val updatedUser = repository.updateAccessibility(
+                    AccessibilitySettingsUpdateRequest(
+                        a11yUiFont = current.a11yUiFont,
+                        a11yVisualAlerts = current.a11yVisualAlerts,
+                        a11yVibrate = current.a11yVibrate,
+                        a11yFlashOnCall = current.a11yFlashOnCall,
+                        a11yLiveCaptions = current.a11yLiveCaptions,
+                        a11yVoiceNoteSTT = current.a11yVoiceNoteSTT,
+                        a11yCaptionFont = current.a11yCaptionFont,
+                        a11yCaptionBg = current.a11yCaptionBg,
+                    )
+                )
+
+                onUserUpdated(updatedUser)
+                load(updatedUser)
+
+                _state.value = _state.value.copy(
+                    isSaving = false,
+                    success = "Accessibility settings saved."
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isSaving = false,
+                    error = e.message ?: "Failed to save accessibility settings."
+                )
+            }
+        }
     }
 
     fun update(transform: (SettingsUiState) -> SettingsUiState) {

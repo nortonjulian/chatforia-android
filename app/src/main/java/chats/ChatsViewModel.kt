@@ -65,6 +65,23 @@ class ChatsViewModel(
         loadConversations()
     }
 
+    fun deleteConversation(conversation: ConversationDto) {
+        val before = _conversations.value
+
+        _conversations.value =
+            before.filterNot { it.uniqueId == conversation.uniqueId }
+
+        viewModelScope.launch {
+            try {
+                repository.deleteConversation(conversation)
+                loadConversations()
+            } catch (e: Exception) {
+                _conversations.value = before
+                _error.value = e.message ?: "Failed to delete conversation."
+            }
+        }
+    }
+
     fun applyRealtimeMessageJson(messageJson: String) {
         viewModelScope.launch {
             try {

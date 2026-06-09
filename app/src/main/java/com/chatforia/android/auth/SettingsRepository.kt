@@ -63,6 +63,29 @@ class SettingsRepository(
         }
     }
 
+    suspend fun updateAccessibility(
+        request: AccessibilitySettingsUpdateRequest
+    ): UserDto {
+        return withContext(Dispatchers.IO) {
+            apiClient.send<Unit>(
+                ApiRequest(
+                    path = "users/me/a11y",
+                    method = HttpMethod.PATCH,
+                    bodyJson = json.encodeToString(request),
+                    requiresAuth = true
+                )
+            )
+
+            apiClient.send<MeResponse>(
+                ApiRequest(
+                    path = "auth/me",
+                    method = HttpMethod.GET,
+                    requiresAuth = true
+                )
+            ).user
+        }
+    }
+
     suspend fun deleteAccount() {
         withContext(Dispatchers.IO) {
             apiClient.send<Unit>(

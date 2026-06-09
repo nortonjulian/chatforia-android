@@ -37,7 +37,6 @@ import com.chatforia.android.network.ApiClient
 import com.chatforia.android.ria.RiaChatScreen
 import com.chatforia.android.ria.RiaChatViewModel
 import com.chatforia.android.ria.RiaRepository
-
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -58,7 +57,14 @@ import com.chatforia.android.sounds.AudioPlayerService
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.draw.clip
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatsScreen(
@@ -91,6 +97,10 @@ fun ChatsScreen(
 
     var showStartChat by remember {
         mutableStateOf(false)
+    }
+
+    var pendingDeleteConversation by remember {
+        mutableStateOf<ConversationDto?>(null)
     }
 
     val context = LocalContext.current
@@ -337,30 +347,29 @@ fun ChatsScreen(
                 Text("No chats yet")
             }
         } else {
-            Surface(
-                shape = RoundedCornerShape(28.dp),
-                color = ChatforiaColors.cardBackground,
-                tonalElevation = 2.dp,
-                modifier = Modifier.fillMaxWidth()
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 12.dp)
             ) {
-                LazyColumn(
-                    modifier = Modifier.padding(12.dp)
-                ) {
-                    items(filtered) { chat ->
-                        ConversationRow(
-                            conversation = chat,
+                items(
+                    items = filtered,
+                    key = { it.uniqueId }
+                ) { chat ->
 
-                            onClick = {
-                                selectedConversation = chat
-                            }
-                        )
-                        HorizontalDivider(color = ChatforiaColors.border)
-                    }
+                    SwipeRevealConversationRow(
+                        conversation = chat,
+                        onClick = {
+                            selectedConversation = chat
+                        },
+                        onDelete = {
+                            pendingDeleteConversation = chat
+                        }
+                    )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
 
         Surface(
             modifier = Modifier
@@ -376,6 +385,39 @@ fun ChatsScreen(
         }
 
         Spacer(modifier = Modifier.height(12.dp))
+    }
+
+    pendingDeleteConversation?.let { conversation ->
+        AlertDialog(
+            onDismissRequest = {
+                pendingDeleteConversation = null
+            },
+            title = {
+                Text("Delete conversation?")
+            },
+            text = {
+                Text("This will remove this conversation from your chat list.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pendingDeleteConversation = null
+                        viewModel.deleteConversation(conversation)
+                    }
+                ) {
+                    Text("Delete", color = Color(0xFFE53935))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        pendingDeleteConversation = null
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     if (showRandomMatching) {
@@ -514,6 +556,72 @@ private fun ConversationRow(
                     Text(unreadCount.toString())
                 }
             }
+        }
+    }
+}
+
+
+@Composable
+private fun SwipeRevealConversationRow(
+    conversation: ConversationDto,
+    onClick: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var offsetX by remember(conversation.uniqueId) {
+        mutableFloatStateOf(0f)
+    }
+
+    val maxRevealPx = 92.dp.value * LocalDensity.current.density
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+    ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .width(92.dp)
+                .background(Color(0xFFE53935)),
+            contentAlignment = Alignment.Center
+        ) {
+            IconButton(onClick = onDelete) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Delete conversation",
+                    tint = Color.White
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(offsetX.roundToInt(), 0) }
+                .background(ChatforiaColors.cardBackground)
+                .pointerInput(conversation.uniqueId) {
+                    detectHorizontalDragGestures(
+                        onHorizontalDrag = { _, dragAmount ->
+                            offsetX = (offsetX + dragAmount)
+                                .coerceIn(-maxRevealPx, 0f)
+                        },
+                        onDragEnd = {
+                            offsetX = if (offsetX < -maxRevealPx / 2) {
+                                -maxRevealPx
+                            } else {
+                                0f
+                            }
+                        },
+                        onDragCancel = {
+                            offsetX = 0f
+                        }
+                    )
+                }
+        ) {
+            ConversationRow(
+                conversation = conversation,
+                onClick = onClick
+            )
         }
     }
 }
