@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import com.chatforia.android.crypto.AccountKeyManager
+import android.content.Context
 
 class AuthViewModel(
     private val repository: AuthRepository,
@@ -30,6 +31,23 @@ class AuthViewModel(
         return repository.fetchMe()
     }
 
+    private suspend fun resolveLoggedInState(user: UserDto): AuthState {
+        return try {
+            val preparedUser = prepareEncryptionKeys(user)
+
+            if (needsOnboarding(preparedUser)) {
+                AuthState.NeedsOnboarding(preparedUser)
+            } else {
+                AuthState.LoggedIn(preparedUser)
+            }
+        } catch (e: Exception) {
+            AuthState.NeedsKeyRestore(
+                user = user,
+                message = e.message ?: "This device needs your encryption key."
+            )
+        }
+    }
+
     fun bootstrap() {
         _state.value = AuthState.Loading
 
@@ -41,18 +59,7 @@ class AuthViewModel(
                 return@launch
             }
 
-            val preparedUser =
-                try {
-                    prepareEncryptionKeys(user)
-                } catch (e: Exception) {
-                    user
-                }
-
-            _state.value =
-                when {
-                    needsOnboarding(preparedUser) -> AuthState.NeedsOnboarding(preparedUser)
-                    else -> AuthState.LoggedIn(preparedUser)
-                }
+            _state.value = resolveLoggedInState(user)
         }
     }
 
@@ -81,28 +88,14 @@ class AuthViewModel(
         password: String
     ) {
         val user = repository.login(identifier, password)
-        val preparedUser = prepareEncryptionKeys(user)
-
-        _state.value =
-            if (needsOnboarding(preparedUser)) {
-                AuthState.NeedsOnboarding(preparedUser)
-            } else {
-                AuthState.LoggedIn(preparedUser)
-            }
+        _state.value = resolveLoggedInState(user)
     }
 
     suspend fun loginWithGoogle(
         idToken: String
     ) {
         val user = repository.loginWithGoogle(idToken)
-        val preparedUser = prepareEncryptionKeys(user)
-
-        _state.value =
-            if (needsOnboarding(preparedUser)) {
-                AuthState.NeedsOnboarding(preparedUser)
-            } else {
-                AuthState.LoggedIn(preparedUser)
-            }
+        _state.value = resolveLoggedInState(user)
     }
 
     fun replaceCurrentUser(
@@ -120,6 +113,23 @@ class AuthViewModel(
         user: UserDto
     ) {
         _state.value = AuthState.LoggedIn(user)
+    }
+
+    fun loginWithExternalToken(token: String) {
+        repository.saveExternalToken(token)
+        bootstrap()
+    }
+
+    fun loginWithApple(context: Context) {
+        AppleAuthClient(context).start()
+    }
+
+    fun showRegistration() {
+        _state.value = AuthState.Registering
+    }
+
+    fun showLogin() {
+        _state.value = AuthState.LoggedOut
     }
 
     fun setError(message: String) {

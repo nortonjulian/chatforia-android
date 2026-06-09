@@ -62,6 +62,12 @@ import com.chatforia.android.calls.CallPermissionHelper
 import androidx.compose.material3.MaterialTheme
 import com.chatforia.android.random.RandomChatViewModel
 import androidx.compose.runtime.SideEffect
+import android.content.Intent
+import android.net.Uri
+import com.chatforia.android.crypto.DeviceProvisioningCrypto
+import com.chatforia.android.crypto.DeviceIdentityStorage
+import com.chatforia.android.crypto.KeyRestoreGate
+
 
 enum class AppTab {
     CHATS,
@@ -71,6 +77,26 @@ enum class AppTab {
 }
 
 class MainActivity : ComponentActivity() {
+    private fun consumeAppleOAuthToken(
+        intent: Intent?,
+        onToken: (String) -> Unit
+    ) {
+        val data: Uri = intent?.data ?: return
+
+        if (
+            data.scheme == "chatforia" &&
+            data.host == "oauth" &&
+            data.path == "/apple"
+        ) {
+            val token = data.getQueryParameter("token")
+
+            if (!token.isNullOrBlank()) {
+                onToken(token)
+                setIntent(Intent())
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -115,6 +141,12 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
+                LaunchedEffect(Unit) {
+                    consumeAppleOAuthToken(intent) { token ->
+                        authViewModel.loginWithExternalToken(token)
+                    }
+                }
+
                 val authState by
                 authViewModel.state.collectAsState()
 
@@ -128,6 +160,7 @@ class MainActivity : ComponentActivity() {
                             onLogin = { identifier, password ->
                                 authViewModel.login(identifier, password)
                             },
+
                             onGoogleLogin = {
                                 try {
                                     val googleAuthClient =
@@ -137,16 +170,66 @@ class MainActivity : ComponentActivity() {
                                         googleAuthClient.getIdToken()
 
                                     authViewModel.loginWithGoogle(idToken)
+
                                 } catch (e: Exception) {
                                     authViewModel.setError(
                                         "Google sign-in is not available on this device. Try email login instead."
                                     )
                                 }
                             },
+
+                            onCreateAccount = {
+                                authViewModel.showRegistration()
+                            },
+
+                            onAppleLogin = {
+                                authViewModel.loginWithApple(applicationContext)
+                            },
+
+                            onForgotPassword = { identifier ->
+                                repository.forgotPassword(identifier)
+                            },
+
+                            onResendVerification = { email ->
+                                repository.resendVerificationEmail(email)
+                            },
+
                             onResetEncryption = { identifier, password ->
-                                authViewModel.resetEncryptionAndLogin(identifier, password)
+                                authViewModel.resetEncryptionAndLogin(
+                                    identifier,
+                                    password
+                                )
                             }
                         )
+
+                    AuthState.Registering -> {
+                        val registerViewModel =
+                            remember {
+                                RegisterViewModel(
+                                    authRepository = repository,
+                                    tokenStorage = tokenStorage,
+                                    keyStorage = keyStorage,
+                                    onRegistered = {
+                                        authViewModel.bootstrap()
+                                    }
+                                )
+                            }
+
+                        RegisterScreen(
+                            viewModel = registerViewModel,
+                            onGoogleLogin = {
+                                authViewModel.loginWithGoogle(
+                                    GoogleAuthClient(applicationContext).getIdToken()
+                                )
+                            },
+                            onAppleLogin = {
+                                authViewModel.loginWithApple(applicationContext)
+                            },
+                            onBackToLogin = {
+                                authViewModel.showLogin()
+                            }
+                        )
+                    }
 
                     is AuthState.LoggedIn -> {
                         val loggedInState =
@@ -159,6 +242,24 @@ class MainActivity : ComponentActivity() {
                             authRepository = repository,
                             onUserUpdated = { updatedUser ->
                                 authViewModel.replaceCurrentUser(updatedUser)
+                            },
+                            onLogout = {
+                                authViewModel.logout()
+                            }
+                        )
+                    }
+
+                    is AuthState.NeedsKeyRestore -> {
+                        val restoreState =
+                            authState as AuthState.NeedsKeyRestore
+
+                        KeyRestoreGate(
+                            user = restoreState.user,
+                            message = restoreState.message,
+                            apiClient = apiClient,
+                            authRepository = repository,
+                            onRecovered = {
+                                authViewModel.bootstrap()
                             },
                             onLogout = {
                                 authViewModel.logout()
@@ -275,6 +376,16 @@ fun ChatforiaApp(
 
     val context = LocalContext.current
 
+    val deviceIdentityStorage =
+        remember {
+            DeviceIdentityStorage(context)
+        }
+
+    val keyStorage =
+        remember {
+            KeyStorage(context)
+        }
+
     val uploadRepository =
         remember {
             UploadRepository(
@@ -325,13 +436,17 @@ fun ChatforiaApp(
     val linkedDevicesViewModel =
         remember {
             LinkedDevicesViewModel(
-                linkedDevicesRepository
+                repository = linkedDevicesRepository,
+                keyStorage = keyStorage,
+                deviceIdentityStorage = deviceIdentityStorage,
+                provisioningCrypto = DeviceProvisioningCrypto()
             )
         }
 
     val androidCallManager =
         remember(context) {
             AndroidCallManager(
+                context = context,
                 socketManager = socketManager,
                 callService = callService,
                 videoRepository = videoCallRepository,

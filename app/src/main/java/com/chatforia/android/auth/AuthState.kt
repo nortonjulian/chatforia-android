@@ -6,6 +6,8 @@ sealed interface AuthState {
 
     data object LoggedOut : AuthState
 
+    data object Registering : AuthState
+
     data class LoggedIn(
         val user: UserDto
     ) : AuthState
@@ -13,4 +15,10 @@ sealed interface AuthState {
     data class NeedsOnboarding(
         val user: UserDto
     ) : AuthState
+
+    data class NeedsKeyRestore(
+        val user: UserDto,
+        val message: String
+    ) : AuthState
 }
+

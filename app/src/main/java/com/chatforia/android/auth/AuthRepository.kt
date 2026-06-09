@@ -59,7 +59,7 @@ class AuthRepository(
             withContext(Dispatchers.IO) {
                 apiClient.send(
                     ApiRequest(
-                        path = "auth/oauth/google/ios",
+                        path = "auth/oauth/google/android",
                         method = HttpMethod.POST,
                         bodyJson = bodyJson,
                         requiresAuth = false
@@ -122,6 +122,86 @@ class AuthRepository(
         }
     }
 
+    suspend fun resendVerificationEmail(email: String) {
+        val bodyJson =
+            json.encodeToString(
+                ResendVerificationRequest(
+                    email = email.trim()
+                )
+            )
+
+        withContext(Dispatchers.IO) {
+            apiClient.sendRaw(
+                ApiRequest(
+                    path = "auth/resend-email",
+                    method = HttpMethod.POST,
+                    bodyJson = bodyJson,
+                    requiresAuth = false
+                )
+            )
+        }
+    }
+
+    suspend fun forgotPassword(identifier: String) {
+        val bodyJson =
+            json.encodeToString(
+                ForgotPasswordRequest(
+                    identifier = identifier.trim()
+                )
+            )
+
+        withContext(Dispatchers.IO) {
+            apiClient.sendRaw(
+                ApiRequest(
+                    path = "auth/forgot-password",
+                    method = HttpMethod.POST,
+                    bodyJson = bodyJson,
+                    requiresAuth = false
+                )
+            )
+        }
+    }
+
+    suspend fun register(
+        username: String,
+        email: String,
+        password: String,
+        phone: String? = null,
+        smsConsent: Boolean? = null
+    ): RegistrationResponse {
+        val trimmedPhone =
+            phone
+                ?.trim()
+                ?.takeIf { it.isNotBlank() }
+
+        val bodyJson =
+            json.encodeToString(
+                RegistrationRequest(
+                    username = username.trim(),
+                    email = email.trim(),
+                    password = password,
+                    phone = trimmedPhone,
+                    smsConsent =
+                        if (trimmedPhone == null) null else smsConsent
+                )
+            )
+
+        return withContext(Dispatchers.IO) {
+            apiClient.send(
+                ApiRequest(
+                    path = "auth/register",
+                    method = HttpMethod.POST,
+                    bodyJson = bodyJson,
+                    requiresAuth = false
+                )
+            )
+        }
+    }
+
+    fun saveExternalToken(token: String) {
+        tokenStorage.save(token)
+    }
+
     fun logout() {
         tokenStorage.clear()
     }
@@ -131,4 +211,14 @@ class AuthRepository(
 data class RotateEncryptionKeyRequest(
     val publicKey: String,
     val invalidateExistingBackup: Boolean = true
+)
+
+@kotlinx.serialization.Serializable
+data class ForgotPasswordRequest(
+    val identifier: String
+)
+
+@kotlinx.serialization.Serializable
+data class ResendVerificationRequest(
+    val email: String
 )

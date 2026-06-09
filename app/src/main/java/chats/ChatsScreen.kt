@@ -52,6 +52,13 @@ import com.chatforia.android.auth.UserDto
 import com.chatforia.android.calls.AndroidCallManager
 import com.chatforia.android.StartChatView
 import com.chatforia.android.chats.StartChatViewModel
+import com.chatforia.android.random.RandomChatSheet
+import androidx.compose.ui.platform.LocalContext
+import com.chatforia.android.sounds.AudioPlayerService
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatsScreen(
@@ -86,6 +93,8 @@ fun ChatsScreen(
         mutableStateOf(false)
     }
 
+    val context = LocalContext.current
+
     val randomState by
     randomChatViewModel.state.collectAsState()
 
@@ -98,13 +107,34 @@ fun ChatsScreen(
     val error by
     viewModel.error.collectAsState()
 
+    val startChatState by startChatViewModel.state.collectAsState()
+
     LaunchedEffect(Unit) {
         viewModel.loadConversations()
     }
 
     LaunchedEffect(socketManager) {
         socketManager.messageUpserts.collect { messageJson ->
+
             viewModel.applyRealtimeMessageJson(messageJson)
+
+            try {
+                val senderId =
+                    Json.parseToJsonElement(messageJson)
+                        .jsonObject["sender"]
+                        ?.jsonObject?.get("id")
+                        ?.jsonPrimitive?.content
+                        ?.toIntOrNull()
+
+                if (
+                    senderId != null &&
+                    senderId != currentUserId
+                ) {
+                    AudioPlayerService(context)
+                        .playSavedMessageTone()
+                }
+            } catch (_: Exception) {
+            }
         }
     }
 
@@ -128,6 +158,15 @@ fun ChatsScreen(
             }
 
         viewModel.loadConversations()
+    }
+
+    LaunchedEffect(startChatState.openedConversation) {
+        startChatState.openedConversation?.let { conversation ->
+            showStartChat = false
+            selectedConversation = conversation
+            startChatViewModel.clearOpenedConversation()
+            viewModel.loadConversations()
+        }
     }
 
     val filtered =
@@ -352,6 +391,23 @@ fun ChatsScreen(
                     randomChatViewModel.cancelSearch()
                     showRandomMatching = false
                 }
+            )
+        }
+    }
+
+    if (randomState.session != null) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                randomChatViewModel.endChat()
+            }
+        ) {
+            RandomChatSheet(
+                session = randomState.session!!,
+                messages = randomState.messages,
+                onSend = randomChatViewModel::sendMessage,
+                onAddFriend = randomChatViewModel::requestFriend,
+                onSkip = randomChatViewModel::skip,
+                onClose = randomChatViewModel::endChat
             )
         }
     }

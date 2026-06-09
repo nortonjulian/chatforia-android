@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import com.chatforia.android.ChatforiaGradientButton
 
 data class LinkedDevicesUiState(
     val devices: List<LinkedDeviceDto> = emptyList(),
@@ -23,7 +24,10 @@ data class LinkedDevicesUiState(
 )
 
 class LinkedDevicesViewModel(
-    private val repository: LinkedDevicesRepository
+    private val repository: LinkedDevicesRepository,
+    private val keyStorage: KeyStorage,
+    private val deviceIdentityStorage: DeviceIdentityStorage,
+    private val provisioningCrypto: DeviceProvisioningCrypto = DeviceProvisioningCrypto()
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LinkedDevicesUiState())
@@ -34,36 +38,165 @@ class LinkedDevicesViewModel(
             _state.value = _state.value.copy(isLoading = true, error = null)
 
             try {
-                _state.value =
-                    _state.value.copy(
-                        devices = repository.fetchMine(),
-                        pending = repository.fetchPendingPairing(),
-                        isLoading = false
-                    )
+                val allDevices = repository.fetchMine()
+                val pendingDevices = repository.fetchPendingPairing()
+
+                _state.value = _state.value.copy(
+                    devices = allDevices.filter {
+                        it.pairingStatus == null || it.pairingStatus == "approved"
+                    },
+                    pending = pendingDevices,
+                    isLoading = false
+                )
             } catch (e: Exception) {
-                _state.value =
-                    _state.value.copy(
-                        isLoading = false,
-                        error = e.message
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "Failed to load devices"
+                )
+            }
+        }
+    }
+
+    fun approve(device: LinkedDeviceDto) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val localPrivateKey = keyStorage.readPrivateKey()
+                    ?: throw IllegalStateException("This device is missing your encryption key.")
+
+                val targetPublicKey = device.publicKey
+                    ?: throw IllegalStateException("Pending device is missing a public key.")
+
+                val wrappedAccountKey =
+                    provisioningCrypto.wrapAccountKeyForDevice(
+                        accountPrivateKeyB64 = localPrivateKey,
+                        targetDevicePublicKeyB64 = targetPublicKey
                     )
+
+                repository.approve(
+                    deviceId = device.deviceId,
+                    wrappedAccountKey = wrappedAccountKey
+                )
+
+                load()
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message ?: "Failed to approve device"
+                )
             }
         }
     }
 
     fun reject(deviceId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            runCatching {
+            try {
                 repository.reject(deviceId)
+                load()
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message ?: "Failed to reject device"
+                )
             }
+        }
+    }
 
-            load()
+    fun revoke(deviceId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                repository.revoke(deviceId)
+                load()
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message ?: "Failed to revoke device"
+                )
+            }
+        }
+    }
+
+    fun completePairingForThisDevice(accountPublicKey: String?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val deviceId = deviceIdentityStorage.getOrCreateDeviceId()
+
+                val device = repository.fetchPairingStatus(deviceId)
+                    ?: throw IllegalStateException("Device pairing request was not found.")
+
+                if (device.pairingStatus != "approved") {
+                    throw IllegalStateException("This device has not been approved yet.")
+                }
+
+                val wrappedAccountKey = device.wrappedAccountKey
+                    ?: throw IllegalStateException("Approved device is missing wrapped account key.")
+
+                val devicePrivateKey = deviceIdentityStorage.readPrivateKey()
+                    ?: throw IllegalStateException("This device is missing its device identity key.")
+
+                val restoredAccountPrivateKey =
+                    provisioningCrypto.unwrapProvisionedAccountKey(
+                        wrappedAccountKeyJson = wrappedAccountKey,
+                        currentDevicePrivateKeyB64 = devicePrivateKey
+                    )
+
+                val accountPublicKey = accountPublicKey
+                    ?.trim()
+                    ?.takeIf { it.isNotEmpty() }
+                    ?: throw IllegalStateException("Missing account public key.")
+
+                keyStorage.saveKeyPair(
+                    publicKey = accountPublicKey,
+                    privateKey = restoredAccountPrivateKey
+                )
+
+                _state.value = _state.value.copy(
+                    error = null
+                )
+
+                load()
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message ?: "Failed to complete device pairing"
+                )
+            }
+        }
+    }
+
+    fun requestPairingForThisDevice(
+        name: String = "Android Device",
+        platform: String = "Android"
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val deviceId = deviceIdentityStorage.getOrCreateDeviceId()
+                val keyPair = deviceIdentityStorage.getOrCreateKeyPair()
+
+                repository.requestPairing(
+                    DeviceRegisterRequest(
+                        deviceId = deviceId,
+                        name = name,
+                        platform = platform,
+                        publicKey = keyPair.first,
+                        keyAlgorithm = "curve25519",
+                        keyVersion = 1
+                    )
+                )
+
+                _state.value = _state.value.copy(
+                    error = null
+                )
+
+                load()
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    error = e.message ?: "Failed to request device pairing"
+                )
+            }
         }
     }
 }
 
 @Composable
 fun LinkedDevicesScreen(
-    viewModel: LinkedDevicesViewModel
+    viewModel: LinkedDevicesViewModel,
+    accountPublicKey: String?
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -80,6 +213,32 @@ fun LinkedDevicesScreen(
             "Linked Devices",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        ChatforiaGradientButton(
+            text = "Request approval for this device",
+            onClick = {
+                viewModel.requestPairingForThisDevice()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        ChatforiaGradientButton(
+            text = "Finish device approval",
+            onClick = {
+                viewModel.completePairingForThisDevice(
+                    accountPublicKey = accountPublicKey
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -99,7 +258,10 @@ fun LinkedDevicesScreen(
 
         LazyColumn {
             items(state.devices) { device ->
-                DeviceRow(device)
+                DeviceRow(
+                    device = device,
+                    onRevoke = viewModel::revoke
+                )
                 HorizontalDivider()
             }
         }
@@ -117,10 +279,20 @@ fun LinkedDevicesScreen(
             ) {
                 DeviceSummary(device)
 
-                TextButton(
-                    onClick = { viewModel.reject(device.id) }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Reject")
+                    TextButton(
+                        onClick = { viewModel.approve(device) }
+                    ) {
+                        Text("Approve")
+                    }
+
+                    TextButton(
+                        onClick = { viewModel.reject(device.deviceId) }
+                    ) {
+                        Text("Reject")
+                    }
                 }
             }
 
@@ -130,13 +302,23 @@ fun LinkedDevicesScreen(
 }
 
 @Composable
-private fun DeviceRow(device: LinkedDeviceDto) {
+private fun DeviceRow(
+    device: LinkedDeviceDto,
+    onRevoke: (String) -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 10.dp)
+            .padding(vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         DeviceSummary(device)
+
+        TextButton(
+            onClick = { onRevoke(device.deviceId) }
+        ) {
+            Text("Revoke")
+        }
     }
 }
 

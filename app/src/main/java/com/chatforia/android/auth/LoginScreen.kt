@@ -20,12 +20,18 @@ import kotlinx.coroutines.launch
 fun LoginScreen(
     onLogin: suspend (String, String) -> Unit,
     onGoogleLogin: suspend () -> Unit,
-    onResetEncryption: suspend (String, String) -> Unit
+    onAppleLogin: suspend () -> Unit,
+    onCreateAccount: () -> Unit,
+    onResetEncryption: suspend (String, String) -> Unit,
+    onForgotPassword: suspend (String) -> Unit,
+    onResendVerification: suspend (String) -> Unit,
 ) {
     var identifier by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
+
+    var canResendVerification by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
 
@@ -102,7 +108,19 @@ fun LoginScreen(
 
                     OutlinedButton(
                         onClick = {
-                            errorMessage = "Apple sign-in is not available yet."
+                            scope.launch {
+                                isLoading = true
+                                errorMessage = null
+
+                                try {
+                                    onAppleLogin()
+                                } catch (error: Exception) {
+                                    errorMessage =
+                                        error.message ?: "Apple sign-in failed."
+                                } finally {
+                                    isLoading = false
+                                }
+                            }
                         },
                         modifier = Modifier.weight(1f),
                         enabled = !isLoading,
@@ -135,17 +153,6 @@ fun LoginScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
-
-                TextButton(
-                    onClick = {
-                        errorMessage = "Forgot password is coming next."
-                    },
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Text("Forgot password?")
-                }
-
                 Spacer(modifier = Modifier.height(12.dp))
 
                 OutlinedTextField(
@@ -172,6 +179,39 @@ fun LoginScreen(
                     shape = RoundedCornerShape(18.dp)
                 )
 
+                Spacer(modifier = Modifier.height(14.dp))
+
+                TextButton(
+                    onClick = {
+                        scope.launch {
+                            val value = identifier.trim()
+
+                            if (value.isBlank()) {
+                                errorMessage = "Enter your email, username, or phone number first."
+                                return@launch
+                            }
+
+                            isLoading = true
+                            errorMessage = null
+
+                            try {
+                                onForgotPassword(value)
+                                errorMessage = "If an account exists, we’ll send password reset instructions."
+                            } catch (error: Exception) {
+                                errorMessage = "If an account exists, we’ll send password reset instructions."
+                            } finally {
+                                isLoading = false
+                            }
+                        }
+                    },
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text(
+                        "Forgot password?",
+                        color = ChatforiaColors.accent
+                    )
+                }
+
                 errorMessage?.let { message ->
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -183,6 +223,36 @@ fun LoginScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
 
+                    if (canResendVerification) {
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        TextButton(
+                            onClick = {
+                                scope.launch {
+                                    try {
+                                        onResendVerification(identifier.trim())
+
+                                        errorMessage =
+                                            "Verification email sent. Check your inbox."
+
+                                        canResendVerification = false
+
+                                    } catch (_: Exception) {
+
+                                        errorMessage =
+                                            "If that account exists, we'll send a verification email."
+                                    }
+                                }
+                            }
+                        ) {
+                            Text(
+                                "Resend verification email",
+                                color = ChatforiaColors.accent
+                            )
+                        }
+                    }
+
                     if (
                         message.contains(
                             "missing your encryption key",
@@ -193,6 +263,9 @@ fun LoginScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Button(
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = ChatforiaColors.accent
+                            ),
                             onClick = {
                                 scope.launch {
                                     isLoading = true
@@ -221,6 +294,9 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(22.dp))
 
                 Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ChatforiaColors.accent
+                    ),
                     onClick = {
                         scope.launch {
                             isLoading = true
@@ -232,8 +308,19 @@ fun LoginScreen(
                                     password
                                 )
                             } catch (error: Exception) {
+                                val raw = error.message.orEmpty()
+
                                 errorMessage =
-                                    error.message ?: "Login failed."
+                                    when {
+                                        raw.contains("email_not_verified", ignoreCase = true) ||
+                                        raw.contains("Please verify your email", ignoreCase = true) -> {
+                                            canResendVerification = true
+                                            "Please verify your email before logging in. Check your inbox for the Chatforia verification link."
+                                        }
+
+                                        else ->
+                                            "Login failed. Please try again."
+                                    }
                             } finally {
                                 isLoading = false
                             }
@@ -263,11 +350,12 @@ fun LoginScreen(
                 )
 
                 TextButton(
-                    onClick = {
-                        errorMessage = "Create account is coming next."
-                    }
+                    onClick = onCreateAccount
                 ) {
-                    Text("Create an account")
+                    Text(
+                        "Create an account",
+                        color = ChatforiaColors.accent
+                    )
                 }
             }
         }

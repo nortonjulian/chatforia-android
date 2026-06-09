@@ -9,13 +9,22 @@ import kotlinx.serialization.json.Json
 
 @Serializable
 data class LinkedDeviceDto(
-    val id: String,
+    val id: String? = null,
+    val userId: Int? = null,
+    val deviceId: String,
     val name: String? = null,
     val platform: String? = null,
     val publicKey: String? = null,
+    val keyAlgorithm: String? = null,
+    val keyVersion: Int? = null,
+    val isPrimary: Boolean? = null,
     val status: String? = null,
+    val pairingStatus: String? = null,
     val createdAt: String? = null,
-    val lastSeenAt: String? = null
+    val lastSeenAt: String? = null,
+    val wrappedAccountKey: String? = null,
+    val wrappedAccountKeyAlgo: String? = null,
+    val wrappedAccountKeyVer: Int? = null
 )
 
 @Serializable
@@ -28,8 +37,31 @@ data class LinkedDevicesResponse(
 }
 
 @Serializable
+data class DeviceResponse(
+    val device: LinkedDeviceDto? = null
+)
+
+@Serializable
 data class DeviceIdRequest(
     val deviceId: String
+)
+
+@Serializable
+data class DeviceRegisterRequest(
+    val deviceId: String,
+    val name: String,
+    val platform: String,
+    val publicKey: String,
+    val keyAlgorithm: String = "curve25519",
+    val keyVersion: Int = 1
+)
+
+@Serializable
+data class ApproveDeviceRequest(
+    val deviceId: String,
+    val wrappedAccountKey: String,
+    val wrappedAccountKeyAlgo: String = "x25519-xsalsa20poly1305",
+    val wrappedAccountKeyVer: Int = 1
 )
 
 class LinkedDevicesRepository(
@@ -67,6 +99,33 @@ class LinkedDevicesRepository(
         return response.resolvedItems
     }
 
+    fun registerCurrentDevice(request: DeviceRegisterRequest) {
+        apiClient.sendRaw(
+            ApiRequest(
+                path = "devices/register",
+                method = HttpMethod.POST,
+                bodyJson = json.encodeToString(request),
+                requiresAuth = true
+            )
+        )
+    }
+
+    fun approve(deviceId: String, wrappedAccountKey: String) {
+        apiClient.sendRaw(
+            ApiRequest(
+                path = "devices/pairing/approve",
+                method = HttpMethod.POST,
+                bodyJson = json.encodeToString(
+                    ApproveDeviceRequest(
+                        deviceId = deviceId,
+                        wrappedAccountKey = wrappedAccountKey
+                    )
+                ),
+                requiresAuth = true
+            )
+        )
+    }
+
     fun reject(deviceId: String) {
         apiClient.sendRaw(
             ApiRequest(
@@ -76,5 +135,51 @@ class LinkedDevicesRepository(
                 requiresAuth = true
             )
         )
+    }
+
+    fun revoke(deviceId: String) {
+        apiClient.sendRaw(
+            ApiRequest(
+                path = "devices/revoke",
+                method = HttpMethod.POST,
+                bodyJson = json.encodeToString(DeviceIdRequest(deviceId)),
+                requiresAuth = true
+            )
+        )
+    }
+
+    fun heartbeat(deviceId: String) {
+        apiClient.sendRaw(
+            ApiRequest(
+                path = "devices/heartbeat",
+                method = HttpMethod.POST,
+                bodyJson = json.encodeToString(DeviceIdRequest(deviceId)),
+                requiresAuth = true
+            )
+        )
+    }
+
+    fun requestPairing(request: DeviceRegisterRequest) {
+        apiClient.sendRaw(
+            ApiRequest(
+                path = "devices/pairing/request",
+                method = HttpMethod.POST,
+                bodyJson = json.encodeToString(request),
+                requiresAuth = true
+            )
+        )
+    }
+
+    fun fetchPairingStatus(deviceId: String): LinkedDeviceDto? {
+        val response: DeviceResponse =
+            apiClient.send(
+                ApiRequest(
+                    path = "devices/pairing/status/$deviceId",
+                    method = HttpMethod.GET,
+                    requiresAuth = true
+                )
+            )
+
+        return response.device
     }
 }

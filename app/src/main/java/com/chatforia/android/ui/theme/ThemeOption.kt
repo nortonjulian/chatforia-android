@@ -29,4 +29,18 @@ object AppThemes {
         return option.requiredPlan == "FREE" ||
                 normalizedPlan == "PREMIUM"
     }
+
+    fun resolvedThemeForPlan(
+        code: String?,
+        plan: String?
+    ): String {
+        val fallback = "dawn"
+        val resolvedCode = code?.lowercase() ?: fallback
+
+        return if (canAccess(resolvedCode, plan)) {
+            resolvedCode
+        } else {
+            fallback
+        }
+    }
 }

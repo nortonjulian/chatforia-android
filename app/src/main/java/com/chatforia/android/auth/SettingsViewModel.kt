@@ -5,6 +5,9 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import com.chatforia.android.sounds.resolvedMessageToneForPlan
+import com.chatforia.android.sounds.resolvedRingtoneForPlan
+import com.chatforia.android.ui.theme.AppThemes
 
 data class SettingsUiState(
     val preferredLanguage: String = "en",
@@ -55,7 +58,10 @@ class SettingsViewModel(
             autoTranslate = user.autoTranslate ?: false,
             showOriginalWithTranslation =
                 user.showOriginalWithTranslation ?: false,
-            theme = user.theme ?: "dawn",
+            theme = AppThemes.resolvedThemeForPlan(
+                code = user.theme,
+                plan = user.plan
+            ),
             allowExplicitContent = user.allowExplicitContent ?: false,
             showReadReceipts =
                 user.showReadReceipts ?: false,
@@ -75,12 +81,14 @@ class SettingsViewModel(
                     ?: user.profanityMaskEnabled
                     ?: false,
 
-            messageTone =
-                user.messageTone
-                    ?: user.messageSound
-                    ?: user.tone
-                    ?: "Default.mp3",
-            ringtone = user.ringtone ?: "Classic.mp3",
+            messageTone = resolvedMessageToneForPlan(
+                filename = user.messageTone ?: user.messageSound ?: user.tone,
+                plan = user.plan
+            ),
+            ringtone = resolvedRingtoneForPlan(
+                filename = user.ringtone,
+                plan = user.plan
+            ),
             soundVolume = user.soundVolume?.toInt() ?: 70,
             ageBand = user.ageBand,
             wantsAgeFilter = user.wantsAgeFilter ?: true,

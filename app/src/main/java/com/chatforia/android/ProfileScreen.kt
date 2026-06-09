@@ -91,6 +91,7 @@ import com.chatforia.android.ui.theme.AppThemes
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.luminance
+import com.chatforia.android.sounds.AudioPlayerService
 
 @Composable
 fun ProfileScreen(
@@ -171,6 +172,19 @@ fun ProfileScreen(
 
     val settingsState by settingsViewModel.state.collectAsState()
 
+    LaunchedEffect(
+        settingsState.messageTone,
+        settingsState.ringtone,
+        settingsState.soundVolume
+    ) {
+        AudioPlayerService.save(
+            context = context,
+            messageTone = settingsState.messageTone,
+            ringtone = settingsState.ringtone,
+            soundVolume = settingsState.soundVolume
+        )
+    }
+
     LaunchedEffect(user.theme) {
         ChatforiaColors.applyTheme(user.theme ?: "dawn")
     }
@@ -212,7 +226,8 @@ fun ProfileScreen(
     if (showLinkedDevices) {
 
         LinkedDevicesScreen(
-            viewModel = linkedDevicesViewModel
+            viewModel = linkedDevicesViewModel,
+            accountPublicKey = user.publicKey
         )
 
         return
@@ -1353,7 +1368,7 @@ private fun LegalSupportRow(
 }
 
 @Composable
-private fun ChatforiaGradientButton(
+fun ChatforiaGradientButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,

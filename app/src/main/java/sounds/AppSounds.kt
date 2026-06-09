@@ -40,3 +40,46 @@ object AppRingtones {
         SoundOption("Urgency", "Urgency.mp3", RequiredPlan.Free)
     )
 }
+
+fun SoundOption.isAvailableForPlan(plan: String?): Boolean {
+    val normalizedPlan = plan?.uppercase() ?: "FREE"
+
+    return requiredPlan == RequiredPlan.Free ||
+            normalizedPlan in listOf("PLUS", "PREMIUM", "WIRELESS")
+}
+
+fun resolvedMessageToneForPlan(
+    filename: String?,
+    plan: String?
+): String {
+    val fallback = "Default.mp3"
+
+    val option =
+        AppMessageTones.all.firstOrNull {
+            it.filename.equals(filename, ignoreCase = true)
+        }
+
+    return if (option?.isAvailableForPlan(plan) == true) {
+        option.filename
+    } else {
+        fallback
+    }
+}
+
+fun resolvedRingtoneForPlan(
+    filename: String?,
+    plan: String?
+): String {
+    val fallback = "Classic.mp3"
+
+    val option =
+        AppRingtones.all.firstOrNull {
+            it.filename.equals(filename, ignoreCase = true)
+        }
+
+    return if (option?.isAvailableForPlan(plan) == true) {
+        option.filename
+    } else {
+        fallback
+    }
+}

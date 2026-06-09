@@ -35,7 +35,8 @@ fun SoundSettingsView(
     var showRingtonePicker by remember { mutableStateOf(false) }
 
     val planName = currentPlan?.uppercase() ?: "FREE"
-    val isPremium = planName == "PREMIUM"
+    val hasPaidSounds =
+        planName in listOf("PLUS", "PREMIUM", "WIRELESS")
 
     DisposableEffect(Unit) {
         onDispose { player.stop() }
@@ -51,14 +52,14 @@ fun SoundSettingsView(
         SoundSummaryRow(
             title = "Message Tone",
             value = state.messageTone.removeSuffix(".mp3"),
-            planLabel = if (isPremium) "Premium" else "Free",
+            planLabel = if (hasPaidSounds) "Premium" else "Free",
             onClick = { showMessagePicker = true }
         )
 
         SoundSummaryRow(
             title = "Ringtone",
             value = state.ringtone.removeSuffix(".mp3"),
-            planLabel = if (isPremium) "Premium" else "Free",
+            planLabel = if (hasPaidSounds) "Premium" else "Free",
             onClick = { showRingtonePicker = true }
         )
 
@@ -97,7 +98,7 @@ fun SoundSettingsView(
             currentPlan = planName,
             selectedFilename = state.messageTone,
             options = AppMessageTones.all,
-            isPremium = isPremium,
+            hasPaidSounds = hasPaidSounds,
             onDismiss = { showMessagePicker = false },
             onSelect = { option ->
                 onMessageToneChange(option.filename)
@@ -113,7 +114,7 @@ fun SoundSettingsView(
             currentPlan = planName,
             selectedFilename = state.ringtone,
             options = AppRingtones.all,
-            isPremium = isPremium,
+            hasPaidSounds = hasPaidSounds,
             onDismiss = { showRingtonePicker = false },
             onSelect = { option ->
                 onRingtoneChange(option.filename)
@@ -184,7 +185,7 @@ private fun SoundPickerDialog(
     currentPlan: String,
     selectedFilename: String,
     options: List<SoundOption>,
-    isPremium: Boolean,
+    hasPaidSounds: Boolean,
     onDismiss: () -> Unit,
     onSelect: (SoundOption) -> Unit,
     onLockedTap: () -> Unit
@@ -249,7 +250,7 @@ private fun SoundPickerDialog(
                         SoundPickerRow(
                             option = option,
                             selectedFilename = selectedFilename,
-                            locked = !isPremium,
+                            locked = !hasPaidSounds,
                             onSelect = onSelect,
                             onLockedTap = onLockedTap
                         )

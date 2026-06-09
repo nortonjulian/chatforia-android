@@ -9,8 +9,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import android.content.Context
+import com.chatforia.android.sounds.AudioPlayerService
 
 class AndroidCallManager(
+    private val context: Context,
     private val socketManager: SocketManager,
     private val callService: CallService,
     private val videoRepository: VideoCallRepository,
@@ -22,6 +25,9 @@ class AndroidCallManager(
         ignoreUnknownKeys = true
         explicitNulls = false
     }
+
+    private val ringtonePlayer =
+        AudioPlayerService(context)
 
     private val _state =
         MutableStateFlow<AndroidCallState>(AndroidCallState.Idle)
@@ -152,6 +158,7 @@ class AndroidCallManager(
     }
 
     fun acceptIncoming(currentUser: UserDto) {
+        ringtonePlayer.stop()
         val ringing =
             _state.value as? AndroidCallState.Ringing ?: return
 
@@ -221,6 +228,7 @@ class AndroidCallManager(
     }
 
     fun declineIncoming() {
+        ringtonePlayer.stop()
         val ringing =
             _state.value as? AndroidCallState.Ringing ?: return
 
@@ -293,6 +301,7 @@ class AndroidCallManager(
     }
 
     fun endCall() {
+        ringtonePlayer.stop()
         val current = _state.value
 
         val callId =
@@ -332,6 +341,7 @@ class AndroidCallManager(
                     }.getOrNull()
 
                 if (payload != null) {
+                    ringtonePlayer.playSavedRingtone()
                     _state.value = AndroidCallState.Ringing(payload)
                 }
             }
@@ -345,6 +355,8 @@ class AndroidCallManager(
                     }.getOrNull()
 
                 if (payload != null) {
+                    ringtonePlayer.playSavedRingtone()
+
                     _state.value =
                         AndroidCallState.Ringing(
                             payload.copy(mode = payload.mode ?: "VIDEO")
@@ -355,6 +367,7 @@ class AndroidCallManager(
 
         viewModelScope.launch {
             socketManager.callEnded.collect {
+                ringtonePlayer.stop()
                 voiceManager.endCall()
                 videoManager.disconnect()
                 _state.value = AndroidCallState.Ended()
@@ -362,6 +375,7 @@ class AndroidCallManager(
         }
 
         viewModelScope.launch {
+            ringtonePlayer.stop()
             socketManager.videoCallEnded.collect {
                 videoManager.disconnect()
                 _state.value = AndroidCallState.Ended()
