@@ -210,7 +210,7 @@ fun OnboardingScreen(
                                                 privacyHoldToReveal = currentUser.privacyHoldToReveal ?: false,
                                                 notifyOnCopy = currentUser.notifyOnCopy ?: false,
 
-                                                foriaRemember = currentUser.riaRemember ?: true,
+                                                riaRemember = currentUser.riaRemember ?: true,
 
                                                 voicemailEnabled = currentUser.voicemailEnabled ?: true,
                                                 voicemailAutoDeleteDays = currentUser.voicemailAutoDeleteDays,

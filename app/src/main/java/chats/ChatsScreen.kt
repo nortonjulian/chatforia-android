@@ -65,6 +65,9 @@ import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.lazy.itemsIndexed
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatsScreen(
@@ -118,6 +121,10 @@ fun ChatsScreen(
     viewModel.error.collectAsState()
 
     val startChatState by startChatViewModel.state.collectAsState()
+
+    LaunchedEffect(currentUserId) {
+        viewModel.configureCurrentUser(currentUserId)
+    }
 
     LaunchedEffect(Unit) {
         viewModel.loadConversations()
@@ -212,6 +219,7 @@ fun ChatsScreen(
             socketManager = socketManager,
             uploadRepository = uploadRepository,
             tenorRepository = tenorRepository,
+            riaRepository = RiaRepository(apiClient),
             onBack = {
                 selectedConversation = null
                 viewModel.loadConversations()
@@ -349,13 +357,12 @@ fun ChatsScreen(
         } else {
             LazyColumn(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(bottom = 12.dp)
             ) {
-                items(
+                itemsIndexed(
                     items = filtered,
-                    key = { it.uniqueId }
-                ) { chat ->
+                    key = { _, item -> item.uniqueId }
+                ) { index, chat ->
 
                     SwipeRevealConversationRow(
                         conversation = chat,
@@ -366,6 +373,17 @@ fun ChatsScreen(
                             pendingDeleteConversation = chat
                         }
                     )
+
+                    if (index < filtered.lastIndex) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(
+                                start = 80.dp,
+                                end = 56.dp
+                            ),
+                            thickness = 1.dp,
+                            color = Color(0xFFE0DDD8)
+                        )
+                    }
                 }
             }
         }

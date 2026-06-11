@@ -9,9 +9,13 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import java.time.Instant
+import com.chatforia.android.crypto.KeyStorage
+import com.chatforia.android.crypto.MessageDecryptor
 
 class ChatsViewModel(
-    private val repository: ChatsRepository
+    private val repository: ChatsRepository,
+    private val keyStorage: KeyStorage,
+    private val messageDecryptor: MessageDecryptor = MessageDecryptor()
 ) : ViewModel() {
 
     private val _conversations =
@@ -101,6 +105,15 @@ class ChatsViewModel(
         val roomId =
             message.chatRoomId ?: return
 
+        val decryptedText =
+            currentUserId?.let { userId ->
+                messageDecryptor.decryptMessageOrNull(
+                    message = message,
+                    currentUserPrivateKeyB64 = keyStorage.readPrivateKey(),
+                    currentUserId = userId
+                )
+            }
+
         val current =
             _conversations.value.toMutableList()
 
@@ -118,8 +131,10 @@ class ChatsViewModel(
             current[index]
 
         val previewText =
-            message.decryptedContent
+            decryptedText
                 ?.takeIf { it.isNotBlank() }
+                ?: message.decryptedContent
+                    ?.takeIf { it.isNotBlank() }
                 ?: message.translatedForMe
                     ?.takeIf { it.isNotBlank() }
                 ?: message.rawContent
@@ -165,6 +180,12 @@ class ChatsViewModel(
 
         _conversations.value =
             sortConversations(current)
+    }
+
+    private var currentUserId: Int? = null
+
+    fun configureCurrentUser(id: Int?) {
+        currentUserId = id
     }
 
     private fun sortConversations(

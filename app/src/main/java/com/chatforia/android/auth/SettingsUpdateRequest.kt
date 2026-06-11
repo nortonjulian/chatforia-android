@@ -20,7 +20,7 @@ data class SettingsUpdateRequest(
     val ageBand: String? = null,
     val wantsAgeFilter: Boolean = true,
     val randomChatAllowedBands: List<String> = emptyList(),
-    val foriaRemember: Boolean = true,
+    val riaRemember: Boolean = true,
 
     val voicemailEnabled: Boolean = true,
     val voicemailAutoDeleteDays: Int? = null,

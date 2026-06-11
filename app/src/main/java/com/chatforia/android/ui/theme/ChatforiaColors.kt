@@ -24,6 +24,8 @@ object ChatforiaColors {
     val outgoingBubbleStart: Color get() = palette.outgoingBubbleStart
     val outgoingBubbleEnd: Color get() = palette.outgoingBubbleEnd
 
+    val outgoingBubbleText: Color get() = palette.outgoingBubbleText
+
     fun applyTheme(code: String?) {
         palette = themePalette(code ?: "dawn")
     }
@@ -42,7 +44,8 @@ data class ChatforiaPalette(
     val avatarBackground: Color,
     val avatarForeground: Color,
     val outgoingBubbleStart: Color,
-    val outgoingBubbleEnd: Color
+    val outgoingBubbleEnd: Color,
+    val outgoingBubbleText: Color
 )
 
 private fun readableTextFor(background: Color): Color {
@@ -73,7 +76,8 @@ private fun themePalette(code: String): ChatforiaPalette {
             avatarBackground = Color(0xFF0B3A52),
             avatarForeground = Color(0xFF4FF6FF),
             outgoingBubbleStart = Color(0xFF7562FF),
-            outgoingBubbleEnd = Color(0xFF35F3FF)
+            outgoingBubbleEnd = Color(0xFF35F3FF),
+            outgoingBubbleText = Color.White
         )
 
         "amoled" -> ChatforiaPalette(
@@ -89,7 +93,8 @@ private fun themePalette(code: String): ChatforiaPalette {
             avatarBackground = Color(0xFF171717),
             avatarForeground = Color(0xFF7C3AED),
             outgoingBubbleStart = Color(0xFF7C3AED),
-            outgoingBubbleEnd = Color(0xFF7C3AED)
+            outgoingBubbleEnd = Color(0xFF7C3AED),
+            outgoingBubbleText = Color.White
         )
 
         "aurora" -> ChatforiaPalette(
@@ -105,7 +110,8 @@ private fun themePalette(code: String): ChatforiaPalette {
             avatarBackground = Color(0xFF133C36),
             avatarForeground = Color(0xFF29D39A),
             outgoingBubbleStart = Color(0xFF29D39A),
-            outgoingBubbleEnd = Color(0xFF29D39A)
+            outgoingBubbleEnd = Color(0xFF29D39A),
+            outgoingBubbleText = Color.White
         )
 
         "neon" -> ChatforiaPalette(
@@ -121,23 +127,25 @@ private fun themePalette(code: String): ChatforiaPalette {
             avatarBackground = Color(0xFF142536),
             avatarForeground = Color(0xFF3CF9FF),
             outgoingBubbleStart = Color(0xFF3CF9FF),
-            outgoingBubbleEnd = Color(0xFF3CF9FF)
+            outgoingBubbleEnd = Color(0xFF3CF9FF),
+            outgoingBubbleText = Color.White
         )
 
         "sunset" -> ChatforiaPalette(
-            screenBackground = Color(0xFFFFF1E8),
-            cardBackground = Color(0xFFFFF7F3),
-            border = Color(0xFFF2D9CB),
+            screenBackground = Color(0xFFF8E8DF),
+            cardBackground = Color(0xFFFBEFE8),
+            border = Color(0xFFEBCFC0),
             primaryText = Color(0xFF2C1A10),
             secondaryText = Color(0xFF7B6152),
-            accent = Color(0xFFFF9800),
-            highlightedSurface = Color(0xFFFFF4D8),
-            buttonStart = Color(0xFFFFB300),
-            buttonEnd = Color(0xFFFF9800),
-            avatarBackground = Color(0xFFFFF4D8),
-            avatarForeground = Color(0xFFFF9800),
-            outgoingBubbleStart = Color(0xFFFF9800),
-            outgoingBubbleEnd = Color(0xFFFF9800)
+            accent = Color(0xFFFF7A45),
+            highlightedSurface = Color(0xFFFFE2CF),
+            buttonStart = Color(0xFFF59E0B),
+            buttonEnd = Color(0xFFF97316),
+            avatarBackground = Color(0xFFFFE2CF),
+            avatarForeground = Color(0xFFFF7A45),
+            outgoingBubbleStart = Color(0xFFF59E0B),
+            outgoingBubbleEnd = Color(0xFFF97316),
+            outgoingBubbleText = Color(0xFF1A120B)
         )
 
         "solarized" -> ChatforiaPalette(
@@ -153,7 +161,8 @@ private fun themePalette(code: String): ChatforiaPalette {
             avatarBackground = Color(0xFFFDF0C0),
             avatarForeground = Color(0xFFB58900),
             outgoingBubbleStart = Color(0xFFB58900),
-            outgoingBubbleEnd = Color(0xFFB58900)
+            outgoingBubbleEnd = Color(0xFFB58900),
+            outgoingBubbleText = Color(0xFF1A120B)
         )
 
         "velvet" -> ChatforiaPalette(
@@ -169,7 +178,8 @@ private fun themePalette(code: String): ChatforiaPalette {
             avatarBackground = Color(0xFF35162E),
             avatarForeground = Color(0xFFE91E63),
             outgoingBubbleStart = Color(0xFFE91E63),
-            outgoingBubbleEnd = Color(0xFFE91E63)
+            outgoingBubbleEnd = Color(0xFFE91E63),
+            outgoingBubbleText = Color.White
         )
 
         else -> ChatforiaPalette(
@@ -185,7 +195,8 @@ private fun themePalette(code: String): ChatforiaPalette {
             avatarBackground = Color(0xFFFFF4D0),
             avatarForeground = Color(0xFFFFB300),
             outgoingBubbleStart = Color(0xFFFFB300),
-            outgoingBubbleEnd = Color(0xFFFFB300)
+            outgoingBubbleEnd = Color(0xFFFFB300),
+            outgoingBubbleText = Color(0xFF1A120B)
         )
     }
 }

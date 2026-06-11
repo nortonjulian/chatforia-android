@@ -15,6 +15,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun LoginScreen(
@@ -294,9 +297,6 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(22.dp))
 
                 Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = ChatforiaColors.accent
-                    ),
                     onClick = {
                         scope.launch {
                             isLoading = true
@@ -312,8 +312,14 @@ fun LoginScreen(
 
                                 errorMessage =
                                     when {
-                                        raw.contains("email_not_verified", ignoreCase = true) ||
-                                        raw.contains("Please verify your email", ignoreCase = true) -> {
+                                        raw.contains(
+                                            "email_not_verified",
+                                            ignoreCase = true
+                                        ) ||
+                                                raw.contains(
+                                                    "Please verify your email",
+                                                    ignoreCase = true
+                                                ) -> {
                                             canResendVerification = true
                                             "Please verify your email before logging in. Check your inbox for the Chatforia verification link."
                                         }
@@ -330,15 +336,45 @@ fun LoginScreen(
                         .fillMaxWidth()
                         .height(56.dp),
                     enabled = canLogin,
-                    shape = RoundedCornerShape(28.dp)
+                    shape = RoundedCornerShape(28.dp),
+
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent
+                    ),
+
+                    border = BorderStroke(
+                        1.dp,
+                        Color.Transparent
+                    ),
+
+                    contentPadding = PaddingValues()
                 ) {
-                    Text(
-                        if (isLoading) {
-                            "Signing in..."
-                        } else {
-                            "Log in"
-                        }
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(
+                                        ChatforiaColors.buttonStart,
+                                        ChatforiaColors.buttonEnd
+                                    )
+                                ),
+                                shape = RoundedCornerShape(28.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text =
+                                if (isLoading) {
+                                    "Signing in..."
+                                } else {
+                                    "Log in"
+                                },
+                            color = ChatforiaColors.buttonForeground,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(22.dp))

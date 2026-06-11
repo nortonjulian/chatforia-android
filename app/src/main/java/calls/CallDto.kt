@@ -37,9 +37,15 @@ data class CallsResponse(
 @Serializable
 data class CreateCallRequest(
     val calleeId: Int,
-    val mode: String
+    val mode: String,
+    val offer: CallOffer? = null
 )
 
+@Serializable
+data class CallOffer(
+    val type: String,
+    val sdp: String
+)
 @Serializable
 data class StartExternalCallRequest(
     val phoneNumber: String,

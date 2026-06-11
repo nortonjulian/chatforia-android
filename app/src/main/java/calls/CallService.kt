@@ -27,7 +27,11 @@ class CallService(
                     bodyJson = json.encodeToString(
                         CreateCallRequest(
                             calleeId = calleeId,
-                            mode = if (video) "VIDEO" else "AUDIO"
+                            mode = if (video) "VIDEO" else "AUDIO",
+                            offer = if (video) null else CallOffer(
+                                type = "offer",
+                                sdp = "android-placeholder"
+                            )
                         )
                     ),
                     requiresAuth = true
@@ -84,3 +88,4 @@ class CallService(
         )
     }
 }
+

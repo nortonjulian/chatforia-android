@@ -56,6 +56,7 @@ import com.chatforia.android.tenor.TenorRepository
 import com.chatforia.android.upload.UploadRepository
 import com.chatforia.android.auth.UserDto
 import com.chatforia.android.calls.AndroidCallManager
+import com.chatforia.android.ria.RiaRepository
 
 @Composable
 fun ContactsScreen(
@@ -69,7 +70,8 @@ fun ContactsScreen(
     androidCallManager: AndroidCallManager,
     socketManager: SocketManager,
     tenorRepository: TenorRepository,
-    uploadRepository: UploadRepository
+    uploadRepository: UploadRepository,
+    riaRepository: RiaRepository
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -145,6 +147,7 @@ fun ContactsScreen(
                 socketManager = socketManager,
                 uploadRepository = uploadRepository,
                 tenorRepository = tenorRepository,
+                riaRepository = riaRepository,
                 onBack = {
                     showingNewChat = false
                 }
@@ -223,6 +226,7 @@ fun ContactsScreen(
             socketManager = socketManager,
             uploadRepository = uploadRepository,
             tenorRepository = tenorRepository,
+            riaRepository = riaRepository,
             onBack = {
                 showingNewChat = false
             }

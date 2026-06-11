@@ -93,6 +93,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.luminance
 import com.chatforia.android.sounds.AudioPlayerService
 import androidx.compose.material.icons.filled.Accessibility
+import com.chatforia.android.forwarding.ForwardingSettingsRepository
+import com.chatforia.android.forwarding.ForwardingSettingsView
+import com.chatforia.android.forwarding.ForwardingSettingsViewModel
 
 @Composable
 fun ProfileScreen(
@@ -135,6 +138,14 @@ fun ProfileScreen(
     var showThemePicker by remember { mutableStateOf(false) }
 
     var showAccessibility by remember { mutableStateOf(false) }
+
+    var showForwarding by remember { mutableStateOf(false) }
+
+    val forwardingViewModel = remember {
+        ForwardingSettingsViewModel(
+            ForwardingSettingsRepository(apiClient)
+        )
+    }
 
     val avatarPickerLauncher =
         rememberLauncherForActivityResult(
@@ -245,6 +256,14 @@ fun ProfileScreen(
             }
         )
 
+        return
+    }
+
+    if (showForwarding) {
+        ForwardingSettingsView(
+            viewModel = forwardingViewModel,
+            onBack = { showForwarding = false }
+        )
         return
     }
 
@@ -427,6 +446,18 @@ fun ProfileScreen(
 
             ProfileRow(
                 icon = Icons.Default.Phone,
+                title = "Call & Text Forwarding",
+                subtitle = "Forward incoming calls and texts",
+                showChevron = true,
+                onClick = {
+                    showForwarding = true
+                }
+            )
+
+            HorizontalDivider(color = ChatforiaColors.border)
+
+            ProfileRow(
+                icon = Icons.Default.Phone,
                 title = "Phone Number",
                 subtitle = "Manage your Chatforia number",
                 showChevron = true,
@@ -484,6 +515,19 @@ fun ProfileScreen(
 
             KeySetupScreen(
                 viewModel = keySetupViewModel
+            )
+
+            HorizontalDivider(color = ChatforiaColors.border)
+
+            SettingSwitchRow(
+                title = "Smart reply suggestions",
+                subtitle = "Show Ria-powered rewrite assistance and quick replies.",
+                checked = settingsState.enableSmartReplies,
+                onCheckedChange = { enabled ->
+                    settingsViewModel.update {
+                        it.copy(enableSmartReplies = enabled)
+                    }
+                }
             )
 
             HorizontalDivider(color = ChatforiaColors.border)
@@ -1069,6 +1113,8 @@ private fun ProfileHeaderCard(
             TextButton(
                 onClick = onChangePhoto,
                 enabled = !isUploadingAvatar,
+                modifier = Modifier.height(36.dp),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                 colors = ButtonDefaults.textButtonColors(
                     contentColor = ChatforiaColors.accent
                 )
@@ -1079,9 +1125,12 @@ private fun ProfileHeaderCard(
             }
 
             if (!user.avatarUrl.isNullOrBlank()) {
+
                 TextButton(
                     onClick = onRemovePhoto,
                     enabled = !isUploadingAvatar,
+                    modifier = Modifier.height(36.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = Color(0xFFFF3B3B)
                     )

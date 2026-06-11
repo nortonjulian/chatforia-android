@@ -9,7 +9,6 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import com.chatforia.android.upload.UploadImageResponse
 
 class ApiClient(
@@ -145,6 +144,27 @@ class ApiClient(
         return json.decodeFromString<UploadImageResponse>(
             if (responseBody.isBlank()) "{}" else responseBody
         )
+    }
+
+    fun putBytesToUrl(
+        uploadUrl: String,
+        mimeType: String,
+        bytes: ByteArray
+    ) {
+        val body = bytes.toRequestBody(mimeType.toMediaType())
+
+        val request = Request.Builder()
+            .url(uploadUrl)
+            .put(body)
+            .addHeader("Content-Type", mimeType)
+            .build()
+
+        val response = client.newCall(request).execute()
+        val responseBody = response.body?.string().orEmpty()
+
+        if (!response.isSuccessful) {
+            throw Exception("PUT upload failed HTTP ${response.code}: $responseBody")
+        }
     }
 
     fun <T> uploadMultipartTyped(

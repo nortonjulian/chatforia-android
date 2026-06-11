@@ -18,6 +18,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.chatforia.android.ui.theme.ChatforiaColors
+import android.media.MediaPlayer
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 @Composable
 fun MessageAttachmentsView(
@@ -68,10 +75,10 @@ private fun AttachmentCard(
         }
 
         kind == "AUDIO" || mime.startsWith("audio/") -> {
-            FileLikeAttachment(
-                title = attachment.caption ?: "Audio message",
-                subtitle = attachment.mimeType ?: "Audio attachment",
-                iconType = FileIconType.Audio,
+            AudioAttachment(
+                url = url,
+                title = attachment.caption ?: "Voice note",
+                durationSec = attachment.durationSec,
                 isMine = isMine
             )
         }
@@ -139,6 +146,99 @@ private fun VideoAttachment(
     }
 }
 
+@Composable
+private fun AudioAttachment(
+    url: String,
+    title: String,
+    durationSec: Double?,
+    isMine: Boolean
+) {
+    var isPlaying by remember { mutableStateOf(false) }
+    var player by remember { mutableStateOf<MediaPlayer?>(null) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            player?.release()
+            player = null
+        }
+    }
+
+    Surface(
+        shape = RoundedCornerShape(18.dp),
+        color =
+            if (isMine) {
+                ChatforiaColors.accent.copy(alpha = 0.18f)
+            } else {
+                ChatforiaColors.cardBackground
+            },
+        modifier = Modifier.widthIn(max = 260.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = {
+                    val current = player
+
+                    if (current != null && isPlaying) {
+                        current.pause()
+                        isPlaying = false
+                        return@IconButton
+                    }
+
+                    if (current != null) {
+                        current.start()
+                        isPlaying = true
+                        return@IconButton
+                    }
+
+                    val next = MediaPlayer().apply {
+                        setDataSource(url)
+                        setOnCompletionListener {
+                            isPlaying = false
+                            seekTo(0)
+                        }
+                        prepareAsync()
+                        setOnPreparedListener {
+                            start()
+                            isPlaying = true
+                        }
+                    }
+
+                    player = next
+                }
+            ) {
+                Icon(
+                    imageVector =
+                        if (isPlaying) Icons.Default.Pause
+                        else Icons.Default.PlayArrow,
+                    contentDescription =
+                        if (isPlaying) "Pause voice note"
+                        else "Play voice note",
+                    tint = ChatforiaColors.accent
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Column {
+                Text(
+                    text = title,
+                    color = ChatforiaColors.primaryText,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Text(
+                    text = durationSec?.let { formatDuration(it) } ?: "Audio message",
+                    color = ChatforiaColors.secondaryText,
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+        }
+    }
+}
+
 private enum class FileIconType {
     File,
     Audio
@@ -193,4 +293,11 @@ private fun FileLikeAttachment(
             }
         }
     }
+}
+
+private fun formatDuration(seconds: Double): String {
+    val total = seconds.toInt().coerceAtLeast(0)
+    val minutes = total / 60
+    val secs = total % 60
+    return "$minutes:${secs.toString().padStart(2, '0')}"
 }

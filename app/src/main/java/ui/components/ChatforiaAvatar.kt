@@ -27,7 +27,7 @@ fun ChatforiaAvatar(
         Box(contentAlignment = Alignment.Center) {
             Text(
                 text = name.firstOrNull()?.uppercase() ?: "?",
-                color = ChatforiaColors.primaryText,
+                color = ChatforiaColors.accent,
                 fontWeight = FontWeight.SemiBold
             )
         }

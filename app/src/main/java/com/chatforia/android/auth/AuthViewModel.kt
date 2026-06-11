@@ -1,24 +1,37 @@
 package com.chatforia.android.auth
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.chatforia.android.crypto.AccountKeyManager
+import com.chatforia.android.notifications.PushTokenRegistrar
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import com.chatforia.android.crypto.AccountKeyManager
-import android.content.Context
+import kotlinx.coroutines.Dispatchers
 
 class AuthViewModel(
     private val repository: AuthRepository,
-    private val accountKeyManager: AccountKeyManager
+    private val accountKeyManager: AccountKeyManager,
+    private val pushTokenRegistrar: PushTokenRegistrar? = null
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<AuthState>(AuthState.Loading)
-
     val state: StateFlow<AuthState> = _state
 
     init {
         bootstrap()
+    }
+
+    private fun registerPushTokenIfPossible() {
+        viewModelScope.launch(Dispatchers.IO) {
+            android.util.Log.d(
+                "ChatforiaFCM",
+                "registerPushTokenIfPossible called. registrarNull=${pushTokenRegistrar == null}"
+            )
+
+            pushTokenRegistrar?.registerCurrentFcmToken()
+        }
     }
 
     private suspend fun prepareEncryptionKeys(user: UserDto): UserDto {
@@ -60,6 +73,7 @@ class AuthViewModel(
             }
 
             _state.value = resolveLoggedInState(user)
+            registerPushTokenIfPossible()
         }
     }
 
@@ -67,7 +81,7 @@ class AuthViewModel(
         identifier: String,
         password: String
     ) {
-        val user = repository.login(identifier, password)
+        repository.login(identifier, password)
 
         accountKeyManager.resetAccountEncryption { publicKey ->
             repository.rotateEncryptionKey(publicKey)
@@ -81,6 +95,8 @@ class AuthViewModel(
             } else {
                 AuthState.LoggedIn(refreshedUser)
             }
+
+        registerPushTokenIfPossible()
     }
 
     suspend fun login(
@@ -89,6 +105,7 @@ class AuthViewModel(
     ) {
         val user = repository.login(identifier, password)
         _state.value = resolveLoggedInState(user)
+        registerPushTokenIfPossible()
     }
 
     suspend fun loginWithGoogle(
@@ -96,23 +113,23 @@ class AuthViewModel(
     ) {
         val user = repository.loginWithGoogle(idToken)
         _state.value = resolveLoggedInState(user)
+        registerPushTokenIfPossible()
     }
 
-    fun replaceCurrentUser(
-        user: UserDto
-    ) {
+    fun replaceCurrentUser(user: UserDto) {
         _state.value =
             if (needsOnboarding(user)) {
                 AuthState.NeedsOnboarding(user)
             } else {
                 AuthState.LoggedIn(user)
             }
+
+        registerPushTokenIfPossible()
     }
 
-    fun markOnboardingComplete(
-        user: UserDto
-    ) {
+    fun markOnboardingComplete(user: UserDto) {
         _state.value = AuthState.LoggedIn(user)
+        registerPushTokenIfPossible()
     }
 
     fun loginWithExternalToken(token: String) {

@@ -49,6 +49,16 @@ import com.chatforia.android.auth.UserDto
 import com.chatforia.android.calls.AndroidCallManager
 import com.chatforia.android.ui.components.ChatforiaAction
 import com.chatforia.android.ui.components.ChatforiaActionPill
+import kotlinx.coroutines.CoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material.icons.filled.AutoAwesome
+import com.chatforia.android.ria.RiaRepository
+import com.chatforia.android.ria.RiaRewriteSheet
+import androidx.compose.foundation.clickable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,6 +72,7 @@ fun ChatThreadScreen(
     socketManager: SocketManager,
     uploadRepository: UploadRepository,
     tenorRepository: TenorRepository,
+    riaRepository: RiaRepository,
     onBack: () -> Unit
 ) {
     val chatMessages by viewModel.messages.collectAsState()
@@ -91,6 +102,30 @@ fun ChatThreadScreen(
     var draft by remember { mutableStateOf("") }
     var showMediaPicker by remember { mutableStateOf(false) }
     var showGifPicker by remember { mutableStateOf(false) }
+
+    var showRewriteSheet by remember { mutableStateOf(false) }
+
+    var rewriteOptions by remember {
+        mutableStateOf<List<String>>(emptyList())
+    }
+
+    var rewriteLoading by remember {
+        mutableStateOf(false)
+    }
+
+    var rewriteError by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    var isRecordingVoice by remember { mutableStateOf(false) }
+
+    var voiceDraft by remember { mutableStateOf<VoiceNoteDraft?>(null) }
+
+    val context = LocalContext.current
+
+    val recorder = remember(context) {
+        AudioRecorderService(context)
+    }
 
     var showSearchSheet by remember { mutableStateOf(false) }
     var threadSearchText by remember { mutableStateOf("") }
@@ -157,7 +192,21 @@ fun ChatThreadScreen(
         }
     }
 
-    LaunchedEffect(chatMessages.size, smsMessages.size) {
+    val latestMessageKey =
+        if (conversation.kind == "sms") {
+            smsMessages.lastOrNull()?.id
+        } else {
+            chatMessages.lastOrNull()?.id
+        }
+
+    LaunchedEffect(
+        conversation.id,
+        conversation.kind,
+        isLoading,
+        latestMessageKey
+    ) {
+        if (isLoading) return@LaunchedEffect
+
         val itemCount =
             if (conversation.kind == "sms") {
                 smsMessages.size
@@ -165,9 +214,14 @@ fun ChatThreadScreen(
                 chatMessages.size
             }
 
-        if (itemCount > 0) {
-            listState.animateScrollToItem(itemCount - 1)
-        }
+        if (itemCount <= 0) return@LaunchedEffect
+
+        // First jump immediately.
+        listState.scrollToItem(itemCount - 1)
+
+        // Then jump again after layout settles.
+        kotlinx.coroutines.delay(150)
+        listState.scrollToItem(itemCount - 1)
     }
 
     Scaffold(
@@ -295,14 +349,26 @@ fun ChatThreadScreen(
                             )
                         ) {
                             if (conversation.kind == "sms") {
-                                items(smsMessages) { message ->
+                                items(
+                                    items = smsMessages,
+                                    key = { message -> message.id }
+                                ) { message ->
                                     SmsMessageBubble(
                                         message = message,
                                         isMine = message.isOutgoing
                                     )
                                 }
                             } else {
-                                items(chatMessages) { message ->
+                                items(
+                                    items = chatMessages,
+                                    key = { message ->
+                                        if (message.id > 0) {
+                                            "server-${message.id}"
+                                        } else {
+                                            "client-${message.clientMessageId ?: message.id}"
+                                        }
+                                    }
+                                ) { message ->
                                     ChatMessageRow(
                                         message = message,
                                         isMine = message.sender.id == currentUserId,
@@ -425,6 +491,12 @@ fun ChatThreadScreen(
                 )
             }
 
+            val canSendText = draft.trim().isNotEmpty() || pendingGifUrl != null
+            val canSendVoice = voiceDraft != null
+
+            val smartRepliesEnabled = currentUser.enableSmartReplies == true
+            val riaAvailable = smartRepliesEnabled && draft.isNotBlank()
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -444,6 +516,24 @@ fun ChatThreadScreen(
                     modifier = Modifier.weight(1f),
                     placeholder = {
                         Text("Message")
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = "Rewrite with Ria",
+                            tint =
+                                if (riaAvailable) {
+                                    ChatforiaColors.accent.copy(alpha = 0.85f)
+                                } else {
+                                    ChatforiaColors.secondaryText.copy(alpha = 0.45f)
+                                },
+                            modifier = Modifier
+                                .size(16.dp)
+                                .padding(start = 4.dp)
+                                .clickable(enabled = riaAvailable) {
+                                    showRewriteSheet = true
+                                }
+                        )
                     },
                     shape = RoundedCornerShape(24.dp),
                     singleLine = true,
@@ -473,37 +563,78 @@ fun ChatThreadScreen(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Button(
+                FilledIconButton(
                     onClick = {
-                        sendDraftMessage(
-                            draft = draft,
-                            pendingGifUrl = pendingGifUrl,
-                            conversation = conversation,
-                            viewModel = viewModel,
-                            currentUserId = currentUserId,
-                            currentUsername = currentUsername,
-                            onSent = {
-                                draft = ""
-                                pendingGifUrl = null
-                                pendingGifPreviewUrl = null
-                                focusManager.clearFocus()
-                                keyboardController?.hide()
+                        when {
+                            isRecordingVoice -> {
+                                recorder.stop()?.let {
+                                    voiceDraft = it
+                                }
+                                isRecordingVoice = false
                             }
-                        )
+
+                            canSendVoice -> {
+                                sendVoiceNote(
+                                    voiceDraft = voiceDraft!!,
+                                    conversation = conversation,
+                                    viewModel = viewModel,
+                                    uploadRepository = uploadRepository,
+                                    scope = scope,
+                                    onSent = {
+                                        voiceDraft = null
+                                        draft = ""
+                                        pendingGifUrl = null
+                                        pendingGifPreviewUrl = null
+                                    }
+                                )
+                            }
+
+                            canSendText -> {
+                                sendDraftMessage(
+                                    draft = draft,
+                                    pendingGifUrl = pendingGifUrl,
+                                    conversation = conversation,
+                                    viewModel = viewModel,
+                                    currentUserId = currentUserId,
+                                    currentUsername = currentUsername,
+                                    onSent = {
+                                        draft = ""
+                                        pendingGifUrl = null
+                                        pendingGifPreviewUrl = null
+                                        focusManager.clearFocus()
+                                        keyboardController?.hide()
+                                    }
+                                )
+                            }
+
+                            else -> {
+                                scope.launch {
+                                    try {
+                                        recorder.start()
+                                        isRecordingVoice = true
+                                    } catch (_: Exception) {
+                                        isRecordingVoice = false
+                                    }
+                                }
+                            }
+                        }
                     },
-                    enabled =
-                        (draft.trim().isNotEmpty() || pendingGifUrl != null) &&
-                                conversation.id != null &&
-                                !isSending
+                    enabled = conversation.id != null && !isSending,
+                    modifier = Modifier.size(56.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = ChatforiaColors.accent,
+                        contentColor = ChatforiaColors.outgoingBubbleText
+                    )
                 ) {
-                    if (isSending) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text("Send")
-                    }
+                    Icon(
+                        imageVector =
+                            when {
+                                isRecordingVoice -> Icons.Default.Stop
+                                canSendText || canSendVoice -> Icons.Default.ArrowUpward
+                                else -> Icons.Default.Mic
+                            },
+                        contentDescription = "Composer action"
+                    )
                 }
             }
             if (deletingMessage != null) {
@@ -640,6 +771,48 @@ fun ChatThreadScreen(
                 )
             }
 
+            if (showRewriteSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        showRewriteSheet = false
+                    }
+                ) {
+                    RiaRewriteSheet(
+                        draft = draft,
+                        isLoading = rewriteLoading,
+                        options = rewriteOptions,
+                        errorText = rewriteError,
+                        disabledReason = null,
+                        onDismiss = {
+                            showRewriteSheet = false
+                        },
+                        onToneTap = { tone ->
+                            scope.launch {
+                                rewriteLoading = true
+                                rewriteError = null
+
+                                try {
+                                    rewriteOptions =
+                                        riaRepository.rewriteText(
+                                            text = draft,
+                                            tone = tone,
+                                            filterProfanity = false
+                                        )
+                                } catch (e: Exception) {
+                                    rewriteError = e.message ?: "Failed to rewrite."
+                                } finally {
+                                    rewriteLoading = false
+                                }
+                            }
+                        },
+                        onSelectRewrite = { option ->
+                            draft = option
+                            showRewriteSheet = false
+                        }
+                    )
+                }
+            }
+
             if (reportingMessage != null) {
                 ReportMessageSheet(
                     message = reportingMessage!!,
@@ -706,6 +879,29 @@ private fun sendDraftMessage(
     }
 
     onSent()
+}
+
+private fun sendVoiceNote(
+    voiceDraft: VoiceNoteDraft,
+    conversation: ConversationDto,
+    viewModel: ChatThreadViewModel,
+    uploadRepository: UploadRepository,
+    scope: CoroutineScope,
+    onSent: () -> Unit
+) {
+    if (conversation.id == null) return
+
+    scope.launch {
+        val uploaded = uploadRepository.uploadAudio(voiceDraft.file)
+
+        viewModel.sendMedia(
+            conversation = conversation,
+            mediaUrls = listOf(uploaded.url),
+            text = ""
+        )
+
+        onSent()
+    }
 }
 
 

@@ -239,7 +239,7 @@ class AndroidCallManager(
                 runCatching {
                     callService.endCall(
                         callId = callId,
-                        reason = "DECLINED"
+                        reason = "declined"
                     )
                 }
             }
@@ -319,7 +319,7 @@ class AndroidCallManager(
                 runCatching {
                     callService.endCall(
                         callId = callId,
-                        reason = "ENDED"
+                        reason = "hangup"
                     )
                 }
             }

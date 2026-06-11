@@ -46,6 +46,9 @@ fun MessageBubble(
         bottomEnd = if (isMine) 4.dp else 18.dp
     )
 
+    val outgoingTextColor = ChatforiaColors.outgoingBubbleText
+    val outgoingMetaTextColor = ChatforiaColors.outgoingBubbleText.copy(alpha = 0.75f)
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start
@@ -77,14 +80,14 @@ fun MessageBubble(
             ) {
                 Text(
                     text = displayText,
-                    color = if (isMine) Color.White else ChatforiaColors.primaryText
+                    color = if (isMine) outgoingTextColor else ChatforiaColors.primaryText
                 )
 
                 if (message.editedAt != null && !isDeleted) {
                     Text(
                         text = "Edited",
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (isMine) Color.White.copy(alpha = 0.75f) else ChatforiaColors.secondaryText
+                        color = if (isMine) outgoingMetaTextColor else ChatforiaColors.secondaryText
                     )
                 }
 
@@ -92,7 +95,7 @@ fun MessageBubble(
                     Text(
                         text = "Sending…",
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (isMine) Color.White.copy(alpha = 0.75f) else ChatforiaColors.secondaryText
+                        color = if (isMine) outgoingMetaTextColor else ChatforiaColors.secondaryText
                     )
                 }
 
@@ -108,7 +111,7 @@ fun MessageBubble(
                     Text(
                         text = "Disappearing message",
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (isMine) Color.White.copy(alpha = 0.75f) else ChatforiaColors.secondaryText
+                        color = if (isMine) outgoingMetaTextColor else ChatforiaColors.secondaryText
                     )
                 }
             }

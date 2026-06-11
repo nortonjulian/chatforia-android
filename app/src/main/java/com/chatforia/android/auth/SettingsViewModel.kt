@@ -179,7 +179,7 @@ class SettingsViewModel(
                         privacyBlurOnUnfocus = current.privacyBlurOnUnfocus,
                         privacyHoldToReveal = current.privacyHoldToReveal,
                         notifyOnCopy = current.notifyOnCopy,
-                        foriaRemember = current.riaRemember,
+                        riaRemember = current.riaRemember,
                         enableSmartReplies = current.enableSmartReplies,
                         maskAIProfanity = current.maskAIProfanity,
                         messageTone = current.messageTone,

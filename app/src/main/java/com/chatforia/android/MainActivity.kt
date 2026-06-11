@@ -31,7 +31,6 @@ import com.chatforia.android.chats.ChatsViewModel
 import com.chatforia.android.messages.MessagesRepository
 import com.chatforia.android.messages.ChatThreadViewModel
 import com.chatforia.android.socket.SocketManager
-import com.chatforia.android.crypto.KeyStorage
 import androidx.compose.ui.platform.LocalContext
 import com.chatforia.android.crypto.AccountKeyManager
 import com.chatforia.android.contacts.ContactsRepository
@@ -67,8 +66,15 @@ import android.net.Uri
 import com.chatforia.android.crypto.DeviceProvisioningCrypto
 import com.chatforia.android.crypto.DeviceIdentityStorage
 import com.chatforia.android.crypto.KeyRestoreGate
-
-
+import com.chatforia.android.notifications.PushTokenRegistrar
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import com.chatforia.android.ui.theme.ThemePreferenceStorage
+import com.chatforia.android.crypto.KeyStorage
+import com.chatforia.android.ria.RiaRepository
 enum class AppTab {
     CHATS,
     CALLS,
@@ -105,6 +111,18 @@ class MainActivity : ComponentActivity() {
 
             ChatforiaTheme {
 
+                val themeStorage = remember {
+                    ThemePreferenceStorage(applicationContext)
+                }
+
+                var activeTheme by remember {
+                    mutableStateOf(themeStorage.readTheme())
+                }
+
+                LaunchedEffect(activeTheme) {
+                    ChatforiaColors.applyTheme(activeTheme)
+                }
+
                 val tokenStorage =
                     remember {
                         TokenStorage(applicationContext)
@@ -133,11 +151,20 @@ class MainActivity : ComponentActivity() {
                         AccountKeyManager(keyStorage)
                     }
 
+                val pushTokenRegistrar =
+                    remember {
+                        PushTokenRegistrar(
+                            deviceIdentityStorage = DeviceIdentityStorage(applicationContext),
+                            linkedDevicesRepository = LinkedDevicesRepository(apiClient)
+                        )
+                    }
+
                 val authViewModel =
                     remember {
                         AuthViewModel(
                             repository = repository,
-                            accountKeyManager = accountKeyManager
+                            accountKeyManager = accountKeyManager,
+                            pushTokenRegistrar = pushTokenRegistrar
                         )
                     }
 
@@ -235,6 +262,13 @@ class MainActivity : ComponentActivity() {
                         val loggedInState =
                             authState as AuthState.LoggedIn
 
+                        LaunchedEffect(loggedInState.user.theme) {
+                            val theme = loggedInState.user.theme ?: "dawn"
+
+                            themeStorage.saveTheme(theme)
+                            activeTheme = theme
+                        }
+
                         ChatforiaApp(
                             user = loggedInState.user,
                             apiClient = apiClient,
@@ -293,6 +327,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
 @Composable
 fun ChatforiaApp(
     user: UserDto,
@@ -306,9 +341,17 @@ fun ChatforiaApp(
         mutableStateOf(AppTab.CHATS)
     }
 
-    LaunchedEffect(user.theme) {
-        ChatforiaColors.applyTheme(user.theme ?: "dawn")
-    }
+    val context = LocalContext.current
+
+    val deviceIdentityStorage =
+        remember {
+            DeviceIdentityStorage(context)
+        }
+
+    val keyStorage =
+        remember {
+            KeyStorage(context)
+        }
 
     val chatsRepository =
         remember {
@@ -317,7 +360,10 @@ fun ChatforiaApp(
 
     val chatsViewModel =
         remember {
-            ChatsViewModel(chatsRepository)
+            ChatsViewModel(
+                repository = chatsRepository,
+                keyStorage = keyStorage
+            )
         }
 
     val contactsRepository =
@@ -373,18 +419,6 @@ fun ChatforiaApp(
     val linkedDevicesRepository = remember {
         LinkedDevicesRepository(apiClient)
     }
-
-    val context = LocalContext.current
-
-    val deviceIdentityStorage =
-        remember {
-            DeviceIdentityStorage(context)
-        }
-
-    val keyStorage =
-        remember {
-            KeyStorage(context)
-        }
 
     val uploadRepository =
         remember {
@@ -677,7 +711,8 @@ fun ChatforiaApp(
                         androidCallManager = androidCallManager,
                         socketManager = socketManager,
                         tenorRepository = tenorRepository,
-                        uploadRepository = uploadRepository
+                        uploadRepository = uploadRepository,
+                        riaRepository = RiaRepository(apiClient)
                     )
                 AppTab.PROFILE ->
                     ProfileScreen(

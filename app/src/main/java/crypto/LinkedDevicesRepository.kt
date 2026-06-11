@@ -47,6 +47,13 @@ data class DeviceIdRequest(
 )
 
 @Serializable
+data class PushTokenRequest(
+    val deviceId: String,
+    val pushToken: String,
+    val pushProvider: String = "fcm"
+)
+
+@Serializable
 data class DeviceRegisterRequest(
     val deviceId: String,
     val name: String,
@@ -181,5 +188,25 @@ class LinkedDevicesRepository(
             )
 
         return response.device
+    }
+
+    fun registerPushToken(
+        deviceId: String,
+        pushToken: String
+    ) {
+        apiClient.sendRaw(
+            ApiRequest(
+                path = "devices/push-token",
+                method = HttpMethod.POST,
+                bodyJson = json.encodeToString(
+                    PushTokenRequest(
+                        deviceId = deviceId,
+                        pushToken = pushToken,
+                        pushProvider = "fcm"
+                    )
+                ),
+                requiresAuth = true
+            )
+        )
     }
 }

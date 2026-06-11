@@ -102,11 +102,7 @@ fun CallsScreen(
                 onClick = { selectedSegment = CallsSegment.Recents },
                 shape = SegmentedButtonDefaults.itemShape(0, 2),
                 colors = SegmentedButtonDefaults.colors(
-                    activeContainerColor =
-                        if (ChatforiaColors.screenBackground.luminance() > 0.5f)
-                            Color(0xFFFFE7A6)
-                        else
-                            Color(0xFF24334F),
+                    activeContainerColor = ChatforiaColors.highlightedSurface,
                     activeContentColor = ChatforiaColors.primaryText,
                     inactiveContainerColor = ChatforiaColors.cardBackground,
                     inactiveContentColor = ChatforiaColors.primaryText
@@ -119,11 +115,7 @@ fun CallsScreen(
                 onClick = { selectedSegment = CallsSegment.Voicemail },
                 shape = SegmentedButtonDefaults.itemShape(1, 2),
                 colors = SegmentedButtonDefaults.colors(
-                    activeContainerColor =
-                        if (ChatforiaColors.screenBackground.luminance() > 0.5f)
-                            Color(0xFFFFE7A6)
-                        else
-                            Color(0xFF24334F),
+                    activeContainerColor = ChatforiaColors.highlightedSurface,
                     activeContentColor = ChatforiaColors.primaryText,
                     inactiveContainerColor = ChatforiaColors.cardBackground,
                     inactiveContentColor = ChatforiaColors.primaryText
@@ -151,7 +143,9 @@ fun CallsScreen(
                     shape = RoundedCornerShape(28.dp),
                     color = ChatforiaColors.cardBackground,
                     tonalElevation = 2.dp,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
                 ) {
                     if (callsState.calls.isEmpty() && !callsState.isLoading) {
                         EmptyCallsState()
@@ -341,9 +335,9 @@ private fun CallHistoryRow(
 private fun EmptyCallsState() {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 180.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Icon(
             Icons.Default.Phone,
