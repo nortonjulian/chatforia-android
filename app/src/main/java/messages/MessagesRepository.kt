@@ -35,13 +35,24 @@ class MessagesRepository(
         roomId: Int,
         text: String,
         clientMessageId: String = UUID.randomUUID().toString(),
-        attachmentsInline: List<AttachmentDto> = emptyList()
+        attachmentsInline: List<AttachmentDto> = emptyList(),
+        contentCiphertext: String? = null,
+        encryptedKeys: Map<String, String>? = null,
+        encryptionVersion: Int? = null
     ): MessageDto? {
         val bodyJson =
             json.encodeToString(
                 SendMessageRequest(
                     chatRoomId = roomId,
-                    content = text.ifBlank { null },
+                    content =
+                        if (contentCiphertext.isNullOrBlank()) {
+                            text.ifBlank { null }
+                        } else {
+                            null
+                        },
+                    contentCiphertext = contentCiphertext,
+                    encryptedKeys = encryptedKeys,
+                    encryptionVersion = encryptionVersion,
                     clientMessageId = clientMessageId,
                     attachmentsInline = attachmentsInline
                 )
@@ -87,6 +98,22 @@ class MessagesRepository(
         return response.items
     }
 
+    suspend fun loadRoomParticipants(
+        roomId: Int
+    ): List<RoomParticipantDto> {
+        val response: RoomParticipantsResponse =
+            withContext(Dispatchers.IO) {
+                apiClient.send(
+                    ApiRequest(
+                        path = "chatrooms/$roomId/participants",
+                        method = HttpMethod.GET,
+                        requiresAuth = true
+                    )
+                )
+            }
+
+        return response.participants
+    }
 
     suspend fun loadSmsThread(threadId: Int): SmsThreadDto {
         return withContext(Dispatchers.IO) {
@@ -178,12 +205,14 @@ class MessagesRepository(
 
     suspend fun editMessage(
         messageId: Int,
-        text: String
+        text: String,
+        attachments: List<AttachmentDto> = emptyList()
     ): MessageDto? {
         val bodyJson =
             json.encodeToString(
                 EditMessageRequest(
-                    content = text
+                    content = text,
+                    attachments = attachments
                 )
             )
 
@@ -248,7 +277,8 @@ data class ReadBulkRequest(
 
 @Serializable
 data class EditMessageRequest(
-    val content: String
+    val content: String,
+    val attachments: List<AttachmentDto> = emptyList()
 )
 
 @Serializable

@@ -33,7 +33,13 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
-
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.draw.clip
+import kotlin.math.roundToInt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CallsScreen(
@@ -153,14 +159,20 @@ fun CallsScreen(
                         LazyColumn(
                             modifier = Modifier.padding(12.dp)
                         ) {
-                            items(callsState.calls) { call ->
-                                CallHistoryRow(
+                            items(
+                                items = callsState.calls,
+                                key = { it.id }
+                            ) { call ->
+                                SwipeRevealCallRow(
                                     call = call,
                                     onStartAudioCall = {
                                         onStartAudioCall(call)
                                     },
                                     onStartVideoCall = {
                                         onStartVideoCall(call)
+                                    },
+                                    onDelete = {
+                                        callsViewModel.deleteCall(call)
                                     }
                                 )
 
@@ -195,6 +207,73 @@ fun CallsScreen(
                     showDialer = false
                     onDialNumber(number)
                 }
+            )
+        }
+    }
+}
+
+@Composable
+private fun SwipeRevealCallRow(
+    call: CallDto,
+    onStartAudioCall: () -> Unit,
+    onStartVideoCall: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var offsetX by remember(call.id) {
+        mutableFloatStateOf(0f)
+    }
+
+    val maxRevealPx = 92.dp.value * LocalDensity.current.density
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+    ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .width(92.dp)
+                .background(Color(0xFFE53935)),
+            contentAlignment = Alignment.Center
+        ) {
+            IconButton(onClick = onDelete) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Delete call",
+                    tint = Color.White
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(offsetX.roundToInt(), 0) }
+                .background(ChatforiaColors.cardBackground)
+                .pointerInput(call.id) {
+                    detectHorizontalDragGestures(
+                        onHorizontalDrag = { _, dragAmount ->
+                            offsetX = (offsetX + dragAmount)
+                                .coerceIn(-maxRevealPx, 0f)
+                        },
+                        onDragEnd = {
+                            offsetX = if (offsetX < -maxRevealPx / 2) {
+                                -maxRevealPx
+                            } else {
+                                0f
+                            }
+                        },
+                        onDragCancel = {
+                            offsetX = 0f
+                        }
+                    )
+                }
+        ) {
+            CallHistoryRow(
+                call = call,
+                onStartAudioCall = onStartAudioCall,
+                onStartVideoCall = onStartVideoCall
             )
         }
     }

@@ -115,6 +115,10 @@ fun ContactsScreen(
         mutableStateOf<ContactDto?>(null)
     }
 
+    var editingContact by remember {
+        mutableStateOf<ContactDto?>(null)
+    }
+
     var showingAddContact by remember {
         mutableStateOf(false)
     }
@@ -149,7 +153,8 @@ fun ContactsScreen(
                 tenorRepository = tenorRepository,
                 riaRepository = riaRepository,
                 onBack = {
-                    showingNewChat = false
+                    viewModel.clearOpenedConversation()
+                    selectedContact = null
                 }
             )
 
@@ -160,6 +165,35 @@ fun ContactsScreen(
             viewModel = startChatViewModel,
             onBack = {
                 showingNewChat = false
+            }
+        )
+
+        return
+    }
+
+    editingContact?.let { contact ->
+        AddContactScreen(
+            editingContact = contact,
+            onSaveUsername = { _, alias, favorite ->
+                viewModel.updateContact(
+                    contact = contact,
+                    alias = alias,
+                    externalName = null,
+                    favorite = favorite
+                )
+                editingContact = null
+            },
+            onSaveExternal = { _, name, alias, favorite ->
+                viewModel.updateContact(
+                    contact = contact,
+                    alias = alias,
+                    externalName = name,
+                    favorite = favorite
+                )
+                editingContact = null
+            },
+            onBack = {
+                editingContact = null
             }
         )
 
@@ -216,21 +250,23 @@ fun ContactsScreen(
     }
 
     openedConversation?.let { conversation ->
-        ChatThreadScreen(
-            conversation = conversation,
-            viewModel = threadViewModel,
-            currentUserId = currentUserId,
-            currentUsername = currentUsername,
-            currentUser = currentUser,
-            androidCallManager = androidCallManager,
-            socketManager = socketManager,
-            uploadRepository = uploadRepository,
-            tenorRepository = tenorRepository,
-            riaRepository = riaRepository,
-            onBack = {
-                showingNewChat = false
-            }
-        )
+        key(conversation.id) {
+            ChatThreadScreen(
+                conversation = conversation,
+                viewModel = threadViewModel,
+                currentUserId = currentUserId,
+                currentUsername = currentUsername,
+                currentUser = currentUser,
+                androidCallManager = androidCallManager,
+                socketManager = socketManager,
+                uploadRepository = uploadRepository,
+                tenorRepository = tenorRepository,
+                riaRepository = riaRepository,
+                onBack = {
+                    viewModel.clearOpenedConversation()
+                }
+            )
+        }
 
         return
     }
@@ -247,11 +283,38 @@ fun ContactsScreen(
             },
 
             onCall = {
-                // TODO
+                val userId = contact.user?.id ?: contact.userId
+                val phone = contact.externalPhone?.trim()?.takeIf { it.isNotBlank() }
+
+                when {
+                    userId != null -> {
+                        androidCallManager.startAudioCall(
+                            calleeId = userId,
+                            displayName = viewModel.displayName(contact)
+                        )
+                    }
+
+                    phone != null -> {
+                        androidCallManager.startPhoneCall(phone)
+                    }
+                }
             },
 
             onVideo = {
-                // TODO
+                val userId = contact.user?.id ?: contact.userId
+
+                if (userId != null) {
+                    androidCallManager.startVideoCall(
+                        currentUser = currentUser,
+                        calleeId = userId,
+                        displayName = viewModel.displayName(contact)
+                    )
+                }
+            },
+
+            onEdit = {
+                editingContact = contact
+                selectedContact = null
             },
 
             onDelete = {

@@ -50,8 +50,6 @@ class AndroidCallManager(
                         video = false
                     )
 
-                val token = callService.fetchVoiceToken()
-
                 val session =
                     CallSession(
                         callId = callId,
@@ -60,6 +58,8 @@ class AndroidCallManager(
                     )
 
                 _state.value = AndroidCallState.Connecting(session)
+
+                val token = callService.fetchVoiceToken()
 
                 voiceManager.startCall(
                     accessToken = token.token,
@@ -83,8 +83,6 @@ class AndroidCallManager(
                 val callId =
                     callService.startExternalCall(phoneNumber)
 
-                val token = callService.fetchVoiceToken()
-
                 val session =
                     CallSession(
                         callId = callId,
@@ -93,6 +91,8 @@ class AndroidCallManager(
                     )
 
                 _state.value = AndroidCallState.Connecting(session)
+
+                val token = callService.fetchVoiceToken()
 
                 voiceManager.startCall(
                     accessToken = token.token,
@@ -124,12 +124,6 @@ class AndroidCallManager(
                         chatRoomId = chatRoomId
                     )
 
-                val token =
-                    videoRepository.fetchVideoToken(
-                        identity = currentUser.id.toString(),
-                        roomName = start.roomName
-                    )
-
                 val session =
                     CallSession(
                         callId = start.callId,
@@ -140,6 +134,12 @@ class AndroidCallManager(
                     )
 
                 _state.value = AndroidCallState.Connecting(session)
+
+                val token =
+                    videoRepository.fetchVideoToken(
+                        identity = currentUser.id.toString(),
+                        roomName = start.roomName
+                    )
 
                 videoManager.connect(
                     accessToken = token.token,
@@ -156,6 +156,14 @@ class AndroidCallManager(
             }
         }
     }
+
+    fun restoreIncomingCall(payload: IncomingCallPayload) {
+        ringtonePlayer.playSavedRingtone()
+
+        _state.value =
+            AndroidCallState.Ringing(payload)
+    }
+
 
     fun acceptIncoming(currentUser: UserDto) {
         ringtonePlayer.stop()

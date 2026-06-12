@@ -75,6 +75,7 @@ import androidx.compose.runtime.LaunchedEffect
 import com.chatforia.android.ui.theme.ThemePreferenceStorage
 import com.chatforia.android.crypto.KeyStorage
 import com.chatforia.android.ria.RiaRepository
+import com.chatforia.android.calls.IncomingCallPayload
 enum class AppTab {
     CHATS,
     CALLS,
@@ -274,6 +275,10 @@ class MainActivity : ComponentActivity() {
                             apiClient = apiClient,
                             tokenStorage = tokenStorage,
                             authRepository = repository,
+                            launchIntent = intent,
+                            onIncomingCallIntentConsumed = {
+                                setIntent(Intent())
+                            },
                             onUserUpdated = { updatedUser ->
                                 authViewModel.replaceCurrentUser(updatedUser)
                             },
@@ -334,6 +339,8 @@ fun ChatforiaApp(
     apiClient: ApiClient,
     tokenStorage: TokenStorage,
     authRepository: AuthRepository,
+    launchIntent: Intent?,
+    onIncomingCallIntentConsumed: () -> Unit,
     onUserUpdated: (UserDto) -> Unit,
     onLogout: () -> Unit
 ) {
@@ -489,6 +496,26 @@ fun ChatforiaApp(
             )
         }
 
+    LaunchedEffect(launchIntent) {
+        val intent = launchIntent
+
+        if (intent?.getStringExtra("type") == "call_incoming") {
+            val payload =
+                IncomingCallPayload(
+                    callId = intent.getStringExtra("callId")?.toIntOrNull(),
+                    fromNumber = intent.getStringExtra("fromNumber"),
+                    callerName =
+                        intent.getStringExtra("callerName")
+                            ?: intent.getStringExtra("fromNumber"),
+                    mode = intent.getStringExtra("mode"),
+                    roomName = intent.getStringExtra("roomName")
+                )
+
+            androidCallManager.restoreIncomingCall(payload)
+            onIncomingCallIntentConsumed()
+        }
+    }
+
     val callState by
     androidCallManager.state.collectAsState()
 
@@ -526,6 +553,43 @@ fun ChatforiaApp(
                     androidCallManager.declineIncoming()
                 }
             )
+        }
+
+        is AndroidCallState.Connecting -> {
+            if (state.session.isVideo) {
+                VideoCallScreen(
+                    session = state.session,
+                    onToggleMute = {
+                        androidCallManager.toggleMute()
+                    },
+                    onToggleCamera = {
+                        androidCallManager.toggleCamera()
+                    },
+                    onFlipCamera = {
+                        androidCallManager.flipCamera()
+                    },
+                    onEndCall = {
+                        androidCallManager.endCall()
+                    }
+                )
+
+                return
+            }
+
+            AudioCallScreen(
+                session = state.session,
+                onToggleMute = {
+                    androidCallManager.toggleMute()
+                },
+                onToggleSpeaker = {
+                    androidCallManager.toggleSpeaker()
+                },
+                onEndCall = {
+                    androidCallManager.endCall()
+                }
+            )
+
+            return
         }
 
         is AndroidCallState.Active -> {
@@ -694,6 +758,58 @@ fun ChatforiaApp(
                     CallsScreen(
                         callsViewModel = callsViewModel,
                         voicemailViewModel = voicemailViewModel,
+
+                        onStartAudioCall = { call ->
+                            val otherUserId =
+                                if (call.callerId == user.id) {
+                                    call.calleeId
+                                } else {
+                                    call.callerId
+                                }
+
+                            val phone =
+                                call.externalPhone
+                                    ?: call.phoneNumber
+
+                            when {
+                                otherUserId != null -> {
+                                    androidCallManager.startAudioCall(
+                                        calleeId = otherUserId,
+                                        displayName =
+                                            call.displayName
+                                                ?: call.toLabel
+                                                ?: call.fromLabel
+                                                ?: "Audio Call"
+                                    )
+                                }
+
+                                !phone.isNullOrBlank() -> {
+                                    androidCallManager.startPhoneCall(phone)
+                                }
+                            }
+                        },
+
+                        onStartVideoCall = { call ->
+                            val otherUserId =
+                                if (call.callerId == user.id) {
+                                    call.calleeId
+                                } else {
+                                    call.callerId
+                                }
+
+                            if (otherUserId != null) {
+                                androidCallManager.startVideoCall(
+                                    currentUser = user,
+                                    calleeId = otherUserId,
+                                    displayName =
+                                        call.displayName
+                                            ?: call.toLabel
+                                            ?: call.fromLabel
+                                            ?: "Video Call"
+                                )
+                            }
+                        },
+
                         onDialNumber = { number ->
                             androidCallManager.startPhoneCall(number)
                         }

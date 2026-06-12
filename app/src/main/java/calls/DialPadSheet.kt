@@ -128,33 +128,39 @@ fun DialPadSheet(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
-            onClick = {
-                if (number.isNotBlank()) {
-                    onCall(number)
-                }
-            },
-            enabled = number.isNotBlank(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(54.dp),
-            shape = RoundedCornerShape(32.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = ChatforiaColors.accent
-            )
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Default.Call, contentDescription = null)
+            Button(
+                onClick = {
+                    if (number.isNotBlank()) {
+                        onCall(number)
+                    }
+                },
+                enabled = number.isNotBlank(),
+                modifier = Modifier
+                    .fillMaxWidth(0.56f)
+                    .height(54.dp),
+                shape = RoundedCornerShape(32.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ChatforiaColors.accent
+                )
+            ) {
+                Icon(Icons.Default.Call, contentDescription = null)
 
-            Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(10.dp))
 
-            Text(
-                "Call",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold
-            )
+                Text(
+                    "Call",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
     }
 }
+
 
 @Composable
 private fun DialKey(

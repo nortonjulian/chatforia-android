@@ -9,12 +9,13 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.math.min
 import kotlin.math.pow
-
+import com.chatforia.android.crypto.MessageEncryptor
 class MessageQueueManager(
     private val repository: MessagesRepository,
     private val messageStore: MessageStore,
     private val queueStorage: MessageQueueStorage,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    private val messageEncryptor: MessageEncryptor = MessageEncryptor()
 ) {
 
     private val mutex = Mutex()
@@ -125,12 +126,28 @@ class MessageQueueManager(
         markSending(job)
 
         try {
+            val participants =
+                repository.loadRoomParticipants(job.roomId)
+
+            val encrypted =
+                if (!job.text.isNullOrBlank()) {
+                    messageEncryptor.encryptMessage(
+                        plaintext = job.text,
+                        participants = participants
+                    )
+                } else {
+                    null
+                }
+
             val saved =
                 repository.sendMessage(
                     roomId = job.roomId,
-                    text = job.text.orEmpty(),
+                    text = "",
                     clientMessageId = job.clientMessageId,
-                    attachmentsInline = job.attachmentsInline
+                    attachmentsInline = job.attachmentsInline,
+                    contentCiphertext = encrypted?.contentCiphertext,
+                    encryptedKeys = encrypted?.encryptedKeys,
+                    encryptionVersion = encrypted?.encryptionVersion
                 )
 
             if (saved != null) {

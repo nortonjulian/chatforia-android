@@ -86,7 +86,6 @@ data class VideoTokenRequest(
     val identity: String,
     val room: String
 )
-
 @Serializable
 data class VideoTokenResponse(
     val token: String

@@ -31,7 +31,8 @@ fun ContactDetailScreen(
     onCall: () -> Unit,
     onVideo: () -> Unit,
     onDelete: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onEdit: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -136,6 +137,15 @@ fun ContactDetailScreen(
         }
 
         Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = onEdit,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Edit Contact")
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         Button(
             onClick = onDelete,

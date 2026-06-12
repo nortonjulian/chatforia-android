@@ -93,6 +93,28 @@ class CallsViewModel(
         _state.value = _state.value.copy(incomingCall = null)
     }
 
+    fun deleteCall(call: CallDto) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val previousCalls = _state.value.calls
+
+            _state.value =
+                _state.value.copy(
+                    calls = previousCalls.filterNot { it.id == call.id },
+                    error = null
+                )
+
+            try {
+                callHistoryRepository.deleteCall(call.id)
+            } catch (e: Exception) {
+                _state.value =
+                    _state.value.copy(
+                        calls = previousCalls,
+                        error = e.message ?: "Failed to delete call."
+                    )
+            }
+        }
+    }
+
     private fun observeSocketEvents() {
         viewModelScope.launch {
             socketManager.incomingCalls.collect { raw ->

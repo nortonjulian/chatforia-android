@@ -39,7 +39,7 @@ fun AudioCallScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Audio call",
+            text = if (session.callId != null) "Calling…" else "Audio call",
             style = MaterialTheme.typography.bodyLarge,
             color = ChatforiaColors.secondaryText
         )

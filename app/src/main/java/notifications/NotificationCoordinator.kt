@@ -62,9 +62,14 @@ class NotificationCoordinator(
 
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+
             putExtra("type", "call_incoming")
             putExtra("callId", data["callId"])
+            putExtra("callerId", data["callerId"])
+            putExtra("callerName", data["callerName"])
             putExtra("fromNumber", fromNumber)
+            putExtra("mode", data["mode"])
+            putExtra("roomName", data["roomName"])
         }
 
         val pendingIntent = PendingIntent.getActivity(

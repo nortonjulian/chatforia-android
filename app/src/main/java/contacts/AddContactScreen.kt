@@ -18,6 +18,7 @@ private enum class AddContactMode {
 
 @Composable
 fun AddContactScreen(
+    editingContact: ContactDto? = null,
     onSaveUsername: (username: String, alias: String?, favorite: Boolean) -> Unit,
     onSaveExternal: (phone: String, name: String?, alias: String?, favorite: Boolean) -> Unit,
     onBack: () -> Unit
@@ -29,6 +30,27 @@ fun AddContactScreen(
     var nameText by remember { mutableStateOf("") }
     var aliasText by remember { mutableStateOf("") }
     var favorite by remember { mutableStateOf(false) }
+
+    LaunchedEffect(editingContact?.id) {
+        val contact = editingContact ?: return@LaunchedEffect
+
+        val isPhoneContact =
+            !contact.externalPhone.isNullOrBlank() &&
+                    (contact.user?.id == null && contact.userId == null)
+
+        mode =
+            if (isPhoneContact) {
+                AddContactMode.PHONE
+            } else {
+                AddContactMode.USERNAME
+            }
+
+        usernameText = contact.user?.username ?: ""
+        phoneText = contact.externalPhone ?: ""
+        nameText = contact.externalName ?: ""
+        aliasText = contact.alias ?: ""
+        favorite = contact.favorite
+    }
 
     val username = usernameText.trim()
     val phone = phoneText.trim()
@@ -56,7 +78,12 @@ fun AddContactScreen(
             }
 
             Text(
-                text = "Add Contact",
+                text =
+                    if (editingContact == null) {
+                        "Add Contact"
+                    } else {
+                        "Edit Contact"
+                    },
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = ChatforiaColors.primaryText
@@ -214,7 +241,12 @@ fun AddContactScreen(
             )
         ) {
             Text(
-                text = "Save Contact",
+                text =
+                    if (editingContact == null) {
+                        "Save Contact"
+                    } else {
+                        "Save Changes"
+                    },
                 fontWeight = FontWeight.Bold
             )
         }

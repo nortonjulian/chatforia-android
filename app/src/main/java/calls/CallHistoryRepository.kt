@@ -19,4 +19,14 @@ class CallHistoryRepository(
 
         return response.resolvedItems
     }
+
+    fun deleteCall(callId: Int) {
+        apiClient.sendRaw(
+            ApiRequest(
+                path = "calls/$callId",
+                method = HttpMethod.DELETE,
+                requiresAuth = true
+            )
+        )
+    }
 }

@@ -306,6 +306,43 @@ class ContactsViewModel(
         }
     }
 
+    fun updateContact(
+        contact: ContactDto,
+        alias: String? = null,
+        externalName: String? = null,
+        favorite: Boolean
+    ) {
+        viewModelScope.launch {
+            try {
+                val updated =
+                    repository.updateContact(
+                        contact = contact,
+                        alias = alias,
+                        externalName = externalName,
+                        favorite = favorite
+                    )
+
+                _state.value =
+                    _state.value.copy(
+                        contacts =
+                            _state.value.contacts.map {
+                                if (it.id == updated.id) updated else it
+                            },
+                        error = null,
+                        importMessage = "Contact updated."
+                    )
+
+                loadContacts()
+
+            } catch (e: Exception) {
+                _state.value =
+                    _state.value.copy(
+                        error = e.message ?: "Failed to update contact."
+                    )
+            }
+        }
+    }
+
     fun clearOpenedConversation() {
         _state.value =
             _state.value.copy(

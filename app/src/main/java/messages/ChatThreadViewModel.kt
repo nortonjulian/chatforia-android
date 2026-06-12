@@ -278,7 +278,9 @@ class ChatThreadViewModel(
     fun sendMedia(
         conversation: ConversationDto,
         mediaUrls: List<String>,
-        text: String = ""
+        text: String = "",
+        currentUserId: Int? = null,
+        currentUsername: String? = null
     ) {
         viewModelScope.launch {
             if (mediaUrls.isEmpty()) return@launch
@@ -297,7 +299,9 @@ class ChatThreadViewModel(
             sendChatMedia(
                 conversation = conversation,
                 mediaUrls = mediaUrls,
-                text = text
+                text = text,
+                currentUserId = currentUserId,
+                currentUsername = currentUsername
             )
         }
     }
@@ -366,24 +370,46 @@ class ChatThreadViewModel(
         viewModelScope.launch {
             val trimmed = text.trim()
 
-            try {
-                val updated =
-                    repository.editMessage(
-                        messageId = message.id,
-                        text = trimmed
-                    )
+            val existingAttachments =
+                message.attachments.ifEmpty { message.attachmentsInline }
 
-                messageStore.upsert(
-                    updated ?: message.copy(
-                        rawContent = trimmed,
-                        content = trimmed,
-                        decryptedContent = trimmed,
-                        editedAt = Instant.now().toString()
+            val updatedAttachments =
+                if (!gifUrl.isNullOrBlank()) {
+                    listOf(
+                        AttachmentDto(
+                            kind = "GIF",
+                            url = gifUrl,
+                            mimeType = "image/gif"
+                        )
                     )
+                } else {
+                    existingAttachments
+                }
+
+            val updated = repository.editMessage(
+                messageId = message.id,
+                text = trimmed,
+                attachments = updatedAttachments
+            )
+
+            val displayUpdated =
+                updated?.copy(
+                    rawContent = trimmed,
+                    content = trimmed,
+                    decryptedContent = trimmed,
+                    attachments = updated.attachments.ifEmpty { updatedAttachments },
+                    attachmentsInline = updated.attachmentsInline.ifEmpty { updatedAttachments },
+                    editedAt = updated.editedAt ?: Instant.now().toString()
+                ) ?: message.copy(
+                    rawContent = trimmed,
+                    content = trimmed,
+                    decryptedContent = trimmed,
+                    attachments = updatedAttachments,
+                    attachmentsInline = updatedAttachments,
+                    editedAt = Instant.now().toString()
                 )
-            } catch (e: Exception) {
-                _error.value = e.message ?: "Failed to edit message."
-            }
+
+            messageStore.upsert(displayUpdated)
         }
     }
 
@@ -501,7 +527,9 @@ class ChatThreadViewModel(
     private suspend fun sendChatMedia(
         conversation: ConversationDto,
         mediaUrls: List<String>,
-        text: String = ""
+        text: String = "",
+        currentUserId: Int?,
+        currentUsername: String?
     ) {
         val roomId = conversation.id
             ?: throw Exception("Missing chat room.")
@@ -527,7 +555,10 @@ class ChatThreadViewModel(
             translatedForMe = null,
             decryptedContent = text.ifBlank { null },
             createdAt = Instant.now().toString(),
-            sender = SenderDto(id = 0, username = null),
+            sender = SenderDto(
+                id = currentUserId ?: 0,
+                username = currentUsername
+            ),
             chatRoomId = roomId,
             clientMessageId = clientMessageId,
             attachmentsInline = attachments,
@@ -542,7 +573,7 @@ class ChatThreadViewModel(
             QueuedMessageJob(
                 clientMessageId = clientMessageId,
                 roomId = roomId,
-                text = text,
+                text = captionText,
                 attachmentsInline = attachments
             )
         )

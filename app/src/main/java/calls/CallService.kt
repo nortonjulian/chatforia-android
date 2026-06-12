@@ -28,10 +28,7 @@ class CallService(
                         CreateCallRequest(
                             calleeId = calleeId,
                             mode = if (video) "VIDEO" else "AUDIO",
-                            offer = if (video) null else CallOffer(
-                                type = "offer",
-                                sdp = "android-placeholder"
-                            )
+                            offer = null
                         )
                     ),
                     requiresAuth = true
