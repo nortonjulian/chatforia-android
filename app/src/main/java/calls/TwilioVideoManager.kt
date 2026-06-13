@@ -13,16 +13,26 @@ import com.twilio.video.Video
 class TwilioVideoManager(
     private val context: Context
 ) {
+    interface Listener {
+        fun onConnected() {}
+        fun onFailed(message: String) {}
+        fun onDisconnected() {}
+    }
+
     private var room: Room? = null
     private var cameraCapturer: CameraCapturer? = null
     private var currentCameraId: String? = null
     private var localAudioTrack: LocalAudioTrack? = null
     private var localVideoTrack: LocalVideoTrack? = null
+    private var listener: Listener? = null
 
     fun connect(
         accessToken: String,
-        roomName: String
+        roomName: String,
+        listener: Listener
     ) {
+        this.listener = listener
+
         localAudioTrack =
             LocalAudioTrack.create(
                 context,
@@ -31,7 +41,6 @@ class TwilioVideoManager(
             )
 
         val cameraId = preferredCameraId()
-
         currentCameraId = cameraId
 
         val capturer =
@@ -102,12 +111,14 @@ class TwilioVideoManager(
 
         cameraCapturer = null
         currentCameraId = null
+        listener = null
     }
 
     private val roomListener =
         object : Room.Listener {
             override fun onConnected(room: Room) {
                 this@TwilioVideoManager.room = room
+                listener?.onConnected()
             }
 
             override fun onReconnected(room: Room) {}
@@ -121,14 +132,28 @@ class TwilioVideoManager(
                 room: Room,
                 twilioException: TwilioException
             ) {
+                val currentListener = listener
+                val message = twilioException.message ?: "Video call failed."
+
                 cleanup()
+
+                currentListener?.onFailed(message)
             }
 
             override fun onDisconnected(
                 room: Room,
                 twilioException: TwilioException?
             ) {
+                val currentListener = listener
+                val message = twilioException?.message
+
                 cleanup()
+
+                if (message != null) {
+                    currentListener?.onFailed(message)
+                } else {
+                    currentListener?.onDisconnected()
+                }
             }
 
             override fun onParticipantConnected(

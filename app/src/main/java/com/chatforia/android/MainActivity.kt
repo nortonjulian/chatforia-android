@@ -270,6 +270,15 @@ class MainActivity : ComponentActivity() {
                             activeTheme = theme
                         }
 
+                        LaunchedEffect(loggedInState.user.uiLanguage, loggedInState.user.preferredLanguage) {
+                            AppLocaleManager.applyLanguage(
+                                context = applicationContext,
+                                languageCode = loggedInState.user.uiLanguage
+                                    ?: loggedInState.user.preferredLanguage
+                                    ?: "en"
+                            )
+                        }
+
                         ChatforiaApp(
                             user = loggedInState.user,
                             apiClient = apiClient,

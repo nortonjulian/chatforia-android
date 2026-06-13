@@ -10,17 +10,20 @@ import com.twilio.voice.Voice
 class TwilioVoiceManager(
     private val context: Context
 ) {
+    interface Listener {
+        fun onRinging() {}
+        fun onConnected() {}
+        fun onFailed(message: String) {}
+        fun onDisconnected() {}
+    }
+
     private var activeCall: Call? = null
     private var isMuted: Boolean = false
 
-    fun prepare(token: String) {
-        // Twilio Voice Android does not need a separate prepare step
-        // for basic outgoing calls. Token is used when connecting.
-    }
-
     fun startCall(
         accessToken: String,
-        to: String
+        to: String,
+        listener: Listener
     ) {
         val connectOptions =
             ConnectOptions.Builder(accessToken)
@@ -37,12 +40,16 @@ class TwilioVoiceManager(
                         error: CallException
                     ) {
                         activeCall = null
+                        listener.onFailed(error.message ?: "Call failed.")
                     }
 
-                    override fun onRinging(call: Call) {}
+                    override fun onRinging(call: Call) {
+                        listener.onRinging()
+                    }
 
                     override fun onConnected(call: Call) {
                         activeCall = call
+                        listener.onConnected()
                     }
 
                     override fun onReconnecting(
@@ -58,15 +65,19 @@ class TwilioVoiceManager(
                     ) {
                         activeCall = null
                         isMuted = false
+
+                        if (error != null) {
+                            listener.onFailed(error.message ?: "Call disconnected.")
+                        } else {
+                            listener.onDisconnected()
+                        }
                     }
                 }
             )
     }
 
-    fun acceptCall() {
-        // TODO: Incoming Twilio Voice invites require FCM + Voice.handleMessage.
-        // Socket incoming calls can still show UI, but true Twilio invite accept
-        // comes after push integration.
+    fun acceptCall(): Boolean {
+        return activeCall != null
     }
 
     fun endCall() {

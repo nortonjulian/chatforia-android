@@ -63,10 +63,22 @@ class AndroidCallManager(
 
                 voiceManager.startCall(
                     accessToken = token.token,
-                    to = calleeId.toString()
-                )
+                    to = calleeId.toString(),
+                    listener = object : TwilioVoiceManager.Listener {
 
-                _state.value = AndroidCallState.Active(session)
+                        override fun onConnected() {
+                            _state.value = AndroidCallState.Active(session)
+                        }
+
+                        override fun onFailed(message: String) {
+                            _state.value = AndroidCallState.Failed(message)
+                        }
+
+                        override fun onDisconnected() {
+                            _state.value = AndroidCallState.Ended()
+                        }
+                    }
+                )
 
             } catch (e: Exception) {
                 _state.value =
@@ -96,10 +108,22 @@ class AndroidCallManager(
 
                 voiceManager.startCall(
                     accessToken = token.token,
-                    to = phoneNumber
-                )
+                    to = phoneNumber,
+                    listener = object : TwilioVoiceManager.Listener {
 
-                _state.value = AndroidCallState.Active(session)
+                        override fun onConnected() {
+                            _state.value = AndroidCallState.Active(session)
+                        }
+
+                        override fun onFailed(message: String) {
+                            _state.value = AndroidCallState.Failed(message)
+                        }
+
+                        override fun onDisconnected() {
+                            _state.value = AndroidCallState.Ended()
+                        }
+                    }
+                )
 
             } catch (e: Exception) {
                 _state.value =
@@ -143,10 +167,21 @@ class AndroidCallManager(
 
                 videoManager.connect(
                     accessToken = token.token,
-                    roomName = start.roomName
-                )
+                    roomName = start.roomName,
+                    listener = object : TwilioVideoManager.Listener {
+                        override fun onConnected() {
+                            _state.value = AndroidCallState.Active(session)
+                        }
 
-                _state.value = AndroidCallState.Active(session)
+                        override fun onFailed(message: String) {
+                            _state.value = AndroidCallState.Failed(message)
+                        }
+
+                        override fun onDisconnected() {
+                            _state.value = AndroidCallState.Ended()
+                        }
+                    }
+                )
 
             } catch (e: Exception) {
                 _state.value =
@@ -180,6 +215,17 @@ class AndroidCallManager(
     }
 
     private fun acceptIncomingAudio(payload: IncomingCallPayload) {
+        val accepted =
+            voiceManager.acceptCall()
+
+        if (!accepted) {
+            _state.value =
+                AndroidCallState.Failed(
+                    "Incoming audio calls are not available yet on this device."
+                )
+            return
+        }
+
         val session =
             CallSession(
                 callId = payload.callId,
@@ -190,7 +236,6 @@ class AndroidCallManager(
                 isVideo = false
             )
 
-        voiceManager.acceptCall()
         _state.value = AndroidCallState.Active(session)
     }
 
@@ -221,10 +266,21 @@ class AndroidCallManager(
 
                 videoManager.connect(
                     accessToken = token.token,
-                    roomName = roomName
-                )
+                    roomName = roomName,
+                    listener = object : TwilioVideoManager.Listener {
+                        override fun onConnected() {
+                            _state.value = AndroidCallState.Active(session)
+                        }
 
-                _state.value = AndroidCallState.Active(session)
+                        override fun onFailed(message: String) {
+                            _state.value = AndroidCallState.Failed(message)
+                        }
+
+                        override fun onDisconnected() {
+                            _state.value = AndroidCallState.Ended()
+                        }
+                    }
+                )
 
             } catch (e: Exception) {
                 _state.value =
@@ -383,8 +439,8 @@ class AndroidCallManager(
         }
 
         viewModelScope.launch {
-            ringtonePlayer.stop()
             socketManager.videoCallEnded.collect {
+                ringtonePlayer.stop()
                 videoManager.disconnect()
                 _state.value = AndroidCallState.Ended()
             }

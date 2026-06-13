@@ -96,6 +96,7 @@ import androidx.compose.material.icons.filled.Accessibility
 import com.chatforia.android.forwarding.ForwardingSettingsRepository
 import com.chatforia.android.forwarding.ForwardingSettingsView
 import com.chatforia.android.forwarding.ForwardingSettingsViewModel
+import com.chatforia.android.auth.AppLocaleManager
 
 @Composable
 fun ProfileScreen(
@@ -484,6 +485,11 @@ fun ProfileScreen(
                     settingsViewModel.update {
                         it.copy(preferredLanguage = code)
                     }
+
+                    AppLocaleManager.applyLanguage(
+                        context = context,
+                        languageCode = code
+                    )
                 }
             )
 

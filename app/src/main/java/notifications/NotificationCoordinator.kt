@@ -88,7 +88,8 @@ class NotificationCoordinator(
                 .setCategory(NotificationCompat.CATEGORY_CALL)
                 .setFullScreenIntent(pendingIntent, true)
                 .setContentIntent(pendingIntent)
-                .setAutoCancel(true)
+                .setOngoing(true)
+                .setAutoCancel(false)
                 .build()
 
         NotificationManagerCompat.from(context)

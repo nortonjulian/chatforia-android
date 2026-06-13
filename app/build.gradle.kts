@@ -62,6 +62,9 @@ dependencies {
 
     implementation("io.coil-kt:coil-compose:2.7.0")
 
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.core:core-ktx:1.13.1")
+
     implementation("io.socket:socket.io-client:2.1.0") {
         exclude(group = "org.json", module = "json")
     }
