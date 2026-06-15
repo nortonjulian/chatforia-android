@@ -2514,7 +2514,7 @@
     <string name="ria_login_verification_failed">Nije uspjelo ponovo poslati e-mail za verifikaciju.</string>
     <string name="ria_login_verification_sent">Verifikacijski e-mail poslan. Provjerite svoj inbox.</string>
     <string name="ria_login_welcomeBack">Dobrodošao nazad</string>
-    <string name="ria_original">Original</string>
+    <string name="ria_original">Originalno</string>
     <string name="ria_rewriting">Prepisivanje…</string>
     <string name="ria_suggestions">Prijedlozi</string>
     <string name="ria_title">Prepiši s Rijom</string>

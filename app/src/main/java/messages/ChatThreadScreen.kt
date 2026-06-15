@@ -61,6 +61,9 @@ import com.chatforia.android.ria.RiaRewriteSheet
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -228,25 +231,52 @@ fun ChatThreadScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        conversation.displayName
-                            ?: conversation.title
-                            ?: "Chat"
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(ChatforiaColors.screenBackground)
+                    .statusBarsPadding()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(68.dp)
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(ChatforiaColors.cardBackground)
+                            .clickable { onBack() },
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = stringResource(R.string.android_plan_back)
+                            contentDescription = stringResource(R.string.android_plan_back),
+                            tint = ChatforiaColors.primaryText
                         )
                     }
-                },
-                actions = {
+
+                    Spacer(modifier = Modifier.width(14.dp))
+
+                    Text(
+                        text = conversation.displayName
+                            ?: conversation.title
+                            ?: "Chat",
+                        fontSize = 21.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = ChatforiaColors.primaryText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
                     ChatforiaActionPill(
-                        modifier = Modifier.padding(end = 10.dp),
+                        modifier = Modifier,
                         actions = listOf(
                             ChatforiaAction(
                                 icon = Icons.Default.Search,
@@ -305,7 +335,7 @@ fun ChatThreadScreen(
                         )
                     )
                 }
-            )
+            }
         }
     ) { padding ->
 

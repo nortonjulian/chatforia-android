@@ -2047,7 +2047,7 @@
     <string name="phoneNumber_noInventory">Наразі немає доступних запасів.</string>
     <string name="phoneNumber_noNumberAssigned">Номер в Chatforia не присвоєно</string>
     <string name="phoneNumber_pickNumber">Виберіть номер</string>
-    <string name="phoneNumber_pluralS">s</string>
+    <string name="phoneNumber_pluralS">с</string>
     <string name="phoneNumber_premiumNumber">Преміум-номер 🔒.</string>
     <string name="phoneNumber_premiumNumberSubtitle">Збережіть та захистіть свій номер (без переробки)</string>
     <string name="phoneNumber_premiumProtected">Преміум-номери захищені від переробки, поки активна ваша преміум-підписка.</string>

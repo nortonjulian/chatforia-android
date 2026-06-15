@@ -168,7 +168,7 @@
     <string name="android_accessibility_settings_vibrate_on_new_messages">Bei neuen Nachrichten vibrieren</string>
     <string name="android_accessibility_settings_visual_alerts_for_messages_calls">Visuelle Benachrichtigungen für Nachrichten und Anrufe</string>
     <string name="android_accessibility_settings_voice_notes">Sprachmemos</string>
-    <string name="android_add_contact_alias_optional">Alias optional</string>
+    <string name="android_add_contact_alias_optional">Alias (optional)</string>
     <string name="android_add_contact_name">Name</string>
     <string name="android_add_contact_phone">Telefon</string>
     <string name="android_add_contact_pin_this_person_as_a_favorite_contact">Diese Person als Favorit speichern.</string>

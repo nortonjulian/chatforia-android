@@ -247,11 +247,6 @@
     <string name="android_forwarding_settings_forwarding">Forwarding</string>
     <string name="android_forwarding_settings_quiet_hours">Quiet Hours</string>
     <string name="android_forwarding_settings_reset">Reset</string>
-    <string name="android_forwarding_settings_destination_phone">Destination phone</string>
-    <string name="android_forwarding_settings_destination_email">Destination email</string>
-    <string name="android_forwarding_settings_destination_phone_for_calls">Destination phone for calls</string>
-    <string name="android_forwarding_settings_start">Start</string>
-    <string name="android_forwarding_settings_end">End</string>
     <string name="android_gif_picker_search_gifs">Search GIFs</string>
     <string name="android_gif_picker_search_tenor">Search Tenor</string>
     <string name="android_import_phone_contacts_clear">Clear</string>
@@ -331,8 +326,6 @@
     <string name="android_plan_plan_billing">Plan &amp; Billing</string>
     <string name="android_plan_plus">Plus</string>
     <string name="android_plan_premium">Premium</string>
-    <string name="android_profile_saving">Saving...</string>
-    <string name="android_profile_save_settings">Save Settings</string>
     <string name="android_profile_accessibility">Accessibility</string>
     <string name="android_profile_account">Account</string>
     <string name="android_profile_allow_explicit_content">Allow explicit content</string>
@@ -387,15 +380,6 @@
     <string name="android_profile_visual_alerts_captions_and_voice_note_accessibil">Visual alerts, captions, and voice note accessibility</string>
     <string name="android_profile_wireless">Wireless</string>
     <string name="android_profile_your_age_range">Your age range</string>
-    <string name="android_profile_auto_delete_voicemails_after_days">Auto-delete voicemails after (days)</string>
-    <string name="android_profile_keep_forever">Keep forever</string>
-    <string name="android_profile_email_address">Email address</string>
-    <string name="android_profile_text_fallback_greeting">Text fallback greeting</string>
-    <string name="android_profile_greeting">Greeting</string>
-    <string name="android_profile_privacy_policy">Privacy Policy</string>
-    <string name="android_profile_terms_of_service">Terms of Service</string>
-    <string name="android_profile_sms_policy">SMS Policy</string>
-    <string name="android_profile_contact_support">Contact Support</string>
     <string name="android_random_chat_add_friend">Add Friend</string>
     <string name="android_random_chat_end_chat">End chat</string>
     <string name="android_random_chat_send">Send</string>
@@ -427,29 +411,6 @@
     <string name="android_sound_settings_message_tone">Message Tone</string>
     <string name="android_sound_settings_ringtone">Ringtone</string>
     <string name="android_sound_settings_volume">Volume</string>
-    <string name="android_sound_default">Default</string>
-    <string name="android_sound_dreamer">Dreamer</string>
-    <string name="android_sound_happy_message">Happy Message</string>
-    <string name="android_sound_notify">Notify</string>
-    <string name="android_sound_pop">Pop</string>
-    <string name="android_sound_pulsating_sound">Pulsating Sound</string>
-    <string name="android_sound_sparkle">Sparkle</string>
-    <string name="android_sound_text_message">Text Message</string>
-    <string name="android_sound_vibrate">Vibrate</string>
-    <string name="android_sound_xylophone">Xylophone</string>
-    <string name="android_sound_bells">Bells</string>
-    <string name="android_sound_chimes">Chimes</string>
-    <string name="android_sound_classic">Classic</string>
-    <string name="android_sound_digital_phone">Digital Phone</string>
-    <string name="android_sound_melodic">Melodic</string>
-    <string name="android_sound_organ_notes">Organ Notes</string>
-    <string name="android_sound_sound_reality">Sound Reality</string>
-    <string name="android_sound_street">Street</string>
-    <string name="android_sound_universfield">Universfield</string>
-    <string name="android_sound_urgency">Urgency</string>
-    <string name="android_sound_settings_current_plan">Current plan: %1$s</string>
-    <string name="android_sound_settings_requires_premium">Requires Premium</string>
-    <string name="android_sound_settings_available_now">Available now</string>
     <string name="android_start_chat_new_chat">New Chat</string>
     <string name="android_start_chat_open_chat">Open chat</string>
     <string name="android_start_chat_results">Results</string>
@@ -3186,4 +3147,50 @@
     <string name="wireless_esim_description">Browse eSIM data packs and manage wireless features.</string>
     <string name="wireless_phone_number">Phone number</string>
     <string name="wireless_phone_number_description">Manage your Chatforia phone number.</string>
+    <!-- Profile missing strings -->
+    <string name="android_profile_auto_delete_voicemails_after_days">Auto-delete voicemails after days</string>
+    <string name="android_profile_keep_forever">Keep forever</string>
+    <string name="android_profile_email_address">Email address</string>
+    <string name="android_profile_text_fallback_greeting">Text fallback greeting</string>
+    <string name="android_profile_greeting">Greeting</string>
+    <string name="android_profile_privacy_policy">Privacy Policy</string>
+    <string name="android_profile_terms_of_service">Terms of Service</string>
+    <string name="android_profile_sms_policy">SMS Policy</string>
+    <string name="android_profile_contact_support">Contact Support</string>
+    <string name="android_profile_save_settings">Save Settings</string>
+    <string name="android_profile_saving">Saving…</string>
+
+    <!-- Forwarding settings missing strings -->
+    <string name="android_forwarding_settings_destination_phone">Destination phone</string>
+    <string name="android_forwarding_settings_destination_email">Destination email</string>
+    <string name="android_forwarding_settings_destination_phone_for_calls">Destination phone for calls</string>
+    <string name="android_forwarding_settings_start">Start</string>
+    <string name="android_forwarding_settings_end">End</string>
+
+    <!-- Sound names -->
+    <string name="android_sound_default">Default</string>
+    <string name="android_sound_dreamer">Dreamer</string>
+    <string name="android_sound_happy_message">Happy Message</string>
+    <string name="android_sound_notify">Notify</string>
+    <string name="android_sound_pop">Pop</string>
+    <string name="android_sound_pulsating_sound">Pulsating Sound</string>
+    <string name="android_sound_sparkle">Sparkle</string>
+    <string name="android_sound_text_message">Text Message</string>
+    <string name="android_sound_vibrate">Vibrate</string>
+    <string name="android_sound_xylophone">Xylophone</string>
+    <string name="android_sound_bells">Bells</string>
+    <string name="android_sound_chimes">Chimes</string>
+    <string name="android_sound_classic">Classic</string>
+    <string name="android_sound_digital_phone">Digital Phone</string>
+    <string name="android_sound_melodic">Melodic</string>
+    <string name="android_sound_organ_notes">Organ Notes</string>
+    <string name="android_sound_sound_reality">Sound Reality</string>
+    <string name="android_sound_street">Street</string>
+    <string name="android_sound_universfield">Universfield</string>
+    <string name="android_sound_urgency">Urgency</string>
+
+    <!-- Sound settings missing strings -->
+    <string name="android_sound_settings_current_plan">Current plan</string>
+    <string name="android_sound_settings_requires_premium">Requires Premium</string>
+    <string name="android_sound_settings_available_now">Available now</string>
 </resources>
