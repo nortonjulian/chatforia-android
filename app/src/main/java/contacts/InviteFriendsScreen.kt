@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chatforia.android.ui.theme.ChatforiaColors
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun InviteFriendsScreen(
@@ -95,13 +97,13 @@ fun InviteFriendsScreen(
             IconButton(onClick = onBack) {
                 Icon(
                     Icons.Default.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.android_plan_back),
                     tint = ChatforiaColors.primaryText
                 )
             }
 
             Text(
-                text = "Invite Friends",
+                text = stringResource(R.string.android_invite_friends_invite_friends),
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = ChatforiaColors.primaryText
@@ -109,7 +111,7 @@ fun InviteFriendsScreen(
         }
 
         Text(
-            text = "Share a Chatforia invite link with friends using Messages, email, or any app on your phone.",
+            text = stringResource(R.string.android_invite_friends_share_a_invite_link_with_friends_using_messages_),
             color = ChatforiaColors.secondaryText,
             style = MaterialTheme.typography.bodyLarge
         )
@@ -134,7 +136,7 @@ fun InviteFriendsScreen(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Text("Share Invite Link")
+                Text(stringResource(R.string.android_invite_friends_share_invite_link))
             }
         }
 

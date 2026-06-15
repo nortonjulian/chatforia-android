@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.sp
 import com.chatforia.android.ui.theme.ChatforiaColors
 import androidx.compose.material.icons.filled.Backspace
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun DialPadSheet(
@@ -60,7 +62,7 @@ fun DialPadSheet(
                 }
             },
             placeholder = {
-                Text("Enter number")
+                Text(stringResource(R.string.android_dial_pad_enter_number))
             },
             trailingIcon = {
                 if (number.isNotEmpty()) {
@@ -71,7 +73,7 @@ fun DialPadSheet(
                     ) {
                         Icon(
                             Icons.Default.Backspace,
-                            contentDescription = "Delete digit",
+                            contentDescription = stringResource(R.string.android_dial_pad_delete_digit),
                             tint = ChatforiaColors.secondaryText
                         )
                     }

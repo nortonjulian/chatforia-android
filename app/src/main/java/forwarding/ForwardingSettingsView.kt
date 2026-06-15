@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.sp
 import com.chatforia.android.ChatforiaGradientButton
 import com.chatforia.android.ui.components.ChatforiaSectionCard
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun ForwardingSettingsView(
@@ -45,13 +47,13 @@ fun ForwardingSettingsView(
             IconButton(onClick = onBack) {
                 Icon(
                     Icons.Default.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.android_plan_back),
                     tint = ChatforiaColors.primaryText
                 )
             }
 
             Text(
-                text = "Call & Text Forwarding",
+                text = stringResource(R.string.android_profile_call_text_forwarding),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 color = ChatforiaColors.primaryText
@@ -75,9 +77,9 @@ fun ForwardingSettingsView(
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp)
         ) {
-            ChatforiaSectionCard(title = "Forwarding") {
+            ChatforiaSectionCard(title = stringResource(R.string.android_forwarding_settings_forwarding)) {
                 Text(
-                    text = "Forward incoming calls and texts to your verified phone or email.",
+                    text = stringResource(R.string.android_forwarding_settings_forward_incoming_calls_and_texts_to_your_verifie),
                     style = MaterialTheme.typography.bodyMedium,
                     color = ChatforiaColors.secondaryText
                 )
@@ -90,7 +92,7 @@ fun ForwardingSettingsView(
                 )
 
                 SettingSwitchRowLocal(
-                    title = "Enable text forwarding",
+                    title = stringResource(R.string.android_forwarding_settings_enable_text_forwarding),
                     checked = state.forwardingEnabledSms,
                     onCheckedChange = { enabled ->
                         viewModel.update {
@@ -104,7 +106,7 @@ fun ForwardingSettingsView(
                 }
 
                 SettingSwitchRowLocal(
-                    title = "Forward texts to phone",
+                    title = stringResource(R.string.android_forwarding_settings_forward_texts_to_phone),
                     checked = state.forwardSmsToPhone,
                     onCheckedChange = { enabled ->
                         viewModel.update {
@@ -114,7 +116,7 @@ fun ForwardingSettingsView(
                 )
 
                 ForwardingTextField(
-                    label = "Destination phone",
+                    stringResource(R.string.android_forwarding_settings_destination_phone),
                     value = state.forwardPhoneNumber,
                     placeholder = "+15551234567",
                     enabled = state.forwardSmsToPhone,
@@ -130,7 +132,7 @@ fun ForwardingSettingsView(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 SettingSwitchRowLocal(
-                    title = "Forward texts to email",
+                    title = stringResource(R.string.android_forwarding_settings_forward_texts_to_email),
                     checked = state.forwardSmsToEmail,
                     onCheckedChange = { enabled ->
                         viewModel.update {
@@ -140,7 +142,7 @@ fun ForwardingSettingsView(
                 )
 
                 ForwardingTextField(
-                    label = "Destination email",
+                    stringResource(R.string.android_forwarding_settings_destination_email),
                     value = state.forwardEmail,
                     placeholder = "me@example.com",
                     enabled = state.forwardSmsToEmail,
@@ -159,7 +161,7 @@ fun ForwardingSettingsView(
                 )
 
                 SettingSwitchRowLocal(
-                    title = "Enable call forwarding",
+                    title = stringResource(R.string.android_forwarding_settings_enable_call_forwarding),
                     checked = state.forwardingEnabledCalls,
                     onCheckedChange = { enabled ->
                         viewModel.update {
@@ -169,7 +171,7 @@ fun ForwardingSettingsView(
                 )
 
                 ForwardingTextField(
-                    label = "Destination phone for calls",
+                    stringResource(R.string.android_forwarding_settings_destination_phone_for_calls),
                     value = state.forwardToPhoneE164,
                     placeholder = "+15551234567",
                     enabled = state.forwardingEnabledCalls,
@@ -188,7 +190,7 @@ fun ForwardingSettingsView(
                 )
 
                 Text(
-                    text = "Quiet Hours",
+                    text = stringResource(R.string.android_forwarding_settings_quiet_hours),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = ChatforiaColors.primaryText
@@ -198,7 +200,7 @@ fun ForwardingSettingsView(
 
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     ForwardingTextField(
-                        label = "Start",
+                        stringResource(R.string.android_forwarding_settings_start),
                         value = state.forwardQuietHoursStart?.toString() ?: "",
                         placeholder = "0",
                         keyboardType = KeyboardType.Number,
@@ -213,7 +215,7 @@ fun ForwardingSettingsView(
                     )
 
                     ForwardingTextField(
-                        label = "End",
+                        stringResource(R.string.android_forwarding_settings_end),
                         value = state.forwardQuietHoursEnd?.toString() ?: "",
                         placeholder = "23",
                         keyboardType = KeyboardType.Number,
@@ -245,11 +247,15 @@ fun ForwardingSettingsView(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(999.dp)
                     ) {
-                        Text("Reset")
+                        Text(stringResource(R.string.android_forwarding_settings_reset))
                     }
 
                     ChatforiaGradientButton(
-                        text = if (state.isSaving) "Saving..." else "Save",
+                        if (state.isSaving) {
+                            stringResource(R.string.android_profile_saving)
+                        } else {
+                            stringResource(R.string.common_save)
+                        },
                         enabled = state.canSave,
                         onClick = { viewModel.save() },
                         modifier = Modifier

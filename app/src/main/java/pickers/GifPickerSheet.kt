@@ -17,6 +17,8 @@ import coil.compose.AsyncImage
 import com.chatforia.android.tenor.TenorGifDto
 import com.chatforia.android.tenor.TenorRepository
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,7 +86,7 @@ fun GifPickerSheet(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Search GIFs",
+                text = stringResource(R.string.android_gif_picker_search_gifs),
                 style = MaterialTheme.typography.titleLarge
             )
 
@@ -97,12 +99,12 @@ fun GifPickerSheet(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
-                    Text("Search Tenor")
+                    Text(stringResource(R.string.android_gif_picker_search_tenor))
                 },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Search,
-                        contentDescription = "Search"
+                        contentDescription = stringResource(R.string.android_chats_search)
                     )
                 },
                 singleLine = true,
@@ -112,7 +114,7 @@ fun GifPickerSheet(
                             search()
                         }
                     ) {
-                        Text("Search")
+                        Text(stringResource(R.string.android_chats_search))
                     }
                 }
             )

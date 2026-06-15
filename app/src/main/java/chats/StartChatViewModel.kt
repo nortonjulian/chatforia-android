@@ -181,6 +181,33 @@ class StartChatViewModel(
         }
     }
 
+    fun openDirectChatFromCall(
+        userId: Int,
+        title: String
+    ) {
+        viewModelScope.launch {
+            _state.value =
+                _state.value.copy(
+                    isLoading = true,
+                    error = null,
+                    openedConversation = null
+                )
+
+            try {
+                openDirectChat(
+                    userId = userId,
+                    title = title
+                )
+            } catch (e: Exception) {
+                _state.value =
+                    _state.value.copy(
+                        isLoading = false,
+                        error = e.message ?: "Failed to open chat."
+                    )
+            }
+        }
+    }
+
     private suspend fun openDirectChat(
         userId: Int,
         title: String

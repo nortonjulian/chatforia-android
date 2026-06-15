@@ -5,6 +5,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun DevicePairingScreen(
@@ -22,9 +24,7 @@ fun DevicePairingScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Text(
-            "Open Chatforia on your new device and sign in. If it needs access to your encrypted chats, approve it from a trusted device."
-        )
+        Text(stringResource(R.string.android_device_pairing_open_on_your_new_device_and_sign_in_if_it_needs_))
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -32,7 +32,7 @@ fun DevicePairingScreen(
             onClick = onOpenLinkedDevices,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("View pending device requests")
+            Text(stringResource(R.string.android_device_pairing_view_pending_device_requests))
         }
     }
 }

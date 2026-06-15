@@ -18,6 +18,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun MessageBubble(
@@ -29,14 +31,33 @@ fun MessageBubble(
     val displayText =
         when {
             isDeleted -> "This message was deleted"
-            !message.decryptedContent.isNullOrBlank() -> message.decryptedContent
-            !message.translatedForMe.isNullOrBlank() -> message.translatedForMe
-            !message.rawContent.isNullOrBlank() -> message.rawContent
-            !message.content.isNullOrBlank() -> message.content
-            message.attachments.isNotEmpty() -> ""
-            message.attachmentsInline.isNotEmpty() -> ""
-            !message.contentCiphertext.isNullOrBlank() -> "Unable to decrypt this older message."
-            else -> ""
+
+            isMine -> {
+                listOf(
+                    message.rawContent,
+                    message.content,
+                    message.decryptedContent
+                ).firstOrNull { !it.isNullOrBlank() }
+                    ?: when {
+                        message.attachments.isNotEmpty() -> ""
+                        message.attachmentsInline.isNotEmpty() -> ""
+                        !message.contentCiphertext.isNullOrBlank() -> "Unable to decrypt this older message."
+                        else -> ""
+                    }
+            }
+
+            else -> {
+                when {
+                    !message.translatedForMe.isNullOrBlank() -> message.translatedForMe
+                    !message.decryptedContent.isNullOrBlank() -> message.decryptedContent
+                    !message.rawContent.isNullOrBlank() -> message.rawContent
+                    !message.content.isNullOrBlank() -> message.content
+                    message.attachments.isNotEmpty() -> ""
+                    message.attachmentsInline.isNotEmpty() -> ""
+                    !message.contentCiphertext.isNullOrBlank() -> "Unable to decrypt this older message."
+                    else -> ""
+                }
+            }
         }
 
     val bubbleShape = RoundedCornerShape(
@@ -85,7 +106,7 @@ fun MessageBubble(
 
                 if (message.editedAt != null && !isDeleted) {
                     Text(
-                        text = "Edited",
+                        text = stringResource(R.string.android_chat_thread_edited),
                         style = MaterialTheme.typography.labelSmall,
                         color = if (isMine) outgoingMetaTextColor else ChatforiaColors.secondaryText
                     )
@@ -93,7 +114,7 @@ fun MessageBubble(
 
                 if (message.optimistic) {
                     Text(
-                        text = "Sending…",
+                        text = stringResource(R.string.android_chat_thread_sending),
                         style = MaterialTheme.typography.labelSmall,
                         color = if (isMine) outgoingMetaTextColor else ChatforiaColors.secondaryText
                     )
@@ -101,7 +122,7 @@ fun MessageBubble(
 
                 if (message.failed) {
                     Text(
-                        text = "Failed to send",
+                        text = stringResource(R.string.android_chat_thread_failed_to_send),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -109,7 +130,7 @@ fun MessageBubble(
 
                 if (message.expiresAt != null && !isDeleted) {
                     Text(
-                        text = "Disappearing message",
+                        text = stringResource(R.string.android_message_bubble_disappearing_message),
                         style = MaterialTheme.typography.labelSmall,
                         color = if (isMine) outgoingMetaTextColor else ChatforiaColors.secondaryText
                     )

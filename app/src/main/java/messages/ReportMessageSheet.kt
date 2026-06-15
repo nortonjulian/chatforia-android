@@ -7,6 +7,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,18 +44,18 @@ fun ReportMessageSheet(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Report message",
+                text = stringResource(R.string.android_report_message_report_message),
                 style = MaterialTheme.typography.titleLarge
             )
 
-            Text("Reason")
+            Text(stringResource(R.string.android_report_message_reason))
 
             ReasonDropdown(
                 selected = reason,
                 onSelected = { reason = it }
             )
 
-            Text("Include previous messages")
+            Text(stringResource(R.string.android_report_message_include_previous_messages))
 
             ContextDropdown(
                 selected = contextCount,
@@ -64,8 +66,8 @@ fun ReportMessageSheet(
                 value = details,
                 onValueChange = { details = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Additional details") },
-                placeholder = { Text("Anything else moderators should know?") },
+                label = { Text(stringResource(R.string.android_report_message_additional_details)) },
+                placeholder = { Text(stringResource(R.string.android_report_message_anything_else_moderators_should_know)) },
                 minLines = 3,
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Sentences
@@ -76,7 +78,7 @@ fun ReportMessageSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Block this user after reporting")
+                Text(stringResource(R.string.android_report_message_block_this_user_after_reporting))
 
                 Switch(
                     checked = blockAfterReport,
@@ -106,7 +108,7 @@ fun ReportMessageSheet(
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(onClick = onCancel) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.android_chats_cancel))
                 }
 
                 Button(
@@ -122,7 +124,7 @@ fun ReportMessageSheet(
                         containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Submit report")
+                    Text(stringResource(R.string.android_report_message_submit_report))
                 }
             }
         }

@@ -9,9 +9,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.UUID
-import com.chatforia.android.messages.SendSmsRequest
-import com.chatforia.android.messages.SendSmsResponse
-
+import com.chatforia.android.crypto.EncryptedMessagePayloadForUser
 class MessagesRepository(
     private val apiClient: ApiClient
 ) {
@@ -38,6 +36,7 @@ class MessagesRepository(
         attachmentsInline: List<AttachmentDto> = emptyList(),
         contentCiphertext: String? = null,
         encryptedKeys: Map<String, String>? = null,
+        encryptedPayloads: Map<String, EncryptedMessagePayloadForUser>? = null,
         encryptionVersion: Int? = null
     ): MessageDto? {
         val bodyJson =
@@ -45,13 +44,14 @@ class MessagesRepository(
                 SendMessageRequest(
                     chatRoomId = roomId,
                     content =
-                        if (contentCiphertext.isNullOrBlank()) {
+                        if (contentCiphertext.isNullOrBlank() && encryptedPayloads.isNullOrEmpty()) {
                             text.ifBlank { null }
                         } else {
                             null
                         },
                     contentCiphertext = contentCiphertext,
                     encryptedKeys = encryptedKeys,
+                    encryptedPayloads = encryptedPayloads,
                     encryptionVersion = encryptionVersion,
                     clientMessageId = clientMessageId,
                     attachmentsInline = attachmentsInline
@@ -88,7 +88,7 @@ class MessagesRepository(
             withContext(Dispatchers.IO) {
                 apiClient.send(
                     ApiRequest(
-                        path = "messages/$roomId",
+                        path = "messages/$roomId?limit=100",
                         method = HttpMethod.GET,
                         requiresAuth = true
                     )
@@ -105,7 +105,7 @@ class MessagesRepository(
             withContext(Dispatchers.IO) {
                 apiClient.send(
                     ApiRequest(
-                        path = "chatrooms/$roomId/participants",
+                        path = "chatrooms/$roomId/participants?_=${System.currentTimeMillis()}",
                         method = HttpMethod.GET,
                         requiresAuth = true
                     )
@@ -113,6 +113,37 @@ class MessagesRepository(
             }
 
         return response.participants
+    }
+
+    suspend fun translateMessagePreview(
+        roomId: Int,
+        text: String,
+        targetLangs: List<String>
+    ): Map<String, String> {
+        if (text.isBlank() || targetLangs.isEmpty()) return emptyMap()
+
+        val bodyJson =
+            json.encodeToString(
+                MessagePreviewTranslateRequest(
+                    chatRoomId = roomId,
+                    text = text,
+                    targetLangs = targetLangs
+                )
+            )
+
+        val response: MessagePreviewTranslateResponse =
+            withContext(Dispatchers.IO) {
+                apiClient.send(
+                    ApiRequest(
+                        path = "translate/message-preview",
+                        method = HttpMethod.POST,
+                        bodyJson = bodyJson,
+                        requiresAuth = true
+                    )
+                )
+            }
+
+        return response.translations
     }
 
     suspend fun loadSmsThread(threadId: Int): SmsThreadDto {
@@ -206,12 +237,17 @@ class MessagesRepository(
     suspend fun editMessage(
         messageId: Int,
         text: String,
-        attachments: List<AttachmentDto> = emptyList()
+        attachments: List<AttachmentDto> = emptyList(),
+        encryptedPayloads: Map<String, EncryptedMessagePayloadForUser>? = null
     ): MessageDto? {
         val bodyJson =
             json.encodeToString(
                 EditMessageRequest(
-                    content = text,
+                    newContent = if (encryptedPayloads.isNullOrEmpty()) text else null,
+                    content = null,
+                    contentCiphertext = null,
+                    encryptedKeys = null,
+                    encryptedPayloads = encryptedPayloads,
                     attachments = attachments
                 )
             )
@@ -220,7 +256,7 @@ class MessagesRepository(
             withContext(Dispatchers.IO) {
                 apiClient.sendRaw(
                     ApiRequest(
-                        path = "messages/$messageId",
+                        path = "messages/$messageId/edit",
                         method = HttpMethod.PATCH,
                         bodyJson = bodyJson,
                         requiresAuth = true
@@ -277,7 +313,11 @@ data class ReadBulkRequest(
 
 @Serializable
 data class EditMessageRequest(
-    val content: String,
+    val newContent: String? = null,
+    val content: String? = null,
+    val contentCiphertext: String? = null,
+    val encryptedKeys: Map<String, String>? = null,
+    val encryptedPayloads: Map<String, EncryptedMessagePayloadForUser>? = null,
     val attachments: List<AttachmentDto> = emptyList()
 )
 
@@ -293,4 +333,16 @@ data class ReportMessageRequest(
 @Serializable
 data class ReportMessageResponse(
     val success: Boolean
+)
+
+@Serializable
+data class MessagePreviewTranslateRequest(
+    val chatRoomId: Int,
+    val text: String,
+    val targetLangs: List<String>
+)
+
+@Serializable
+data class MessagePreviewTranslateResponse(
+    val translations: Map<String, String> = emptyMap()
 )

@@ -20,6 +20,8 @@ import com.chatforia.android.ui.components.ChatforiaSectionCard
 import com.chatforia.android.ui.theme.ChatforiaColors
 import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun WirelessHomeView(
@@ -72,13 +74,13 @@ fun WirelessHomeView(
             IconButton(onClick = onBack) {
                 Icon(
                     Icons.Default.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.android_plan_back),
                     tint = ChatforiaColors.primaryText
                 )
             }
 
             Text(
-                text = "Wireless",
+                text = stringResource(R.string.android_profile_wireless),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = ChatforiaColors.primaryText
@@ -133,13 +135,13 @@ fun WirelessHomeView(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        ChatforiaSectionCard(title = "Manage") {
+        ChatforiaSectionCard(title = stringResource(R.string.android_wireless_home_manage)) {
             OutlinedButton(
                 onClick = {},
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text("Manage Wireless")
+                Text(stringResource(R.string.android_wireless_home_manage_wireless))
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -149,14 +151,14 @@ fun WirelessHomeView(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text("Port My Number")
+                Text(stringResource(R.string.android_wireless_home_port_my_number))
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "eSIM data packs require an eSIM-compatible and unlocked device.",
+            text = stringResource(R.string.android_wireless_home_esim_data_packs_require_an_esim_compatible_and_u),
             color = ChatforiaColors.secondaryText,
             style = MaterialTheme.typography.bodySmall
         )
@@ -165,9 +167,9 @@ fun WirelessHomeView(
 
 @Composable
 private fun HeroSection() {
-    ChatforiaSectionCard(title = "Chatforia Mobile") {
+    ChatforiaSectionCard(title = stringResource(R.string.android_profile_mobile)) {
         Text(
-            text = "Stay connected when you’re traveling or away from Wi-Fi.",
+            text = stringResource(R.string.android_wireless_home_stay_connected_when_you_re_traveling_or_away_fro),
             color = ChatforiaColors.primaryText,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
@@ -176,7 +178,7 @@ private fun HeroSection() {
         Spacer(modifier = Modifier.height(10.dp))
 
         Text(
-            text = "Choose a one-time eSIM data pack for Local, Europe, or Global coverage.",
+            text = stringResource(R.string.android_wireless_home_choose_a_one_time_esim_data_pack_for_local_europ),
             color = ChatforiaColors.secondaryText,
             style = MaterialTheme.typography.bodyLarge
         )
@@ -188,7 +190,7 @@ private fun CoverageSection(
     selectedScope: EsimScope,
     onScopeChange: (EsimScope) -> Unit
 ) {
-    ChatforiaSectionCard(title = "Coverage") {
+    ChatforiaSectionCard(title = stringResource(R.string.android_wireless_home_coverage)) {
         SingleChoiceSegmentedButtonRow(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -225,7 +227,7 @@ private fun CoverageSection(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "We don’t sell data packs under 3 GB.",
+            text = stringResource(R.string.android_wireless_home_we_don_t_sell_data_packs_under_3_gb),
             color = ChatforiaColors.secondaryText,
             style = MaterialTheme.typography.bodyMedium
         )
@@ -237,7 +239,7 @@ private fun EsimSection(
     esim: EsimSubscriberDto?,
     activation: ReserveEsimResponse?
 ) {
-    ChatforiaSectionCard(title = "Your eSIM") {
+    ChatforiaSectionCard(title = stringResource(R.string.android_wireless_home_your_esim)) {
         val hasEsim = esim != null || activation != null
 
         Text(
@@ -286,14 +288,14 @@ private fun UsageSection(
     error: String?,
     status: WirelessStatusResponse?
 ) {
-    ChatforiaSectionCard(title = "Current Usage") {
+    ChatforiaSectionCard(title = stringResource(R.string.android_wireless_home_current_usage)) {
         when {
             isLoading -> {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "Loading usage…",
+                        text = stringResource(R.string.android_wireless_home_loading_usage),
                         color = ChatforiaColors.secondaryText
                     )
                 }
@@ -345,14 +347,14 @@ private fun UsageSection(
 
             status?.mode == "NONE" -> {
                 Text(
-                    text = "No active data pack yet. Buy a pack below to start tracking usage.",
+                    text = stringResource(R.string.android_wireless_home_no_active_data_pack_yet_buy_a_pack_below_to_star),
                     color = ChatforiaColors.secondaryText
                 )
             }
 
             else -> {
                 Text(
-                    text = "Usage details will appear once your data pack is active.",
+                    text = stringResource(R.string.android_wireless_home_usage_details_will_appear_once_your_data_pack_is),
                     color = ChatforiaColors.secondaryText
                 )
             }

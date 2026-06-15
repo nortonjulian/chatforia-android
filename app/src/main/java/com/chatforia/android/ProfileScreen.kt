@@ -97,7 +97,10 @@ import com.chatforia.android.forwarding.ForwardingSettingsRepository
 import com.chatforia.android.forwarding.ForwardingSettingsView
 import com.chatforia.android.forwarding.ForwardingSettingsViewModel
 import com.chatforia.android.auth.AppLocaleManager
-
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
+import android.util.Log
+import android.app.Activity
 @Composable
 fun ProfileScreen(
     user: UserDto,
@@ -330,8 +333,8 @@ fun ProfileScreen(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete Account") },
-            text = { Text("This action cannot be undone. Are you sure you want to delete your account?") },
+            title = { Text(stringResource(R.string.android_profile_delete_account)) },
+            text = { Text(stringResource(R.string.android_profile_this_action_cannot_be_undone_are_you_sure_you_wa)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -352,7 +355,7 @@ fun ProfileScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.android_chats_cancel))
                 }
             }
         )
@@ -367,7 +370,7 @@ fun ProfileScreen(
             .padding(bottom = 24.dp)
     ) {
         Text(
-            text = "Profile",
+            text = stringResource(R.string.android_main_activity_profile),
             fontSize = 34.sp,
             fontWeight = FontWeight.Bold,
             color = ChatforiaColors.primaryText,
@@ -394,10 +397,10 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        ChatforiaSectionCard(title = "Account") {
+        ChatforiaSectionCard(title = stringResource(R.string.android_profile_account)) {
             ProfileRow(
                 icon = Icons.Default.Person,
-                title = "Username",
+                title = stringResource(R.string.android_profile_username),
                 subtitle = user.username ?: "Unknown"
             )
 
@@ -405,7 +408,7 @@ fun ProfileScreen(
 
             ProfileRow(
                 icon = Icons.Default.Email,
-                title = "Email",
+                title = stringResource(R.string.android_profile_email),
                 subtitle = user.email ?: "No email"
             )
 
@@ -413,17 +416,17 @@ fun ProfileScreen(
 
             ProfileRow(
                 icon = Icons.Default.Star,
-                title = "Plan",
+                title = stringResource(R.string.android_profile_plan),
                 subtitle = user.plan ?: "Free"
             )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        ChatforiaSectionCard(title = "Plan") {
+        ChatforiaSectionCard(title = stringResource(R.string.android_profile_plan)) {
             ProfileRow(
                 icon = Icons.Default.CreditCard,
-                title = "Plan & Billing",
+                title = stringResource(R.string.android_plan_plan_billing),
                 subtitle = "Current plan: ${user.plan ?: "Free"}",
                 showChevron = true,
                 onClick = { showPlan = true }
@@ -432,11 +435,11 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        ChatforiaSectionCard(title = "Wireless") {
+        ChatforiaSectionCard(title = stringResource(R.string.android_profile_wireless)) {
             ProfileRow(
                 icon = Icons.Default.Wifi,
-                title = "Chatforia Mobile",
-                subtitle = "eSIM and wireless settings",
+                title = stringResource(R.string.android_profile_mobile),
+                subtitle = stringResource(R.string.android_profile_esim_and_wireless_settings),
                 showChevron = true,
                 onClick = {
                     showWireless = true
@@ -447,8 +450,8 @@ fun ProfileScreen(
 
             ProfileRow(
                 icon = Icons.Default.Phone,
-                title = "Call & Text Forwarding",
-                subtitle = "Forward incoming calls and texts",
+                title = stringResource(R.string.android_profile_call_text_forwarding),
+                subtitle = stringResource(R.string.android_profile_forward_incoming_calls_and_texts),
                 showChevron = true,
                 onClick = {
                     showForwarding = true
@@ -459,8 +462,8 @@ fun ProfileScreen(
 
             ProfileRow(
                 icon = Icons.Default.Phone,
-                title = "Phone Number",
-                subtitle = "Manage your Chatforia number",
+                title = stringResource(R.string.android_profile_phone_number),
+                subtitle = stringResource(R.string.android_profile_manage_your_number),
                 showChevron = true,
                 onClick = {
                     showPhoneNumbers = true
@@ -470,9 +473,9 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        ChatforiaSectionCard(title = "Settings") {
+        ChatforiaSectionCard(title = stringResource(R.string.android_profile_settings)) {
             Text(
-                text = "Preferred Language",
+                text = stringResource(R.string.android_profile_preferred_language),
                 style = MaterialTheme.typography.bodyLarge,
                 color = ChatforiaColors.primaryText
             )
@@ -485,19 +488,14 @@ fun ProfileScreen(
                     settingsViewModel.update {
                         it.copy(preferredLanguage = code)
                     }
-
-                    AppLocaleManager.applyLanguage(
-                        context = context,
-                        languageCode = code
-                    )
                 }
             )
 
             HorizontalDivider(color = ChatforiaColors.border)
 
             SettingSwitchRow(
-                title = "Auto-translate messages",
-                subtitle = "Automatically translate messages into your preferred language.",
+                title = stringResource(R.string.android_profile_auto_translate_messages),
+                subtitle = stringResource(R.string.android_profile_automatically_translate_messages_into_your_prefe),
                 checked = settingsState.autoTranslate,
                 onCheckedChange = { enabled ->
                     settingsViewModel.update {
@@ -509,8 +507,8 @@ fun ProfileScreen(
             HorizontalDivider(color = ChatforiaColors.border)
 
             SettingSwitchRow(
-                title = "Show original with translation",
-                subtitle = "Show the original message alongside the translation.",
+                title = stringResource(R.string.android_profile_show_original_with_translation),
+                subtitle = stringResource(R.string.android_profile_show_the_original_message_alongside_the_translat),
                 checked = settingsState.showOriginalWithTranslation,
                 onCheckedChange = { enabled ->
                     settingsViewModel.update {
@@ -526,8 +524,8 @@ fun ProfileScreen(
             HorizontalDivider(color = ChatforiaColors.border)
 
             SettingSwitchRow(
-                title = "Smart reply suggestions",
-                subtitle = "Show Ria-powered rewrite assistance and quick replies.",
+                title = stringResource(R.string.android_profile_smart_reply_suggestions),
+                subtitle = stringResource(R.string.android_profile_show_ria_powered_rewrite_assistance_and_quick_re),
                 checked = settingsState.enableSmartReplies,
                 onCheckedChange = { enabled ->
                     settingsViewModel.update {
@@ -540,8 +538,8 @@ fun ProfileScreen(
 
             ProfileRow(
                 icon = Icons.Default.Security,
-                title = "Linked Devices",
-                subtitle = "Manage trusted devices",
+                title = stringResource(R.string.android_profile_linked_devices),
+                subtitle = stringResource(R.string.android_profile_manage_trusted_devices),
                 showChevron = true,
                 onClick = {
                     showLinkedDevices = true
@@ -552,8 +550,8 @@ fun ProfileScreen(
 
             ProfileRow(
                 icon = Icons.Default.Phone,
-                title = "Pair New Device",
-                subtitle = "Approve a new device",
+                title = stringResource(R.string.android_profile_pair_new_device),
+                subtitle = stringResource(R.string.android_profile_approve_a_new_device),
                 showChevron = true,
                 onClick = {
                     showDevicePairing = true
@@ -562,7 +560,7 @@ fun ProfileScreen(
 
             ProfileRow(
                 icon = Icons.Default.Settings,
-                title = "Appearance",
+                title = stringResource(R.string.android_profile_appearance),
                 subtitle = AppThemes.nameFor(settingsState.theme),
                 showChevron = true,
                 onClick = {
@@ -576,8 +574,8 @@ fun ProfileScreen(
 
             ProfileRow(
                 icon = Icons.Default.Accessibility,
-                title = "Accessibility",
-                subtitle = "Visual alerts, captions, and voice note accessibility",
+                title = stringResource(R.string.android_profile_accessibility),
+                subtitle = stringResource(R.string.android_profile_visual_alerts_captions_and_voice_note_accessibil),
                 showChevron = true,
                 onClick = {
                     showAccessibility = true
@@ -611,17 +609,17 @@ fun ProfileScreen(
 
             ProfileRow(
                 icon = Icons.Default.Security,
-                title = "Security",
-                subtitle = "Encryption key protected",
+                title = stringResource(R.string.android_profile_security),
+                subtitle = stringResource(R.string.android_profile_encryption_key_protected),
                 showChevron = true
             )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        ChatforiaSectionCard(title = "Privacy") {
+        ChatforiaSectionCard(title = stringResource(R.string.android_profile_privacy)) {
             SettingSwitchRow(
-                title = "Allow explicit content",
+                title = stringResource(R.string.android_profile_allow_explicit_content),
                 subtitle = "",
                 checked = settingsState.allowExplicitContent,
                 onCheckedChange = { enabled ->
@@ -630,7 +628,7 @@ fun ProfileScreen(
             )
 
             SettingSwitchRow(
-                title = "Show read receipts",
+                title = stringResource(R.string.android_profile_show_read_receipts),
                 subtitle = "",
                 checked = settingsState.showReadReceipts,
                 onCheckedChange = { enabled ->
@@ -641,7 +639,7 @@ fun ProfileScreen(
             )
 
             SettingSwitchRow(
-                title = "Blur messages by default",
+                title = stringResource(R.string.android_profile_blur_messages_by_default),
                 subtitle = "",
                 checked = settingsState.privacyBlurEnabled,
                 onCheckedChange = { enabled ->
@@ -650,7 +648,7 @@ fun ProfileScreen(
             )
 
             SettingSwitchRow(
-                title = "Blur when app is unfocused",
+                title = stringResource(R.string.android_profile_blur_when_app_is_unfocused),
                 subtitle = "",
                 checked = settingsState.privacyBlurOnUnfocus,
                 onCheckedChange = { enabled ->
@@ -659,7 +657,7 @@ fun ProfileScreen(
             )
 
             SettingSwitchRow(
-                title = "Hold to reveal messages",
+                title = stringResource(R.string.android_profile_hold_to_reveal_messages),
                 subtitle = "",
                 checked = settingsState.privacyHoldToReveal,
                 onCheckedChange = { enabled ->
@@ -668,7 +666,7 @@ fun ProfileScreen(
             )
 
             SettingSwitchRow(
-                title = "Notify when messages are copied",
+                title = stringResource(R.string.android_profile_notify_when_messages_are_copied),
                 subtitle = "",
                 checked = settingsState.notifyOnCopy,
                 onCheckedChange = { enabled ->
@@ -679,9 +677,9 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        ChatforiaSectionCard(title = "Random Chat") {
+        ChatforiaSectionCard(title = stringResource(R.string.android_profile_random_chat)) {
             Text(
-                text = "Your age range",
+                text = stringResource(R.string.android_profile_your_age_range),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = ChatforiaColors.primaryText
@@ -701,7 +699,7 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             SettingSwitchRow(
-                title = "Use age-based matching",
+                title = stringResource(R.string.android_profile_use_age_based_matching),
                 subtitle = "",
                 checked = settingsState.wantsAgeFilter,
                 enabled = settingsState.ageBand != null,
@@ -713,7 +711,7 @@ fun ProfileScreen(
             )
 
             SettingSwitchRow(
-                title = "Let Ria remember conversations",
+                title = stringResource(R.string.android_profile_let_ria_remember_conversations),
                 subtitle = "",
                 checked = settingsState.riaRemember,
                 onCheckedChange = { enabled ->
@@ -726,9 +724,9 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        ChatforiaSectionCard(title = "Voicemail") {
+        ChatforiaSectionCard(title = stringResource(R.string.android_calls_voicemail)) {
             SettingSwitchRow(
-                title = "Forward voicemail to email",
+                title = stringResource(R.string.android_profile_forward_voicemail_to_email),
                 subtitle = "",
                 checked = settingsState.voicemailEnabled,
                 onCheckedChange = { enabled ->
@@ -741,9 +739,9 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             SettingsTextField(
-                label = "Auto-delete voicemails after (days)",
+                stringResource(R.string.android_profile_auto_delete_voicemails_after_days),
                 value = settingsState.voicemailAutoDeleteDays?.toString() ?: "",
-                placeholder = "Keep forever",
+                stringResource(R.string.android_profile_keep_forever),
                 onValueChange = { value ->
                     settingsViewModel.update {
                         it.copy(
@@ -757,9 +755,9 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             SettingsTextField(
-                label = "Forward voicemail to email",
+                stringResource(R.string.android_profile_forward_voicemail_to_email),
                 value = settingsState.voicemailForwardEmail,
-                placeholder = "Email address",
+                stringResource(R.string.android_profile_email_address),
                 onValueChange = { value ->
                     settingsViewModel.update {
                         it.copy(voicemailForwardEmail = value)
@@ -770,9 +768,9 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             SettingsTextField(
-                label = "Text fallback greeting",
+                stringResource(R.string.android_profile_text_fallback_greeting),
                 value = settingsState.voicemailGreetingText,
-                placeholder = "Greeting",
+                stringResource(R.string.android_profile_greeting),
                 minLines = 3,
                 onValueChange = { value ->
                     settingsViewModel.update {
@@ -782,17 +780,31 @@ fun ProfileScreen(
             )
         }
 
-        ChatforiaSectionCard(title = "Legal & Support") {
-            LegalSupportRow("Privacy Policy", "https://chatforia.com/privacy")
+        ChatforiaSectionCard(
+            title = stringResource(R.string.android_profile_legal_support)
+        ) {
+            LegalSupportRow(
+                title = stringResource(R.string.android_profile_privacy_policy),
+                url = "https://chatforia.com/privacy"
+            )
             HorizontalDivider(color = ChatforiaColors.border)
 
-            LegalSupportRow("Terms of Service", "https://chatforia.com/legal/terms")
+            LegalSupportRow(
+                title = stringResource(R.string.android_profile_terms_of_service),
+                url = "https://chatforia.com/legal/terms"
+            )
             HorizontalDivider(color = ChatforiaColors.border)
 
-            LegalSupportRow("SMS Policy", "https://chatforia.com/legal/sms")
+            LegalSupportRow(
+                title = stringResource(R.string.android_profile_sms_policy),
+                url = "https://chatforia.com/legal/sms"
+            )
             HorizontalDivider(color = ChatforiaColors.border)
 
-            LegalSupportRow("Contact Support", "mailto:support@chatforia.com")
+            LegalSupportRow(
+                title = stringResource(R.string.android_profile_contact_support),
+                url = "mailto:support@chatforia.com"
+            )
         }
 
         Spacer(modifier = Modifier.height(18.dp))
@@ -802,11 +814,35 @@ fun ProfileScreen(
             contentAlignment = Alignment.Center
         ) {
             ChatforiaGradientButton(
-                text = if (settingsState.isSaving) "Saving..." else "Save Settings",
+                stringResource(R.string.android_profile_save_settings),
                 enabled = !settingsState.isSaving,
                 onClick = {
+                    Log.d(
+                        "LocaleTest",
+                        "Saving preferredLanguage=${settingsState.preferredLanguage}"
+                    )
+
+                    Log.d(
+                        "LocaleTest",
+                        "Before save settingsState=${settingsState.preferredLanguage}"
+                    )
+
                     settingsViewModel.save(
-                        onUserUpdated = onUserUpdated
+                        onUserUpdated = { updatedUser ->
+                            Log.d(
+                                "LocaleTest",
+                                "Updated preferredLanguage=${updatedUser.preferredLanguage}"
+                            )
+
+                            onUserUpdated(updatedUser)
+
+                            AppLocaleManager.saveLanguage(
+                                context = context,
+                                languageCode = updatedUser.preferredLanguage ?: "en"
+                            )
+
+                            (context as? Activity)?.recreate()
+                        }
                     )
                 },
                 modifier = Modifier
@@ -837,7 +873,7 @@ fun ProfileScreen(
         ) {
             Icon(Icons.Default.Delete, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Delete Account")
+            Text(stringResource(R.string.android_profile_delete_account))
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -866,9 +902,9 @@ fun ProfileScreen(
                 contentColor = logoutForeground
             )
         ) {
-            Icon(Icons.Default.Logout, contentDescription = "Log out")
+            Icon(Icons.Default.Logout, contentDescription = stringResource(R.string.android_profile_log_out))
             Spacer(Modifier.width(8.dp))
-            Text("Log out")
+            Text(stringResource(R.string.android_profile_log_out))
         }
     }
 
@@ -913,7 +949,7 @@ private fun ThemePickerDialog(
         },
         title = {
             Text(
-                text = "Theme",
+                text = stringResource(R.string.android_profile_theme),
                 color = ChatforiaColors.primaryText,
                 fontWeight = FontWeight.Bold
             )
@@ -921,14 +957,14 @@ private fun ThemePickerDialog(
         text = {
             Column {
                 Text(
-                    text = "Choose how Chatforia looks across the app.",
+                    text = stringResource(R.string.android_profile_choose_how_looks_across_the_app),
                     color = ChatforiaColors.secondaryText
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 ThemeOptionGroup(
-                    title = "Free",
+                    title = stringResource(R.string.android_profile_free),
                     options = AppThemes.all.filter { it.requiredPlan == "FREE" },
                     currentTheme = currentTheme,
                     currentPlan = currentPlan,
@@ -939,7 +975,7 @@ private fun ThemePickerDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 ThemeOptionGroup(
-                    title = "Premium",
+                    title = stringResource(R.string.android_plan_premium),
                     options = AppThemes.all.filter { it.requiredPlan != "FREE" },
                     currentTheme = currentTheme,
                     currentPlan = currentPlan,
@@ -1074,7 +1110,7 @@ private fun ProfileHeaderCard(
                 if (!user.avatarUrl.isNullOrBlank()) {
                     AsyncImage(
                         model = user.avatarUrl,
-                        contentDescription = "Profile photo",
+                        contentDescription = stringResource(R.string.android_profile_profile_photo),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -1127,7 +1163,7 @@ private fun ProfileHeaderCard(
             ) {
                 Icon(Icons.Default.Image, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Change Photo")
+                Text(stringResource(R.string.android_profile_change_photo))
             }
 
             if (!user.avatarUrl.isNullOrBlank()) {
@@ -1143,14 +1179,14 @@ private fun ProfileHeaderCard(
                 ) {
                     Icon(Icons.Default.Delete, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Remove Photo")
+                    Text(stringResource(R.string.android_profile_remove_photo))
                 }
             }
 
             if (isUploadingAvatar) {
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Uploading…",
+                    text = stringResource(R.string.android_profile_uploading),
                     color = ChatforiaColors.secondaryText,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -1186,7 +1222,7 @@ private fun UpgradeCard(
         ) {
             Icon(
                 Icons.Default.AutoAwesome,
-                contentDescription = "Upgrade",
+                contentDescription = stringResource(R.string.android_upgrade_upgrade),
                 tint = ChatforiaColors.accent
             )
 
@@ -1194,14 +1230,14 @@ private fun UpgradeCard(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Upgrade",
+                    text = stringResource(R.string.android_upgrade_upgrade),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = ChatforiaColors.primaryText
                 )
 
                 Text(
-                    text = "Choose Plus or Premium",
+                    text = stringResource(R.string.android_profile_choose_plus_or_premium),
                     style = MaterialTheme.typography.bodyMedium,
                     color = ChatforiaColors.secondaryText
                 )
@@ -1209,7 +1245,7 @@ private fun UpgradeCard(
 
             Icon(
                 Icons.Default.ChevronRight,
-                contentDescription = "Open upgrade",
+                contentDescription = stringResource(R.string.android_profile_open_upgrade),
                 tint = ChatforiaColors.secondaryText
             )
         }
@@ -1263,7 +1299,7 @@ private fun ProfileRow(
         if (showChevron) {
             Icon(
                 Icons.Default.ChevronRight,
-                contentDescription = "Open",
+                contentDescription = stringResource(R.string.android_profile_open),
                 tint = ChatforiaColors.secondaryText
             )
         }
@@ -1449,7 +1485,7 @@ private fun LegalSupportRow(
 
         Icon(
             imageVector = Icons.Default.OpenInNew,
-            contentDescription = "Open",
+            contentDescription = stringResource(R.string.android_profile_open),
             tint = ChatforiaColors.secondaryText
         )
     }

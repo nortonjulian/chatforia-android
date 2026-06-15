@@ -15,6 +15,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun ImportPhoneContactsScreen(
@@ -45,13 +47,13 @@ fun ImportPhoneContactsScreen(
             IconButton(onClick = onBack) {
                 Icon(
                     Icons.Default.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.android_plan_back),
                     tint = ChatforiaColors.primaryText
                 )
             }
 
             Text(
-                text = "Import Contacts",
+                text = stringResource(R.string.android_import_phone_contacts_import_contacts),
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = ChatforiaColors.primaryText
@@ -73,7 +75,7 @@ fun ImportPhoneContactsScreen(
                     selectedPhones = contacts.map { it.phone }.toSet()
                 }
             ) {
-                Text("Select All")
+                Text(stringResource(R.string.android_import_phone_contacts_select_all))
             }
 
             TextButton(
@@ -81,7 +83,7 @@ fun ImportPhoneContactsScreen(
                     selectedPhones = emptySet()
                 }
             ) {
-                Text("Clear")
+                Text(stringResource(R.string.android_import_phone_contacts_clear))
             }
         }
 

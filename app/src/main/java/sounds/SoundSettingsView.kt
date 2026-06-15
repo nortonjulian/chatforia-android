@@ -18,6 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.auth.SettingsUiState
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun SoundSettingsView(
@@ -44,29 +46,49 @@ fun SoundSettingsView(
 
     Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
         Text(
-            text = "Free includes basic sounds. Upgrade to unlock more tones and ringtones.",
+            text = stringResource(R.string.android_sound_settings_free_includes_basic_sounds_upgrade_to_unlock_mor),
             color = ChatforiaColors.secondaryText,
             style = MaterialTheme.typography.bodyMedium
         )
 
         SoundSummaryRow(
-            title = "Message Tone",
-            value = state.messageTone.removeSuffix(".mp3"),
-            planLabel = if (hasPaidSounds) "Premium" else "Free",
+            title = stringResource(R.string.android_sound_settings_message_tone),
+            value = stringResource(
+                AppMessageTones.all
+                    .firstOrNull { it.filename == state.messageTone }
+                    ?.labelResId
+                    ?: R.string.android_sound_default
+            ),
+            planLabel =
+                if (hasPaidSounds) {
+                    stringResource(R.string.android_plan_premium)
+                } else {
+                    stringResource(R.string.android_profile_free)
+                },
             onClick = { showMessagePicker = true }
         )
 
         SoundSummaryRow(
-            title = "Ringtone",
-            value = state.ringtone.removeSuffix(".mp3"),
-            planLabel = if (hasPaidSounds) "Premium" else "Free",
+            title = stringResource(R.string.android_sound_settings_ringtone),
+            value = stringResource(
+                AppRingtones.all
+                    .firstOrNull { it.filename == state.ringtone }
+                    ?.labelResId
+                    ?: R.string.android_sound_classic
+            ),
+            planLabel =
+                if (hasPaidSounds) {
+                    stringResource(R.string.android_plan_premium)
+                } else {
+                    stringResource(R.string.android_profile_free)
+                },
             onClick = { showRingtonePicker = true }
         )
 
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "Volume",
+                    text = stringResource(R.string.android_sound_settings_volume),
                     color = ChatforiaColors.primaryText,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
@@ -94,7 +116,7 @@ fun SoundSettingsView(
 
     if (showMessagePicker) {
         SoundPickerDialog(
-            title = "Message Tone",
+            title = stringResource(R.string.android_sound_settings_message_tone),
             currentPlan = planName,
             selectedFilename = state.messageTone,
             options = AppMessageTones.all,
@@ -110,7 +132,7 @@ fun SoundSettingsView(
 
     if (showRingtonePicker) {
         SoundPickerDialog(
-            title = "Ringtone",
+            title = stringResource(R.string.android_sound_settings_ringtone),
             currentPlan = planName,
             selectedFilename = state.ringtone,
             options = AppRingtones.all,
@@ -209,7 +231,10 @@ private fun SoundPickerDialog(
                     .verticalScroll(rememberScrollState())
             ) {
                 Text(
-                    text = "Current plan: $currentPlan",
+                    text = stringResource(
+                        R.string.android_sound_settings_current_plan,
+                        currentPlan
+                    ),
                     color = ChatforiaColors.secondaryText,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -217,7 +242,9 @@ private fun SoundPickerDialog(
                 Spacer(modifier = Modifier.height(18.dp))
 
                 Text(
-                    text = "FREE",
+                    text = stringResource(
+                        R.string.android_profile_free
+                    ).uppercase(),
                     color = ChatforiaColors.secondaryText,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold
@@ -238,7 +265,9 @@ private fun SoundPickerDialog(
                 Spacer(modifier = Modifier.height(18.dp))
 
                 Text(
-                    text = "PREMIUM",
+                    text = stringResource(
+                        R.string.android_plan_premium
+                    ).uppercase(),
                     color = ChatforiaColors.secondaryText,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold
@@ -260,7 +289,7 @@ private fun SoundPickerDialog(
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text(
-                    text = "Done",
+                    text = stringResource(R.string.android_dial_pad_done),
                     color = ChatforiaColors.accent
                 )
             }
@@ -291,7 +320,7 @@ private fun SoundPickerRow(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = option.label,
+                text = stringResource(option.labelResId),
                 color =
                     if (locked)
                         ChatforiaColors.secondaryText
@@ -302,7 +331,16 @@ private fun SoundPickerRow(
             )
 
             Text(
-                text = if (locked) "Requires Premium" else "Available now",
+                text =
+                    if (locked) {
+                        stringResource(
+                            R.string.android_sound_settings_requires_premium
+                        )
+                    } else {
+                        stringResource(
+                            R.string.android_sound_settings_available_now
+                        )
+                    },
                 color = ChatforiaColors.secondaryText,
                 style = MaterialTheme.typography.bodySmall
             )

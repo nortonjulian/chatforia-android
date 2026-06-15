@@ -11,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun ChatforiaSearchField(
@@ -28,7 +30,7 @@ fun ChatforiaSearchField(
         leadingIcon = {
             Icon(
                 Icons.Default.Search,
-                contentDescription = "Search",
+                contentDescription = stringResource(R.string.android_chats_search),
                 tint = ChatforiaColors.secondaryText
             )
         },

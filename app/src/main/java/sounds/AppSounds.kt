@@ -1,43 +1,45 @@
 package com.chatforia.android.sounds
 
+import com.chatforia.android.R
+
 enum class RequiredPlan {
     Free,
     Premium
 }
 
 data class SoundOption(
-    val label: String,
+    val labelResId: Int,
     val filename: String,
     val requiredPlan: RequiredPlan
 )
 
 object AppMessageTones {
     val all = listOf(
-        SoundOption("Default", "Default.mp3", RequiredPlan.Free),
-        SoundOption("Dreamer", "Dreamer.mp3", RequiredPlan.Premium),
-        SoundOption("Happy Message", "Happy Message.mp3", RequiredPlan.Premium),
-        SoundOption("Notify", "Notify.mp3", RequiredPlan.Premium),
-        SoundOption("Pop", "Pop.mp3", RequiredPlan.Premium),
-        SoundOption("Pulsating Sound", "Pulsating Sound.mp3", RequiredPlan.Premium),
-        SoundOption("Sparkle", "Sparkle.mp3", RequiredPlan.Premium),
-        SoundOption("Text Message", "Text Message.mp3", RequiredPlan.Premium),
-        SoundOption("Vibrate", "Vibrate.mp3", RequiredPlan.Free),
-        SoundOption("Xylophone", "Xylophone.mp3", RequiredPlan.Premium)
+        SoundOption(R.string.android_sound_default, "Default.mp3", RequiredPlan.Free),
+        SoundOption(R.string.android_sound_dreamer, "Dreamer.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_happy_message, "Happy Message.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_notify, "Notify.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_pop, "Pop.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_pulsating_sound, "Pulsating Sound.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_sparkle, "Sparkle.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_text_message, "Text Message.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_vibrate, "Vibrate.mp3", RequiredPlan.Free),
+        SoundOption(R.string.android_sound_xylophone, "Xylophone.mp3", RequiredPlan.Premium)
     )
 }
 
 object AppRingtones {
     val all = listOf(
-        SoundOption("Bells", "Bells.mp3", RequiredPlan.Premium),
-        SoundOption("Chimes", "Chimes.mp3", RequiredPlan.Premium),
-        SoundOption("Classic", "Classic.mp3", RequiredPlan.Free),
-        SoundOption("Digital Phone", "Digital Phone.mp3", RequiredPlan.Premium),
-        SoundOption("Melodic", "Melodic.mp3", RequiredPlan.Premium),
-        SoundOption("Organ Notes", "Organ Notes.mp3", RequiredPlan.Premium),
-        SoundOption("Sound Reality", "Sound Reality.mp3", RequiredPlan.Premium),
-        SoundOption("Street", "Street.mp3", RequiredPlan.Premium),
-        SoundOption("Universfield", "Universfield.mp3", RequiredPlan.Premium),
-        SoundOption("Urgency", "Urgency.mp3", RequiredPlan.Free)
+        SoundOption(R.string.android_sound_bells, "Bells.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_chimes, "Chimes.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_classic, "Classic.mp3", RequiredPlan.Free),
+        SoundOption(R.string.android_sound_digital_phone, "Digital Phone.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_melodic, "Melodic.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_organ_notes, "Organ Notes.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_sound_reality, "Sound Reality.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_street, "Street.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_universfield, "Universfield.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_urgency, "Urgency.mp3", RequiredPlan.Free)
     )
 }
 

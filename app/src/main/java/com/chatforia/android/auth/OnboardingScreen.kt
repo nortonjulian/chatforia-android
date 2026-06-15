@@ -17,6 +17,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun OnboardingScreen(
@@ -54,7 +56,7 @@ fun OnboardingScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Welcome",
+            text = stringResource(R.string.android_onboarding_welcome),
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Bold
             ),
@@ -137,7 +139,7 @@ fun OnboardingScreen(
                     },
                     enabled = !isSaving
                 ) {
-                    Text("Back")
+                    Text(stringResource(R.string.android_plan_back))
                 }
             }
 
@@ -294,7 +296,7 @@ private fun WelcomeStep() {
         )
 
         Text(
-            text = "Welcome to Chatforia",
+            text = stringResource(R.string.android_login_welcome_to),
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Bold
             ),
@@ -303,7 +305,7 @@ private fun WelcomeStep() {
         )
 
         Text(
-            text = "Set up your profile so Chatforia can personalize your experience.",
+            text = stringResource(R.string.android_onboarding_set_up_your_profile_so_can_personalize_your_expe),
             color = ChatforiaColors.secondaryText,
             textAlign = TextAlign.Center
         )
@@ -319,7 +321,7 @@ private fun UsernameStep(
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         Text(
-            text = "Choose a username",
+            text = stringResource(R.string.android_onboarding_choose_a_username),
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Bold
             ),
@@ -329,7 +331,7 @@ private fun UsernameStep(
         )
 
         Text(
-            text = "This is how people will recognize you in Chatforia.",
+            text = stringResource(R.string.android_onboarding_this_is_how_people_will_recognize_you_in),
             color = ChatforiaColors.secondaryText,
             textAlign = TextAlign.Center
         )
@@ -337,7 +339,7 @@ private fun UsernameStep(
         OutlinedTextField(
             value = username,
             onValueChange = onUsernameChange,
-            label = { Text("Username") },
+            label = { Text(stringResource(R.string.android_profile_username)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             keyboardOptions = KeyboardOptions(
@@ -357,7 +359,7 @@ private fun LanguageStep(
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         Text(
-            text = "Choose your language",
+            text = stringResource(R.string.android_onboarding_choose_your_language),
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Bold
             ),
@@ -367,7 +369,7 @@ private fun LanguageStep(
         )
 
         Text(
-            text = "Chatforia will use this for translations and your app experience.",
+            text = stringResource(R.string.android_onboarding_will_use_this_for_translations_and_your_app_expe),
             color = ChatforiaColors.secondaryText,
             textAlign = TextAlign.Center
         )
@@ -393,7 +395,7 @@ private fun ReadyStep() {
         )
 
         Text(
-            text = "You’re ready",
+            text = stringResource(R.string.android_onboarding_you_re_ready),
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Bold
             ),
@@ -402,7 +404,7 @@ private fun ReadyStep() {
         )
 
         Text(
-            text = "Start chatting, calling, translating, and connecting with people around the world.",
+            text = stringResource(R.string.android_onboarding_start_chatting_calling_translating_and_connectin),
             color = ChatforiaColors.secondaryText,
             textAlign = TextAlign.Center
         )

@@ -40,6 +40,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 @Composable
 fun KeySetupScreen(
     viewModel: KeySetupViewModel,
@@ -77,7 +79,7 @@ fun KeySetupScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Encryption",
+                text = stringResource(R.string.android_key_setup_encryption),
                 style = MaterialTheme.typography.titleLarge,
                 color = ChatforiaColors.primaryText
             )
@@ -121,7 +123,7 @@ fun KeySetupScreen(
                     OutlinedTextField(
                         value = backupPassword,
                         onValueChange = { backupPassword = it },
-                        label = { Text("Recovery Passcode") },
+                        label = { Text(stringResource(R.string.android_key_setup_recovery_passcode)) },
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -138,7 +140,7 @@ fun KeySetupScreen(
                     OutlinedTextField(
                         value = confirmPassword,
                         onValueChange = { confirmPassword = it },
-                        label = { Text("Confirm Recovery Passcode") },
+                        label = { Text(stringResource(R.string.android_key_setup_confirm_recovery_passcode)) },
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -184,7 +186,7 @@ fun KeySetupScreen(
 
                 state.hasRemoteBackup -> {
                     Text(
-                        text = "Restore encrypted chats",
+                        text = stringResource(R.string.android_key_setup_restore_encrypted_chats),
                         style = MaterialTheme.typography.titleMedium,
                         color = ChatforiaColors.primaryText
                     )
@@ -192,7 +194,7 @@ fun KeySetupScreen(
                     OutlinedTextField(
                         value = backupPassword,
                         onValueChange = { backupPassword = it },
-                        label = { Text("Recovery Passcode") },
+                        label = { Text(stringResource(R.string.android_key_setup_recovery_passcode)) },
                         visualTransformation = PasswordVisualTransformation(),
                         enabled = !state.isRestoring,
                         modifier = Modifier.fillMaxWidth(),
@@ -219,7 +221,7 @@ fun KeySetupScreen(
                         if (state.isRestoring) {
                             CircularProgressIndicator()
                         } else {
-                            Text("Restore Chats")
+                            Text(stringResource(R.string.android_key_setup_restore_chats))
                         }
                     }
                 }
@@ -227,13 +229,12 @@ fun KeySetupScreen(
                 else -> {
 
                     Text(
-                        text = "No recovery backup found",
+                        text = stringResource(R.string.android_key_setup_no_recovery_backup_found),
                         style = MaterialTheme.typography.titleMedium
                     )
 
                     Text(
-                        text =
-                            "Open Chatforia on a device that can already read your encrypted chats and create a Recovery Passcode there."
+                        text = stringResource(R.string.android_key_setup_open_on_a_device_that_can_already_read_your_encr)
                     )
                 }
             }
@@ -241,7 +242,7 @@ fun KeySetupScreen(
 
             if (!state.hasRemoteBackup && !state.isCheckingBackup) {
                 Text(
-                    text = "No Recovery Backup found yet. Create one from this device so you can restore chats on iOS, Android, and web.",
+                    text = stringResource(R.string.android_key_setup_no_recovery_backup_found_yet_create_one_from_thi),
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -285,13 +286,13 @@ fun KeySetupScreen(
             HorizontalDivider(color = ChatforiaColors.border)
 
             Text(
-                text = "Reset Encryption",
+                text = stringResource(R.string.android_login_reset_encryption),
                 style = MaterialTheme.typography.titleMedium,
                 color = ChatforiaColors.primaryText
             )
 
             Text(
-                text = "Only use this if you have lost all trusted devices and cannot restore your original key.",
+                text = stringResource(R.string.android_key_setup_only_use_this_if_you_have_lost_all_trusted_devic),
                 color = ChatforiaColors.secondaryText
             )
 
@@ -315,7 +316,7 @@ fun KeySetupScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Reset Encryption",
+                    text = stringResource(R.string.android_login_reset_encryption),
                     color = ChatforiaColors.buttonForeground
                 )
             }
@@ -329,7 +330,7 @@ fun KeySetupScreen(
             },
 
             title = {
-                Text("Reset Encryption?")
+                Text(stringResource(R.string.android_key_setup_reset_encryption))
             },
 
             text = {
@@ -347,7 +348,7 @@ fun KeySetupScreen(
                         viewModel.resetEncryption()
                     }
                 ) {
-                    Text("Reset Encryption")
+                    Text(stringResource(R.string.android_login_reset_encryption))
                 }
             },
 
@@ -357,7 +358,7 @@ fun KeySetupScreen(
                         showResetDialog = false
                     }
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.android_chats_cancel))
                 }
             }
         )

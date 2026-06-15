@@ -10,6 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun RiaRewriteSheet(
@@ -33,7 +35,7 @@ fun RiaRewriteSheet(
             .verticalScroll(rememberScrollState())
     ) {
         Text(
-            text = "Rewrite with Ria",
+            text = stringResource(R.string.android_chat_thread_rewrite_with_ria),
             style = MaterialTheme.typography.titleLarge,
             color = ChatforiaColors.primaryText
         )
@@ -41,7 +43,7 @@ fun RiaRewriteSheet(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Original text",
+            text = stringResource(R.string.android_ria_rewrite_original_text),
             style = MaterialTheme.typography.titleMedium,
             color = ChatforiaColors.primaryText
         )
@@ -63,7 +65,7 @@ fun RiaRewriteSheet(
         Spacer(modifier = Modifier.height(18.dp))
 
         Text(
-            text = "Choose tone",
+            text = stringResource(R.string.android_ria_rewrite_choose_tone),
             style = MaterialTheme.typography.titleMedium,
             color = ChatforiaColors.primaryText
         )
@@ -116,7 +118,7 @@ fun RiaRewriteSheet(
                     Spacer(modifier = Modifier.width(10.dp))
 
                     Text(
-                        text = "Rewriting…",
+                        text = stringResource(R.string.android_ria_rewrite_rewriting),
                         color = ChatforiaColors.secondaryText
                     )
                 }
@@ -138,7 +140,7 @@ fun RiaRewriteSheet(
 
             options.isNotEmpty() -> {
                 Text(
-                    text = "Suggestions",
+                    text = stringResource(R.string.android_ria_rewrite_suggestions),
                     style = MaterialTheme.typography.titleMedium,
                     color = ChatforiaColors.primaryText
                 )
@@ -167,7 +169,7 @@ fun RiaRewriteSheet(
 
             else -> {
                 Text(
-                    text = "Choose a tone to generate rewrite suggestions.",
+                    text = stringResource(R.string.android_ria_rewrite_choose_a_tone_to_generate_rewrite_suggestions),
                     color = ChatforiaColors.secondaryText
                 )
             }
@@ -179,7 +181,7 @@ fun RiaRewriteSheet(
             onClick = onDismiss,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Close")
+            Text(stringResource(R.string.android_upgrade_close))
         }
     }
 }

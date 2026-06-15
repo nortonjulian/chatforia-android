@@ -27,6 +27,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import com.chatforia.android.contacts.ContactDto
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun StartChatView(
@@ -53,13 +55,13 @@ fun StartChatView(
             IconButton(onClick = onBack) {
                 Icon(
                     Icons.Default.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.android_plan_back),
                     tint = ChatforiaColors.primaryText
                 )
             }
 
             Text(
-                text = "New Chat",
+                text = stringResource(R.string.android_start_chat_new_chat),
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = ChatforiaColors.primaryText
@@ -83,7 +85,7 @@ fun StartChatView(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Start a chat",
+                    text = stringResource(R.string.android_start_chat_start_a_chat),
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
                     color = ChatforiaColors.primaryText,
@@ -93,7 +95,7 @@ fun StartChatView(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Search by username, contact name, or phone number.",
+                    text = stringResource(R.string.android_start_chat_search_by_username_contact_name_or_phone_number),
                     color = ChatforiaColors.secondaryText,
                     style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center,
@@ -112,7 +114,7 @@ fun StartChatView(
                 viewModel.updateUsername(it)
             },
             placeholder = {
-                Text("Username, contact name, or phone number")
+                Text(stringResource(R.string.android_start_chat_username_contact_name_or_phone_number))
             },
             leadingIcon = {
                 Icon(
@@ -161,7 +163,7 @@ fun StartChatView(
 
         if (state.contactResults.isNotEmpty()) {
             Text(
-                text = "Results",
+                text = stringResource(R.string.android_start_chat_results),
                 color = ChatforiaColors.secondaryText,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
@@ -232,7 +234,7 @@ private fun StartChatContactRow(
 
         Icon(
             Icons.Default.KeyboardArrowRight,
-            contentDescription = "Open chat",
+            contentDescription = stringResource(R.string.android_start_chat_open_chat),
             tint = ChatforiaColors.secondaryText
         )
     }

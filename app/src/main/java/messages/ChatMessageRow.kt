@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -34,8 +36,7 @@ fun ChatMessageRow(
         }
 
     val hasAttachments = attachments.isNotEmpty()
-    val copyText = message.visibleTextOrNull()
-
+    val copyText = message.visibleTextOrNull(isMine)
     val canEdit =
         isMine &&
                 message.deletedForAll != true &&
@@ -76,7 +77,7 @@ fun ChatMessageRow(
                     )
                 }
 
-                if (shouldShowTextBubble(message, hasAttachments)) {
+                if (shouldShowTextBubble(message, hasAttachments, isMine)) {
                     MessageBubble(
                         message = message,
                         isMine = isMine
@@ -92,7 +93,7 @@ fun ChatMessageRow(
         ) {
             if (!copyText.isNullOrBlank()) {
                 DropdownMenuItem(
-                    text = { Text("Copy") },
+                    text = { Text(stringResource(R.string.android_chat_message_row_copy)) },
                     onClick = {
                         clipboard.setText(AnnotatedString(copyText))
                         showMenu = false
@@ -102,7 +103,7 @@ fun ChatMessageRow(
 
             if (canEdit) {
                 DropdownMenuItem(
-                    text = { Text("Edit") },
+                    text = { Text(stringResource(R.string.android_chat_message_row_edit)) },
                     onClick = {
                         showMenu = false
                         onEdit?.invoke(message)
@@ -112,7 +113,7 @@ fun ChatMessageRow(
 
             if (canDeleteForMe || canDeleteForEveryone) {
                 DropdownMenuItem(
-                    text = { Text("Delete") },
+                    text = { Text(stringResource(R.string.android_chats_delete)) },
                     onClick = {
                         showMenu = false
                         onDelete?.invoke(message)
@@ -122,7 +123,7 @@ fun ChatMessageRow(
 
             if (!isMine && message.deletedForAll != true) {
                 DropdownMenuItem(
-                    text = { Text("Report") },
+                    text = { Text(stringResource(R.string.android_chat_message_row_report)) },
                     onClick = {
                         showMenu = false
                         onReport?.invoke(message)
@@ -132,7 +133,7 @@ fun ChatMessageRow(
 
             if (isMine && message.deletedForAll != true) {
                 DropdownMenuItem(
-                    text = { Text("Message Info") },
+                    text = { Text(stringResource(R.string.android_chat_message_row_message_info)) },
                     onClick = {
                         showMenu = false
                         onMessageInfo?.invoke(message)
@@ -145,11 +146,12 @@ fun ChatMessageRow(
 
 private fun shouldShowTextBubble(
     message: MessageDto,
-    hasAttachments: Boolean
+    hasAttachments: Boolean,
+    isMine: Boolean
 ): Boolean {
     if (message.deletedForAll == true || message.deletedBySender == true) return true
 
-    val text = message.visibleTextOrNull() ?: ""
+    val text = message.visibleTextOrNull(isMine) ?: ""
 
     val normalized = text.trim().lowercase()
 
@@ -170,16 +172,27 @@ private fun shouldShowTextBubble(
     return true
 }
 
-private fun MessageDto.visibleTextOrNull(): String? {
+private fun MessageDto.visibleTextOrNull(isMine: Boolean): String? {
     val attachmentCaption =
         attachments.firstOrNull { !it.caption.isNullOrBlank() }?.caption
             ?: attachmentsInline.firstOrNull { !it.caption.isNullOrBlank() }?.caption
 
-    return decryptedContent
-        ?: translatedForMe
-        ?: rawContent
-        ?: content
-        ?: attachmentCaption
+    return if (isMine) {
+        listOf(
+            rawContent,
+            content,
+            decryptedContent,
+            attachmentCaption
+        ).firstOrNull { !it.isNullOrBlank() }
+    } else {
+        listOf(
+            translatedForMe,
+            decryptedContent,
+            rawContent,
+            content,
+            attachmentCaption
+        ).firstOrNull { !it.isNullOrBlank() }
+    }
 }
 
 fun MessageDto.isWithinActionWindow(): Boolean {

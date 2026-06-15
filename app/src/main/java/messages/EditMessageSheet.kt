@@ -19,6 +19,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,11 +50,11 @@ fun EditMessageSheet(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = onCancel) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.android_chats_cancel))
                 }
 
                 Text(
-                    text = "Edit message",
+                    text = stringResource(R.string.android_edit_message_edit_message),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.weight(1f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -63,7 +65,7 @@ fun EditMessageSheet(
                         onSave(text, gifUrl)
                     }
                 ) {
-                    Text("Save")
+                    Text(stringResource(R.string.android_edit_message_save))
                 }
             }
 
@@ -78,7 +80,7 @@ fun EditMessageSheet(
                         keyboardController?.show()
                     }
                 ) {
-                    Text("Emoji")
+                    Text(stringResource(R.string.android_edit_message_emoji))
                 }
             }
 
@@ -92,7 +94,7 @@ fun EditMessageSheet(
                 ) {
                     AsyncImage(
                         model = gifUrl,
-                        contentDescription = "Selected GIF",
+                        contentDescription = stringResource(R.string.android_chat_thread_selected_gif),
                         modifier = Modifier.fillMaxSize()
                     )
 
@@ -109,7 +111,7 @@ fun EditMessageSheet(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Remove GIF",
+                                contentDescription = stringResource(R.string.android_chat_thread_remove_gif),
                                 tint = Color.White,
                                 modifier = Modifier.size(12.dp)
                             )
@@ -126,7 +128,7 @@ fun EditMessageSheet(
                     .weight(1f)
                     .focusRequester(focusRequester),
                 placeholder = {
-                    Text("Message")
+                    Text(stringResource(R.string.android_contact_detail_message))
                 },
                 shape = RoundedCornerShape(18.dp),
                 keyboardOptions = KeyboardOptions(

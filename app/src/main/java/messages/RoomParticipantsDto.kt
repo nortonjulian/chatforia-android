@@ -19,5 +19,7 @@ data class RoomParticipantDto(
 data class RoomParticipantUserDto(
     val id: Int,
     val username: String? = null,
-    val publicKey: String? = null
+    val publicKey: String? = null,
+    val preferredLanguage: String? = null,
+    val autoTranslate: Boolean? = true
 )

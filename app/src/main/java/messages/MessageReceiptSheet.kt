@@ -12,6 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,13 +35,13 @@ fun MessageReceiptSheet(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Text(
-                text = "Message Info",
+                text = stringResource(R.string.android_chat_message_row_message_info),
                 style = MaterialTheme.typography.titleLarge
             )
 
             if (readers.isEmpty()) {
                 Text(
-                    text = "No one has read this yet",
+                    text = stringResource(R.string.android_message_receipt_no_one_has_read_this_yet),
                     style = MaterialTheme.typography.bodyMedium
                 )
             } else {
@@ -78,7 +80,7 @@ fun MessageReceiptSheet(
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                text = "Message info",
+                                text = stringResource(R.string.android_message_receipt_message_info),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -90,7 +92,7 @@ fun MessageReceiptSheet(
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Done")
+                Text(stringResource(R.string.android_dial_pad_done))
             }
         }
     }

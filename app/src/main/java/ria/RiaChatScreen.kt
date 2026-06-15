@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun RiaChatScreen(
@@ -60,7 +62,7 @@ fun RiaChatScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "You’re now chatting with Ria",
+                        text = stringResource(R.string.android_ria_chat_you_re_now_chatting_with_ria),
                         color = ChatforiaColors.secondaryText,
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier
@@ -163,7 +165,7 @@ private fun RiaHeader(
                 }
 
                 Text(
-                    text = "Chat with Ria anytime, separate from random human matching.",
+                    text = stringResource(R.string.android_ria_chat_chat_with_ria_anytime_separate_from_random_human),
                     color = ChatforiaColors.secondaryText,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -172,7 +174,7 @@ private fun RiaHeader(
             IconButton(onClick = onClose) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Close",
+                    contentDescription = stringResource(R.string.android_upgrade_close),
                     tint = ChatforiaColors.secondaryText
                 )
             }
@@ -257,7 +259,7 @@ private fun RiaComposer(
             OutlinedTextField(
                 value = draft,
                 onValueChange = onDraftChange,
-                placeholder = { Text("Ask Ria...") },
+                placeholder = { Text(stringResource(R.string.android_ria_chat_ask_ria)) },
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(22.dp),
                 minLines = 1,
@@ -285,7 +287,7 @@ private fun RiaComposer(
                 } else {
                     Icon(
                         imageVector = Icons.Default.ArrowUpward,
-                        contentDescription = "Send",
+                        contentDescription = stringResource(R.string.android_random_chat_send),
                         tint = ChatforiaColors.primaryText
                     )
                 }

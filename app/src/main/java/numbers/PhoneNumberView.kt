@@ -18,6 +18,8 @@ import com.chatforia.android.ui.components.ChatforiaSectionCard
 import com.chatforia.android.ui.theme.ChatforiaColors
 import kotlinx.coroutines.launch
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,13 +91,13 @@ fun PhoneNumberView(
             IconButton(onClick = onBack) {
                 Icon(
                     Icons.Default.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.android_plan_back),
                     tint = ChatforiaColors.primaryText
                 )
             }
 
             Text(
-                text = "Phone Number",
+                text = stringResource(R.string.android_profile_phone_number),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = ChatforiaColors.primaryText
@@ -123,7 +125,7 @@ fun PhoneNumberView(
                 val number = response?.number
                 val policy = response?.policy
 
-                ChatforiaSectionCard(title = "Your Chatforia Number") {
+                ChatforiaSectionCard(title = stringResource(R.string.android_phone_number_your_number)) {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -172,7 +174,7 @@ fun PhoneNumberView(
                             shape = RoundedCornerShape(16.dp),
                             modifier = Modifier.widthIn(min = 180.dp, max = 260.dp)
                         ) {
-                            Text("Replace Number")
+                            Text(stringResource(R.string.android_phone_number_replace_number))
                         }
 
                         Spacer(modifier = Modifier.height(10.dp))
@@ -202,13 +204,13 @@ fun PhoneNumberView(
             }
 
             else -> {
-                ChatforiaSectionCard(title = "Your Chatforia Number") {
+                ChatforiaSectionCard(title = stringResource(R.string.android_phone_number_your_number)) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
                     ) {
                         Text(
-                            text = "No Chatforia number assigned.",
+                            text = stringResource(R.string.android_phone_number_no_number_assigned),
                             style = MaterialTheme.typography.bodyLarge,
                             color = ChatforiaColors.secondaryText
                         )
@@ -224,7 +226,7 @@ fun PhoneNumberView(
                             ),
                             modifier = Modifier.widthIn(min = 180.dp, max = 260.dp)
                         ) {
-                            Text("Pick a Number")
+                            Text(stringResource(R.string.android_phone_number_pick_a_number))
                         }
                     }
                 }

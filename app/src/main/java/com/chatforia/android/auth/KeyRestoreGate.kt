@@ -16,6 +16,8 @@ import com.chatforia.android.auth.AuthRepository
 import com.chatforia.android.auth.UserDto
 import com.chatforia.android.network.ApiClient
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun KeyRestoreGate(
@@ -55,7 +57,7 @@ fun KeyRestoreGate(
             .padding(16.dp)
     ) {
         Text(
-            text = "Restore Encryption",
+            text = stringResource(R.string.android_key_restore_gate_restore_encryption),
             style = MaterialTheme.typography.headlineMedium
         )
 
@@ -77,13 +79,13 @@ fun KeyRestoreGate(
         TextButton(
             onClick = onRecovered
         ) {
-            Text("I've restored my key")
+            Text(stringResource(R.string.android_key_restore_gate_i_ve_restored_my_key))
         }
 
         TextButton(
             onClick = onLogout
         ) {
-            Text("Log out")
+            Text(stringResource(R.string.android_profile_log_out))
         }
     }
 }

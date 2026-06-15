@@ -40,6 +40,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.clip
 import kotlin.math.roundToInt
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
+import androidx.compose.material.icons.filled.Message
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CallsScreen(
@@ -47,7 +50,8 @@ fun CallsScreen(
     voicemailViewModel: VoicemailViewModel,
     onStartAudioCall: (CallDto) -> Unit = {},
     onStartVideoCall: (CallDto) -> Unit = {},
-    onDialNumber: (String) -> Unit = {}
+    onDialNumber: (String) -> Unit = {},
+    onMessageCall: (CallDto) -> Unit = {}
 ) {
     var selectedSegment by remember {
         mutableStateOf(CallsSegment.Recents)
@@ -81,7 +85,7 @@ fun CallsScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Calls",
+                text = stringResource(R.string.android_calls_calls),
                 fontSize = 34.sp,
                 fontWeight = FontWeight.Bold,
                 color = ChatforiaColors.primaryText
@@ -94,7 +98,7 @@ fun CallsScreen(
             ) {
                 Icon(
                     Icons.Default.Dialpad,
-                    contentDescription = "Open dial pad",
+                    contentDescription = stringResource(R.string.android_calls_open_dial_pad),
                     tint = ChatforiaColors.accent
                 )
             }
@@ -113,7 +117,7 @@ fun CallsScreen(
                     inactiveContainerColor = ChatforiaColors.cardBackground,
                     inactiveContentColor = ChatforiaColors.primaryText
                 ),
-                label = { Text("Recents") }
+                label = { Text(stringResource(R.string.android_calls_recents)) }
             )
 
             SegmentedButton(
@@ -126,7 +130,7 @@ fun CallsScreen(
                     inactiveContainerColor = ChatforiaColors.cardBackground,
                     inactiveContentColor = ChatforiaColors.primaryText
                 ),
-                label = { Text("Voicemail") }
+                label = { Text(stringResource(R.string.android_calls_voicemail)) }
             )
         }
 
@@ -170,6 +174,9 @@ fun CallsScreen(
                                     },
                                     onStartVideoCall = {
                                         onStartVideoCall(call)
+                                    },
+                                    onMessage = {
+                                        onMessageCall(call)
                                     },
                                     onDelete = {
                                         callsViewModel.deleteCall(call)
@@ -217,7 +224,8 @@ private fun SwipeRevealCallRow(
     call: CallDto,
     onStartAudioCall: () -> Unit,
     onStartVideoCall: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onMessage: () -> Unit
 ) {
     var offsetX by remember(call.id) {
         mutableFloatStateOf(0f)
@@ -232,6 +240,22 @@ private fun SwipeRevealCallRow(
     ) {
         Box(
             modifier = Modifier
+                .align(Alignment.CenterStart)
+                .fillMaxHeight()
+                .width(92.dp)
+                .background(ChatforiaColors.accent),
+            contentAlignment = Alignment.Center
+        ) {
+            IconButton(onClick = onMessage) {
+                Icon(
+                    Icons.Default.Message,
+                    contentDescription = "Message",
+                    tint = Color.White
+                )
+            }
+        }
+        Box(
+            modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight()
                 .width(92.dp)
@@ -241,7 +265,7 @@ private fun SwipeRevealCallRow(
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Default.Delete,
-                    contentDescription = "Delete call",
+                    contentDescription = stringResource(R.string.android_calls_delete_call),
                     tint = Color.White
                 )
             }
@@ -255,13 +279,13 @@ private fun SwipeRevealCallRow(
                     detectHorizontalDragGestures(
                         onHorizontalDrag = { _, dragAmount ->
                             offsetX = (offsetX + dragAmount)
-                                .coerceIn(-maxRevealPx, 0f)
+                                .coerceIn(-maxRevealPx, maxRevealPx)
                         },
                         onDragEnd = {
-                            offsetX = if (offsetX < -maxRevealPx / 2) {
-                                -maxRevealPx
-                            } else {
-                                0f
+                            offsetX = when {
+                                offsetX < -maxRevealPx / 2 -> -maxRevealPx
+                                offsetX > maxRevealPx / 2 -> maxRevealPx
+                                else -> 0f
                             }
                         },
                         onDragCancel = {
@@ -389,7 +413,7 @@ private fun CallHistoryRow(
                     contentColor = ChatforiaColors.accent
                 )
             ) {
-                Icon(Icons.Default.Videocam, contentDescription = "Video call")
+                Icon(Icons.Default.Videocam, contentDescription = stringResource(R.string.android_calls_video_call))
             }
 
             FilledIconButton(
@@ -404,7 +428,7 @@ private fun CallHistoryRow(
                     contentColor = ChatforiaColors.accent
                 )
             ) {
-                Icon(Icons.Default.Call, contentDescription = "Call")
+                Icon(Icons.Default.Call, contentDescription = stringResource(R.string.android_dial_pad_call))
             }
         }
     }
@@ -428,7 +452,7 @@ private fun EmptyCallsState() {
         Spacer(modifier = Modifier.height(18.dp))
 
         Text(
-            text = "No calls yet",
+            text = stringResource(R.string.android_calls_no_calls_yet),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = ChatforiaColors.primaryText
@@ -437,7 +461,7 @@ private fun EmptyCallsState() {
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Your recent calls will show up here.",
+            text = stringResource(R.string.android_calls_your_recent_calls_will_show_up_here),
             style = MaterialTheme.typography.bodyLarge,
             color = ChatforiaColors.secondaryText
         )

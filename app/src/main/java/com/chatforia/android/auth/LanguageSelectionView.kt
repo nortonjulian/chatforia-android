@@ -23,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun LanguageSelectionView(
@@ -70,7 +72,7 @@ fun LanguageSelectionView(
 
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowDown,
-                    contentDescription = "Select language",
+                    contentDescription = stringResource(R.string.android_language_selection_select_language),
                     tint = ChatforiaColors.accent
                 )
             }

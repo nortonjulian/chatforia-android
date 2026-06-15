@@ -23,6 +23,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.ui.text.style.TextAlign
 import com.chatforia.android.ui.theme.ChatforiaColors
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 data class VoicemailUiState(
     val items: List<VoicemailDto> = emptyList(),
@@ -173,11 +175,11 @@ private fun VoicemailRow(
         }
 
         IconButton(onClick = onPlay) {
-            Icon(Icons.Default.PlayArrow, contentDescription = "Play voicemail")
+            Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.android_voicemail_inbox_play_voicemail))
         }
 
         IconButton(onClick = onDelete) {
-            Icon(Icons.Default.Delete, contentDescription = "Delete voicemail")
+            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.android_voicemail_inbox_delete_voicemail))
         }
     }
 }
@@ -201,7 +203,7 @@ private fun EmptyVoicemailState() {
         Spacer(modifier = Modifier.height(18.dp))
 
         Text(
-            text = "No voicemails yet.",
+            text = stringResource(R.string.android_voicemail_inbox_no_voicemails_yet),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = ChatforiaColors.primaryText

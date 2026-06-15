@@ -217,6 +217,7 @@ class MessageStore {
             contentCiphertext = incoming.contentCiphertext ?: contentCiphertext,
             encryptedKeyForMe = incoming.encryptedKeyForMe ?: encryptedKeyForMe,
             encryptedKeys = incoming.encryptedKeys ?: encryptedKeys,
+            encryptedPayloadForMe = incoming.encryptedPayloadForMe ?: encryptedPayloadForMe,
             encryptionVersion = incoming.encryptionVersion ?: encryptionVersion,
 
             createdAt = incoming.createdAt.ifBlank { createdAt },

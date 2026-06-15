@@ -14,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun AudioCallScreen(
@@ -53,7 +55,7 @@ fun AudioCallScreen(
             ) {
                 Icon(
                     if (session.muted) Icons.Default.MicOff else Icons.Default.Mic,
-                    contentDescription = "Mute"
+                    contentDescription = stringResource(R.string.android_audio_call_mute)
                 )
             }
 
@@ -63,7 +65,7 @@ fun AudioCallScreen(
             ) {
                 Icon(
                     Icons.Default.VolumeUp,
-                    contentDescription = "Speaker"
+                    contentDescription = stringResource(R.string.android_audio_call_speaker)
                 )
             }
 
@@ -76,7 +78,7 @@ fun AudioCallScreen(
             ) {
                 Icon(
                     Icons.Default.CallEnd,
-                    contentDescription = "End call"
+                    contentDescription = stringResource(R.string.android_audio_call_end_call)
                 )
             }
         }

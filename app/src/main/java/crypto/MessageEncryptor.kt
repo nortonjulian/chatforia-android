@@ -64,6 +64,40 @@ class MessageEncryptor {
         )
     }
 
+    fun encryptForSingleUser(
+        plaintext: String,
+        recipientUserId: Int,
+        recipientPublicKeyB64: String,
+        language: String? = null,
+        sourceLanguage: String? = null
+    ): EncryptedMessagePayloadForUser {
+        if (recipientPublicKeyB64.isBlank()) {
+            throw IllegalArgumentException("Missing recipient public key.")
+        }
+
+        val sessionKey = randomBytes(32)
+
+        val contentCiphertext =
+            aesGcmEncryptPacked(
+                key = sessionKey,
+                plaintext = plaintext.toByteArray(StandardCharsets.UTF_8)
+            )
+
+        val encryptedKey =
+            wrapSessionKeyForUser(
+                sessionKey = sessionKey,
+                recipientUserId = recipientUserId,
+                recipientPublicKeyB64 = recipientPublicKeyB64
+            )
+
+        return EncryptedMessagePayloadForUser(
+            contentCiphertext = contentCiphertext,
+            encryptedKey = encryptedKey,
+            language = language,
+            sourceLanguage = sourceLanguage
+        )
+    }
+
     private fun wrapSessionKeyForUser(
         sessionKey: ByteArray,
         recipientUserId: Int,
@@ -232,4 +266,12 @@ data class EncryptedMessagePayload(
     val contentCiphertext: String,
     val encryptedKeys: Map<String, String>,
     val encryptionVersion: Int
+)
+
+@Serializable
+data class EncryptedMessagePayloadForUser(
+    val contentCiphertext: String,
+    val encryptedKey: String,
+    val language: String? = null,
+    val sourceLanguage: String? = null
 )

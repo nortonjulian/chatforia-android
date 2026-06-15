@@ -16,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun VideoCallScreen(
@@ -70,7 +72,7 @@ fun VideoCallScreen(
             ) {
                 Icon(
                     if (session.muted) Icons.Default.MicOff else Icons.Default.Mic,
-                    contentDescription = "Mute"
+                    contentDescription = stringResource(R.string.android_audio_call_mute)
                 )
             }
 
@@ -80,7 +82,7 @@ fun VideoCallScreen(
             ) {
                 Icon(
                     if (session.cameraEnabled) Icons.Default.Videocam else Icons.Default.VideocamOff,
-                    contentDescription = "Camera"
+                    contentDescription = stringResource(R.string.android_video_call_camera)
                 )
             }
 
@@ -90,7 +92,7 @@ fun VideoCallScreen(
             ) {
                 Icon(
                     Icons.Default.Cameraswitch,
-                    contentDescription = "Flip camera"
+                    contentDescription = stringResource(R.string.android_video_call_flip_camera)
                 )
             }
 
@@ -103,7 +105,7 @@ fun VideoCallScreen(
             ) {
                 Icon(
                     Icons.Default.CallEnd,
-                    contentDescription = "End call"
+                    contentDescription = stringResource(R.string.android_audio_call_end_call)
                 )
             }
         }

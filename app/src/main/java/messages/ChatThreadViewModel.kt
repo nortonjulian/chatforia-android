@@ -15,12 +15,14 @@ import kotlinx.serialization.json.Json
 import java.time.Instant
 import java.util.UUID
 import kotlin.math.abs
-
+import com.chatforia.android.crypto.MessageEncryptor
+import com.chatforia.android.crypto.EncryptedMessagePayloadForUser
 class ChatThreadViewModel(
     private val repository: MessagesRepository,
     private val keyStorage: KeyStorage,
     private val queueStorage: MessageQueueStorage,
-    private val messageDecryptor: MessageDecryptor = MessageDecryptor()
+    private val messageDecryptor: MessageDecryptor = MessageDecryptor(),
+    private val messageEncryptor: MessageEncryptor = MessageEncryptor()
 ) : ViewModel() {
 
     private val messageStore = MessageStore()
@@ -373,43 +375,113 @@ class ChatThreadViewModel(
             val existingAttachments =
                 message.attachments.ifEmpty { message.attachmentsInline }
 
+            if (trimmed.isBlank() && existingAttachments.isEmpty() && gifUrl.isNullOrBlank()) {
+                return@launch
+            }
+
             val updatedAttachments =
                 if (!gifUrl.isNullOrBlank()) {
                     listOf(
                         AttachmentDto(
                             kind = "GIF",
                             url = gifUrl,
-                            mimeType = "image/gif"
+                            mimeType = "image/gif",
+                            caption = trimmed.takeIf { it.isNotBlank() }
                         )
                     )
                 } else {
-                    existingAttachments
+                    existingAttachments.map { attachment ->
+                        attachment.copy(
+                            caption = trimmed.takeIf { it.isNotBlank() }
+                        )
+                    }
                 }
 
-            val updated = repository.editMessage(
-                messageId = message.id,
-                text = trimmed,
-                attachments = updatedAttachments
-            )
+            val roomId =
+                message.chatRoomId
+                    ?: activeRealtimeRoomId
+                    ?: run {
+                        _error.value = "Missing chat room for edit."
+                        return@launch
+                    }
 
-            val displayUpdated =
-                updated?.copy(
-                    rawContent = trimmed,
-                    content = trimmed,
-                    decryptedContent = trimmed,
-                    attachments = updated.attachments.ifEmpty { updatedAttachments },
-                    attachmentsInline = updated.attachmentsInline.ifEmpty { updatedAttachments },
-                    editedAt = updated.editedAt ?: Instant.now().toString()
-                ) ?: message.copy(
-                    rawContent = trimmed,
-                    content = trimmed,
-                    decryptedContent = trimmed,
-                    attachments = updatedAttachments,
-                    attachmentsInline = updatedAttachments,
-                    editedAt = Instant.now().toString()
+            val senderUserId = message.sender.id
+
+            val isEncrypted =
+                !message.encryptedPayloadForMe?.contentCiphertext.isNullOrBlank() ||
+                        !message.encryptedPayloadForMe?.encryptedKey.isNullOrBlank() ||
+                        !message.contentCiphertext.isNullOrBlank() ||
+                        !message.encryptedKeyForMe.isNullOrBlank()
+
+            try {
+                val plaintextForEncryption =
+                    if (updatedAttachments.isNotEmpty()) {
+                        trimmed.takeIf { it.isNotBlank() }
+                            ?: fallbackTextForAttachments(updatedAttachments)
+                    } else {
+                        trimmed
+                    }
+
+                val encryptedPayloads =
+                    if (isEncrypted) {
+                        buildEncryptedPayloadsForUsers(
+                            roomId = roomId,
+                            plaintext = plaintextForEncryption,
+                            senderUserId = senderUserId
+                        )
+                    } else {
+                        null
+                    }
+
+                val attachmentsForRequest =
+                    if (isEncrypted) {
+                        stripAttachmentCaptionsForEncryptedSend(updatedAttachments)
+                    } else {
+                        updatedAttachments
+                    }
+
+                val updated = repository.editMessage(
+                    messageId = message.id,
+                    text = trimmed,
+                    attachments = attachmentsForRequest,
+                    encryptedPayloads = encryptedPayloads?.takeIf { it.isNotEmpty() }
                 )
 
-            messageStore.upsert(displayUpdated)
+                val displayText =
+                    if (trimmed.isNotBlank()) {
+                        trimmed
+                    } else if (updatedAttachments.isNotEmpty()) {
+                        plaintextForEncryption
+                    } else {
+                        ""
+                    }
+
+                val displayUpdated =
+                    updated?.let {
+                        decryptForDisplay(
+                            message = it,
+                            currentUserId = senderUserId
+                        )
+                    }?.copy(
+                        rawContent = displayText,
+                        content = displayText,
+                        decryptedContent = displayText,
+                        attachments = updated.attachments.ifEmpty { updatedAttachments },
+                        attachmentsInline = updated.attachmentsInline.ifEmpty { updatedAttachments },
+                        editedAt = updated.editedAt ?: Instant.now().toString()
+                    ) ?: message.copy(
+                        rawContent = displayText,
+                        content = displayText,
+                        decryptedContent = displayText,
+                        attachments = updatedAttachments,
+                        attachmentsInline = updatedAttachments,
+                        editedAt = Instant.now().toString()
+                    )
+
+                messageStore.upsert(displayUpdated)
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Failed to edit message."
+            }
         }
     }
 
@@ -574,6 +646,7 @@ class ChatThreadViewModel(
                 clientMessageId = clientMessageId,
                 roomId = roomId,
                 text = captionText,
+                senderUserId = currentUserId,
                 attachmentsInline = attachments
             )
         )
@@ -615,13 +688,93 @@ class ChatThreadViewModel(
             QueuedMessageJob(
                 clientMessageId = clientMessageId,
                 roomId = roomId,
-                text = text
+                text = text,
+                senderUserId = currentUserId
             )
         )
 
         _isSending.value = false
     }
 
+    private fun normalizeLanguage(value: String?): String? {
+        return value
+            ?.trim()
+            ?.lowercase()
+            ?.takeIf { it.isNotBlank() }
+    }
+
+    private fun fallbackTextForAttachments(attachments: List<AttachmentDto>): String {
+        return when (attachments.firstOrNull()?.kind?.uppercase()) {
+            "IMAGE" -> "[image]"
+            "VIDEO" -> "[video]"
+            "GIF" -> "[gif]"
+            "AUDIO" -> "[voice note]"
+            else -> "[attachment]"
+        }
+    }
+
+    private fun stripAttachmentCaptionsForEncryptedSend(
+        attachments: List<AttachmentDto>
+    ): List<AttachmentDto> {
+        return attachments.map { attachment ->
+            attachment.copy(caption = null)
+        }
+    }
+
+    private suspend fun buildEncryptedPayloadsForUsers(
+        roomId: Int,
+        plaintext: String,
+        senderUserId: Int?
+    ): Map<String, EncryptedMessagePayloadForUser> {
+        val participants = repository.loadRoomParticipants(roomId)
+
+        val targetLangs =
+            participants
+                .filter { senderUserId == null || it.userId != senderUserId }
+                .filter { it.user?.autoTranslate != false }
+                .mapNotNull { normalizeLanguage(it.user?.preferredLanguage) }
+                .distinct()
+
+        val translations =
+            repository.translateMessagePreview(
+                roomId = roomId,
+                text = plaintext,
+                targetLangs = targetLangs
+            )
+
+        return participants.mapNotNull { participant ->
+            val user = participant.user ?: return@mapNotNull null
+            val publicKey = user.publicKey ?: return@mapNotNull null
+
+            if (publicKey.isBlank()) return@mapNotNull null
+
+            val preferredLang = normalizeLanguage(user.preferredLanguage)
+            val baseLang = preferredLang?.substringBefore("-")?.takeIf { it.isNotBlank() }
+
+            val isSender =
+                senderUserId != null && participant.userId == senderUserId
+
+            val translatedForUser =
+                preferredLang?.let { translations[it] }
+                    ?: baseLang?.let { translations[it] }
+                    ?: plaintext
+
+            val plaintextForUser =
+                if (isSender || user.autoTranslate == false || preferredLang == null) {
+                    plaintext
+                } else {
+                    translatedForUser
+                }
+
+            participant.userId.toString() to messageEncryptor.encryptForSingleUser(
+                plaintext = plaintextForUser,
+                recipientUserId = participant.userId,
+                recipientPublicKeyB64 = publicKey,
+                language = preferredLang,
+                sourceLanguage = null
+            )
+        }.toMap()
+    }
     private fun applyMessageReadPayload(payloadJson: String) {
         try {
             val payload = json.decodeFromString<MessageReadPayload>(payloadJson)

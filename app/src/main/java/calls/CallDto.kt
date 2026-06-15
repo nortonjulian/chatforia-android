@@ -22,6 +22,9 @@ data class CallDto(
     val externalPhone: String? = null,
     val fromLabel: String? = null,
     val toLabel: String? = null,
+    val otherUserId: Int? = null,
+    val otherUsername: String? = null,
+    val otherDisplayName: String? = null,
 )
 
 @Serializable

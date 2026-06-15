@@ -15,6 +15,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun RandomMatchingView(
@@ -44,7 +46,7 @@ fun RandomMatchingView(
             Spacer(modifier = Modifier.height(28.dp))
 
             Text(
-                text = "Finding someone",
+                text = stringResource(R.string.android_random_matching_finding_someone),
                 style = MaterialTheme.typography.headlineSmall,
                 color = ChatforiaColors.primaryText,
                 fontWeight = FontWeight.Bold
@@ -73,7 +75,7 @@ fun RandomMatchingView(
                     contentColor = ChatforiaColors.accent
                 )
             ) {
-                Text("Cancel")
+                Text(stringResource(R.string.android_chats_cancel))
             }
         }
     }

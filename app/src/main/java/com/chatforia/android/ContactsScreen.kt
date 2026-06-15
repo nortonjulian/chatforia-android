@@ -57,6 +57,8 @@ import com.chatforia.android.upload.UploadRepository
 import com.chatforia.android.auth.UserDto
 import com.chatforia.android.calls.AndroidCallManager
 import com.chatforia.android.ria.RiaRepository
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun ContactsScreen(
@@ -344,7 +346,7 @@ fun ContactsScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Contacts",
+                text = stringResource(R.string.android_contacts_contacts),
                 fontSize = 34.sp,
                 fontWeight = FontWeight.Bold,
                 color = ChatforiaColors.primaryText
@@ -354,21 +356,21 @@ fun ContactsScreen(
                 actions = listOf(
                     ChatforiaAction(
                         icon = Icons.Default.Add,
-                        contentDescription = "New chat",
+                        contentDescription = stringResource(R.string.android_chats_new_chat),
                         onClick = {
                             showingNewChat = true
                         }
                     ),
                     ChatforiaAction(
                         icon = Icons.Default.PersonAdd,
-                        contentDescription = "Add contact",
+                        contentDescription = stringResource(R.string.android_contacts_add_contact),
                         onClick = {
                             showingAddContact = true
                         }
                     ),
                     ChatforiaAction(
                         icon = Icons.Default.Contacts,
-                        contentDescription = "Import from phone",
+                        contentDescription = stringResource(R.string.android_contacts_import_from_phone),
                         onClick = {
 
                             val permissionGranted =
@@ -397,7 +399,7 @@ fun ContactsScreen(
                     ),
                     ChatforiaAction(
                         icon = Icons.Default.Share,
-                        contentDescription = "Invite friends",
+                        contentDescription = stringResource(R.string.android_contacts_invite_friends),
                         onClick = {
                             showingInviteFriends = true
                         }
@@ -512,7 +514,7 @@ private fun ContactPreviewRow(
 
                     Icon(
                         Icons.Default.Star,
-                        contentDescription = "Favorite",
+                        contentDescription = stringResource(R.string.android_contacts_favorite),
                         tint = ChatforiaColors.accent,
                         modifier = Modifier.size(16.dp)
                     )
@@ -528,7 +530,7 @@ private fun ContactPreviewRow(
 
         Icon(
             Icons.Default.KeyboardArrowRight,
-            contentDescription = "Open contact",
+            contentDescription = stringResource(R.string.android_contacts_open_contact),
             tint = ChatforiaColors.secondaryText
         )
     }

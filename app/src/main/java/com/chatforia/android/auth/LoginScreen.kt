@@ -18,6 +18,8 @@ import kotlinx.coroutines.launch
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun LoginScreen(
@@ -52,7 +54,7 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Welcome to Chatforia",
+            text = stringResource(R.string.android_login_welcome_to),
             style = MaterialTheme.typography.headlineLarge.copy(
                 fontWeight = FontWeight.Bold
             ),
@@ -63,7 +65,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Sign in or create an account",
+            text = stringResource(R.string.android_login_sign_in_or_create_an_account),
             style = MaterialTheme.typography.titleMedium,
             color = ChatforiaColors.secondaryText,
             textAlign = TextAlign.Center
@@ -145,7 +147,7 @@ fun LoginScreen(
                     )
 
                     Text(
-                        text = "or",
+                        text = stringResource(R.string.android_login_or),
                         color = ChatforiaColors.secondaryText,
                         modifier = Modifier.padding(horizontal = 12.dp)
                     )
@@ -161,7 +163,7 @@ fun LoginScreen(
                 OutlinedTextField(
                     value = identifier,
                     onValueChange = { identifier = it },
-                    label = { Text("Email or username") },
+                    label = { Text(stringResource(R.string.android_login_email_or_username)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(18.dp)
@@ -172,7 +174,7 @@ fun LoginScreen(
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password") },
+                    label = { Text(stringResource(R.string.android_login_password)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
@@ -289,7 +291,7 @@ fun LoginScreen(
                             modifier = Modifier.fillMaxWidth(),
                             enabled = canLogin
                         ) {
-                            Text("Reset Encryption")
+                            Text(stringResource(R.string.android_login_reset_encryption))
                         }
                     }
                 }
@@ -380,7 +382,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(22.dp))
 
                 Text(
-                    text = "Don’t have an account yet?",
+                    text = stringResource(R.string.android_login_don_t_have_an_account_yet),
                     color = ChatforiaColors.secondaryText,
                     style = MaterialTheme.typography.bodyMedium
                 )

@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import com.chatforia.android.ChatforiaGradientButton
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 data class LinkedDevicesUiState(
     val devices: List<LinkedDeviceDto> = emptyList(),
@@ -218,7 +220,7 @@ fun LinkedDevicesScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         ChatforiaGradientButton(
-            text = "Request approval for this device",
+            text = stringResource(R.string.android_linked_devices_request_approval_for_this_device),
             onClick = {
                 viewModel.requestPairingForThisDevice()
             },
@@ -230,7 +232,7 @@ fun LinkedDevicesScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         ChatforiaGradientButton(
-            text = "Finish device approval",
+            text = stringResource(R.string.android_linked_devices_finish_device_approval),
             onClick = {
                 viewModel.completePairingForThisDevice(
                     accountPublicKey = accountPublicKey
@@ -285,13 +287,13 @@ fun LinkedDevicesScreen(
                     TextButton(
                         onClick = { viewModel.approve(device) }
                     ) {
-                        Text("Approve")
+                        Text(stringResource(R.string.android_linked_devices_approve))
                     }
 
                     TextButton(
                         onClick = { viewModel.reject(device.deviceId) }
                     ) {
-                        Text("Reject")
+                        Text(stringResource(R.string.android_linked_devices_reject))
                     }
                 }
             }
@@ -317,7 +319,7 @@ private fun DeviceRow(
         TextButton(
             onClick = { onRevoke(device.deviceId) }
         ) {
-            Text("Revoke")
+            Text(stringResource(R.string.android_linked_devices_revoke))
         }
     }
 }

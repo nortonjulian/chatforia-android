@@ -25,6 +25,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun MessageAttachmentsView(
@@ -100,7 +102,7 @@ private fun ImageAttachment(
 ) {
     AsyncImage(
         model = url,
-        contentDescription = "Image attachment",
+        contentDescription = stringResource(R.string.android_message_attachments_image_attachment),
         modifier = Modifier
             .width(260.dp)
             .height(190.dp)
@@ -125,7 +127,7 @@ private fun VideoAttachment(
     ) {
         AsyncImage(
             model = url,
-            contentDescription = "Video attachment",
+            contentDescription = stringResource(R.string.android_message_attachments_video_attachment),
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
@@ -136,7 +138,7 @@ private fun VideoAttachment(
         ) {
             Icon(
                 imageVector = Icons.Default.PlayArrow,
-                contentDescription = "Play video",
+                contentDescription = stringResource(R.string.android_message_attachments_play_video),
                 tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier
                     .padding(12.dp)

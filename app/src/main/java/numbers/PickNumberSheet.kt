@@ -27,6 +27,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 private enum class NumberPickMode {
     FREE,
@@ -71,7 +73,7 @@ fun PickNumberSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Pick a Number",
+                    text = stringResource(R.string.android_phone_number_pick_a_number),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = ChatforiaColors.primaryText,
@@ -79,7 +81,7 @@ fun PickNumberSheet(
                 )
 
                 TextButton(onClick = onDismiss) {
-                    Text("Close")
+                    Text(stringResource(R.string.android_upgrade_close))
                 }
             }
 
@@ -121,7 +123,7 @@ fun PickNumberSheet(
                 OutlinedTextField(
                     value = areaCode,
                     onValueChange = { areaCode = it.filter(Char::isDigit).take(3) },
-                    label = { Text("Area Code") },
+                    label = { Text(stringResource(R.string.android_pick_number_area_code)) },
                     placeholder = { Text("303") },
                     modifier = Modifier.weight(1f),
                     singleLine = true
@@ -154,7 +156,7 @@ fun PickNumberSheet(
                 ) {
                     Icon(Icons.Default.Search, contentDescription = null)
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Search")
+                    Text(stringResource(R.string.android_chats_search))
                 }
             }
 
@@ -178,7 +180,7 @@ fun PickNumberSheet(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = "Premium numbers are protected from recycling.",
+                    text = stringResource(R.string.android_pick_number_premium_numbers_are_protected_from_recycling),
                     color = ChatforiaColors.secondaryText,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -191,7 +193,7 @@ fun PickNumberSheet(
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = "Available Numbers",
+                text = stringResource(R.string.android_pick_number_available_numbers),
                 color = ChatforiaColors.secondaryText,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold
@@ -218,7 +220,7 @@ fun PickNumberSheet(
 
                 numbers.isEmpty() -> {
                     Text(
-                        text = "Search by area code to find available numbers.",
+                        text = stringResource(R.string.android_pick_number_search_by_area_code_to_find_available_numbers),
                         color = ChatforiaColors.secondaryText
                     )
                 }
@@ -281,14 +283,14 @@ private fun ModePicker(
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         ModeButton(
-            text = "Free",
+            text = stringResource(R.string.android_profile_free),
             selected = mode == NumberPickMode.FREE,
             onClick = { onChange(NumberPickMode.FREE) },
             modifier = Modifier.weight(1f)
         )
 
         ModeButton(
-            text = "Premium",
+            text = stringResource(R.string.android_plan_premium),
             selected = mode == NumberPickMode.PREMIUM,
             onClick = { onChange(NumberPickMode.PREMIUM) },
             modifier = Modifier.weight(1f)
@@ -333,7 +335,7 @@ private fun CapabilityPicker(
 ) {
     Column {
         Text(
-            text = "Capability",
+            text = stringResource(R.string.android_pick_number_capability),
             color = ChatforiaColors.primaryText,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold
@@ -448,7 +450,7 @@ private fun CountryDropdown(
 
     Column {
         Text(
-            text = "Country",
+            text = stringResource(R.string.android_pick_number_country),
             color = ChatforiaColors.primaryText,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold

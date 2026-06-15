@@ -16,6 +16,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun RegisterScreen(
@@ -37,7 +39,7 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(36.dp))
 
         Text(
-            text = "Create your account",
+            text = stringResource(R.string.android_register_create_your_account),
             style = MaterialTheme.typography.headlineLarge.copy(
                 fontWeight = FontWeight.Bold
             ),
@@ -48,7 +50,7 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Start chatting across languages with Chatforia.",
+            text = stringResource(R.string.android_register_start_chatting_across_languages_with),
             color = ChatforiaColors.secondaryText,
             textAlign = TextAlign.Center
         )
@@ -69,7 +71,7 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = state.username,
                     onValueChange = viewModel::updateUsername,
-                    label = { Text("Username") },
+                    label = { Text(stringResource(R.string.android_profile_username)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(18.dp)
@@ -80,7 +82,7 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = state.email,
                     onValueChange = viewModel::updateEmail,
-                    label = { Text("Email") },
+                    label = { Text(stringResource(R.string.android_profile_email)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
@@ -94,7 +96,7 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = state.password,
                     onValueChange = viewModel::updatePassword,
-                    label = { Text("Password") },
+                    label = { Text(stringResource(R.string.android_login_password)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
@@ -109,7 +111,7 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = state.confirmPassword,
                     onValueChange = viewModel::updateConfirmPassword,
-                    label = { Text("Confirm password") },
+                    label = { Text(stringResource(R.string.android_register_confirm_password)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
@@ -124,7 +126,7 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = state.phone,
                     onValueChange = viewModel::updatePhone,
-                    label = { Text("Phone optional") },
+                    label = { Text(stringResource(R.string.android_register_phone_optional)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
@@ -148,7 +150,7 @@ fun RegisterScreen(
                         Spacer(modifier = Modifier.width(10.dp))
 
                         Text(
-                            text = "I agree to receive SMS verification messages.",
+                            text = stringResource(R.string.android_register_i_agree_to_receive_sms_verification_messages),
                             color = ChatforiaColors.secondaryText,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -198,7 +200,7 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(18.dp))
 
                 Text(
-                    text = "Already have an account?",
+                    text = stringResource(R.string.android_register_already_have_an_account),
                     color = ChatforiaColors.secondaryText
                 )
 

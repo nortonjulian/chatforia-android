@@ -32,13 +32,21 @@ class AccountKeyManager(
         val localPublicKey = keyStorage.readPublicKey()
         val hasPrivateKey = keyStorage.hasPrivateKey()
 
+        if (hasPrivateKey && localPublicKey.isNullOrBlank()) {
+            throw IllegalStateException(
+                "This device has a private key but no public key. Reset encryption."
+            )
+        }
+
         if (!serverPublicKey.isNullOrBlank() && !hasPrivateKey) {
             throw IllegalStateException(
                 "This device is missing your encryption key. Restore your backup key or reset encryption."
             )
         }
 
-        if (!localPublicKey.isNullOrBlank() &&
+        if (
+            hasPrivateKey &&
+            !localPublicKey.isNullOrBlank() &&
             !serverPublicKey.isNullOrBlank() &&
             localPublicKey.trim() != serverPublicKey.trim()
         ) {

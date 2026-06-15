@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
 import com.chatforia.android.auth.UserDto
 import com.chatforia.android.ui.components.ChatforiaSectionCard
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun PlanView(
@@ -27,9 +29,9 @@ fun PlanView(
 ) {
     val currentPlan = user.plan?.lowercase() ?: "free"
     val displayPlan = when (currentPlan) {
-        "plus" -> "Plus"
-        "premium" -> "Premium"
-        else -> "Free"
+        "plus" -> stringResource(R.string.android_plan_plus)
+        "premium" -> stringResource(R.string.android_plan_premium)
+        else -> stringResource(R.string.android_profile_free)
     }
 
     Column(
@@ -46,13 +48,13 @@ fun PlanView(
             IconButton(onClick = onBack) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.android_plan_back),
                     tint = ChatforiaColors.primaryText
                 )
             }
 
             Text(
-                text = "Plan & Billing",
+                text = stringResource(R.string.android_plan_plan_billing),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = ChatforiaColors.primaryText,
@@ -67,9 +69,9 @@ fun PlanView(
                 .padding(horizontal = 18.dp)
                 .padding(bottom = 28.dp)
         ) {
-            ChatforiaSectionCard(title = "My Plan") {
+            ChatforiaSectionCard(title = stringResource(R.string.android_plan_my_plan)) {
                 Text(
-                    text = "Current plan",
+                    text = stringResource(R.string.android_plan_current_plan),
                     style = MaterialTheme.typography.bodyLarge,
                     color = ChatforiaColors.secondaryText
                 )
@@ -87,9 +89,9 @@ fun PlanView(
 
                 Text(
                     text = when (currentPlan) {
-                        "plus" -> "Ad-free access with forwarding and expanded features."
-                        "premium" -> "Full access to Chatforia customization, AI tools, and advanced features."
-                        else -> "Basic access to Chatforia with core messaging features."
+                        "plus" -> stringResource(R.string.billing_description_plus)
+                        "premium" -> stringResource(R.string.billing_description_premium)
+                        else -> stringResource(R.string.billing_description_free)
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = ChatforiaColors.secondaryText
@@ -98,9 +100,9 @@ fun PlanView(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            ChatforiaSectionCard(title = "Compare Plans") {
+            ChatforiaSectionCard(title = stringResource(R.string.android_plan_compare_plans)) {
                 Text(
-                    text = "Go ad-free with Plus, or unlock AI tools and customization with Premium.",
+                    text = stringResource(R.string.android_plan_go_ad_free_with_plus_or_unlock_ai_tools_and_cust),
                     style = MaterialTheme.typography.bodyMedium,
                     color = ChatforiaColors.secondaryText
                 )
@@ -109,13 +111,12 @@ fun PlanView(
 
                 PlanCompareHeader()
 
-                PlanCompareRow("Ad-free experience", plus = true, premium = true)
-                PlanCompareRow("Longer message history", plus = true, premium = true)
-                PlanCompareRow("Message forwarding", plus = true, premium = true)
-                PlanCompareRow("AI tools", plus = false, premium = true)
-                PlanCompareRow("Premium themes & sounds", plus = false, premium = true)
-                PlanCompareRow("Priority support", plus = false, premium = true)
-
+                PlanCompareRow(stringResource(R.string.billing_feature_adFree), plus = true, premium = true)
+                PlanCompareRow(stringResource(R.string.billing_feature_longerHistory), plus = true, premium = true)
+                PlanCompareRow(stringResource(R.string.billing_feature_forwarding), plus = true, premium = true)
+                PlanCompareRow(stringResource(R.string.billing_feature_aiTools), plus = false, premium = true)
+                PlanCompareRow(stringResource(R.string.billing_feature_premiumThemes), plus = false, premium = true)
+                PlanCompareRow(stringResource(R.string.billing_feature_prioritySupport), plus = false, premium = true)
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedButton(
@@ -125,9 +126,9 @@ fun PlanView(
                 ) {
                     Text(
                         text = if (currentPlan == "premium") {
-                            "Manage Subscription"
+                            stringResource(R.string.common_manageSubscription)
                         } else {
-                            "Upgrade"
+                            stringResource(R.string.android_upgrade_upgrade)
                         },
                         fontWeight = FontWeight.SemiBold
                     )
@@ -136,21 +137,21 @@ fun PlanView(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            ChatforiaSectionCard(title = "Included") {
-                IncludedRow("Messaging")
-                IncludedRow("Translation")
-                IncludedRow("Media sharing")
+            ChatforiaSectionCard(title = stringResource(R.string.android_plan_included)) {
+                IncludedRow(stringResource(R.string.billing_included_messaging))
+                IncludedRow(stringResource(R.string.billing_included_translation))
+                IncludedRow(stringResource(R.string.billing_included_mediaSharing))
 
                 if (currentPlan == "plus" || currentPlan == "premium") {
-                    IncludedRow("Expanded access")
-                    IncludedRow("Enhanced features")
+                    IncludedRow(stringResource(R.string.billing_included_expandedAccess))
+                    IncludedRow(stringResource(R.string.billing_included_enhancedFeatures))
                 }
 
                 if (currentPlan == "premium") {
-                    IncludedRow("Premium themes")
-                    IncludedRow("Premium sounds")
-                    IncludedRow("AI tools")
-                    IncludedRow("Priority support")
+                    IncludedRow(stringResource(R.string.billing_included_premiumThemes))
+                    IncludedRow(stringResource(R.string.billing_included_premiumSounds))
+                    IncludedRow(stringResource(R.string.billing_included_aiTools))
+                    IncludedRow(stringResource(R.string.billing_included_prioritySupport))
                 }
             }
         }
@@ -166,14 +167,14 @@ private fun PlanCompareHeader() {
         Spacer(modifier = Modifier.weight(1f))
 
         Text(
-            text = "Plus",
+            text = stringResource(R.string.android_plan_plus),
             style = MaterialTheme.typography.labelLarge,
             color = ChatforiaColors.secondaryText,
             modifier = Modifier.width(70.dp)
         )
 
         Text(
-            text = "Premium",
+            text = stringResource(R.string.android_plan_premium),
             style = MaterialTheme.typography.labelLarge,
             color = ChatforiaColors.secondaryText,
             modifier = Modifier.width(90.dp)

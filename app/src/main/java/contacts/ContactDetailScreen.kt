@@ -21,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun ContactDetailScreen(
@@ -74,20 +76,20 @@ fun ContactDetailScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         ContactActionRow(
-            title = "Message",
+            title = stringResource(R.string.android_contact_detail_message),
             icon = Icons.Default.Message,
             onClick = onMessage
         )
 
         ContactActionRow(
-            title = "Call",
+            title = stringResource(R.string.android_dial_pad_call),
             icon = Icons.Default.Call,
             onClick = onCall
         )
 
         if (contact.user?.id != null || contact.userId != null) {
             ContactActionRow(
-                title = "Video",
+                title = stringResource(R.string.android_contact_detail_video),
                 icon = Icons.Default.Videocam,
                 onClick = onVideo
             )
@@ -105,14 +107,14 @@ fun ContactDetailScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 ContactDetailLine(
-                    title = "Name",
+                    title = stringResource(R.string.android_add_contact_name),
                     value = displayName,
                     icon = Icons.Default.Person
                 )
 
                 contact.externalName?.takeIf { it.isNotBlank() }?.let {
                     ContactDetailLine(
-                        title = "External name",
+                        title = stringResource(R.string.android_contact_detail_external_name),
                         value = it,
                         icon = Icons.Default.Person
                     )
@@ -120,7 +122,7 @@ fun ContactDetailScreen(
 
                 contact.externalPhone?.takeIf { it.isNotBlank() }?.let {
                     ContactDetailLine(
-                        title = "Phone",
+                        title = stringResource(R.string.android_add_contact_phone),
                         value = it,
                         icon = Icons.Default.Phone
                     )
@@ -128,7 +130,7 @@ fun ContactDetailScreen(
 
                 contact.user?.username?.takeIf { it.isNotBlank() }?.let {
                     ContactDetailLine(
-                        title = "Username",
+                        title = stringResource(R.string.android_profile_username),
                         value = "@$it",
                         icon = Icons.Default.Person
                     )
@@ -142,7 +144,7 @@ fun ContactDetailScreen(
             onClick = onEdit,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Edit Contact")
+            Text(stringResource(R.string.android_contact_detail_edit_contact))
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -151,7 +153,7 @@ fun ContactDetailScreen(
             onClick = onDelete,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Delete Contact")
+            Text(stringResource(R.string.android_contact_detail_delete_contact))
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -160,7 +162,7 @@ fun ContactDetailScreen(
             onClick = onBack,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Back")
+            Text(stringResource(R.string.android_plan_back))
         }
     }
 }

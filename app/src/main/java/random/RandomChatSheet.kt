@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 data class RandomChatMessage(
     val id: String,
@@ -70,7 +72,7 @@ fun RandomChatSheet(
                 ) {
                     Icon(Icons.Default.PersonAdd, contentDescription = null)
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Add Friend")
+                    Text(stringResource(R.string.android_random_chat_add_friend))
                 }
 
                 OutlinedButton(
@@ -79,7 +81,7 @@ fun RandomChatSheet(
                 ) {
                     Icon(Icons.Default.SkipNext, contentDescription = null)
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Skip")
+                    Text(stringResource(R.string.android_random_chat_skip))
                 }
             }
 
@@ -129,7 +131,7 @@ fun RandomChatSheet(
                 OutlinedTextField(
                     value = draft,
                     onValueChange = { draft = it },
-                    placeholder = { Text("Message") },
+                    placeholder = { Text(stringResource(R.string.android_contact_detail_message)) },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     shape = RoundedCornerShape(24.dp)
@@ -147,7 +149,7 @@ fun RandomChatSheet(
                         }
                     }
                 ) {
-                    Text("Send")
+                    Text(stringResource(R.string.android_random_chat_send))
                 }
             }
 
@@ -155,7 +157,7 @@ fun RandomChatSheet(
                 onClick = onClose,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
-                Text("End chat")
+                Text(stringResource(R.string.android_random_chat_end_chat))
             }
         }
     }

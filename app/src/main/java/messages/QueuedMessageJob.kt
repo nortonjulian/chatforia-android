@@ -7,6 +7,7 @@ data class QueuedMessageJob(
     val clientMessageId: String,
     val roomId: Int,
     val text: String? = null,
+    val senderUserId: Int? = null,
     val attachmentsInline: List<AttachmentDto> = emptyList(),
     val createdAtMillis: Long = System.currentTimeMillis(),
     val retryCount: Int = 0,

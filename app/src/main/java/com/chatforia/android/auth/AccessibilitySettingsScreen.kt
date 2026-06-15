@@ -16,6 +16,8 @@ import com.chatforia.android.auth.SettingsUiState
 import com.chatforia.android.ui.components.ChatforiaSectionCard
 import com.chatforia.android.ui.theme.ChatforiaColors
 import com.chatforia.android.ui.components.SettingSwitchRow
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 
 @Composable
@@ -40,13 +42,13 @@ fun AccessibilitySettingsScreen(
             IconButton(onClick = onBack) {
                 Icon(
                     Icons.Default.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.android_plan_back),
                     tint = ChatforiaColors.primaryText
                 )
             }
 
             Text(
-                text = "Accessibility",
+                text = stringResource(R.string.android_profile_accessibility),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = ChatforiaColors.primaryText
@@ -60,9 +62,9 @@ fun AccessibilitySettingsScreen(
                 .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            ChatforiaSectionCard(title = "Accessibility") {
+            ChatforiaSectionCard(title = stringResource(R.string.android_profile_accessibility)) {
                 Text(
-                    text = "Options to make Chatforia easier to use without relying on sound.",
+                    text = stringResource(R.string.android_accessibility_settings_options_to_make_easier_to_use_without_relying_on),
                     color = ChatforiaColors.secondaryText,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -70,7 +72,7 @@ fun AccessibilitySettingsScreen(
                 Spacer(Modifier.height(12.dp))
 
                 A11yDropdownRow(
-                    title = "Interface font size",
+                    title = stringResource(R.string.android_accessibility_settings_interface_font_size),
                     value = state.a11yUiFont,
                     options = fontOptions,
                     onValueChange = { value ->
@@ -79,16 +81,16 @@ fun AccessibilitySettingsScreen(
                 )
 
                 Text(
-                    text = "Starts at normal size. Increase if you prefer larger text in accessibility settings.",
+                    text = stringResource(R.string.android_accessibility_settings_starts_at_normal_size_increase_if_you_prefer_lar),
                     color = ChatforiaColors.secondaryText,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
 
-            ChatforiaSectionCard(title = "Notifications") {
+            ChatforiaSectionCard(title = stringResource(R.string.android_accessibility_settings_notifications)) {
                 SettingSwitchRow(
-                    title = "Visual alerts for messages & calls",
-                    subtitle = "Show banners and visual indicators so you do not miss activity.",
+                    title = stringResource(R.string.android_accessibility_settings_visual_alerts_for_messages_calls),
+                    subtitle = stringResource(R.string.android_accessibility_settings_show_banners_and_visual_indicators_so_you_do_not),
                     checked = state.a11yVisualAlerts,
                     onCheckedChange = {
                         onUpdate(state.copy(a11yVisualAlerts = it))
@@ -98,8 +100,8 @@ fun AccessibilitySettingsScreen(
                 HorizontalDivider(color = ChatforiaColors.border)
 
                 SettingSwitchRow(
-                    title = "Vibrate on new messages",
-                    subtitle = "Trigger device vibration with notifications when supported.",
+                    title = stringResource(R.string.android_accessibility_settings_vibrate_on_new_messages),
+                    subtitle = stringResource(R.string.android_accessibility_settings_trigger_device_vibration_with_notifications_when),
                     checked = state.a11yVibrate,
                     onCheckedChange = {
                         onUpdate(state.copy(a11yVibrate = it))
@@ -109,8 +111,8 @@ fun AccessibilitySettingsScreen(
                 HorizontalDivider(color = ChatforiaColors.border)
 
                 SettingSwitchRow(
-                    title = "Flash screen on incoming call",
-                    subtitle = "Briefly flash the screen when a call rings.",
+                    title = stringResource(R.string.android_accessibility_settings_flash_screen_on_incoming_call),
+                    subtitle = stringResource(R.string.android_accessibility_settings_briefly_flash_the_screen_when_a_call_rings),
                     checked = state.a11yFlashOnCall,
                     onCheckedChange = {
                         onUpdate(state.copy(a11yFlashOnCall = it))
@@ -118,10 +120,10 @@ fun AccessibilitySettingsScreen(
                 )
             }
 
-            ChatforiaSectionCard(title = "Live captions") {
+            ChatforiaSectionCard(title = stringResource(R.string.android_accessibility_settings_live_captions)) {
                 SettingSwitchRow(
-                    title = "Enable live captions",
-                    subtitle = "Show real-time captions during calls. Premium required.",
+                    title = stringResource(R.string.android_accessibility_settings_enable_live_captions),
+                    subtitle = stringResource(R.string.android_accessibility_settings_show_real_time_captions_during_calls_premium_req),
                     checked = state.a11yLiveCaptions,
                     onCheckedChange = { enabled ->
                         if (enabled) {
@@ -135,7 +137,7 @@ fun AccessibilitySettingsScreen(
                 HorizontalDivider(color = ChatforiaColors.border)
 
                 A11yDropdownRow(
-                    title = "Caption font size",
+                    title = stringResource(R.string.android_accessibility_settings_caption_font_size),
                     value = state.a11yCaptionFont,
                     options = fontOptions,
                     onValueChange = { value ->
@@ -146,7 +148,7 @@ fun AccessibilitySettingsScreen(
                 HorizontalDivider(color = ChatforiaColors.border)
 
                 A11yDropdownRow(
-                    title = "Caption background",
+                    title = stringResource(R.string.android_accessibility_settings_caption_background),
                     value = state.a11yCaptionBg,
                     options = captionBgOptions,
                     onValueChange = { value ->
@@ -155,10 +157,10 @@ fun AccessibilitySettingsScreen(
                 )
             }
 
-            ChatforiaSectionCard(title = "Voice notes") {
+            ChatforiaSectionCard(title = stringResource(R.string.android_accessibility_settings_voice_notes)) {
                 SettingSwitchRow(
-                    title = "Auto-transcribe voice notes",
-                    subtitle = "Attach a transcript to audio messages you receive.",
+                    title = stringResource(R.string.android_accessibility_settings_auto_transcribe_voice_notes),
+                    subtitle = stringResource(R.string.android_accessibility_settings_attach_a_transcript_to_audio_messages_you_receiv),
                     checked = state.a11yVoiceNoteSTT,
                     onCheckedChange = {
                         onUpdate(state.copy(a11yVoiceNoteSTT = it))

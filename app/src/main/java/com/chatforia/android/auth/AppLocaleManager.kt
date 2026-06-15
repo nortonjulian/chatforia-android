@@ -1,32 +1,42 @@
 package com.chatforia.android.auth
 
-import android.app.LocaleManager
 import android.content.Context
-import android.os.Build
-import android.os.LocaleList
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.LocaleListCompat
+import android.content.res.Configuration
+import android.util.Log
+import java.util.Locale
 
 object AppLocaleManager {
-    fun applyLanguage(
-        context: Context,
-        languageCode: String?
-    ) {
-        val code = languageCode
-            ?.takeIf { it.isNotBlank() }
-            ?: "en"
+    private const val PREFS = "chatforia_locale"
+    private const val KEY_LANGUAGE = "language"
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val localeManager =
-                context.getSystemService(LocaleManager::class.java)
+    fun saveLanguage(context: Context, languageCode: String?) {
+        val code = languageCode?.takeIf { it.isNotBlank() } ?: "en"
 
-            localeManager.applicationLocales =
-                LocaleList.forLanguageTags(toAndroidLanguageTag(code))
-        } else {
-            AppCompatDelegate.setApplicationLocales(
-                LocaleListCompat.forLanguageTags(toAndroidLanguageTag(code))
-            )
-        }
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_LANGUAGE, code)
+            .commit()
+    }
+
+    fun readLanguage(context: Context): String {
+        val code = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getString(KEY_LANGUAGE, "en") ?: "en"
+
+        return code
+    }
+
+    fun wrapContext(context: Context): Context {
+        val code = readLanguage(context)
+        val tag = toAndroidLanguageTag(code)
+        val locale = Locale.forLanguageTag(tag)
+
+        Locale.setDefault(locale)
+
+        val config = Configuration(context.resources.configuration)
+        config.setLocale(locale)
+        config.setLayoutDirection(locale)
+
+        return context.createConfigurationContext(config)
     }
 
     private fun toAndroidLanguageTag(code: String): String {

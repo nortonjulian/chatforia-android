@@ -10,6 +10,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 private enum class AddContactMode {
     USERNAME,
@@ -74,7 +76,7 @@ fun AddContactScreen(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             TextButton(onClick = onBack) {
-                Text("Cancel")
+                Text(stringResource(R.string.android_chats_cancel))
             }
 
             Text(
@@ -112,7 +114,7 @@ fun AddContactScreen(
                     contentColor = ChatforiaColors.primaryText
                 )
             ) {
-                Text("Username")
+                Text(stringResource(R.string.android_profile_username))
             }
 
             Button(
@@ -129,7 +131,7 @@ fun AddContactScreen(
                     contentColor = ChatforiaColors.primaryText
                 )
             ) {
-                Text("Phone")
+                Text(stringResource(R.string.android_add_contact_phone))
             }
         }
 
@@ -148,7 +150,7 @@ fun AddContactScreen(
                     OutlinedTextField(
                         value = usernameText,
                         onValueChange = { usernameText = it },
-                        label = { Text("Username") },
+                        label = { Text(stringResource(R.string.android_profile_username)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -156,7 +158,7 @@ fun AddContactScreen(
                     OutlinedTextField(
                         value = phoneText,
                         onValueChange = { phoneText = it },
-                        label = { Text("Phone Number") },
+                        label = { Text(stringResource(R.string.android_profile_phone_number)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -164,7 +166,7 @@ fun AddContactScreen(
                     OutlinedTextField(
                         value = nameText,
                         onValueChange = { nameText = it },
-                        label = { Text("Name") },
+                        label = { Text(stringResource(R.string.android_add_contact_name)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -173,7 +175,7 @@ fun AddContactScreen(
                 OutlinedTextField(
                     value = aliasText,
                     onValueChange = { aliasText = it },
-                    label = { Text("Alias optional") },
+                    label = { Text(stringResource(R.string.android_add_contact_alias_optional)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -184,13 +186,13 @@ fun AddContactScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Favorite",
+                            text = stringResource(R.string.android_contacts_favorite),
                             style = MaterialTheme.typography.titleMedium,
                             color = ChatforiaColors.primaryText
                         )
 
                         Text(
-                            text = "Pin this person as a favorite contact.",
+                            text = stringResource(R.string.android_add_contact_pin_this_person_as_a_favorite_contact),
                             style = MaterialTheme.typography.bodySmall,
                             color = ChatforiaColors.secondaryText
                         )

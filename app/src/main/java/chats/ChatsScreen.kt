@@ -66,6 +66,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -272,7 +274,7 @@ fun ChatsScreen(
         ) {
 
             Text(
-                text = "Chats",
+                text = stringResource(R.string.android_chats_chats),
                 fontSize = 34.sp,
                 fontWeight = FontWeight.Bold,
                 color = ChatforiaColors.primaryText
@@ -282,14 +284,14 @@ fun ChatsScreen(
                 actions = listOf(
                     ChatforiaAction(
                         icon = Icons.Default.Add,
-                        contentDescription = "New chat",
+                        contentDescription = stringResource(R.string.android_chats_new_chat),
                         onClick = {
                             showStartChat = true
                         }
                     ),
                     ChatforiaAction(
                         icon = Icons.Default.Refresh,
-                        contentDescription = "Refresh",
+                        contentDescription = stringResource(R.string.android_chats_refresh),
                         onClick = {
                             viewModel.loadConversations()
                         }
@@ -303,7 +305,7 @@ fun ChatsScreen(
                     ),
                     ChatforiaAction(
                         icon = Icons.Default.Shuffle,
-                        contentDescription = "Random chat",
+                        contentDescription = stringResource(R.string.android_chats_random_chat),
                         onClick = {
                             showRandomMatching = true
                             randomChatViewModel.startSearch()
@@ -316,12 +318,12 @@ fun ChatsScreen(
         OutlinedTextField(
             value = searchText,
             onValueChange = { searchText = it },
-            placeholder = { Text("Search chats") },
+            placeholder = { Text(stringResource(R.string.android_chats_search_chats)) },
 
             leadingIcon = {
                 Icon(
                     Icons.Default.Search,
-                    contentDescription = "Search",
+                    contentDescription = stringResource(R.string.android_chats_search),
                     tint = ChatforiaColors.secondaryText
                 )
             },
@@ -352,7 +354,7 @@ fun ChatsScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("No chats yet")
+                Text(stringResource(R.string.android_chats_no_chats_yet))
             }
         } else {
             LazyColumn(
@@ -398,7 +400,7 @@ fun ChatsScreen(
             shape = RoundedCornerShape(2.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Text("AdMob Ad")
+                Text(stringResource(R.string.android_chats_admob_ad))
             }
         }
 
@@ -411,10 +413,10 @@ fun ChatsScreen(
                 pendingDeleteConversation = null
             },
             title = {
-                Text("Delete conversation?")
+                Text(stringResource(R.string.android_chats_delete_conversation))
             },
             text = {
-                Text("This will remove this conversation from your chat list.")
+                Text(stringResource(R.string.android_chats_this_will_remove_this_conversation_from_your_cha))
             },
             confirmButton = {
                 TextButton(
@@ -432,7 +434,7 @@ fun ChatsScreen(
                         pendingDeleteConversation = null
                     }
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.android_chats_cancel))
                 }
             }
         )
@@ -607,7 +609,7 @@ private fun SwipeRevealConversationRow(
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Default.Delete,
-                    contentDescription = "Delete conversation",
+                    contentDescription = stringResource(R.string.android_chats_delete_conversation_2),
                     tint = Color.White
                 )
             }

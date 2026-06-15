@@ -59,6 +59,8 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import com.chatforia.android.ria.RiaRepository
 import com.chatforia.android.ria.RiaRewriteSheet
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -238,7 +240,7 @@ fun ChatThreadScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.android_plan_back)
                         )
                     }
                 },
@@ -248,14 +250,14 @@ fun ChatThreadScreen(
                         actions = listOf(
                             ChatforiaAction(
                                 icon = Icons.Default.Search,
-                                contentDescription = "Search",
+                                contentDescription = stringResource(R.string.android_chats_search),
                                 onClick = {
                                     showSearchSheet = true
                                 }
                             ),
                             ChatforiaAction(
                                 icon = Icons.Default.Call,
-                                contentDescription = "Audio Call",
+                                contentDescription = stringResource(R.string.android_chat_thread_audio_call),
                                 onClick = {
                                     conversation.phone?.let { phone ->
                                         androidCallManager.startPhoneCall(phone)
@@ -278,7 +280,7 @@ fun ChatThreadScreen(
                             ),
                             ChatforiaAction(
                                 icon = Icons.Default.Videocam,
-                                contentDescription = "Video Call",
+                                contentDescription = stringResource(R.string.android_chat_thread_video_call),
                                 onClick = {
                                     val callee = conversation.avatarUsers
                                         ?.firstOrNull { it.id != currentUser.id }
@@ -335,7 +337,7 @@ fun ChatThreadScreen(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("No messages yet")
+                            Text(stringResource(R.string.android_chat_thread_no_messages_yet))
                         }
                     }
 
@@ -432,7 +434,7 @@ fun ChatThreadScreen(
                 ) {
                     AsyncImage(
                         model = pendingGifPreviewUrl,
-                        contentDescription = "Selected GIF",
+                        contentDescription = stringResource(R.string.android_chat_thread_selected_gif),
                         modifier = Modifier.fillMaxSize()
                     )
 
@@ -452,7 +454,7 @@ fun ChatThreadScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Remove GIF",
+                                contentDescription = stringResource(R.string.android_chat_thread_remove_gif),
                                 tint = Color.White,
                                 modifier = Modifier.size(12.dp)
                             )
@@ -506,7 +508,7 @@ fun ChatThreadScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Attach"
+                        contentDescription = stringResource(R.string.android_chat_thread_attach)
                     )
                 }
 
@@ -515,12 +517,12 @@ fun ChatThreadScreen(
                     onValueChange = { draft = it },
                     modifier = Modifier.weight(1f),
                     placeholder = {
-                        Text("Message")
+                        Text(stringResource(R.string.android_contact_detail_message))
                     },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = "Rewrite with Ria",
+                            contentDescription = stringResource(R.string.android_chat_thread_rewrite_with_ria),
                             tint =
                                 if (riaAvailable) {
                                     ChatforiaColors.accent.copy(alpha = 0.85f)
@@ -633,15 +635,15 @@ fun ChatThreadScreen(
                                 canSendText || canSendVoice -> Icons.Default.ArrowUpward
                                 else -> Icons.Default.Mic
                             },
-                        contentDescription = "Composer action"
+                        contentDescription = stringResource(R.string.android_chat_thread_composer_action)
                     )
                 }
             }
             if (deletingMessage != null) {
                 AlertDialog(
                     onDismissRequest = { deletingMessage = null },
-                    title = { Text("Delete message?") },
-                    text = { Text("Choose how you want to delete this message.") },
+                    title = { Text(stringResource(R.string.android_chat_thread_delete_message)) },
+                    text = { Text(stringResource(R.string.android_chat_thread_choose_how_you_want_to_delete_this_message)) },
                     confirmButton = {
                         val canDeleteForEveryone =
                             deletingMessage?.let { message ->
@@ -659,7 +661,7 @@ fun ChatThreadScreen(
                                     deletingMessage = null
                                 }
                             ) {
-                                Text("Delete for everyone")
+                                Text(stringResource(R.string.android_chat_thread_delete_for_everyone))
                             }
                         }
                     },
@@ -670,7 +672,7 @@ fun ChatThreadScreen(
                                 deletingMessage = null
                             }
                         ) {
-                            Text("Delete for me")
+                            Text(stringResource(R.string.android_chat_thread_delete_for_me))
                         }
                     }
                 )
@@ -719,7 +721,7 @@ fun ChatThreadScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Search in chat",
+                            text = stringResource(R.string.android_chat_thread_search_in_chat),
                             style = MaterialTheme.typography.titleLarge,
                             color = ChatforiaColors.primaryText
                         )
@@ -729,7 +731,7 @@ fun ChatThreadScreen(
                         OutlinedTextField(
                             value = threadSearchText,
                             onValueChange = { threadSearchText = it },
-                            placeholder = { Text("Search messages") },
+                            placeholder = { Text(stringResource(R.string.android_chat_thread_search_messages)) },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Search,
@@ -947,7 +949,7 @@ private fun SmsMessageBubble(
 
                 if (message.optimistic) {
                     Text(
-                        text = "Sending…",
+                        text = stringResource(R.string.android_chat_thread_sending),
                         style = MaterialTheme.typography.labelSmall,
                         color =
                             if (isMine) {
@@ -960,7 +962,7 @@ private fun SmsMessageBubble(
 
                 if (message.failed) {
                     Text(
-                        text = "Failed to send",
+                        text = stringResource(R.string.android_chat_thread_failed_to_send),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -968,7 +970,7 @@ private fun SmsMessageBubble(
 
                 if (message.editedAt != null) {
                     Text(
-                        text = "Edited",
+                        text = stringResource(R.string.android_chat_thread_edited),
                         style = MaterialTheme.typography.labelSmall,
                         color =
                             if (isMine) {

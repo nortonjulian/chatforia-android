@@ -1,7 +1,7 @@
 package com.chatforia.android.messages
 
 import kotlinx.serialization.Serializable
-
+import com.chatforia.android.crypto.EncryptedMessagePayloadForUser
 @Serializable
 data class MessagesResponse(
     val items: List<MessageDto>,
@@ -37,6 +37,7 @@ data class MessageDto(
     val chatRoomId: Int? = null,
 
     val clientMessageId: String? = null,
+    val encryptedPayloadForMe: EncryptedMessagePayloadForUser? = null,
 
     val readBy: List<SenderDto> = emptyList(),
     val attachments: List<AttachmentDto> = emptyList(),

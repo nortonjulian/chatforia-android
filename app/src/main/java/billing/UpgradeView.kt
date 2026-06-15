@@ -25,6 +25,8 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun UpgradeView(
@@ -61,7 +63,7 @@ fun UpgradeView(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Upgrade",
+                text = stringResource(R.string.android_upgrade_upgrade),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = ChatforiaColors.primaryText,
@@ -71,7 +73,7 @@ fun UpgradeView(
             IconButton(onClick = onClose) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Close",
+                    contentDescription = stringResource(R.string.android_upgrade_close),
                     tint = ChatforiaColors.primaryText
                 )
             }
@@ -91,8 +93,8 @@ fun UpgradeView(
 
             UpgradePlanCard(
                 badge = "PLUS",
-                title = "Chatforia Plus",
-                subtitle = "Remove ads and unlock more everyday features.",
+                title = stringResource(R.string.android_upgrade_plus),
+                subtitle = stringResource(R.string.android_upgrade_remove_ads_and_unlock_more_everyday_features),
                 price = pricingService.formattedPrice(
                     quote = quotes[PricingProduct.Plus],
                     fallbackProduct = PricingProduct.Plus
@@ -114,8 +116,8 @@ fun UpgradeView(
 
             UpgradePlanCard(
                 badge = "PREMIUM",
-                title = "Chatforia Premium",
-                subtitle = "The full Chatforia experience.",
+                title = stringResource(R.string.android_upgrade_premium),
+                subtitle = stringResource(R.string.android_upgrade_the_full_experience),
                 price = pricingService.formattedPrice(
                     quote = quotes[PricingProduct.PremiumMonthly],
                     fallbackProduct = PricingProduct.PremiumMonthly
@@ -139,8 +141,8 @@ fun UpgradeView(
 
             UpgradePlanCard(
                 badge = "BEST VALUE",
-                title = "Premium Annual",
-                subtitle = "Save compared to monthly Premium.",
+                title = stringResource(R.string.android_upgrade_premium_annual),
+                subtitle = stringResource(R.string.android_upgrade_save_compared_to_monthly_premium),
                 price = pricingService.formattedPrice(
                     quote = quotes[PricingProduct.PremiumAnnual],
                     fallbackProduct = PricingProduct.PremiumAnnual
@@ -168,7 +170,7 @@ fun UpgradeView(
                 }
             ) {
                 Text(
-                    text = "Restore purchases",
+                    text = stringResource(R.string.android_upgrade_restore_purchases),
                     color = ChatforiaColors.accent
                 )
             }
@@ -203,7 +205,7 @@ private fun HeroSection() {
         Spacer(modifier = Modifier.height(14.dp))
 
         Text(
-            text = "Unlock more with Chatforia",
+            text = stringResource(R.string.android_upgrade_unlock_more_with),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = ChatforiaColors.primaryText,
@@ -213,7 +215,7 @@ private fun HeroSection() {
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Choose Plus or Premium to remove ads, customize your experience, and unlock advanced tools.",
+            text = stringResource(R.string.android_upgrade_choose_plus_or_premium_to_remove_ads_customize_y),
             style = MaterialTheme.typography.bodyMedium,
             color = ChatforiaColors.secondaryText,
             textAlign = TextAlign.Center
@@ -276,7 +278,7 @@ private fun UpgradePlanCard(
 
                 if (highlighted) {
                     Text(
-                        text = "Best experience",
+                        text = stringResource(R.string.android_upgrade_best_experience),
                         color = ChatforiaColors.accent,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold
@@ -347,7 +349,7 @@ private fun UpgradePlanCard(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Upgrade",
+                    text = stringResource(R.string.android_upgrade_upgrade),
                     fontWeight = FontWeight.SemiBold,
                     color = ChatforiaColors.buttonForeground
                 )

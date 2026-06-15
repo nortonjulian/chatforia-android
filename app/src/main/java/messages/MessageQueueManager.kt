@@ -1,5 +1,6 @@
 package com.chatforia.android.messages
 
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -126,17 +127,63 @@ class MessageQueueManager(
         markSending(job)
 
         try {
-            val participants =
-                repository.loadRoomParticipants(job.roomId)
+            val participants = repository.loadRoomParticipants(job.roomId)
 
-            val encrypted =
-                if (!job.text.isNullOrBlank()) {
-                    messageEncryptor.encryptMessage(
-                        plaintext = job.text,
-                        participants = participants
-                    )
+            val plaintextForEncryption =
+                job.text?.takeIf { it.isNotBlank() }
+                    ?: fallbackTextForAttachments(job.attachmentsInline)
+
+            val encryptedPayloads =
+                if (!plaintextForEncryption.isNullOrBlank()) {
+                    val targetLangs =
+                        participants
+                            .filter { job.senderUserId == null || it.userId != job.senderUserId }
+                            .filter { it.user?.autoTranslate != false }
+                            .mapNotNull { it.user?.preferredLanguage?.trim()?.lowercase()?.takeIf { lang -> lang.isNotBlank() } }
+                            .distinct()
+
+                    val translations =
+                        repository.translateMessagePreview(
+                            roomId = job.roomId,
+                            text = plaintextForEncryption,
+                            targetLangs = targetLangs
+                        )
+
+                    participants.mapNotNull { participant ->
+                        val user = participant.user ?: return@mapNotNull null
+                        val publicKey = user.publicKey ?: return@mapNotNull null
+
+                        if (publicKey.isBlank()) return@mapNotNull null
+
+                        val preferredLang =
+                            user.preferredLanguage
+                                ?.trim()
+                                ?.lowercase()
+                                ?.takeIf { it.isNotBlank() }
+
+                        val isSender =
+                            job.senderUserId != null &&
+                                    participant.userId == job.senderUserId
+
+                        val plaintextForUser =
+                            if (isSender || user.autoTranslate == false || preferredLang == null) {
+                                plaintextForEncryption
+                            } else {
+                                val baseLang = preferredLang?.substringBefore("-")?.takeIf { it.isNotBlank() }
+
+                                translations[preferredLang] ?: baseLang?.let { translations[it] } ?: plaintextForEncryption
+                            }
+
+                        participant.userId.toString() to messageEncryptor.encryptForSingleUser(
+                            plaintext = plaintextForUser,
+                            recipientUserId = participant.userId,
+                            recipientPublicKeyB64 = publicKey,
+                            language = preferredLang,
+                            sourceLanguage = null
+                        )
+                    }.toMap()
                 } else {
-                    null
+                    emptyMap()
                 }
 
             val saved =
@@ -144,10 +191,12 @@ class MessageQueueManager(
                     roomId = job.roomId,
                     text = "",
                     clientMessageId = job.clientMessageId,
-                    attachmentsInline = job.attachmentsInline,
-                    contentCiphertext = encrypted?.contentCiphertext,
-                    encryptedKeys = encrypted?.encryptedKeys,
-                    encryptionVersion = encrypted?.encryptionVersion
+                    attachmentsInline = if (encryptedPayloads.isNotEmpty()) {
+                        job.attachmentsInline.map { it.copy(caption = null) }
+                    } else {
+                        job.attachmentsInline
+                    },
+                    encryptedPayloads = encryptedPayloads.takeIf { it.isNotEmpty() }
                 )
 
             if (saved != null) {
@@ -160,7 +209,8 @@ class MessageQueueManager(
             }
 
             markSucceeded(job.clientMessageId)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            println("❌ MessageQueueManager failed: ${e::class.simpleName}: ${e.message}")
             markTemporaryFailure(job)
         }
     }
@@ -266,6 +316,16 @@ class MessageQueueManager(
         )
 
         return (seconds * 1_000).toLong()
+    }
+
+    private fun fallbackTextForAttachments(attachments: List<AttachmentDto>): String? {
+        return when (attachments.firstOrNull()?.kind?.uppercase()) {
+            "IMAGE" -> "[image]"
+            "VIDEO" -> "[video]"
+            "GIF" -> "[gif]"
+            "AUDIO" -> "[voice note]"
+            else -> if (attachments.isNotEmpty()) "[attachment]" else null
+        }
     }
 
     companion object {

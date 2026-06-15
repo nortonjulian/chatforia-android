@@ -24,6 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.res.stringResource
+import com.chatforia.android.R
 
 @Composable
 fun IncomingCallSheet(
@@ -85,12 +87,12 @@ fun IncomingCallSheet(
                         ) {
                             Icon(
                                 Icons.Default.CallEnd,
-                                contentDescription = "Decline call"
+                                contentDescription = stringResource(R.string.android_incoming_call_decline_call)
                             )
                         }
 
                         Text(
-                            text = "Decline",
+                            text = stringResource(R.string.android_incoming_call_decline),
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -105,12 +107,12 @@ fun IncomingCallSheet(
                         ) {
                             Icon(
                                 if (isVideo) Icons.Default.Videocam else Icons.Default.Call,
-                                contentDescription = "Accept call"
+                                contentDescription = stringResource(R.string.android_incoming_call_accept_call)
                             )
                         }
 
                         Text(
-                            text = "Accept",
+                            text = stringResource(R.string.android_incoming_call_accept),
                             style = MaterialTheme.typography.bodySmall
                         )
                     }

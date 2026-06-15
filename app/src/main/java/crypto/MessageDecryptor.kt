@@ -25,10 +25,12 @@ class MessageDecryptor {
         currentUserPrivateKeyB64: String?,
         currentUserId: Int
     ): String? {
-        val ciphertext = message.contentCiphertext ?: return plaintextFallback(message)
+        val payload = message.encryptedPayloadForMe
+        val ciphertext = payload?.contentCiphertext ?: message.contentCiphertext ?: return plaintextFallback(message)
 
         val encryptedKeyForMe =
-            message.encryptedKeyForMe
+            payload?.encryptedKey
+                ?: message.encryptedKeyForMe
                 ?: message.encryptedKeys?.get(currentUserId.toString())
                 ?: return null
 
