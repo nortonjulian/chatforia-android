@@ -548,6 +548,161 @@ class ChatThreadViewModelTest {
             assertFalse(finalMessage.failed)
         }
 
+    @Test
+    fun editMessage_plainMessageUpdatesLocalMessageAndCallsRepository() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val viewModel = createViewModel(repository)
+
+            val original =
+                message(
+                    id = 60,
+                    senderId = 1,
+                    text = "old text"
+                )
+
+            viewModel.editMessage(
+                message = original,
+                text = "  edited text  "
+            )
+
+            advanceUntilIdle()
+
+            assertEquals(1, repository.editMessageCalls.size)
+
+            val call = repository.editMessageCalls.single()
+
+            assertEquals(60, call.messageId)
+            assertEquals("edited text", call.text)
+            assertTrue(call.attachments.isEmpty())
+            assertEquals(null, call.encryptedPayloads)
+
+            assertEquals(1, viewModel.messages.value.size)
+
+            val updated = viewModel.messages.value.single()
+
+            assertEquals(60, updated.id)
+            assertEquals("edited text", updated.rawContent)
+            assertEquals("edited text", updated.decryptedContent)
+            assertNotNull(updated.editedAt)
+            assertEquals(null, viewModel.error.value)
+        }
+
+    @Test
+    fun editMessage_blankTextWithNoAttachmentsDoesNothing() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val viewModel = createViewModel(repository)
+
+            val original =
+                message(
+                    id = 61,
+                    senderId = 1,
+                    text = "old text"
+                )
+
+            viewModel.editMessage(
+                message = original,
+                text = "   "
+            )
+
+            advanceUntilIdle()
+
+            assertTrue(repository.editMessageCalls.isEmpty())
+            assertTrue(viewModel.messages.value.isEmpty())
+            assertEquals(null, viewModel.error.value)
+        }
+
+    @Test
+    fun editMessage_failureSetsError() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            repository.editMessageShouldFail = true
+
+            val viewModel = createViewModel(repository)
+
+            val original =
+                message(
+                    id = 62,
+                    senderId = 1,
+                    text = "old text"
+                )
+
+            viewModel.editMessage(
+                message = original,
+                text = "new text"
+            )
+
+            advanceUntilIdle()
+
+            assertEquals(1, repository.editMessageCalls.size)
+            assertEquals("Edit boom", viewModel.error.value)
+        }
+
+    @Test
+    fun reportMessage_callsRepository() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val viewModel = createViewModel(repository)
+
+            val reported =
+                message(
+                    id = 70,
+                    senderId = 99,
+                    text = "bad message"
+                )
+
+            viewModel.reportMessage(
+                message = reported,
+                reason = "spam",
+                details = "posting junk",
+                contextCount = 12,
+                blockAfterReport = true
+            )
+
+            advanceUntilIdle()
+
+            assertEquals(1, repository.reportMessageCalls.size)
+
+            val call = repository.reportMessageCalls.single()
+
+            assertEquals(70, call.messageId)
+            assertEquals("spam", call.reason)
+            assertEquals("posting junk", call.details)
+            assertEquals(12, call.contextCount)
+            assertTrue(call.blockAfterReport)
+            assertEquals(null, viewModel.error.value)
+        }
+
+    @Test
+    fun reportMessage_failureSetsError() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            repository.reportMessageShouldFail = true
+
+            val viewModel = createViewModel(repository)
+
+            val reported =
+                message(
+                    id = 71,
+                    senderId = 99,
+                    text = "bad message"
+                )
+
+            viewModel.reportMessage(
+                message = reported,
+                reason = "harassment",
+                details = "bad stuff",
+                contextCount = 10,
+                blockAfterReport = false
+            )
+
+            advanceUntilIdle()
+
+            assertEquals(1, repository.reportMessageCalls.size)
+            assertEquals("Report boom", viewModel.error.value)
+        }
+
     private suspend fun createViewModel(
         repository: FakeChatThreadRepository
     ): ChatThreadViewModel {
@@ -625,6 +780,21 @@ class ChatThreadViewModelTest {
         val mediaUrls: List<String>
     )
 
+    private data class EditMessageCall(
+        val messageId: Int,
+        val text: String,
+        val attachments: List<AttachmentDto>,
+        val encryptedPayloads: Map<String, EncryptedMessagePayloadForUser>?
+    )
+
+    private data class ReportMessageCall(
+        val messageId: Int,
+        val reason: String,
+        val details: String?,
+        val contextCount: Int,
+        val blockAfterReport: Boolean
+    )
+
     private class FakeChatThreadRepository : ChatThreadRepository {
         var messagesToLoad: List<MessageDto> = emptyList()
         var deltasToLoad: List<MessageDto> = emptyList()
@@ -638,6 +808,12 @@ class ChatThreadViewModelTest {
         val deleteCalls = mutableListOf<Pair<Int, Boolean>>()
 
         val queuedSendCalls = mutableListOf<QueuedSendCall>()
+
+        val editMessageCalls = mutableListOf<EditMessageCall>()
+        val reportMessageCalls = mutableListOf<ReportMessageCall>()
+
+        var editMessageShouldFail = false
+        var reportMessageShouldFail = false
 
         var sendQueuedShouldFail = false
 
@@ -765,7 +941,38 @@ class ChatThreadViewModelTest {
             attachments: List<AttachmentDto>,
             encryptedPayloads: Map<String, EncryptedMessagePayloadForUser>?
         ): MessageDto? {
-            throw AssertionError("editMessage should not be called in this test.")
+            editMessageCalls.add(
+                EditMessageCall(
+                    messageId = messageId,
+                    text = text,
+                    attachments = attachments,
+                    encryptedPayloads = encryptedPayloads
+                )
+            )
+
+            if (editMessageShouldFail) {
+                throw Exception("Edit boom")
+            }
+
+            return MessageDto(
+                id = messageId,
+                rawContent = text,
+                content = text,
+                translatedForMe = null,
+                decryptedContent = text,
+                createdAt = "2026-01-01T00:00:00Z",
+                sender = SenderDto(
+                    id = 1,
+                    username = "julian"
+                ),
+                chatRoomId = 10,
+                clientMessageId = "edited-$messageId",
+                attachments = attachments,
+                attachmentsInline = attachments,
+                optimistic = false,
+                failed = false,
+                editedAt = "2026-01-01T00:01:00Z"
+            )
         }
 
         override suspend fun reportMessage(
@@ -775,7 +982,21 @@ class ChatThreadViewModelTest {
             contextCount: Int,
             blockAfterReport: Boolean
         ): ReportMessageResponse {
-            throw AssertionError("reportMessage should not be called in this test.")
+            reportMessageCalls.add(
+                ReportMessageCall(
+                    messageId = messageId,
+                    reason = reason,
+                    details = details,
+                    contextCount = contextCount,
+                    blockAfterReport = blockAfterReport
+                )
+            )
+
+            if (reportMessageShouldFail) {
+                throw Exception("Report boom")
+            }
+
+            return ReportMessageResponse(success = true)
         }
     }
 }
