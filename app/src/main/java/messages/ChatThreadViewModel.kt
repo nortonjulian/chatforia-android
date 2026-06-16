@@ -18,12 +18,18 @@ import com.chatforia.android.crypto.MessageEncryptor
 import com.chatforia.android.crypto.EncryptedMessagePayloadForUser
 import com.chatforia.android.crypto.DisplayMessageDecryptor
 import com.chatforia.android.crypto.PrivateKeyReader
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+
 class ChatThreadViewModel(
     private val repository: ChatThreadRepository,
     private val keyStorage: PrivateKeyReader,
     private val queueStorage: MessageQueueStorage,
     private val messageDecryptorFactory: () -> DisplayMessageDecryptor = { MessageDecryptor() },
-    private val messageEncryptorFactory: () -> MessageEncryptor = { MessageEncryptor() }
+    private val messageEncryptorFactory: () -> MessageEncryptor = { MessageEncryptor() },
+    private val queueDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val queueDelayProvider: suspend (Long) -> Unit = { delay(it) }
 ) : ViewModel() {
 
     private val messageStore = MessageStore()
@@ -38,7 +44,9 @@ class ChatThreadViewModel(
             messageStore = messageStore,
             queueStorage = queueStorage,
             scope = viewModelScope,
-            messageEncryptorFactory = messageEncryptorFactory
+            messageEncryptorFactory = messageEncryptorFactory,
+            ioDispatcher = queueDispatcher,
+            delayProvider = queueDelayProvider
         )
 
     val messages: StateFlow<List<MessageDto>>
@@ -566,7 +574,6 @@ class ChatThreadViewModel(
         mediaUrls: List<String>
     ) {
         try {
-
             val to =
                 conversation.phone
                     ?.trim()
@@ -581,9 +588,7 @@ class ChatThreadViewModel(
                     mediaUrls = mediaUrls
                 )
 
-            mergeIncomingSms(
-                optimistic
-            )
+            mergeIncomingSms(optimistic)
 
             repository.sendSms(
                 to = to,
@@ -591,13 +596,27 @@ class ChatThreadViewModel(
                 mediaUrls = mediaUrls
             )
 
+            mergeIncomingSms(
+                optimistic.copy(
+                    optimistic = false,
+                    failed = false
+                )
+            )
         } catch (e: Exception) {
+            _smsMessages.value = _smsMessages.value.map { message ->
+                if (message.optimistic) {
+                    message.copy(
+                        optimistic = false,
+                        failed = true
+                    )
+                } else {
+                    message
+                }
+            }
 
             _error.value =
                 e.message ?: "Failed to send media."
-
         } finally {
-
             _isSending.value = false
         }
     }
@@ -852,12 +871,18 @@ class ChatThreadViewModel(
     }
 
     private fun mergeIncomingSms(incoming: SmsMessageDto) {
-        val incomingId = incoming.id.takeIf { it > 0 }
+        val incomingId = incoming.id
 
         val current = _smsMessages.value.toMutableList()
 
         val index = current.indexOfFirst { existing ->
-            incomingId != null && existing.id == incomingId
+            when {
+                incomingId > 0 -> existing.id == incomingId
+                incomingId < 0 -> existing.id == incomingId
+                !incoming.providerMessageId.isNullOrBlank() ->
+                    existing.providerMessageId == incoming.providerMessageId
+                else -> false
+            }
         }
 
         if (index >= 0) {

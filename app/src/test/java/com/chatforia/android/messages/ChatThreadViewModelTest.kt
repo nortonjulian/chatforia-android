@@ -24,6 +24,8 @@ import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.test.runCurrent
 
 @RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -191,6 +193,361 @@ class ChatThreadViewModelTest {
             assertTrue(viewModel.messages.value.isEmpty())
         }
 
+    @Test
+    fun sendSmsMessage_successCreatesOneNonFailedSmsAndCallsRepository() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val viewModel = createViewModel(repository)
+
+            val conversation =
+                ConversationDto(
+                    kind = "sms",
+                    id = 20,
+                    title = "SMS",
+                    phone = "+15551234567"
+                )
+
+            viewModel.sendMessage(
+                conversation = conversation,
+                text = "  hello sms  "
+            )
+
+            advanceUntilIdle()
+
+            assertEquals(
+                listOf(
+                    SendSmsCall(
+                        to = "+15551234567",
+                        body = "hello sms",
+                        mediaUrls = emptyList()
+                    )
+                ),
+                repository.sendSmsCalls
+            )
+
+            assertEquals(1, viewModel.smsMessages.value.size)
+
+            val sms = viewModel.smsMessages.value.single()
+
+            assertEquals("hello sms", sms.body)
+            assertEquals("+15551234567", sms.toNumber)
+            assertFalse(sms.optimistic)
+            assertFalse(sms.failed)
+            assertFalse(viewModel.isSending.value)
+            assertEquals(null, viewModel.error.value)
+        }
+
+    @Test
+    fun sendSmsMessage_failureMarksOptimisticSmsFailed() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            repository.sendSmsShouldFail = true
+
+            val viewModel = createViewModel(repository)
+
+            val conversation =
+                ConversationDto(
+                    kind = "sms",
+                    id = 21,
+                    title = "SMS",
+                    phone = "+15551234567"
+                )
+
+            viewModel.sendMessage(
+                conversation = conversation,
+                text = "failure test"
+            )
+
+            advanceUntilIdle()
+
+            assertEquals(1, repository.sendSmsCalls.size)
+            assertEquals(1, viewModel.smsMessages.value.size)
+
+            val sms = viewModel.smsMessages.value.single()
+
+            assertEquals("failure test", sms.body)
+            assertFalse(sms.optimistic)
+            assertTrue(sms.failed)
+            assertFalse(viewModel.isSending.value)
+            assertEquals("SMS boom", viewModel.error.value)
+        }
+
+    @Test
+    fun sendSmsMessage_missingPhoneSetsErrorAndDoesNotCallRepository() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val viewModel = createViewModel(repository)
+
+            val conversation =
+                ConversationDto(
+                    kind = "sms",
+                    id = 22,
+                    title = "SMS",
+                    phone = "   "
+                )
+
+            viewModel.sendMessage(
+                conversation = conversation,
+                text = "hello"
+            )
+
+            advanceUntilIdle()
+
+            assertTrue(repository.sendSmsCalls.isEmpty())
+            assertTrue(viewModel.smsMessages.value.isEmpty())
+            assertFalse(viewModel.isSending.value)
+            assertEquals("Missing SMS phone number.", viewModel.error.value)
+        }
+
+    @Test
+    fun sendSmsMedia_successCreatesOneNonFailedSmsAndCallsRepository() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val viewModel = createViewModel(repository)
+
+            val conversation =
+                ConversationDto(
+                    kind = "sms",
+                    id = 23,
+                    title = "SMS",
+                    phone = "+15551234567"
+                )
+
+            viewModel.sendMedia(
+                conversation = conversation,
+                mediaUrls = listOf("https://example.com/photo.jpg")
+            )
+
+            advanceUntilIdle()
+
+            assertEquals(
+                listOf(
+                    SendSmsCall(
+                        to = "+15551234567",
+                        body = null,
+                        mediaUrls = listOf("https://example.com/photo.jpg")
+                    )
+                ),
+                repository.sendSmsCalls
+            )
+
+            assertEquals(1, viewModel.smsMessages.value.size)
+
+            val sms = viewModel.smsMessages.value.single()
+
+            assertEquals("+15551234567", sms.toNumber)
+            assertTrue(sms.media.isNotEmpty())
+            assertFalse(sms.optimistic)
+            assertFalse(sms.failed)
+            assertFalse(viewModel.isSending.value)
+            assertEquals(null, viewModel.error.value)
+        }
+
+    @Test
+    fun sendSmsMedia_failureMarksOptimisticSmsFailed() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            repository.sendSmsShouldFail = true
+
+            val viewModel = createViewModel(repository)
+
+            val conversation =
+                ConversationDto(
+                    kind = "sms",
+                    id = 24,
+                    title = "SMS",
+                    phone = "+15551234567"
+                )
+
+            viewModel.sendMedia(
+                conversation = conversation,
+                mediaUrls = listOf("https://example.com/photo.jpg")
+            )
+
+            advanceUntilIdle()
+
+            assertEquals(1, repository.sendSmsCalls.size)
+            assertEquals(1, viewModel.smsMessages.value.size)
+
+            val sms = viewModel.smsMessages.value.single()
+
+            assertTrue(sms.media.isNotEmpty())
+            assertFalse(sms.optimistic)
+            assertTrue(sms.failed)
+            assertFalse(viewModel.isSending.value)
+            assertEquals("SMS boom", viewModel.error.value)
+        }
+
+    @Test
+    fun sendSmsMedia_emptyMediaDoesNothing() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val viewModel = createViewModel(repository)
+
+            val conversation =
+                ConversationDto(
+                    kind = "sms",
+                    id = 25,
+                    title = "SMS",
+                    phone = "+15551234567"
+                )
+
+            viewModel.sendMedia(
+                conversation = conversation,
+                mediaUrls = emptyList()
+            )
+
+            advanceUntilIdle()
+
+            assertTrue(repository.sendSmsCalls.isEmpty())
+            assertTrue(viewModel.smsMessages.value.isEmpty())
+            assertFalse(viewModel.isSending.value)
+            assertEquals(null, viewModel.error.value)
+        }
+
+    @Test
+    fun sendChatMessage_showsOptimisticMessageWhileQueuedSendIsPending() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            repository.queuedSendGate = CompletableDeferred()
+
+            val viewModel = createViewModel(repository)
+
+            val conversation =
+                ConversationDto(
+                    kind = "chat",
+                    id = 10,
+                    title = "Test Room"
+                )
+
+            viewModel.sendMessage(
+                conversation = conversation,
+                text = "  hello chat  ",
+                currentUserId = 1,
+                currentUsername = "julian"
+            )
+
+            runCurrent()
+
+            assertEquals(1, viewModel.messages.value.size)
+
+            val optimistic = viewModel.messages.value.single()
+
+            assertEquals("hello chat", optimistic.rawContent)
+            assertEquals("hello chat", optimistic.decryptedContent)
+            assertEquals(10, optimistic.chatRoomId)
+            assertEquals(1, optimistic.sender.id)
+            assertTrue(optimistic.optimistic)
+            assertFalse(optimistic.failed)
+            assertFalse(viewModel.isSending.value)
+
+            assertEquals(1, repository.queuedSendCalls.size)
+            assertEquals(10, repository.queuedSendCalls.single().roomId)
+
+            repository.queuedSendGate?.complete(Unit)
+
+            advanceUntilIdle()
+
+            val finalMessage = viewModel.messages.value.single()
+
+            assertEquals(999, finalMessage.id)
+            assertEquals("server message", finalMessage.rawContent)
+            assertFalse(finalMessage.optimistic)
+            assertFalse(finalMessage.failed)
+        }
+
+    @Test
+    fun sendChatMessage_queueFailureMarksOptimisticMessageFailed() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            repository.sendQueuedShouldFail = true
+
+            val viewModel = createViewModel(repository)
+
+            val conversation =
+                ConversationDto(
+                    kind = "chat",
+                    id = 10,
+                    title = "Test Room"
+                )
+
+            viewModel.sendMessage(
+                conversation = conversation,
+                text = "failure chat",
+                currentUserId = 1,
+                currentUsername = "julian"
+            )
+
+            advanceUntilIdle()
+
+            assertTrue(
+                "Expected queued send to be attempted at least once.",
+                repository.queuedSendCalls.isNotEmpty()
+            )
+
+            assertEquals(1, viewModel.messages.value.size)
+
+            val failedMessage = viewModel.messages.value.single()
+
+            assertEquals("failure chat", failedMessage.rawContent)
+
+            assertTrue(
+                "Expected message to be marked failed, but message was: $failedMessage",
+                failedMessage.failed
+            )
+        }
+
+    @Test
+    fun sendChatMedia_enqueuesAttachmentAndShowsOptimisticMessage() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            repository.queuedSendGate = CompletableDeferred()
+
+            val viewModel = createViewModel(repository)
+
+            val conversation =
+                ConversationDto(
+                    kind = "chat",
+                    id = 10,
+                    title = "Test Room"
+                )
+
+            viewModel.sendMedia(
+                conversation = conversation,
+                mediaUrls = listOf("https://example.com/cat.gif"),
+                text = "cat gif",
+                currentUserId = 1,
+                currentUsername = "julian"
+            )
+
+            runCurrent()
+
+            assertEquals(1, viewModel.messages.value.size)
+
+            val optimistic = viewModel.messages.value.single()
+
+            assertEquals("cat gif", optimistic.rawContent)
+            assertEquals(1, optimistic.attachmentsInline.size)
+            assertEquals("GIF", optimistic.attachmentsInline.single().kind)
+            assertEquals("image/gif", optimistic.attachmentsInline.single().mimeType)
+            assertEquals("cat gif", optimistic.attachmentsInline.single().caption)
+            assertTrue(optimistic.optimistic)
+            assertFalse(optimistic.failed)
+
+            assertEquals(1, repository.queuedSendCalls.size)
+            assertEquals(1, repository.queuedSendCalls.single().attachmentsInline.size)
+
+            repository.queuedSendGate?.complete(Unit)
+
+            advanceUntilIdle()
+
+            val finalMessage = viewModel.messages.value.single()
+
+            assertEquals(999, finalMessage.id)
+            assertFalse(finalMessage.optimistic)
+            assertFalse(finalMessage.failed)
+        }
+
     private suspend fun createViewModel(
         repository: FakeChatThreadRepository
     ): ChatThreadViewModel {
@@ -211,7 +568,9 @@ class ChatThreadViewModelTest {
             queueStorage = storage,
             messageDecryptorFactory = {
                 NoOpDisplayMessageDecryptor()
-            }
+            },
+            queueDispatcher = mainDispatcherRule.testDispatcher,
+            queueDelayProvider = { }
         )
     }
 
@@ -254,13 +613,35 @@ class ChatThreadViewModelTest {
         }
     }
 
+    private data class QueuedSendCall(
+        val roomId: Int,
+        val clientMessageId: String,
+        val attachmentsInline: List<AttachmentDto>
+    )
+
+    private data class SendSmsCall(
+        val to: String,
+        val body: String?,
+        val mediaUrls: List<String>
+    )
+
     private class FakeChatThreadRepository : ChatThreadRepository {
         var messagesToLoad: List<MessageDto> = emptyList()
         var deltasToLoad: List<MessageDto> = emptyList()
 
+        val sendSmsCalls = mutableListOf<SendSmsCall>()
+
+        var sendSmsShouldFail = false
+
         val markReadCalls = mutableListOf<List<Int>>()
         val loadDeltasCalls = mutableListOf<Pair<Int, Int>>()
         val deleteCalls = mutableListOf<Pair<Int, Boolean>>()
+
+        val queuedSendCalls = mutableListOf<QueuedSendCall>()
+
+        var sendQueuedShouldFail = false
+
+        var queuedSendGate: CompletableDeferred<Unit>? = null
 
         var queuedSendCount = 0
 
@@ -312,7 +693,38 @@ class ChatThreadViewModelTest {
             encryptedPayloads: Map<String, EncryptedMessagePayloadForUser>?
         ): MessageDto? {
             queuedSendCount++
-            return null
+
+            queuedSendCalls.add(
+                QueuedSendCall(
+                    roomId = roomId,
+                    clientMessageId = clientMessageId,
+                    attachmentsInline = attachmentsInline
+                )
+            )
+
+            queuedSendGate?.await()
+
+            if (sendQueuedShouldFail) {
+                throw Exception("Queue boom")
+            }
+
+            return MessageDto(
+                id = 999,
+                rawContent = "server message",
+                content = "server message",
+                translatedForMe = null,
+                decryptedContent = "server message",
+                createdAt = "2026-01-01T00:00:10Z",
+                sender = SenderDto(
+                    id = 1,
+                    username = "julian"
+                ),
+                chatRoomId = roomId,
+                clientMessageId = clientMessageId,
+                optimistic = false,
+                failed = false,
+                attachmentsInline = attachmentsInline
+            )
         }
 
         override suspend fun loadSmsThread(
@@ -326,7 +738,25 @@ class ChatThreadViewModelTest {
             body: String?,
             mediaUrls: List<String>
         ): SendSmsResponse {
-            throw AssertionError("sendSms should not be called in this test.")
+            sendSmsCalls.add(
+                SendSmsCall(
+                    to = to,
+                    body = body,
+                    mediaUrls = mediaUrls
+                )
+            )
+
+            if (sendSmsShouldFail) {
+                throw Exception("SMS boom")
+            }
+
+            return SendSmsResponse(
+                ok = true,
+                threadId = 20,
+                provider = "twilio",
+                messageSid = "SM123",
+                clientRef = "client-ref"
+            )
         }
 
         override suspend fun editMessage(
