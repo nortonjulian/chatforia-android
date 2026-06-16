@@ -1,6 +1,7 @@
 package com.chatforia.android.messages
 
 import android.content.Context
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
@@ -8,7 +9,8 @@ import kotlinx.serialization.json.Json
 import java.io.File
 
 class MessageQueueStorage(
-    context: Context
+    context: Context,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val file = File(context.filesDir, "chatforia_message_queue.json")
 
@@ -19,7 +21,7 @@ class MessageQueueStorage(
     }
 
     suspend fun load(): List<QueuedMessageJob> {
-        return withContext(Dispatchers.IO) {
+        return withContext(ioDispatcher) {
             try {
                 if (!file.exists()) return@withContext emptyList()
                 json.decodeFromString<List<QueuedMessageJob>>(file.readText())
@@ -30,7 +32,7 @@ class MessageQueueStorage(
     }
 
     suspend fun save(jobs: List<QueuedMessageJob>) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             val tempFile = File(file.parentFile, "${file.name}.tmp")
 
             tempFile.writeText(json.encodeToString(jobs))
@@ -44,7 +46,7 @@ class MessageQueueStorage(
     }
 
     suspend fun clear() {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             if (file.exists()) file.delete()
         }
     }

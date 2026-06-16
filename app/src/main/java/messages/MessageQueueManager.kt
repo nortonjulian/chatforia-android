@@ -11,12 +11,15 @@ import kotlinx.coroutines.sync.withLock
 import kotlin.math.min
 import kotlin.math.pow
 import com.chatforia.android.crypto.MessageEncryptor
+import kotlinx.coroutines.CoroutineDispatcher
 class MessageQueueManager(
-    private val repository: MessagesRepository,
+    private val repository: MessageQueueRepository,
     private val messageStore: MessageStore,
     private val queueStorage: MessageQueueStorage,
     private val scope: CoroutineScope,
-    private val messageEncryptor: MessageEncryptor = MessageEncryptor()
+    private val messageEncryptorFactory: () -> MessageEncryptor = { MessageEncryptor() },
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val delayProvider: suspend (Long) -> Unit = { delay(it) }
 ) {
 
     private val mutex = Mutex()
@@ -25,7 +28,7 @@ class MessageQueueManager(
     private var workerJob: Job? = null
 
     init {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             val restoredJobs =
                 queueStorage.load()
                     .map { job ->
@@ -97,7 +100,7 @@ class MessageQueueManager(
         if (workerJob?.isActive == true) return
 
         workerJob =
-            scope.launch(Dispatchers.IO) {
+            scope.launch(ioDispatcher) {
                 processLoop()
             }
     }
@@ -174,7 +177,7 @@ class MessageQueueManager(
                                 translations[preferredLang] ?: baseLang?.let { translations[it] } ?: plaintextForEncryption
                             }
 
-                        participant.userId.toString() to messageEncryptor.encryptForSingleUser(
+                        participant.userId.toString() to messageEncryptorFactory().encryptForSingleUser(
                             plaintext = plaintextForUser,
                             recipientUserId = participant.userId,
                             recipientPublicKeyB64 = publicKey,
@@ -187,9 +190,8 @@ class MessageQueueManager(
                 }
 
             val saved =
-                repository.sendMessage(
+                repository.sendQueuedMessage(
                     roomId = job.roomId,
-                    text = "",
                     clientMessageId = job.clientMessageId,
                     attachmentsInline = if (encryptedPayloads.isNotEmpty()) {
                         job.attachmentsInline.map { it.copy(caption = null) }
@@ -291,7 +293,7 @@ class MessageQueueManager(
             queueStorage.save(jobs)
         }
 
-        delay(backoffMillis)
+        delayProvider(backoffMillis)
 
         mutex.withLock {
             jobs = jobs.map { queued ->

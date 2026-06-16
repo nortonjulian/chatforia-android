@@ -12,7 +12,7 @@ import java.util.UUID
 import com.chatforia.android.crypto.EncryptedMessagePayloadForUser
 class MessagesRepository(
     private val apiClient: ApiClient
-) {
+) : MessageQueueRepository {
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -98,7 +98,7 @@ class MessagesRepository(
         return response.items
     }
 
-    suspend fun loadRoomParticipants(
+    override suspend fun loadRoomParticipants(
         roomId: Int
     ): List<RoomParticipantDto> {
         val response: RoomParticipantsResponse =
@@ -115,7 +115,7 @@ class MessagesRepository(
         return response.participants
     }
 
-    suspend fun translateMessagePreview(
+    override suspend fun translateMessagePreview(
         roomId: Int,
         text: String,
         targetLangs: List<String>
@@ -144,6 +144,21 @@ class MessagesRepository(
             }
 
         return response.translations
+    }
+
+    override suspend fun sendQueuedMessage(
+        roomId: Int,
+        clientMessageId: String,
+        attachmentsInline: List<AttachmentDto>,
+        encryptedPayloads: Map<String, EncryptedMessagePayloadForUser>?
+    ): MessageDto? {
+        return sendMessage(
+            roomId = roomId,
+            text = "",
+            clientMessageId = clientMessageId,
+            attachmentsInline = attachmentsInline,
+            encryptedPayloads = encryptedPayloads
+        )
     }
 
     suspend fun loadSmsThread(threadId: Int): SmsThreadDto {
