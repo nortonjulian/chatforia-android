@@ -3,7 +3,6 @@ package com.chatforia.android.messages
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chatforia.android.chats.ConversationDto
-import com.chatforia.android.crypto.KeyStorage
 import com.chatforia.android.crypto.MessageDecryptor
 import com.chatforia.android.socket.SocketManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,12 +16,14 @@ import java.util.UUID
 import kotlin.math.abs
 import com.chatforia.android.crypto.MessageEncryptor
 import com.chatforia.android.crypto.EncryptedMessagePayloadForUser
+import com.chatforia.android.crypto.DisplayMessageDecryptor
+import com.chatforia.android.crypto.PrivateKeyReader
 class ChatThreadViewModel(
-    private val repository: MessagesRepository,
-    private val keyStorage: KeyStorage,
+    private val repository: ChatThreadRepository,
+    private val keyStorage: PrivateKeyReader,
     private val queueStorage: MessageQueueStorage,
-    private val messageDecryptor: MessageDecryptor = MessageDecryptor(),
-    private val messageEncryptor: MessageEncryptor = MessageEncryptor()
+    private val messageDecryptorFactory: () -> DisplayMessageDecryptor = { MessageDecryptor() },
+    private val messageEncryptorFactory: () -> MessageEncryptor = { MessageEncryptor() }
 ) : ViewModel() {
 
     private val messageStore = MessageStore()
@@ -32,7 +33,8 @@ class ChatThreadViewModel(
             repository = repository,
             messageStore = messageStore,
             queueStorage = queueStorage,
-            scope = viewModelScope
+            scope = viewModelScope,
+            messageEncryptorFactory = messageEncryptorFactory
         )
 
     val messages: StateFlow<List<MessageDto>>
@@ -766,7 +768,7 @@ class ChatThreadViewModel(
                     translatedForUser
                 }
 
-            participant.userId.toString() to messageEncryptor.encryptForSingleUser(
+            participant.userId.toString() to messageEncryptorFactory().encryptForSingleUser(
                 plaintext = plaintextForUser,
                 recipientUserId = participant.userId,
                 recipientPublicKeyB64 = publicKey,
@@ -797,7 +799,7 @@ class ChatThreadViewModel(
     ): MessageDto {
         val privateKey = keyStorage.readPrivateKey()
 
-        val decrypted = messageDecryptor.decryptMessageOrNull(
+        val decrypted = messageDecryptorFactory().decryptMessageOrNull(
             message = message,
             currentUserPrivateKeyB64 = privateKey,
             currentUserId = currentUserId

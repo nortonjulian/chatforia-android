@@ -16,7 +16,7 @@ import java.util.UUID
 class MessagesRepository(
     private val apiClient: ApiTransport,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
-) : MessageQueueRepository {
+) : ChatThreadRepository {
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -101,7 +101,7 @@ class MessagesRepository(
         }
     }
 
-    suspend fun loadMessages(
+    override suspend fun loadMessages(
         roomId: Int
     ): List<MessageDto> {
         val response: MessagesResponse =
@@ -175,7 +175,7 @@ class MessagesRepository(
         )
     }
 
-    suspend fun loadSmsThread(
+    override suspend fun loadSmsThread(
         threadId: Int
     ): SmsThreadDto {
         return sendJson(
@@ -187,10 +187,10 @@ class MessagesRepository(
         )
     }
 
-    suspend fun sendSms(
+    override suspend fun sendSms(
         to: String,
-        body: String? = null,
-        mediaUrls: List<String> = emptyList()
+        body: String?,
+        mediaUrls: List<String>
     ): SendSmsResponse {
         val bodyJson =
             json.encodeToString(
@@ -211,7 +211,7 @@ class MessagesRepository(
         )
     }
 
-    suspend fun markReadBulk(
+    override suspend fun markReadBulk(
         ids: List<Int>
     ) {
         if (ids.isEmpty()) return
@@ -231,7 +231,7 @@ class MessagesRepository(
         )
     }
 
-    suspend fun loadDeltas(
+    override suspend fun loadDeltas(
         roomId: Int,
         sinceId: Int
     ): List<MessageDto> {
@@ -247,7 +247,7 @@ class MessagesRepository(
         return response.items
     }
 
-    suspend fun deleteMessage(
+    override suspend fun deleteMessage(
         messageId: Int,
         deleteForEveryone: Boolean
     ) {
@@ -262,11 +262,11 @@ class MessagesRepository(
         )
     }
 
-    suspend fun editMessage(
+    override suspend fun editMessage(
         messageId: Int,
         text: String,
-        attachments: List<AttachmentDto> = emptyList(),
-        encryptedPayloads: Map<String, EncryptedMessagePayloadForUser>? = null
+        attachments: List<AttachmentDto>,
+        encryptedPayloads: Map<String, EncryptedMessagePayloadForUser>?
     ): MessageDto? {
         val bodyJson =
             json.encodeToString(
@@ -301,7 +301,7 @@ class MessagesRepository(
         }
     }
 
-    suspend fun reportMessage(
+    override suspend fun reportMessage(
         messageId: Int,
         reason: String,
         details: String?,

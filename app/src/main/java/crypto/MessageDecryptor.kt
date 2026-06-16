@@ -12,7 +12,7 @@ import javax.crypto.Mac
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-class MessageDecryptor {
+class MessageDecryptor : DisplayMessageDecryptor {
     private val lazySodium = LazySodiumAndroid(SodiumAndroid())
 
     private val json = Json {
@@ -20,7 +20,7 @@ class MessageDecryptor {
         explicitNulls = false
     }
 
-    fun decryptMessageOrNull(
+    override fun decryptMessageOrNull(
         message: MessageDto,
         currentUserPrivateKeyB64: String?,
         currentUserId: Int

@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
-class KeyStorage(context: Context) {
+class KeyStorage(context: Context) : PrivateKeyReader {
     private val masterKey = MasterKey.Builder(context)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
         .build()
@@ -28,10 +28,9 @@ class KeyStorage(context: Context) {
         return prefs.getString("chatforia.e2ee.publicKey", null)
     }
 
-    fun readPrivateKey(): String? {
+    override fun readPrivateKey(): String? {
         return prefs.getString("chatforia.e2ee.privateKey", null)
     }
-
     fun hasPrivateKey(): Boolean {
         return !readPrivateKey().isNullOrBlank()
     }
