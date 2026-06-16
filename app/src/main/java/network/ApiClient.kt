@@ -13,7 +13,7 @@ import com.chatforia.android.upload.UploadImageResponse
 
 class ApiClient(
     private val tokenStorage: TokenStorage
-) {
+) : ApiTransport {
     @PublishedApi
     internal val json = Json {
         ignoreUnknownKeys = true
@@ -33,7 +33,7 @@ class ApiClient(
         }
     }
 
-    fun sendRaw(
+    override fun sendRaw(
         request: ApiRequest
     ): String {
         return sendInternal(request) { body -> body }

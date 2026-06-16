@@ -1,22 +1,44 @@
 package com.chatforia.android.messages
 
-import com.chatforia.android.network.ApiClient
+import com.chatforia.android.crypto.EncryptedMessagePayloadForUser
 import com.chatforia.android.network.ApiRequest
+import com.chatforia.android.network.ApiTransport
 import com.chatforia.android.network.HttpMethod
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.UUID
-import com.chatforia.android.crypto.EncryptedMessagePayloadForUser
+
 class MessagesRepository(
-    private val apiClient: ApiClient
+    private val apiClient: ApiTransport,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : MessageQueueRepository {
 
     private val json = Json {
         ignoreUnknownKeys = true
         explicitNulls = false
+    }
+
+    private suspend fun sendRawRequest(
+        request: ApiRequest
+    ): String {
+        return withContext(ioDispatcher) {
+            apiClient.sendRaw(request)
+        }
+    }
+
+    private suspend inline fun <reified T> sendJson(
+        request: ApiRequest
+    ): T {
+        val responseText = sendRawRequest(request)
+
+        return json.decodeFromString(
+            if (responseText.isBlank()) "{}" else responseText
+        )
     }
 
     @Serializable
@@ -59,16 +81,14 @@ class MessagesRepository(
             )
 
         val responseText =
-            withContext(Dispatchers.IO) {
-                apiClient.sendRaw(
-                    ApiRequest(
-                        path = "messages",
-                        method = HttpMethod.POST,
-                        bodyJson = bodyJson,
-                        requiresAuth = true
-                    )
+            sendRawRequest(
+                ApiRequest(
+                    path = "messages",
+                    method = HttpMethod.POST,
+                    bodyJson = bodyJson,
+                    requiresAuth = true
                 )
-            }
+            )
 
         return try {
             json.decodeFromString<SendMessageEnvelope>(responseText).resolved
@@ -85,15 +105,13 @@ class MessagesRepository(
         roomId: Int
     ): List<MessageDto> {
         val response: MessagesResponse =
-            withContext(Dispatchers.IO) {
-                apiClient.send(
-                    ApiRequest(
-                        path = "messages/$roomId?limit=100",
-                        method = HttpMethod.GET,
-                        requiresAuth = true
-                    )
+            sendJson(
+                ApiRequest(
+                    path = "messages/$roomId?limit=100",
+                    method = HttpMethod.GET,
+                    requiresAuth = true
                 )
-            }
+            )
 
         return response.items
     }
@@ -102,15 +120,13 @@ class MessagesRepository(
         roomId: Int
     ): List<RoomParticipantDto> {
         val response: RoomParticipantsResponse =
-            withContext(Dispatchers.IO) {
-                apiClient.send(
-                    ApiRequest(
-                        path = "chatrooms/$roomId/participants?_=${System.currentTimeMillis()}",
-                        method = HttpMethod.GET,
-                        requiresAuth = true
-                    )
+            sendJson(
+                ApiRequest(
+                    path = "chatrooms/$roomId/participants?_=${System.currentTimeMillis()}",
+                    method = HttpMethod.GET,
+                    requiresAuth = true
                 )
-            }
+            )
 
         return response.participants
     }
@@ -132,16 +148,14 @@ class MessagesRepository(
             )
 
         val response: MessagePreviewTranslateResponse =
-            withContext(Dispatchers.IO) {
-                apiClient.send(
-                    ApiRequest(
-                        path = "translate/message-preview",
-                        method = HttpMethod.POST,
-                        bodyJson = bodyJson,
-                        requiresAuth = true
-                    )
+            sendJson(
+                ApiRequest(
+                    path = "translate/message-preview",
+                    method = HttpMethod.POST,
+                    bodyJson = bodyJson,
+                    requiresAuth = true
                 )
-            }
+            )
 
         return response.translations
     }
@@ -161,16 +175,16 @@ class MessagesRepository(
         )
     }
 
-    suspend fun loadSmsThread(threadId: Int): SmsThreadDto {
-        return withContext(Dispatchers.IO) {
-            apiClient.send(
-                ApiRequest(
-                    path = "sms/threads/$threadId",
-                    method = HttpMethod.GET,
-                    requiresAuth = true
-                )
+    suspend fun loadSmsThread(
+        threadId: Int
+    ): SmsThreadDto {
+        return sendJson(
+            ApiRequest(
+                path = "sms/threads/$threadId",
+                method = HttpMethod.GET,
+                requiresAuth = true
             )
-        }
+        )
     }
 
     suspend fun sendSms(
@@ -187,47 +201,48 @@ class MessagesRepository(
                 )
             )
 
-        return withContext(Dispatchers.IO) {
-            apiClient.send(
-                ApiRequest(
-                    path = "sms/send",
-                    method = HttpMethod.POST,
-                    bodyJson = bodyJson,
-                    requiresAuth = true
-                )
+        return sendJson(
+            ApiRequest(
+                path = "sms/send",
+                method = HttpMethod.POST,
+                bodyJson = bodyJson,
+                requiresAuth = true
             )
-        }
+        )
     }
-    suspend fun markReadBulk(ids: List<Int>) {
+
+    suspend fun markReadBulk(
+        ids: List<Int>
+    ) {
         if (ids.isEmpty()) return
 
-        val bodyJson = json.encodeToString(
-            ReadBulkRequest(ids = ids)
-        )
+        val bodyJson =
+            json.encodeToString(
+                ReadBulkRequest(ids = ids)
+            )
 
-        withContext(Dispatchers.IO) {
-            apiClient.sendRaw(
+        sendRawRequest(
+            ApiRequest(
+                path = "messages/read-bulk",
+                method = HttpMethod.POST,
+                bodyJson = bodyJson,
+                requiresAuth = true
+            )
+        )
+    }
+
+    suspend fun loadDeltas(
+        roomId: Int,
+        sinceId: Int
+    ): List<MessageDto> {
+        val response: MessagesResponse =
+            sendJson(
                 ApiRequest(
-                    path = "messages/read-bulk",
-                    method = HttpMethod.POST,
-                    bodyJson = bodyJson,
+                    path = "messages/$roomId/deltas?sinceId=$sinceId",
+                    method = HttpMethod.GET,
                     requiresAuth = true
                 )
             )
-        }
-    }
-
-    suspend fun loadDeltas(roomId: Int, sinceId: Int): List<MessageDto> {
-        val response: MessagesResponse =
-            withContext(Dispatchers.IO) {
-                apiClient.send(
-                    ApiRequest(
-                        path = "messages/$roomId/deltas?sinceId=$sinceId",
-                        method = HttpMethod.GET,
-                        requiresAuth = true
-                    )
-                )
-            }
 
         return response.items
     }
@@ -238,15 +253,13 @@ class MessagesRepository(
     ) {
         val scope = if (deleteForEveryone) "all" else "me"
 
-        withContext(Dispatchers.IO) {
-            apiClient.sendRaw(
-                ApiRequest(
-                    path = "messages/$messageId?scope=$scope",
-                    method = HttpMethod.DELETE,
-                    requiresAuth = true
-                )
+        sendRawRequest(
+            ApiRequest(
+                path = "messages/$messageId?scope=$scope",
+                method = HttpMethod.DELETE,
+                requiresAuth = true
             )
-        }
+        )
     }
 
     suspend fun editMessage(
@@ -268,16 +281,14 @@ class MessagesRepository(
             )
 
         val responseText =
-            withContext(Dispatchers.IO) {
-                apiClient.sendRaw(
-                    ApiRequest(
-                        path = "messages/$messageId/edit",
-                        method = HttpMethod.PATCH,
-                        bodyJson = bodyJson,
-                        requiresAuth = true
-                    )
+            sendRawRequest(
+                ApiRequest(
+                    path = "messages/$messageId/edit",
+                    method = HttpMethod.PATCH,
+                    bodyJson = bodyJson,
+                    requiresAuth = true
                 )
-            }
+            )
 
         return try {
             json.decodeFromString<SendMessageEnvelope>(responseText).resolved
@@ -308,16 +319,14 @@ class MessagesRepository(
                 )
             )
 
-        return withContext(Dispatchers.IO) {
-            apiClient.send(
-                ApiRequest(
-                    path = "reports",
-                    method = HttpMethod.POST,
-                    bodyJson = bodyJson,
-                    requiresAuth = true
-                )
+        return sendJson(
+            ApiRequest(
+                path = "reports",
+                method = HttpMethod.POST,
+                bodyJson = bodyJson,
+                requiresAuth = true
             )
-        }
+        )
     }
 }
 
