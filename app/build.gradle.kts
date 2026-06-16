@@ -17,6 +17,18 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "POSTHOG_API_KEY",
+            "\"${project.findProperty("POSTHOG_API_KEY") ?: ""}\""
+        )
+
+        buildConfigField(
+            "String",
+            "POSTHOG_HOST",
+            "\"${project.findProperty("POSTHOG_HOST") ?: "https://us.i.posthog.com"}\""
+        )
     }
 
     buildTypes {
@@ -36,6 +48,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -61,6 +74,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
 
     implementation("io.coil-kt:coil-compose:2.7.0")
+
+    implementation("com.posthog:posthog-android:3.47.0")
 
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.core:core-ktx:1.13.1")
