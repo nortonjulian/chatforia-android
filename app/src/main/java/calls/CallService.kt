@@ -8,14 +8,14 @@ import kotlinx.serialization.json.Json
 
 class CallService(
     private val apiClient: ApiClient
-) {
+) : CallBackendService {
     private val json = Json {
         ignoreUnknownKeys = true
         explicitNulls = false
         encodeDefaults = true
     }
 
-    fun createAppCall(
+    override fun createAppCall(
         calleeId: Int,
         video: Boolean
     ): Int {
@@ -38,7 +38,7 @@ class CallService(
         return response.resolvedCallId
     }
 
-    fun startExternalCall(phoneNumber: String): Int {
+    override fun startExternalCall(phoneNumber: String): Int {
         val response: CreateCallResponse =
             apiClient.send(
                 ApiRequest(
@@ -54,10 +54,10 @@ class CallService(
         return response.resolvedCallId
     }
 
-    fun endCall(
+    override fun endCall(
         callId: Int,
-        reason: String? = null,
-        durationSec: Int? = null
+        reason: String?,
+        durationSec: Int?
     ) {
         apiClient.sendRaw(
             ApiRequest(
@@ -75,7 +75,7 @@ class CallService(
         )
     }
 
-    fun fetchVoiceToken(): VoiceTokenResponse {
+    override fun fetchVoiceToken(): VoiceTokenResponse {
         return apiClient.send(
             ApiRequest(
                 path = "voice/client/token",

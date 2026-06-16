@@ -8,7 +8,7 @@ import com.goterl.lazysodium.LazySodiumAndroid
 import com.goterl.lazysodium.SodiumAndroid
 import java.util.UUID
 
-class DeviceIdentityStorage(context: Context) {
+class DeviceIdentityStorage(context: Context) : DeviceIdentityStore {
     private val sodium = LazySodiumAndroid(SodiumAndroid())
 
     private val masterKey = MasterKey.Builder(context)
@@ -23,7 +23,7 @@ class DeviceIdentityStorage(context: Context) {
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
 
-    fun getOrCreateDeviceId(): String {
+    override fun getOrCreateDeviceId(): String {
         val existing = prefs.getString("chatforia.device.id", null)
         if (!existing.isNullOrBlank()) return existing
 
@@ -36,7 +36,7 @@ class DeviceIdentityStorage(context: Context) {
         return newId
     }
 
-    fun getOrCreateKeyPair(): Pair<String, String> {
+    override fun getOrCreateKeyPair(): Pair<String, String> {
         val existingPublic = readPublicKey()
         val existingPrivate = readPrivateKey()
 

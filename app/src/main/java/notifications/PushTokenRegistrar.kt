@@ -1,16 +1,16 @@
 package com.chatforia.android.notifications
 
 import android.util.Log
-import com.chatforia.android.crypto.DeviceIdentityStorage
+import com.chatforia.android.crypto.DeviceIdentityStore
 import com.chatforia.android.crypto.DeviceRegisterRequest
-import com.chatforia.android.crypto.LinkedDevicesRepository
-import com.google.firebase.messaging.FirebaseMessaging
-import kotlinx.coroutines.tasks.await
+import com.chatforia.android.crypto.LinkedDevicesDataSource
 
 class PushTokenRegistrar(
-    private val deviceIdentityStorage: DeviceIdentityStorage,
-    private val linkedDevicesRepository: LinkedDevicesRepository
+    private val deviceIdentityStorage: DeviceIdentityStore,
+    private val linkedDevicesRepository: LinkedDevicesDataSource,
+    private val fcmTokenProvider: FcmTokenProvider = FirebaseFcmTokenProvider()
 ) : PushTokenRegisterer {
+
     override suspend fun registerCurrentFcmToken() {
         try {
             Log.d("ChatforiaFCM", "Starting FCM registration")
@@ -31,7 +31,7 @@ class PushTokenRegistrar(
             )
             Log.d("ChatforiaFCM", "Device registered with backend")
 
-            val token = FirebaseMessaging.getInstance().token.await()
+            val token = fcmTokenProvider.currentToken()
             Log.d("ChatforiaFCM", "FCM token acquired: ${token.take(24)}...")
 
             linkedDevicesRepository.registerPushToken(
@@ -39,7 +39,6 @@ class PushTokenRegistrar(
                 pushToken = token
             )
             Log.d("ChatforiaFCM", "Registered FCM token for device $deviceId")
-
         } catch (e: Exception) {
             Log.e("ChatforiaFCM", "Failed to register FCM token", e)
         }

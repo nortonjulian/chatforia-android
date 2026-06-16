@@ -3,31 +3,29 @@ package com.chatforia.android.calls
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chatforia.android.auth.UserDto
-import com.chatforia.android.socket.SocketManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import android.content.Context
-import com.chatforia.android.sounds.AudioPlayerService
+import kotlinx.coroutines.CoroutineDispatcher
 
 class AndroidCallManager(
-    private val context: Context,
-    private val socketManager: SocketManager,
-    private val callService: CallService,
-    private val videoRepository: VideoCallRepository,
-    private val voiceManager: TwilioVoiceManager,
-    private val videoManager: TwilioVideoManager
+    context: Context,
+    private val socketManager: CallRealtimeEvents,
+    private val callService: CallBackendService,
+    private val videoRepository: VideoCallBackend,
+    private val voiceManager: CallAudioClient,
+    private val videoManager: CallVideoClient,
+    private val ringtonePlayer: CallRingtonePlayer = AudioCallRingtonePlayer(context),
+    private val callDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ViewModel() {
 
     private val json = Json {
         ignoreUnknownKeys = true
         explicitNulls = false
     }
-
-    private val ringtonePlayer =
-        AudioPlayerService(context)
 
     private val _state =
         MutableStateFlow<AndroidCallState>(AndroidCallState.Idle)
@@ -42,7 +40,7 @@ class AndroidCallManager(
         calleeId: Int,
         displayName: String = "Audio Call"
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(callDispatcher) {
             try {
                 val callId =
                     callService.createAppCall(
@@ -64,7 +62,7 @@ class AndroidCallManager(
                 voiceManager.startCall(
                     accessToken = token.token,
                     to = calleeId.toString(),
-                    listener = object : TwilioVoiceManager.Listener {
+                    listener = object : CallAudioClient.Listener {
 
                         override fun onConnected() {
                             _state.value = AndroidCallState.Active(session)
@@ -90,7 +88,7 @@ class AndroidCallManager(
     }
 
     fun startPhoneCall(phoneNumber: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(callDispatcher) {
             try {
                 val callId =
                     callService.startExternalCall(phoneNumber)
@@ -109,7 +107,7 @@ class AndroidCallManager(
                 voiceManager.startCall(
                     accessToken = token.token,
                     to = phoneNumber,
-                    listener = object : TwilioVoiceManager.Listener {
+                    listener = object : CallAudioClient.Listener {
 
                         override fun onConnected() {
                             _state.value = AndroidCallState.Active(session)
@@ -140,7 +138,7 @@ class AndroidCallManager(
         displayName: String = "Video Call",
         chatRoomId: Int? = null
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(callDispatcher) {
             try {
                 val start =
                     videoRepository.startVideo(
@@ -168,7 +166,7 @@ class AndroidCallManager(
                 videoManager.connect(
                     accessToken = token.token,
                     roomName = start.roomName,
-                    listener = object : TwilioVideoManager.Listener {
+                    listener = object : CallVideoClient.Listener {
                         override fun onConnected() {
                             _state.value = AndroidCallState.Active(session)
                         }
@@ -243,7 +241,7 @@ class AndroidCallManager(
         currentUser: UserDto,
         payload: IncomingCallPayload
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(callDispatcher) {
             try {
                 val roomName =
                     payload.roomName
@@ -267,7 +265,7 @@ class AndroidCallManager(
                 videoManager.connect(
                     accessToken = token.token,
                     roomName = roomName,
-                    listener = object : TwilioVideoManager.Listener {
+                    listener = object : CallVideoClient.Listener {
                         override fun onConnected() {
                             _state.value = AndroidCallState.Active(session)
                         }
@@ -299,7 +297,7 @@ class AndroidCallManager(
         val callId = ringing.payload.callId
 
         if (callId != null) {
-            viewModelScope.launch(Dispatchers.IO) {
+            viewModelScope.launch(callDispatcher) {
                 runCatching {
                     callService.endCall(
                         callId = callId,
@@ -379,7 +377,7 @@ class AndroidCallManager(
         videoManager.disconnect()
 
         if (callId != null) {
-            viewModelScope.launch(Dispatchers.IO) {
+            viewModelScope.launch(callDispatcher) {
                 runCatching {
                     callService.endCall(
                         callId = callId,

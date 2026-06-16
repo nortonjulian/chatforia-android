@@ -8,16 +8,16 @@ import kotlinx.serialization.json.Json
 
 class VideoCallRepository(
     private val apiClient: ApiClient
-) {
+) : VideoCallBackend {
     private val json = Json {
         ignoreUnknownKeys = true
         explicitNulls = false
         encodeDefaults = true
     }
 
-    fun startVideo(
+    override fun startVideo(
         calleeId: Int,
-        chatRoomId: Int? = null
+        chatRoomId: Int?
     ): VideoStartResponse {
         return apiClient.send(
             ApiRequest(
@@ -34,7 +34,7 @@ class VideoCallRepository(
         )
     }
 
-    fun fetchVideoToken(
+    override fun fetchVideoToken(
         identity: String,
         roomName: String
     ): VideoTokenResponse {

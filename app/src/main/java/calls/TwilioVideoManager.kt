@@ -12,7 +12,7 @@ import com.twilio.video.Video
 
 class TwilioVideoManager(
     private val context: Context
-) {
+) : CallVideoClient {
     interface Listener {
         fun onConnected() {}
         fun onFailed(message: String) {}
@@ -24,12 +24,12 @@ class TwilioVideoManager(
     private var currentCameraId: String? = null
     private var localAudioTrack: LocalAudioTrack? = null
     private var localVideoTrack: LocalVideoTrack? = null
-    private var listener: Listener? = null
+    private var listener: CallVideoClient.Listener? = null
 
-    fun connect(
+    override fun connect(
         accessToken: String,
         roomName: String,
-        listener: Listener
+        listener: CallVideoClient.Listener
     ) {
         this.listener = listener
 
@@ -79,20 +79,20 @@ class TwilioVideoManager(
             )
     }
 
-    fun disconnect() {
+    override fun disconnect() {
         room?.disconnect()
         cleanup()
     }
 
-    fun setMuted(isMuted: Boolean) {
+    override fun setMuted(isMuted: Boolean) {
         localAudioTrack?.enable(!isMuted)
     }
 
-    fun setCameraEnabled(enabled: Boolean) {
+    override fun setCameraEnabled(enabled: Boolean) {
         localVideoTrack?.enable(enabled)
     }
 
-    fun flipCamera() {
+    override fun flipCamera() {
         // TODO: wire camera switching after confirming Twilio Android camera API.
     }
 

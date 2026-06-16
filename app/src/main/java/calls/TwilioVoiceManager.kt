@@ -9,7 +9,7 @@ import com.twilio.voice.Voice
 
 class TwilioVoiceManager(
     private val context: Context
-) {
+) : CallAudioClient {
     interface Listener {
         fun onRinging() {}
         fun onConnected() {}
@@ -20,10 +20,10 @@ class TwilioVoiceManager(
     private var activeCall: Call? = null
     private var isMuted: Boolean = false
 
-    fun startCall(
+    override fun startCall(
         accessToken: String,
         to: String,
-        listener: Listener
+        listener: CallAudioClient.Listener
     ) {
         val connectOptions =
             ConnectOptions.Builder(accessToken)
@@ -76,22 +76,22 @@ class TwilioVoiceManager(
             )
     }
 
-    fun acceptCall(): Boolean {
+    override fun acceptCall(): Boolean {
         return activeCall != null
     }
 
-    fun endCall() {
+    override fun endCall() {
         activeCall?.disconnect()
         activeCall = null
         isMuted = false
     }
 
-    fun setMuted(isMuted: Boolean) {
+    override fun setMuted(isMuted: Boolean) {
         this.isMuted = isMuted
         activeCall?.mute(isMuted)
     }
 
-    fun setSpeaker(enabled: Boolean) {
+    override fun setSpeaker(enabled: Boolean) {
         val audioManager =
             context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 

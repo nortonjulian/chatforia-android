@@ -73,14 +73,14 @@ data class ApproveDeviceRequest(
 
 class LinkedDevicesRepository(
     private val apiClient: ApiClient
-) {
+) : LinkedDevicesDataSource {
     private val json = Json {
         ignoreUnknownKeys = true
         explicitNulls = false
         encodeDefaults = true
     }
 
-    fun fetchMine(): List<LinkedDeviceDto> {
+    override fun fetchMine(): List<LinkedDeviceDto> {
         val response: LinkedDevicesResponse =
             apiClient.send(
                 ApiRequest(
@@ -93,7 +93,7 @@ class LinkedDevicesRepository(
         return response.resolvedItems
     }
 
-    fun fetchPendingPairing(): List<LinkedDeviceDto> {
+    override fun fetchPendingPairing(): List<LinkedDeviceDto> {
         val response: LinkedDevicesResponse =
             apiClient.send(
                 ApiRequest(
@@ -106,7 +106,7 @@ class LinkedDevicesRepository(
         return response.resolvedItems
     }
 
-    fun registerCurrentDevice(request: DeviceRegisterRequest) {
+    override fun registerCurrentDevice(request: DeviceRegisterRequest) {
         apiClient.sendRaw(
             ApiRequest(
                 path = "devices/register",
@@ -117,7 +117,7 @@ class LinkedDevicesRepository(
         )
     }
 
-    fun approve(deviceId: String, wrappedAccountKey: String) {
+    override fun approve(deviceId: String, wrappedAccountKey: String) {
         apiClient.sendRaw(
             ApiRequest(
                 path = "devices/pairing/approve",
@@ -133,7 +133,7 @@ class LinkedDevicesRepository(
         )
     }
 
-    fun reject(deviceId: String) {
+    override fun reject(deviceId: String) {
         apiClient.sendRaw(
             ApiRequest(
                 path = "devices/pairing/reject",
@@ -144,7 +144,7 @@ class LinkedDevicesRepository(
         )
     }
 
-    fun revoke(deviceId: String) {
+    override fun revoke(deviceId: String) {
         apiClient.sendRaw(
             ApiRequest(
                 path = "devices/revoke",
@@ -155,7 +155,7 @@ class LinkedDevicesRepository(
         )
     }
 
-    fun heartbeat(deviceId: String) {
+    override fun heartbeat(deviceId: String) {
         apiClient.sendRaw(
             ApiRequest(
                 path = "devices/heartbeat",
@@ -166,7 +166,7 @@ class LinkedDevicesRepository(
         )
     }
 
-    fun requestPairing(request: DeviceRegisterRequest) {
+    override fun requestPairing(request: DeviceRegisterRequest) {
         apiClient.sendRaw(
             ApiRequest(
                 path = "devices/pairing/request",
@@ -177,7 +177,7 @@ class LinkedDevicesRepository(
         )
     }
 
-    fun fetchPairingStatus(deviceId: String): LinkedDeviceDto? {
+    override fun fetchPairingStatus(deviceId: String): LinkedDeviceDto? {
         val response: DeviceResponse =
             apiClient.send(
                 ApiRequest(
@@ -190,7 +190,7 @@ class LinkedDevicesRepository(
         return response.device
     }
 
-    fun registerPushToken(
+    override fun registerPushToken(
         deviceId: String,
         pushToken: String
     ) {

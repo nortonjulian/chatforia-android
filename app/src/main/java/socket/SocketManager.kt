@@ -10,8 +10,9 @@ import kotlinx.coroutines.flow.asSharedFlow
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URI
+import com.chatforia.android.calls.CallRealtimeEvents
 
-class SocketManager : ChatRealtimeEvents {
+class SocketManager : ChatRealtimeEvents, CallRealtimeEvents {
     private var socket: Socket? = null
     private val joinedRoomIds = mutableSetOf<Int>()
 
@@ -34,16 +35,16 @@ class SocketManager : ChatRealtimeEvents {
     override val socketConnected: SharedFlow<Unit> = _socketConnected.asSharedFlow()
 
     private val _incomingCalls = MutableSharedFlow<String>(extraBufferCapacity = 64)
-    val incomingCalls: SharedFlow<String> = _incomingCalls.asSharedFlow()
+    override val incomingCalls: SharedFlow<String> = _incomingCalls.asSharedFlow()
 
     private val _callEnded = MutableSharedFlow<String>(extraBufferCapacity = 64)
-    val callEnded: SharedFlow<String> = _callEnded.asSharedFlow()
+    override val callEnded: SharedFlow<String> = _callEnded.asSharedFlow()
 
     private val _incomingVideoCalls = MutableSharedFlow<String>(extraBufferCapacity = 64)
-    val incomingVideoCalls: SharedFlow<String> = _incomingVideoCalls.asSharedFlow()
+    override val incomingVideoCalls: SharedFlow<String> = _incomingVideoCalls.asSharedFlow()
 
     private val _videoCallEnded = MutableSharedFlow<String>(extraBufferCapacity = 64)
-    val videoCallEnded: SharedFlow<String> = _videoCallEnded.asSharedFlow()
+    override val videoCallEnded: SharedFlow<String> = _videoCallEnded.asSharedFlow()
 
     private val _voicemailEvents = MutableSharedFlow<String>(extraBufferCapacity = 64)
     val voicemailEvents: SharedFlow<String> = _voicemailEvents.asSharedFlow()
