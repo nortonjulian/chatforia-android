@@ -6,7 +6,7 @@ import androidx.security.crypto.MasterKey
 
 class TokenStorage(
     context: Context
-) {
+) : AuthTokenStorage {
     private val masterKey = MasterKey.Builder(context)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
         .build()
@@ -19,17 +19,17 @@ class TokenStorage(
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
 
-    fun save(token: String) {
+    override fun save(token: String) {
         prefs.edit()
             .putString("chatforia.auth.token", token)
             .apply()
     }
 
-    fun read(): String? {
+    override fun read(): String? {
         return prefs.getString("chatforia.auth.token", null)
     }
 
-    fun clear() {
+    override fun clear() {
         prefs.edit()
             .remove("chatforia.auth.token")
             .apply()

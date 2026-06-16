@@ -6,7 +6,7 @@ import com.goterl.lazysodium.SodiumAndroid
 
 class AccountKeyManager(
     private val keyStorage: KeyStorage
-) {
+) : AccountKeyService {
     private val sodium = LazySodiumAndroid(SodiumAndroid())
 
     fun generateNewAccountKeys(): Pair<String, String> {
@@ -25,7 +25,7 @@ class AccountKeyManager(
         )
     }
 
-    suspend fun ensureLocalKeysExist(
+    override suspend fun ensureLocalKeysExist(
         serverPublicKey: String?,
         uploadPublicKey: suspend (String) -> Unit
     ) {
@@ -67,7 +67,7 @@ class AccountKeyManager(
         uploadPublicKey(publicKey)
     }
 
-    suspend fun resetAccountEncryption(
+    override suspend fun resetAccountEncryption(
         uploadPublicKey: suspend (String) -> Unit
     ) {
         val (publicKey, privateKey) = generateNewAccountKeys()

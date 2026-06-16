@@ -980,6 +980,273 @@ class ChatThreadViewModelTest {
             assertEquals("2026-01-01T00:03:00Z", expired.deletedAt)
         }
 
+    @Test
+    fun realtimeReadReceipt_addsReaderToMessage() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val realtime = FakeRealtimeEvents()
+            val viewModel = createViewModel(repository)
+
+            viewModel.connectRealtime(
+                roomId = 10,
+                socketManager = realtime,
+                currentUserId = 1
+            )
+
+            runCurrent()
+
+            realtime.emitMessageUpsert(
+                realtimeJson.encodeToString(
+                    message(
+                        id = 120,
+                        senderId = 1,
+                        text = "read me"
+                    )
+                )
+            )
+
+            advanceUntilIdle()
+
+            realtime.emitMessageRead(
+                """
+            {
+              "messageId": 120,
+              "reader": {
+                "id": 99,
+                "username": "reader"
+              },
+              "readAt": "2026-01-01T00:04:00Z"
+            }
+            """.trimIndent()
+            )
+
+            advanceUntilIdle()
+
+            val updated = viewModel.messages.value.single()
+
+            assertEquals(120, updated.id)
+            assertEquals(1, updated.readBy.size)
+            assertEquals(99, updated.readBy.single().id)
+            assertEquals("reader", updated.readBy.single().username)
+        }
+
+    @Test
+    fun realtimeReadReceipt_doesNotDuplicateSameReader() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val realtime = FakeRealtimeEvents()
+            val viewModel = createViewModel(repository)
+
+            viewModel.connectRealtime(
+                roomId = 10,
+                socketManager = realtime,
+                currentUserId = 1
+            )
+
+            runCurrent()
+
+            realtime.emitMessageUpsert(
+                realtimeJson.encodeToString(
+                    message(
+                        id = 121,
+                        senderId = 1,
+                        text = "read twice"
+                    )
+                )
+            )
+
+            advanceUntilIdle()
+
+            val payload =
+                """
+            {
+              "messageId": 121,
+              "reader": {
+                "id": 99,
+                "username": "reader"
+              },
+              "readAt": "2026-01-01T00:04:00Z"
+            }
+            """.trimIndent()
+
+            realtime.emitMessageRead(payload)
+            realtime.emitMessageRead(payload)
+
+            advanceUntilIdle()
+
+            val updated = viewModel.messages.value.single()
+
+            assertEquals(121, updated.id)
+            assertEquals(1, updated.readBy.size)
+            assertEquals(99, updated.readBy.single().id)
+        }
+
+    @Test
+    fun realtimeReadReceipt_missingMessageIdDoesNothing() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val realtime = FakeRealtimeEvents()
+            val viewModel = createViewModel(repository)
+
+            viewModel.connectRealtime(
+                roomId = 10,
+                socketManager = realtime,
+                currentUserId = 1
+            )
+
+            runCurrent()
+
+            realtime.emitMessageUpsert(
+                realtimeJson.encodeToString(
+                    message(
+                        id = 122,
+                        senderId = 1,
+                        text = "no message id"
+                    )
+                )
+            )
+
+            advanceUntilIdle()
+
+            realtime.emitMessageRead(
+                """
+            {
+              "reader": {
+                "id": 99,
+                "username": "reader"
+              },
+              "readAt": "2026-01-01T00:04:00Z"
+            }
+            """.trimIndent()
+            )
+
+            advanceUntilIdle()
+
+            val updated = viewModel.messages.value.single()
+
+            assertEquals(122, updated.id)
+            assertTrue(updated.readBy.isEmpty())
+        }
+
+    @Test
+    fun smsRealtime_incomingMessageIsAdded() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val realtime = FakeRealtimeEvents()
+            val viewModel = createViewModel(repository)
+
+            viewModel.connectSmsRealtime(realtime)
+
+            runCurrent()
+
+            realtime.emitSmsMessage(
+                """
+            {
+              "id": 200,
+              "threadId": 20,
+              "direction": "in",
+              "fromNumber": "+15550001111",
+              "toNumber": "+15550002222",
+              "body": "hello from sms realtime",
+              "provider": "twilio",
+              "providerMessageId": "SM200",
+              "createdAt": "2026-01-01T00:05:00Z"
+            }
+            """.trimIndent()
+            )
+
+            advanceUntilIdle()
+
+            assertEquals(1, viewModel.smsMessages.value.size)
+
+            val sms = viewModel.smsMessages.value.single()
+
+            assertEquals(200, sms.id)
+            assertEquals(20, sms.threadId)
+            assertEquals("in", sms.direction)
+            assertEquals("+15550001111", sms.fromNumber)
+            assertEquals("hello from sms realtime", sms.body)
+            assertFalse(sms.optimistic)
+            assertFalse(sms.failed)
+        }
+
+    @Test
+    fun smsRealtime_duplicateMessageUpdatesExistingSms() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val realtime = FakeRealtimeEvents()
+            val viewModel = createViewModel(repository)
+
+            viewModel.connectSmsRealtime(realtime)
+
+            runCurrent()
+
+            realtime.emitSmsMessage(
+                """
+            {
+              "id": 201,
+              "threadId": 20,
+              "direction": "in",
+              "fromNumber": "+15550001111",
+              "toNumber": "+15550002222",
+              "body": "before update",
+              "provider": "twilio",
+              "providerMessageId": "SM201",
+              "createdAt": "2026-01-01T00:05:00Z"
+            }
+            """.trimIndent()
+            )
+
+            advanceUntilIdle()
+
+            realtime.emitSmsMessage(
+                """
+            {
+              "id": 201,
+              "threadId": 20,
+              "direction": "in",
+              "fromNumber": "+15550001111",
+              "toNumber": "+15550002222",
+              "body": "after update",
+              "provider": "twilio",
+              "providerMessageId": "SM201",
+              "createdAt": "2026-01-01T00:05:00Z",
+              "editedAt": "2026-01-01T00:06:00Z"
+            }
+            """.trimIndent()
+            )
+
+            advanceUntilIdle()
+
+            assertEquals(1, viewModel.smsMessages.value.size)
+
+            val sms = viewModel.smsMessages.value.single()
+
+            assertEquals(201, sms.id)
+            assertEquals("after update", sms.body)
+            assertEquals("2026-01-01T00:06:00Z", sms.editedAt)
+        }
+
+    @Test
+    fun smsRealtime_malformedPayloadDoesNotCrash() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val realtime = FakeRealtimeEvents()
+            val viewModel = createViewModel(repository)
+
+            viewModel.connectSmsRealtime(realtime)
+
+            runCurrent()
+
+            realtime.emitSmsMessage("{ this is not valid json")
+
+            advanceUntilIdle()
+
+            assertTrue(viewModel.smsMessages.value.isEmpty())
+            assertEquals(null, viewModel.error.value)
+        }
+
+
     private suspend fun createViewModel(
         repository: FakeChatThreadRepository
     ): ChatThreadViewModel {
@@ -1350,6 +1617,14 @@ class ChatThreadViewModelTest {
 
         suspend fun emitMessageExpired(payload: String) {
             _messageExpired.emit(payload)
+        }
+
+        suspend fun emitMessageRead(payload: String) {
+            _messageReads.emit(payload)
+        }
+
+        suspend fun emitSmsMessage(payload: String) {
+            _smsMessages.emit(payload)
         }
     }
 }

@@ -10,8 +10,8 @@ import kotlinx.coroutines.tasks.await
 class PushTokenRegistrar(
     private val deviceIdentityStorage: DeviceIdentityStorage,
     private val linkedDevicesRepository: LinkedDevicesRepository
-) {
-    suspend fun registerCurrentFcmToken() {
+) : PushTokenRegisterer {
+    override suspend fun registerCurrentFcmToken() {
         try {
             Log.d("ChatforiaFCM", "Starting FCM registration")
 

@@ -1,51 +1,71 @@
 package com.chatforia.android.auth
 
-import com.chatforia.android.network.ApiClient
 import com.chatforia.android.network.ApiRequest
+import com.chatforia.android.network.ApiTransport
 import com.chatforia.android.network.HttpMethod
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 class AuthRepository(
-    private val apiClient: ApiClient,
-    private val tokenStorage: TokenStorage
-) {
+    private val apiClient: ApiTransport,
+    private val tokenStorage: AuthTokenStorage,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+) : AuthSessionRepository {
     private val json = Json {
         ignoreUnknownKeys = true
         explicitNulls = false
     }
 
-    suspend fun login(
+    private suspend fun sendRawRequest(
+        request: ApiRequest
+    ): String {
+        return withContext(ioDispatcher) {
+            apiClient.sendRaw(request)
+        }
+    }
+
+    private suspend inline fun <reified T> sendJson(
+        request: ApiRequest
+    ): T {
+        val responseText = sendRawRequest(request)
+
+        return json.decodeFromString(
+            if (responseText.isBlank()) "{}" else responseText
+        )
+    }
+
+    override suspend fun login(
         identifier: String,
         password: String
     ): UserDto {
-        val bodyJson = json.encodeToString(
-            LoginRequest(
-                identifier = identifier.trim(),
-                password = password
+        val bodyJson =
+            json.encodeToString(
+                LoginRequest(
+                    identifier = identifier.trim(),
+                    password = password
+                )
             )
-        )
 
         val response: LoginResponse =
-            withContext(Dispatchers.IO) {
-                apiClient.send(
-                    ApiRequest(
-                        path = "auth/login",
-                        method = HttpMethod.POST,
-                        bodyJson = bodyJson,
-                        requiresAuth = false
-                    )
+            sendJson(
+                ApiRequest(
+                    path = "auth/login",
+                    method = HttpMethod.POST,
+                    bodyJson = bodyJson,
+                    requiresAuth = false
                 )
-            }
+            )
 
         tokenStorage.save(response.token)
 
         return response.user
     }
 
-    suspend fun loginWithGoogle(
+    override suspend fun loginWithGoogle(
         idToken: String
     ): UserDto {
         val bodyJson =
@@ -56,58 +76,53 @@ class AuthRepository(
             )
 
         val response: LoginResponse =
-            withContext(Dispatchers.IO) {
-                apiClient.send(
-                    ApiRequest(
-                        path = "auth/oauth/google/android",
-                        method = HttpMethod.POST,
-                        bodyJson = bodyJson,
-                        requiresAuth = false
-                    )
+            sendJson(
+                ApiRequest(
+                    path = "auth/oauth/google/android",
+                    method = HttpMethod.POST,
+                    bodyJson = bodyJson,
+                    requiresAuth = false
                 )
-            }
+            )
 
         tokenStorage.save(response.token)
 
         return response.user
     }
 
-    suspend fun fetchMe(): UserDto {
+    override suspend fun fetchMe(): UserDto {
         val response: MeResponse =
-            withContext(Dispatchers.IO) {
-                apiClient.send(
-                    ApiRequest(
-                        path = "auth/me",
-                        method = HttpMethod.GET,
-                        requiresAuth = true
-                    )
+            sendJson(
+                ApiRequest(
+                    path = "auth/me",
+                    method = HttpMethod.GET,
+                    requiresAuth = true
                 )
-            }
+            )
 
         return response.user
     }
 
-    suspend fun rotateEncryptionKey(publicKey: String) {
-        val bodyJson = json.encodeToString(
-            RotateEncryptionKeyRequest(
-                publicKey = publicKey,
-                invalidateExistingBackup = true
-            )
-        )
-
-        withContext(Dispatchers.IO) {
-            apiClient.sendRaw(
-                ApiRequest(
-                    path = "auth/keys/rotate",
-                    method = HttpMethod.POST,
-                    bodyJson = bodyJson,
-                    requiresAuth = true
+    override suspend fun rotateEncryptionKey(publicKey: String) {
+        val bodyJson =
+            json.encodeToString(
+                RotateEncryptionKeyRequest(
+                    publicKey = publicKey,
+                    invalidateExistingBackup = true
                 )
             )
-        }
+
+        sendRawRequest(
+            ApiRequest(
+                path = "auth/keys/rotate",
+                method = HttpMethod.POST,
+                bodyJson = bodyJson,
+                requiresAuth = true
+            )
+        )
     }
 
-    suspend fun bootstrap(): UserDto? {
+    override suspend fun bootstrap(): UserDto? {
         val token = tokenStorage.read()
 
         if (token.isNullOrBlank()) {
@@ -130,16 +145,14 @@ class AuthRepository(
                 )
             )
 
-        withContext(Dispatchers.IO) {
-            apiClient.sendRaw(
-                ApiRequest(
-                    path = "auth/resend-email",
-                    method = HttpMethod.POST,
-                    bodyJson = bodyJson,
-                    requiresAuth = false
-                )
+        sendRawRequest(
+            ApiRequest(
+                path = "auth/resend-email",
+                method = HttpMethod.POST,
+                bodyJson = bodyJson,
+                requiresAuth = false
             )
-        }
+        )
     }
 
     suspend fun forgotPassword(identifier: String) {
@@ -150,16 +163,14 @@ class AuthRepository(
                 )
             )
 
-        withContext(Dispatchers.IO) {
-            apiClient.sendRaw(
-                ApiRequest(
-                    path = "auth/forgot-password",
-                    method = HttpMethod.POST,
-                    bodyJson = bodyJson,
-                    requiresAuth = false
-                )
+        sendRawRequest(
+            ApiRequest(
+                path = "auth/forgot-password",
+                method = HttpMethod.POST,
+                bodyJson = bodyJson,
+                requiresAuth = false
             )
-        }
+        )
     }
 
     suspend fun register(
@@ -186,23 +197,21 @@ class AuthRepository(
                 )
             )
 
-        return withContext(Dispatchers.IO) {
-            apiClient.send(
-                ApiRequest(
-                    path = "auth/register",
-                    method = HttpMethod.POST,
-                    bodyJson = bodyJson,
-                    requiresAuth = false
-                )
+        return sendJson(
+            ApiRequest(
+                path = "auth/register",
+                method = HttpMethod.POST,
+                bodyJson = bodyJson,
+                requiresAuth = false
             )
-        }
+        )
     }
 
-    fun saveExternalToken(token: String) {
+    override fun saveExternalToken(token: String) {
         tokenStorage.save(token)
     }
 
-    fun logout() {
+    override fun logout() {
         tokenStorage.clear()
     }
 }

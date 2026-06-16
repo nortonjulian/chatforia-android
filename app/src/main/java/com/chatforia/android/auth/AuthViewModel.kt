@@ -3,28 +3,33 @@ package com.chatforia.android.auth
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.chatforia.android.crypto.AccountKeyManager
-import com.chatforia.android.notifications.PushTokenRegistrar
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
+import com.chatforia.android.crypto.AccountKeyService
+import com.chatforia.android.notifications.PushTokenRegisterer
+import kotlinx.coroutines.CoroutineDispatcher
 
 class AuthViewModel(
-    private val repository: AuthRepository,
-    private val accountKeyManager: AccountKeyManager,
-    private val pushTokenRegistrar: PushTokenRegistrar? = null
+    private val repository: AuthSessionRepository,
+    private val accountKeyManager: AccountKeyService,
+    private val pushTokenRegistrar: PushTokenRegisterer? = null,
+    private val pushDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val autoBootstrap: Boolean = true
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<AuthState>(AuthState.Loading)
     val state: StateFlow<AuthState> = _state
 
     init {
-        bootstrap()
+        if (autoBootstrap) {
+            bootstrap()
+        }
     }
 
     private fun registerPushTokenIfPossible() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(pushDispatcher) {
             android.util.Log.d(
                 "ChatforiaFCM",
                 "registerPushTokenIfPossible called. registrarNull=${pushTokenRegistrar == null}"
