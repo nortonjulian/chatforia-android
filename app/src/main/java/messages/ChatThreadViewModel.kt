@@ -28,6 +28,10 @@ class ChatThreadViewModel(
 
     private val messageStore = MessageStore()
 
+    private val messageDecryptor: DisplayMessageDecryptor by lazy {
+        messageDecryptorFactory()
+    }
+
     private val messageQueueManager =
         MessageQueueManager(
             repository = repository,
@@ -744,6 +748,8 @@ class ChatThreadViewModel(
                 targetLangs = targetLangs
             )
 
+        val messageEncryptor = messageEncryptorFactory()
+
         return participants.mapNotNull { participant ->
             val user = participant.user ?: return@mapNotNull null
             val publicKey = user.publicKey ?: return@mapNotNull null
@@ -768,7 +774,7 @@ class ChatThreadViewModel(
                     translatedForUser
                 }
 
-            participant.userId.toString() to messageEncryptorFactory().encryptForSingleUser(
+            participant.userId.toString() to messageEncryptor.encryptForSingleUser(
                 plaintext = plaintextForUser,
                 recipientUserId = participant.userId,
                 recipientPublicKeyB64 = publicKey,
@@ -799,7 +805,7 @@ class ChatThreadViewModel(
     ): MessageDto {
         val privateKey = keyStorage.readPrivateKey()
 
-        val decrypted = messageDecryptorFactory().decryptMessageOrNull(
+        val decrypted = messageDecryptor.decryptMessageOrNull(
             message = message,
             currentUserPrivateKeyB64 = privateKey,
             currentUserId = currentUserId
