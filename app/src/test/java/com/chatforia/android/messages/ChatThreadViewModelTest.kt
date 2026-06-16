@@ -26,10 +26,22 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runCurrent
+import com.chatforia.android.socket.ChatRealtimeEvents
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+
 
 @RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChatThreadViewModelTest {
+
+    private val realtimeJson = Json {
+        ignoreUnknownKeys = true
+        explicitNulls = false
+    }
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
@@ -703,6 +715,271 @@ class ChatThreadViewModelTest {
             assertEquals("Report boom", viewModel.error.value)
         }
 
+    @Test
+    fun realtimeMessageUpsert_addsIncomingMessage() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val realtime = FakeRealtimeEvents()
+            val viewModel = createViewModel(repository)
+
+            viewModel.connectRealtime(
+                roomId = 10,
+                socketManager = realtime,
+                currentUserId = 1
+            )
+
+            runCurrent()
+
+            realtime.emitMessageUpsert(
+                realtimeJson.encodeToString(
+                    message(
+                        id = 80,
+                        senderId = 99,
+                        text = "incoming realtime",
+                        createdAt = "2026-01-01T00:00:01Z"
+                    )
+                )
+            )
+
+            advanceUntilIdle()
+
+            assertEquals(listOf(10), realtime.joinedRooms)
+            assertEquals(1, viewModel.messages.value.size)
+            assertEquals(80, viewModel.messages.value.single().id)
+            assertEquals("incoming realtime", viewModel.messages.value.single().rawContent)
+        }
+
+    @Test
+    fun realtimeMessageUpsert_ignoresDifferentRoom() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val realtime = FakeRealtimeEvents()
+            val viewModel = createViewModel(repository)
+
+            viewModel.connectRealtime(
+                roomId = 10,
+                socketManager = realtime,
+                currentUserId = 1
+            )
+
+            runCurrent()
+
+            realtime.emitMessageUpsert(
+                realtimeJson.encodeToString(
+                    message(
+                        id = 81,
+                        senderId = 99,
+                        text = "wrong room"
+                    ).copy(
+                        chatRoomId = 99
+                    )
+                )
+            )
+
+            advanceUntilIdle()
+
+            assertTrue(viewModel.messages.value.isEmpty())
+        }
+
+    @Test
+    fun realtimeAck_updatesOptimisticMessageWithServerId() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            repository.queuedSendGate = CompletableDeferred()
+
+            val realtime = FakeRealtimeEvents()
+            val viewModel = createViewModel(repository)
+
+            viewModel.connectRealtime(
+                roomId = 10,
+                socketManager = realtime,
+                currentUserId = 1
+            )
+
+            runCurrent()
+
+            val conversation =
+                ConversationDto(
+                    kind = "chat",
+                    id = 10,
+                    title = "Test Room"
+                )
+
+            viewModel.sendMessage(
+                conversation = conversation,
+                text = "ack me",
+                currentUserId = 1,
+                currentUsername = "julian"
+            )
+
+            runCurrent()
+
+            val optimistic = viewModel.messages.value.single()
+            val clientMessageId = optimistic.clientMessageId!!
+
+            realtime.emitMessageAck(
+                """
+            {
+              "clientMessageId": "$clientMessageId",
+              "id": 777,
+              "chatRoomId": 10,
+              "createdAt": "2026-01-01T00:00:20Z"
+            }
+            """.trimIndent()
+            )
+
+            advanceUntilIdle()
+
+            val acked = viewModel.messages.value.single()
+
+            assertEquals(777, acked.id)
+            assertEquals(clientMessageId, acked.clientMessageId)
+            assertFalse(acked.optimistic)
+
+            repository.queuedSendGate?.complete(Unit)
+            advanceUntilIdle()
+        }
+
+    @Test
+    fun realtimeEdited_updatesExistingMessage() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val realtime = FakeRealtimeEvents()
+            val viewModel = createViewModel(repository)
+
+            viewModel.connectRealtime(
+                roomId = 10,
+                socketManager = realtime,
+                currentUserId = 1
+            )
+
+            runCurrent()
+
+            realtime.emitMessageUpsert(
+                realtimeJson.encodeToString(
+                    message(
+                        id = 90,
+                        senderId = 99,
+                        text = "before edit"
+                    )
+                )
+            )
+
+            advanceUntilIdle()
+
+            realtime.emitMessageEdited(
+                realtimeJson.encodeToString(
+                    message(
+                        id = 90,
+                        senderId = 99,
+                        text = "after edit"
+                    ).copy(
+                        editedAt = "2026-01-01T00:01:00Z"
+                    )
+                )
+            )
+
+            advanceUntilIdle()
+
+            assertEquals(1, viewModel.messages.value.size)
+
+            val edited = viewModel.messages.value.single()
+
+            assertEquals(90, edited.id)
+            assertEquals("after edit", edited.rawContent)
+            assertEquals("2026-01-01T00:01:00Z", edited.editedAt)
+        }
+
+    @Test
+    fun realtimeDeleted_marksMessageDeleted() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val realtime = FakeRealtimeEvents()
+            val viewModel = createViewModel(repository)
+
+            viewModel.connectRealtime(
+                roomId = 10,
+                socketManager = realtime,
+                currentUserId = 1
+            )
+
+            runCurrent()
+
+            realtime.emitMessageUpsert(
+                realtimeJson.encodeToString(
+                    message(
+                        id = 100,
+                        senderId = 99,
+                        text = "delete realtime"
+                    )
+                )
+            )
+
+            advanceUntilIdle()
+
+            realtime.emitMessageDeleted(
+                """
+            {
+              "messageId": 100,
+              "chatRoomId": 10,
+              "deletedAt": "2026-01-01T00:02:00Z"
+            }
+            """.trimIndent()
+            )
+
+            advanceUntilIdle()
+
+            val deleted = viewModel.messages.value.single()
+
+            assertEquals(100, deleted.id)
+            assertEquals("2026-01-01T00:02:00Z", deleted.deletedAt)
+        }
+
+    @Test
+    fun realtimeExpired_marksMessageDeleted() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val realtime = FakeRealtimeEvents()
+            val viewModel = createViewModel(repository)
+
+            viewModel.connectRealtime(
+                roomId = 10,
+                socketManager = realtime,
+                currentUserId = 1
+            )
+
+            runCurrent()
+
+            realtime.emitMessageUpsert(
+                realtimeJson.encodeToString(
+                    message(
+                        id = 101,
+                        senderId = 99,
+                        text = "expire realtime"
+                    )
+                )
+            )
+
+            advanceUntilIdle()
+
+            realtime.emitMessageExpired(
+                """
+            {
+              "messageId": 101,
+              "chatRoomId": 10,
+              "deletedAt": "2026-01-01T00:03:00Z"
+            }
+            """.trimIndent()
+            )
+
+            advanceUntilIdle()
+
+            val expired = viewModel.messages.value.single()
+
+            assertEquals(101, expired.id)
+            assertEquals("2026-01-01T00:03:00Z", expired.deletedAt)
+        }
+
     private suspend fun createViewModel(
         repository: FakeChatThreadRepository
     ): ChatThreadViewModel {
@@ -997,6 +1274,82 @@ class ChatThreadViewModelTest {
             }
 
             return ReportMessageResponse(success = true)
+        }
+    }
+
+    private class FakeRealtimeEvents : ChatRealtimeEvents {
+        val joinedRooms = mutableListOf<Int>()
+
+        private val _messageUpserts =
+            MutableSharedFlow<String>(extraBufferCapacity = 64)
+
+        override val messageUpserts: SharedFlow<String> =
+            _messageUpserts.asSharedFlow()
+
+        private val _messageAcks =
+            MutableSharedFlow<String>(extraBufferCapacity = 64)
+
+        override val messageAcks: SharedFlow<String> =
+            _messageAcks.asSharedFlow()
+
+        private val _messageEdited =
+            MutableSharedFlow<String>(extraBufferCapacity = 64)
+
+        override val messageEdited: SharedFlow<String> =
+            _messageEdited.asSharedFlow()
+
+        private val _messageDeleted =
+            MutableSharedFlow<String>(extraBufferCapacity = 64)
+
+        override val messageDeleted: SharedFlow<String> =
+            _messageDeleted.asSharedFlow()
+
+        private val _messageExpired =
+            MutableSharedFlow<String>(extraBufferCapacity = 64)
+
+        override val messageExpired: SharedFlow<String> =
+            _messageExpired.asSharedFlow()
+
+        private val _messageReads =
+            MutableSharedFlow<String>(extraBufferCapacity = 64)
+
+        override val messageReads: SharedFlow<String> =
+            _messageReads.asSharedFlow()
+
+        private val _socketConnected =
+            MutableSharedFlow<Unit>(extraBufferCapacity = 16)
+
+        override val socketConnected: SharedFlow<Unit> =
+            _socketConnected.asSharedFlow()
+
+        private val _smsMessages =
+            MutableSharedFlow<String>(extraBufferCapacity = 64)
+
+        override val smsMessages: SharedFlow<String> =
+            _smsMessages.asSharedFlow()
+
+        override fun joinRoom(roomId: Int) {
+            joinedRooms.add(roomId)
+        }
+
+        suspend fun emitMessageUpsert(payload: String) {
+            _messageUpserts.emit(payload)
+        }
+
+        suspend fun emitMessageAck(payload: String) {
+            _messageAcks.emit(payload)
+        }
+
+        suspend fun emitMessageEdited(payload: String) {
+            _messageEdited.emit(payload)
+        }
+
+        suspend fun emitMessageDeleted(payload: String) {
+            _messageDeleted.emit(payload)
+        }
+
+        suspend fun emitMessageExpired(payload: String) {
+            _messageExpired.emit(payload)
         }
     }
 }

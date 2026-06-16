@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chatforia.android.chats.ConversationDto
 import com.chatforia.android.crypto.MessageDecryptor
-import com.chatforia.android.socket.SocketManager
+import com.chatforia.android.socket.ChatRealtimeEvents
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -75,7 +75,7 @@ class ChatThreadViewModel(
 
     fun connectRealtime(
         roomId: Int,
-        socketManager: SocketManager,
+        socketManager: ChatRealtimeEvents,
         currentUserId: Int
     ) {
         activeRealtimeRoomId = roomId
@@ -182,7 +182,7 @@ class ChatThreadViewModel(
         }
     }
 
-    fun connectSmsRealtime(socketManager: SocketManager) {
+    fun connectSmsRealtime(socketManager: ChatRealtimeEvents) {
         if (smsRealtimeConnected) return
 
         smsRealtimeConnected = true

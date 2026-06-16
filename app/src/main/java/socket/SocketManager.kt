@@ -11,27 +11,27 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URI
 
-class SocketManager {
+class SocketManager : ChatRealtimeEvents {
     private var socket: Socket? = null
     private val joinedRoomIds = mutableSetOf<Int>()
 
     private val _messageUpserts = MutableSharedFlow<String>(extraBufferCapacity = 64)
-    val messageUpserts: SharedFlow<String> = _messageUpserts.asSharedFlow()
+    override val messageUpserts: SharedFlow<String> = _messageUpserts.asSharedFlow()
 
     private val _messageAcks = MutableSharedFlow<String>(extraBufferCapacity = 64)
-    val messageAcks: SharedFlow<String> = _messageAcks.asSharedFlow()
+    override val messageAcks: SharedFlow<String> = _messageAcks.asSharedFlow()
 
     private val _messageEdited = MutableSharedFlow<String>(extraBufferCapacity = 64)
-    val messageEdited: SharedFlow<String> = _messageEdited.asSharedFlow()
+    override val messageEdited: SharedFlow<String> = _messageEdited.asSharedFlow()
 
     private val _messageDeleted = MutableSharedFlow<String>(extraBufferCapacity = 64)
-    val messageDeleted: SharedFlow<String> = _messageDeleted.asSharedFlow()
+    override val messageDeleted: SharedFlow<String> = _messageDeleted.asSharedFlow()
 
     private val _messageExpired = MutableSharedFlow<String>(extraBufferCapacity = 64)
-    val messageExpired: SharedFlow<String> = _messageExpired.asSharedFlow()
+    override val messageExpired: SharedFlow<String> = _messageExpired.asSharedFlow()
 
     private val _socketConnected = MutableSharedFlow<Unit>(extraBufferCapacity = 16)
-    val socketConnected: SharedFlow<Unit> = _socketConnected.asSharedFlow()
+    override val socketConnected: SharedFlow<Unit> = _socketConnected.asSharedFlow()
 
     private val _incomingCalls = MutableSharedFlow<String>(extraBufferCapacity = 64)
     val incomingCalls: SharedFlow<String> = _incomingCalls.asSharedFlow()
@@ -51,13 +51,13 @@ class SocketManager {
     private val _messageReads =
         MutableSharedFlow<String>(extraBufferCapacity = 64)
 
-    val messageReads: SharedFlow<String> =
+    override val messageReads: SharedFlow<String> =
         _messageReads.asSharedFlow()
 
     private val _smsMessages =
         MutableSharedFlow<String>(extraBufferCapacity = 64)
 
-    val smsMessages: SharedFlow<String> =
+    override val smsMessages: SharedFlow<String> =
         _smsMessages.asSharedFlow()
 
     private val _randomChatMatched =
@@ -256,7 +256,7 @@ class SocketManager {
         joinedRoomIds.clear()
     }
 
-    fun joinRoom(roomId: Int) {
+    override fun joinRoom(roomId: Int) {
         joinedRoomIds.add(roomId)
         emitJoinRooms()
     }
