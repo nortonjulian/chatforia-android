@@ -55,7 +55,7 @@ data class SettingsUiState(
 )
 
 class SettingsViewModel(
-    private val repository: SettingsRepository
+    private val repository: UserSettingsRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsUiState())
