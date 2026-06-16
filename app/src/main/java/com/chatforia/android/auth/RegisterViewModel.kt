@@ -6,7 +6,8 @@ import com.chatforia.android.crypto.KeyStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-
+import analytics.AnalyticsManager
+import analytics.AnalyticsTracker
 data class RegisterUiState(
     val username: String = "",
     val email: String = "",
@@ -23,7 +24,8 @@ class RegisterViewModel(
     private val authRepository: AuthRepository,
     private val tokenStorage: TokenStorage,
     private val keyStorage: KeyStorage,
-    private val onRegistered: () -> Unit
+    private val onRegistered: () -> Unit,
+    private val analytics: AnalyticsTracker = AnalyticsManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RegisterUiState())
@@ -125,6 +127,22 @@ class RegisterViewModel(
                             privateKey = privateKey
                         )
                     }
+
+                    analytics.identify(
+                        userId = resolvedUser.id,
+                        properties = mapOf(
+                            "username" to (resolvedUser.username ?: ""),
+                            "preferred_language" to (resolvedUser.preferredLanguage ?: "")
+                        )
+                    )
+
+                    analytics.capture(
+                        "account signed up",
+                        mapOf(
+                            "has_phone" to phone.isNotBlank(),
+                            "sms_consent" to current.smsConsent
+                        )
+                    )
 
                     tokenStorage.save(token)
                     onRegistered()

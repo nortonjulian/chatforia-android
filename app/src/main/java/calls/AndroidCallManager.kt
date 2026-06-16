@@ -10,7 +10,8 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import android.content.Context
 import kotlinx.coroutines.CoroutineDispatcher
-
+import analytics.AnalyticsManager
+import analytics.AnalyticsTracker
 class AndroidCallManager(
     context: Context,
     private val socketManager: CallRealtimeEvents,
@@ -19,7 +20,8 @@ class AndroidCallManager(
     private val voiceManager: CallAudioClient,
     private val videoManager: CallVideoClient,
     private val ringtonePlayer: CallRingtonePlayer = AudioCallRingtonePlayer(context),
-    private val callDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val callDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val analytics: AnalyticsTracker = AnalyticsManager
 ) : ViewModel() {
 
     private val json = Json {
@@ -31,6 +33,8 @@ class AndroidCallManager(
         MutableStateFlow<AndroidCallState>(AndroidCallState.Idle)
 
     val state: StateFlow<AndroidCallState> = _state
+
+    private var activeCallAnalytics: CallAnalyticsContext? = null
 
     init {
         observeSockets()
@@ -66,6 +70,12 @@ class AndroidCallManager(
 
                         override fun onConnected() {
                             _state.value = AndroidCallState.Active(session)
+
+                            trackCallStarted(
+                                session = session,
+                                callType = "audio",
+                                direction = "outbound"
+                            )
                         }
 
                         override fun onFailed(message: String) {
@@ -73,6 +83,7 @@ class AndroidCallManager(
                         }
 
                         override fun onDisconnected() {
+                            trackCallEnded("disconnected")
                             _state.value = AndroidCallState.Ended()
                         }
                     }
@@ -111,6 +122,12 @@ class AndroidCallManager(
 
                         override fun onConnected() {
                             _state.value = AndroidCallState.Active(session)
+
+                            trackCallStarted(
+                                session = session,
+                                callType = "phone",
+                                direction = "outbound"
+                            )
                         }
 
                         override fun onFailed(message: String) {
@@ -118,6 +135,7 @@ class AndroidCallManager(
                         }
 
                         override fun onDisconnected() {
+                            trackCallEnded("disconnected")
                             _state.value = AndroidCallState.Ended()
                         }
                     }
@@ -169,6 +187,12 @@ class AndroidCallManager(
                     listener = object : CallVideoClient.Listener {
                         override fun onConnected() {
                             _state.value = AndroidCallState.Active(session)
+
+                            trackCallStarted(
+                                session = session,
+                                callType = "video",
+                                direction = "outbound"
+                            )
                         }
 
                         override fun onFailed(message: String) {
@@ -176,6 +200,7 @@ class AndroidCallManager(
                         }
 
                         override fun onDisconnected() {
+                            trackCallEnded("disconnected")
                             _state.value = AndroidCallState.Ended()
                         }
                     }
@@ -235,6 +260,12 @@ class AndroidCallManager(
             )
 
         _state.value = AndroidCallState.Active(session)
+
+        trackCallStarted(
+            session = session,
+            callType = "audio",
+            direction = "inbound"
+        )
     }
 
     private fun acceptIncomingVideo(
@@ -268,6 +299,12 @@ class AndroidCallManager(
                     listener = object : CallVideoClient.Listener {
                         override fun onConnected() {
                             _state.value = AndroidCallState.Active(session)
+
+                            trackCallStarted(
+                                session = session,
+                                callType = "video",
+                                direction = "inbound"
+                            )
                         }
 
                         override fun onFailed(message: String) {
@@ -275,6 +312,7 @@ class AndroidCallManager(
                         }
 
                         override fun onDisconnected() {
+                            trackCallEnded("disconnected")
                             _state.value = AndroidCallState.Ended()
                         }
                     }
@@ -373,6 +411,8 @@ class AndroidCallManager(
                 else -> null
             }
 
+        trackCallEnded("hangup")
+
         voiceManager.endCall()
         videoManager.disconnect()
 
@@ -394,6 +434,66 @@ class AndroidCallManager(
         _state.value = AndroidCallState.Idle
     }
 
+
+    private data class CallAnalyticsContext(
+        val callType: String,
+        val direction: String,
+        val startedAtMillis: Long
+    )
+
+    private fun trackCallStarted(
+        session: CallSession,
+        callType: String,
+        direction: String
+    ) {
+        if (activeCallAnalytics != null) return
+
+        activeCallAnalytics =
+            CallAnalyticsContext(
+                callType = callType,
+                direction = direction,
+                startedAtMillis = System.currentTimeMillis()
+            )
+
+        analytics.capture(
+            "call started",
+            mapOf(
+                "call_type" to callType,
+                "direction" to direction
+            )
+        )
+    }
+
+    private fun trackCallEnded(reason: String) {
+        val current = activeCallAnalytics ?: return
+
+        val durationSec =
+            ((System.currentTimeMillis() - current.startedAtMillis) / 1000)
+                .toInt()
+                .coerceAtLeast(0)
+
+        analytics.capture(
+            "call ended",
+            mapOf(
+                "call_type" to current.callType,
+                "direction" to current.direction,
+                "ended_reason" to reason,
+                "duration_bucket" to durationBucket(durationSec)
+            )
+        )
+
+        activeCallAnalytics = null
+    }
+
+    private fun durationBucket(durationSec: Int): String {
+        return when {
+            durationSec < 10 -> "0-9s"
+            durationSec < 60 -> "10-59s"
+            durationSec < 300 -> "1-5m"
+            durationSec < 900 -> "5-15m"
+            else -> "15m+"
+        }
+    }
     private fun observeSockets() {
         viewModelScope.launch {
             socketManager.incomingCalls.collect { raw ->
@@ -432,6 +532,7 @@ class AndroidCallManager(
                 ringtonePlayer.stop()
                 voiceManager.endCall()
                 videoManager.disconnect()
+                trackCallEnded("remote_ended")
                 _state.value = AndroidCallState.Ended()
             }
         }
@@ -440,6 +541,7 @@ class AndroidCallManager(
             socketManager.videoCallEnded.collect {
                 ringtonePlayer.stop()
                 videoManager.disconnect()
+                trackCallEnded("remote_ended")
                 _state.value = AndroidCallState.Ended()
             }
         }

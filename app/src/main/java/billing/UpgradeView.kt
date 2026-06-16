@@ -27,15 +27,21 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
-
+import analytics.AnalyticsManager
+import analytics.AnalyticsTracker
 @Composable
 fun UpgradeView(
     apiClient: ApiClient,
     onClose: () -> Unit,
-    onUpgradeTapped: (PricingProduct) -> Unit = {}
+    onUpgradeTapped: (PricingProduct) -> Unit = {},
+    analytics: AnalyticsTracker = AnalyticsManager
 ) {
     val scope = rememberCoroutineScope()
     val pricingService = remember { PricingQuoteService(apiClient) }
+
+    LaunchedEffect(Unit) {
+        analytics.capture("upgrade screen viewed")
+    }
 
     var quotes by remember {
         mutableStateOf<Map<PricingProduct, PricingQuote>>(emptyMap())
@@ -108,6 +114,14 @@ fun UpgradeView(
                 ),
                 highlighted = false,
                 onClick = {
+                    analytics.capture(
+                        "upgrade option tapped",
+                        mapOf(
+                            "product" to "plus",
+                            "billing_period" to "monthly"
+                        )
+                    )
+
                     onUpgradeTapped(PricingProduct.Plus)
                 }
             )
@@ -133,6 +147,14 @@ fun UpgradeView(
                 ),
                 highlighted = true,
                 onClick = {
+                    analytics.capture(
+                        "upgrade option tapped",
+                        mapOf(
+                            "product" to "premium",
+                            "billing_period" to "monthly"
+                        )
+                    )
+
                     onUpgradeTapped(PricingProduct.PremiumMonthly)
                 }
             )
@@ -156,6 +178,14 @@ fun UpgradeView(
                 ),
                 highlighted = false,
                 onClick = {
+                    analytics.capture(
+                        "upgrade option tapped",
+                        mapOf(
+                            "product" to "premium",
+                            "billing_period" to "annual"
+                        )
+                    )
+
                     onUpgradeTapped(PricingProduct.PremiumAnnual)
                 }
             )
@@ -164,6 +194,8 @@ fun UpgradeView(
 
             TextButton(
                 onClick = {
+                    analytics.capture("restore purchases tapped")
+
                     scope.launch {
                         println("Restore purchases tapped")
                     }

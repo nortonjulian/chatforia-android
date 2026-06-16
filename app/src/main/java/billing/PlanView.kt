@@ -20,14 +20,27 @@ import com.chatforia.android.ui.components.ChatforiaSectionCard
 import com.chatforia.android.ui.theme.ChatforiaColors
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
-
+import androidx.compose.runtime.LaunchedEffect
+import analytics.AnalyticsManager
+import analytics.AnalyticsTracker
 @Composable
 fun PlanView(
     user: UserDto,
     onBack: () -> Unit,
-    onUpgrade: () -> Unit
+    onUpgrade: () -> Unit,
+    analytics: AnalyticsTracker = AnalyticsManager
 ) {
     val currentPlan = user.plan?.lowercase() ?: "free"
+
+    LaunchedEffect(currentPlan) {
+        analytics.capture(
+            "plan screen viewed",
+            mapOf(
+                "current_plan" to currentPlan
+            )
+        )
+    }
+
     val displayPlan = when (currentPlan) {
         "plus" -> stringResource(R.string.android_plan_plus)
         "premium" -> stringResource(R.string.android_plan_premium)
@@ -120,7 +133,17 @@ fun PlanView(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedButton(
-                    onClick = onUpgrade,
+                    onClick = {
+                        analytics.capture(
+                            "upgrade entry tapped",
+                            mapOf(
+                                "source" to "plan_screen",
+                                "current_plan" to currentPlan
+                            )
+                        )
+
+                        onUpgrade()
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp)
                 ) {

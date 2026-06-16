@@ -1,4 +1,4 @@
-package com.chatforia.android.analytics
+package analytics
 
 import android.app.Application
 import com.chatforia.android.BuildConfig
@@ -6,7 +6,7 @@ import com.posthog.PostHog
 import com.posthog.android.PostHogAndroid
 import com.posthog.android.PostHogAndroidConfig
 
-object AnalyticsManager {
+object AnalyticsManager : AnalyticsTracker {
 
     private var isConfigured = false
 
@@ -25,12 +25,7 @@ object AnalyticsManager {
             host = host
         ).apply {
             captureApplicationLifecycleEvents = true
-
-            // iOS is not manually tracking every screen in your file,
-            // so keep Android from creating extra automatic screen events for now.
             captureScreenViews = false
-
-            // Helpful during development, but quiet in release builds.
             debug = BuildConfig.DEBUG
         }
 
@@ -38,7 +33,7 @@ object AnalyticsManager {
         isConfigured = true
     }
 
-    fun identify(userId: Int, properties: Map<String, Any> = emptyMap()) {
+    override fun identify(userId: Int, properties: Map<String, Any>) {
         if (!isConfigured) return
 
         PostHog.identify(
@@ -47,7 +42,7 @@ object AnalyticsManager {
         )
     }
 
-    fun capture(event: String, properties: Map<String, Any> = emptyMap()) {
+    override fun capture(event: String, properties: Map<String, Any>) {
         if (!isConfigured) return
 
         val merged = properties.toMutableMap()
@@ -59,7 +54,7 @@ object AnalyticsManager {
         )
     }
 
-    fun reset() {
+    override fun reset() {
         if (!isConfigured) return
 
         PostHog.reset()

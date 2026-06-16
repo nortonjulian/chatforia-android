@@ -10,13 +10,16 @@ import kotlinx.coroutines.Dispatchers
 import com.chatforia.android.crypto.AccountKeyService
 import com.chatforia.android.notifications.PushTokenRegisterer
 import kotlinx.coroutines.CoroutineDispatcher
+import analytics.AnalyticsManager
+import analytics.AnalyticsTracker
 
 class AuthViewModel(
     private val repository: AuthSessionRepository,
     private val accountKeyManager: AccountKeyService,
     private val pushTokenRegistrar: PushTokenRegisterer? = null,
     private val pushDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val autoBootstrap: Boolean = true
+    private val autoBootstrap: Boolean = true,
+    private val analytics: AnalyticsTracker = AnalyticsManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<AuthState>(AuthState.Loading)
@@ -29,13 +32,15 @@ class AuthViewModel(
     }
 
     private fun registerPushTokenIfPossible() {
+        val registrar = pushTokenRegistrar ?: return
+
         viewModelScope.launch(pushDispatcher) {
             android.util.Log.d(
                 "ChatforiaFCM",
-                "registerPushTokenIfPossible called. registrarNull=${pushTokenRegistrar == null}"
+                "registerPushTokenIfPossible called."
             )
 
-            pushTokenRegistrar?.registerCurrentFcmToken()
+            registrar.registerCurrentFcmToken()
         }
     }
 
@@ -110,6 +115,23 @@ class AuthViewModel(
     ) {
         val user = repository.login(identifier, password)
         _state.value = resolveLoggedInState(user)
+
+        analytics.identify(
+            userId = user.id,
+            properties = mapOf(
+                "username" to (user.username ?: ""),
+                "preferred_language" to (user.preferredLanguage ?: ""),
+                "plan" to (user.plan ?: "")
+            )
+        )
+
+        analytics.capture(
+            "account logged in",
+            mapOf(
+                "method" to "password"
+            )
+        )
+
         registerPushTokenIfPossible()
     }
 
@@ -118,6 +140,20 @@ class AuthViewModel(
     ) {
         val user = repository.loginWithGoogle(idToken)
         _state.value = resolveLoggedInState(user)
+
+        analytics.identify(
+            userId = user.id,
+            properties = mapOf(
+                "username" to (user.username ?: ""),
+                "preferred_language" to (user.preferredLanguage ?: "")
+            )
+        )
+
+        analytics.capture(
+            "account logged in",
+            mapOf("method" to "google")
+        )
+
         registerPushTokenIfPossible()
     }
 
@@ -160,6 +196,9 @@ class AuthViewModel(
     }
 
     fun logout() {
+        analytics.capture("account logged out")
+        analytics.reset()
+
         repository.logout()
         _state.value = AuthState.LoggedOut
     }

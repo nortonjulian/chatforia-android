@@ -13,12 +13,13 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.chatforia.android.MainActivity
 import com.chatforia.android.R
-
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 class NotificationCoordinator(
     private val context: Context
 ) {
     companion object {
-        const val CALLS_CHANNEL_ID = "chatforia_calls"
+        const val CALLS_CHANNEL_ID = "chatforia_calls_v2"
         const val MISSED_CALLS_CHANNEL_ID = "chatforia_missed_calls"
     }
 
@@ -32,13 +33,22 @@ class NotificationCoordinator(
         val manager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
+        val callSoundUri =
+            RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+
+        val callAudioAttributes =
+            AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+
         val callsChannel = NotificationChannel(
             CALLS_CHANNEL_ID,
             "Incoming Calls",
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
             description = "Incoming Chatforia call alerts"
-            setSound(null, null)
+            setSound(callSoundUri, callAudioAttributes)
             enableVibration(true)
         }
 
@@ -60,13 +70,19 @@ class NotificationCoordinator(
 
         val fromNumber = data["fromNumber"] ?: "Unknown caller"
 
+        val callerName =
+            data["callerName"] ?: fromNumber
+
+        val callSoundUri =
+            RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
 
             putExtra("type", "call_incoming")
             putExtra("callId", data["callId"])
             putExtra("callerId", data["callerId"])
-            putExtra("callerName", data["callerName"])
+            putExtra("callerName", callerName)
             putExtra("fromNumber", fromNumber)
             putExtra("mode", data["mode"])
             putExtra("roomName", data["roomName"])
@@ -83,9 +99,10 @@ class NotificationCoordinator(
             NotificationCompat.Builder(context, CALLS_CHANNEL_ID)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle("Incoming call")
-                .setContentText("Call from $fromNumber")
+                .setContentText("Call from $callerName")
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_CALL)
+                .setSound(callSoundUri)
                 .setFullScreenIntent(pendingIntent, true)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)

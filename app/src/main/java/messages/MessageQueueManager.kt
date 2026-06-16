@@ -12,6 +12,8 @@ import kotlin.math.min
 import kotlin.math.pow
 import com.chatforia.android.crypto.MessageEncryptor
 import kotlinx.coroutines.CoroutineDispatcher
+import analytics.AnalyticsManager
+import analytics.AnalyticsTracker
 class MessageQueueManager(
     private val repository: MessageQueueRepository,
     private val messageStore: MessageStore,
@@ -19,7 +21,8 @@ class MessageQueueManager(
     private val scope: CoroutineScope,
     private val messageEncryptorFactory: () -> MessageEncryptor = { MessageEncryptor() },
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val delayProvider: suspend (Long) -> Unit = { delay(it) }
+    private val delayProvider: suspend (Long) -> Unit = { delay(it) },
+    private val analytics: AnalyticsTracker = AnalyticsManager
 ) {
 
     private val mutex = Mutex()
@@ -211,6 +214,14 @@ class MessageQueueManager(
             }
 
             markSucceeded(job.clientMessageId)
+
+            analytics.capture(
+                "message sent",
+                messageSentProperties(
+                    job = job,
+                    wasEncrypted = encryptedPayloads.isNotEmpty()
+                )
+            )
         } catch (e: Exception) {
             println("❌ MessageQueueManager failed: ${e::class.simpleName}: ${e.message}")
             markTemporaryFailure(job)
@@ -327,6 +338,63 @@ class MessageQueueManager(
             "GIF" -> "[gif]"
             "AUDIO" -> "[voice note]"
             else -> if (attachments.isNotEmpty()) "[attachment]" else null
+        }
+    }
+
+    private fun messageSentProperties(
+        job: QueuedMessageJob,
+        wasEncrypted: Boolean
+    ): Map<String, Any> {
+        return mapOf(
+            "message_type" to "chat",
+            "delivery_path" to "queue",
+            "has_text" to !job.text.isNullOrBlank(),
+            "has_attachment" to job.attachmentsInline.isNotEmpty(),
+            "attachment_type" to attachmentType(job.attachmentsInline),
+            "attachment_count_bucket" to attachmentCountBucket(job.attachmentsInline.size),
+            "message_length_bucket" to messageLengthBucket(job.text),
+            "was_encrypted" to wasEncrypted,
+            "retry_count" to job.retryCount
+        )
+    }
+
+    private fun messageLengthBucket(text: String?): String {
+        val length = text?.trim()?.length ?: 0
+
+        return when {
+            length == 0 -> "empty"
+            length < 20 -> "short"
+            length < 100 -> "medium"
+            else -> "long"
+        }
+    }
+
+    private fun attachmentType(
+        attachments: List<AttachmentDto>
+    ): String {
+        if (attachments.isEmpty()) return "none"
+
+        val kinds =
+            attachments
+                .map { attachment ->
+                    attachment.kind.trim().lowercase()
+                }
+                .filter { it.isNotBlank() }
+                .distinct()
+
+        return when {
+            kinds.isEmpty() -> "unknown"
+            kinds.size == 1 -> kinds.first()
+            else -> "mixed"
+        }
+    }
+
+    private fun attachmentCountBucket(count: Int): String {
+        return when {
+            count <= 0 -> "0"
+            count == 1 -> "1"
+            count <= 4 -> "2-4"
+            else -> "5+"
         }
     }
 
