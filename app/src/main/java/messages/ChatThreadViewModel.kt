@@ -78,8 +78,10 @@ class ChatThreadViewModel(
         socketManager: ChatRealtimeEvents,
         currentUserId: Int
     ) {
-        activeRealtimeRoomId = roomId
-        socketManager.joinRoom(roomId)
+        if (activeRealtimeRoomId != roomId) {
+            activeRealtimeRoomId = roomId
+            socketManager.joinRoom(roomId)
+        }
 
         if (realtimeCollectorsStarted) return
         realtimeCollectorsStarted = true
@@ -234,41 +236,65 @@ class ChatThreadViewModel(
                     }
                     .sortedWith(messageSorter())
 
+                // Show messages immediately
                 messageStore.replaceAll(loaded)
+                _isLoading.value = false
 
-                repository.markReadBulk(
-                    ids = loaded
-                        .filter { it.id > 0 }
-                        .filter { it.sender.id != currentUserId }
-                        .map { it.id }
-                )
-
-                val highestId = loaded
-                    .mapNotNull { message ->
-                        if (message.id > 0) message.id else null
-                    }
-                    .maxOrNull()
-
-                if (highestId != null) {
-                    val deltas = repository
-                        .loadDeltas(
-                            roomId = roomId,
-                            sinceId = highestId
+                // Mark read in the background AFTER the thread is visible
+                launch {
+                    try {
+                        repository.markReadBulk(
+                            ids = loaded
+                                .filter { it.id > 0 }
+                                .filter { it.sender.id != currentUserId }
+                                .map { it.id }
                         )
-                        .map { message ->
-                            decryptForDisplay(
-                                message = message,
-                                currentUserId = currentUserId
-                            )
-                        }
+                    } catch (e: Exception) {
+                        println("⚠️ Failed to mark messages read: ${e.message}")
+                    }
+                }
 
-                    deltas.forEach { incoming ->
-                        messageStore.upsert(incoming)
+                // Load deltas in the background AFTER the thread is visible
+                launch {
+                    try {
+                        val highestId = loaded
+                            .mapNotNull { message ->
+                                if (message.id > 0) message.id else null
+                            }
+                            .maxOrNull()
+
+                        if (highestId != null) {
+                            val deltas = repository
+                                .loadDeltas(
+                                    roomId = roomId,
+                                    sinceId = highestId
+                                )
+                                .map { message ->
+                                    decryptForDisplay(
+                                        message = message,
+                                        currentUserId = currentUserId
+                                    )
+                                }
+
+                            deltas.forEach { incoming ->
+                                messageStore.upsert(incoming)
+                            }
+
+                            if (deltas.isNotEmpty()) {
+                                repository.markReadBulk(
+                                    ids = deltas
+                                        .filter { it.id > 0 }
+                                        .filter { it.sender.id != currentUserId }
+                                        .map { it.id }
+                                )
+                            }
+                        }
+                    } catch (e: Exception) {
+                        println("⚠️ Failed to load message deltas: ${e.message}")
                     }
                 }
             } catch (e: Exception) {
                 _error.value = e.message ?: "Failed to load messages."
-            } finally {
                 _isLoading.value = false
             }
         }

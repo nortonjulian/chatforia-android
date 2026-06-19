@@ -107,7 +107,7 @@ class MessagesRepository(
         val response: MessagesResponse =
             sendJson(
                 ApiRequest(
-                    path = "messages/$roomId?limit=100",
+                    path = "messages/$roomId?limit=50",
                     method = HttpMethod.GET,
                     requiresAuth = true
                 )
