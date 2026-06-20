@@ -21,7 +21,8 @@ import com.chatforia.android.crypto.PrivateKeyReader
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-
+import analytics.AnalyticsManager
+import analytics.AnalyticsTracker
 class ChatThreadViewModel(
     private val repository: ChatThreadRepository,
     private val keyStorage: PrivateKeyReader,
@@ -33,6 +34,8 @@ class ChatThreadViewModel(
 ) : ViewModel() {
 
     private val messageStore = MessageStore()
+
+    private val analytics: AnalyticsTracker = AnalyticsManager
 
     private val messageDecryptor: DisplayMessageDecryptor by lazy {
         messageDecryptorFactory()
@@ -205,6 +208,13 @@ class ChatThreadViewModel(
         conversation: ConversationDto,
         currentUserId: Int
     ) {
+        analytics.capture(
+            "conversation_opened",
+            mapOf(
+                "type" to conversation.kind
+            )
+        )
+
         val id = conversation.id ?: return
 
         if (conversation.kind == "sms") {
@@ -239,6 +249,14 @@ class ChatThreadViewModel(
                 // Show messages immediately
                 messageStore.replaceAll(loaded)
                 _isLoading.value = false
+
+                analytics.capture(
+                    "chat_thread_loaded",
+                    mapOf(
+                        "roomId" to roomId,
+                        "messageCount" to loaded.size
+                    )
+                )
 
                 // Mark read in the background AFTER the thread is visible
                 launch {
@@ -541,6 +559,15 @@ class ChatThreadViewModel(
                     contextCount = contextCount,
                     blockAfterReport = blockAfterReport
                 )
+
+                analytics.capture(
+                    "message_reported",
+                    mapOf(
+                        "reason" to reason,
+                        "blockAfterReport" to blockAfterReport
+                    )
+                )
+
             } catch (e: Exception) {
                 _error.value = e.message ?: "Failed to submit report."
             }
@@ -569,6 +596,13 @@ class ChatThreadViewModel(
                 to = to,
                 body = text,
                 mediaUrls = emptyList()
+            )
+
+            analytics.capture(
+                "sms_sent",
+                mapOf(
+                    "hasMedia" to false
+                )
             )
 
             mergeIncomingSms(
@@ -620,6 +654,14 @@ class ChatThreadViewModel(
                 to = to,
                 body = null,
                 mediaUrls = mediaUrls
+            )
+
+            analytics.capture(
+                "sms_sent",
+                mapOf(
+                    "hasMedia" to true,
+                    "mediaCount" to mediaUrls.size
+                )
             )
 
             mergeIncomingSms(
@@ -702,6 +744,15 @@ class ChatThreadViewModel(
             )
         )
 
+        analytics.capture(
+            "message_sent",
+            mapOf(
+                "roomId" to roomId,
+                "messageType" to inferAttachmentKind(mediaUrls.firstOrNull().orEmpty()).lowercase(),
+                "encrypted" to true
+            )
+        )
+
         _isSending.value = false
     }
 
@@ -741,6 +792,15 @@ class ChatThreadViewModel(
                 roomId = roomId,
                 text = text,
                 senderUserId = currentUserId
+            )
+        )
+
+        analytics.capture(
+            "message_sent",
+            mapOf(
+                "roomId" to roomId,
+                "messageType" to "text",
+                "encrypted" to true
             )
         )
 

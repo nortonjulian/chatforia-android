@@ -5,7 +5,8 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-
+import analytics.AnalyticsManager
+import analytics.AnalyticsTracker
 data class RiaChatUiState(
     val messages: List<RiaChatMessage> = emptyList(),
     val isLoading: Boolean = false,
@@ -14,7 +15,8 @@ data class RiaChatUiState(
 )
 
 class RiaChatViewModel(
-    private val repository: RiaRepository
+    private val repository: RiaRepository,
+    private val analytics: AnalyticsTracker = AnalyticsManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RiaChatUiState())
@@ -38,6 +40,26 @@ class RiaChatViewModel(
             isLoading = true,
             error = null,
             aiDisabledReason = null
+        )
+
+        val isFirstUserMessage =
+            _state.value.messages.count { it.role == "user" } == 1
+
+        if (isFirstUserMessage) {
+            analytics.capture(
+                "ria_chat_started",
+                mapOf(
+                    "memoryEnabled" to memoryEnabled,
+                    "filterProfanity" to filterProfanity
+                )
+            )
+        }
+
+        analytics.capture(
+            "ria_message_sent",
+            mapOf(
+                "memoryEnabled" to memoryEnabled
+            )
         )
 
         viewModelScope.launch {
@@ -65,6 +87,9 @@ class RiaChatViewModel(
                     messages = _state.value.messages + assistantMessage,
                     isLoading = false
                 )
+
+                analytics.capture("ria_response_received")
+
             } catch (e: Exception) {
                 val message = e.message.orEmpty().lowercase()
 

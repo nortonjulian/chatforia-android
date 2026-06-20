@@ -137,10 +137,12 @@ class RegisterViewModel(
                     )
 
                     analytics.capture(
-                        "account signed up",
+                        "user_registered",
                         mapOf(
-                            "has_phone" to phone.isNotBlank(),
-                            "sms_consent" to current.smsConsent
+                            "method" to "email",
+                            "hasPhone" to phone.isNotBlank(),
+                            "smsConsent" to current.smsConsent,
+                            "plan" to "FREE"
                         )
                     )
 
