@@ -22,7 +22,9 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
-
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
 @Composable
 fun WirelessHomeView(
     apiClient: ApiClient,
@@ -30,6 +32,7 @@ fun WirelessHomeView(
 ) {
     val repository = remember { WirelessRepository(apiClient) }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     var selectedScope by remember { mutableStateOf(EsimScope.LOCAL) }
     var status by remember { mutableStateOf<WirelessStatusResponse?>(null) }
@@ -117,19 +120,19 @@ fun WirelessHomeView(
             packs = packsFor(selectedScope),
             isPurchasing = isPurchasing,
             onChoosePack = { pack ->
-                scope.launch {
-                    isPurchasing = true
-                    error = null
+                error = null
 
-                    try {
-                        activation = repository.reserveEsim(pack.region)
-                        reload()
-                    } catch (e: Exception) {
-                        error = e.message ?: "Could not start eSIM activation."
-                    } finally {
-                        isPurchasing = false
-                    }
-                }
+                val url = webCheckoutUrl(
+                    pack = pack,
+                    scope = selectedScope
+                )
+
+                context.startActivity(
+                    Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse(url)
+                    )
+                )
             }
         )
 
@@ -439,6 +442,19 @@ private fun FeatureRow(
     }
 }
 
+private fun webCheckoutUrl(
+    pack: DataPackOption,
+    scope: EsimScope
+): String {
+    val scopeValue = when (scope) {
+        EsimScope.LOCAL -> "local"
+        EsimScope.EUROPE -> "europe"
+        EsimScope.GLOBAL -> "global"
+    }
+
+    return "https://chatforia.com/upgrade?section=mobile&scope=$scopeValue&product=${pack.product}"
+}
+
 private fun formatGb(
     mb: Int
 ): String {
@@ -456,26 +472,26 @@ private fun packsFor(
 ): List<DataPackOption> {
     return when (scope) {
         EsimScope.LOCAL -> listOf(
-            DataPackOption("esim_local_unlimited", scope, "Local Unlimited", "Unlimited", "$59.99", "Best for heavy usage, streaming, and never worrying about data limits.", "US"),
-            DataPackOption("esim_local_3", scope, "Local 3GB", "3 GB", "$14.99", "Perfect for short trips and light browsing.", "US"),
-            DataPackOption("esim_local_5", scope, "Local 5GB", "5 GB", "$22.99", "Great for travel, messaging, maps, and everyday use.", "US"),
-            DataPackOption("esim_local_10", scope, "Local 10GB", "10 GB", "$34.99", "Ideal for heavier travel usage and streaming.", "US"),
-            DataPackOption("esim_local_20", scope, "Local 20GB", "20 GB", "$54.99", "Maximum data for extended travel and heavy usage.", "US")
+            DataPackOption("chatforia_esim_local_unlimited_premium", scope, "Local Unlimited", "Unlimited", "$59.99", "Best for heavy usage, streaming, and never worrying about data limits.", "US"),
+            DataPackOption("chatforia_esim_local_3_premium", scope, "Local 3GB", "3 GB", "$14.99", "Perfect for short trips and light browsing.", "US"),
+            DataPackOption("chatforia_esim_local_5_premium", scope, "Local 5GB", "5 GB", "$22.99", "Great for travel, messaging, maps, and everyday use.", "US"),
+            DataPackOption("chatforia_esim_local_10_premium", scope, "Local 10GB", "10 GB", "$34.99", "Ideal for heavier travel usage and streaming.", "US"),
+            DataPackOption("chatforia_esim_local_20_premium", scope, "Local 20GB", "20 GB", "$54.99", "Maximum data for extended travel and heavy usage.", "US")
         )
 
         EsimScope.EUROPE -> listOf(
-            DataPackOption("esim_local_unlimited", scope, "Local Unlimited", "Unlimited", "$69.99", "Best for heavy usage, streaming, and never worrying about data limits.", "US"),
-            DataPackOption("esim_europe_3", scope, "Europe 3GB", "3 GB", "$16.99", "Light browsing and messaging across Europe.", "EU"),
-            DataPackOption("esim_europe_5", scope, "Europe 5GB", "5 GB", "$24.99", "Great for maps, messaging, and travel.", "EU"),
-            DataPackOption("esim_europe_10", scope, "Europe 10GB", "10 GB", "$36.99", "More room for streaming and longer trips.", "EU"),
-            DataPackOption("esim_europe_20", scope, "Europe 20GB", "20 GB", "$64.99", "Maximum Europe coverage for heavy usage.", "EU")
+            DataPackOption("chatforia_esim_europe_unlimited_premium", scope, "Europe Unlimited", "Unlimited", "$69.99", "Best for heavy usage, streaming, and never worrying about data limits.", "EU"),
+            DataPackOption("chatforia_esim_europe_3_premium", scope, "Europe 3GB", "3 GB", "$16.99", "Light browsing and messaging across Europe.", "EU"),
+            DataPackOption("chatforia_esim_europe_5_premium", scope, "Europe 5GB", "5 GB", "$24.99", "Great for maps, messaging, and travel.", "EU"),
+            DataPackOption("chatforia_esim_europe_10_premium", scope, "Europe 10GB", "10 GB", "$36.99", "More room for streaming and longer trips.", "EU"),
+            DataPackOption("chatforia_esim_europe_20_premium", scope, "Europe 20GB", "20 GB", "$64.99", "Maximum Europe coverage for heavy usage.", "EU")
         )
 
         EsimScope.GLOBAL -> listOf(
-            DataPackOption("esim_local_unlimited", scope, "Local Unlimited", "Unlimited", "$79.99", "Best for heavy usage, streaming, and never worrying about data limits.", "US"),
-            DataPackOption("esim_global_3", scope, "Global 3GB", "3 GB", "$21.99", "Light global travel data.", "GLOBAL"),
-            DataPackOption("esim_global_5", scope, "Global 5GB", "5 GB", "$32.99", "Everyday travel coverage around the world.", "GLOBAL"),
-            DataPackOption("esim_global_10", scope, "Global 10GB", "10 GB", "$49.99", "More data for extended global trips.", "GLOBAL")
+            DataPackOption("chatforia_esim_global_unlimited_premium", scope, "Global Unlimited", "Unlimited", "$79.99", "Best for heavy usage, streaming, and never worrying about data limits.", "GLOBAL"),
+            DataPackOption("chatforia_esim_global_3_premium", scope, "Global 3GB", "3 GB", "$21.99", "Light global travel data.", "GLOBAL"),
+            DataPackOption("chatforia_esim_global_5_premium", scope, "Global 5GB", "5 GB", "$32.99", "Everyday travel coverage around the world.", "GLOBAL"),
+            DataPackOption("chatforia_esim_global_10_premium", scope, "Global 10GB", "10 GB", "$49.99", "More data for extended global trips.", "GLOBAL")
         )
     }
 }
