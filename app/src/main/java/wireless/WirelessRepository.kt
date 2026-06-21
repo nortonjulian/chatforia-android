@@ -13,7 +13,7 @@ class WirelessRepository(
         return withContext(Dispatchers.IO) {
             apiClient.send(
                 ApiRequest(
-                    path = "wireless/status",
+                    path = "api/wireless/status",
                     method = HttpMethod.GET,
                     requiresAuth = true
                 )

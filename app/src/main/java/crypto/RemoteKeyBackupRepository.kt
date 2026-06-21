@@ -24,14 +24,10 @@ class RemoteKeyBackupRepository(
                 )
             }
 
-        println("🔑 RAW BACKUP RESPONSE = $raw")
 
         val response =
             apiClient.json.decodeFromString<RemoteKeyBackupResponse>(raw)
 
-        println(
-            "🔑 PARSED BACKUP RESPONSE = $response"
-        )
 
         if (!response.hasBackup) return null
 
@@ -56,12 +52,10 @@ class RemoteKeyBackupRepository(
                 )
             }
 
-        println("🔑 RAW BACKUP UPLOAD RESPONSE = $raw")
 
         val response =
             apiClient.json.decodeFromString<RemoteKeyBackupResponse>(raw)
 
-        println("🔑 PARSED BACKUP UPLOAD RESPONSE = $response")
 
         return response.keys
     }

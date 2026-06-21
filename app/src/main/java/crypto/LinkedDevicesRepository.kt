@@ -9,7 +9,7 @@ import kotlinx.serialization.json.Json
 
 @Serializable
 data class LinkedDeviceDto(
-    val id: String? = null,
+    val id: Int? = null,
     val userId: Int? = null,
     val deviceId: String,
     val name: String? = null,

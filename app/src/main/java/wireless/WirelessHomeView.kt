@@ -103,7 +103,23 @@ fun WirelessHomeView(
 
         EsimSection(
             esim = esim,
-            activation = activation
+            activation = activation,
+            onOpenEsim = {
+                context.startActivity(
+                    Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://chatforia.com/account/esim")
+                    )
+                )
+            },
+            onSetupEsim = {
+                context.startActivity(
+                    Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://chatforia.com/upgrade?section=mobile")
+                    )
+                )
+            }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -140,22 +156,29 @@ fun WirelessHomeView(
 
         ChatforiaSectionCard(title = stringResource(R.string.android_wireless_home_manage)) {
             OutlinedButton(
-                onClick = {},
+                onClick = {
+                    context.startActivity(
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("https://chatforia.com/account/esim")
+                        )
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Text(stringResource(R.string.android_wireless_home_manage_wireless))
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            OutlinedButton(
-                onClick = {},
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(stringResource(R.string.android_wireless_home_port_my_number))
-            }
+//            Spacer(modifier = Modifier.height(10.dp))
+//
+//            OutlinedButton(
+//                onClick = {},
+//                modifier = Modifier.fillMaxWidth(),
+//                shape = RoundedCornerShape(16.dp)
+//            ) {
+//                Text(stringResource(R.string.android_wireless_home_port_my_number))
+//            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -240,7 +263,9 @@ private fun CoverageSection(
 @Composable
 private fun EsimSection(
     esim: EsimSubscriberDto?,
-    activation: ReserveEsimResponse?
+    activation: ReserveEsimResponse?,
+    onOpenEsim: () -> Unit,
+    onSetupEsim: () -> Unit
 ) {
     ChatforiaSectionCard(title = stringResource(R.string.android_wireless_home_your_esim)) {
         val hasEsim = esim != null || activation != null
@@ -274,7 +299,13 @@ private fun EsimSection(
         Spacer(modifier = Modifier.height(14.dp))
 
         Button(
-            onClick = {},
+            onClick = {
+                if (hasEsim) {
+                    onOpenEsim()
+                } else {
+                    onSetupEsim()
+                }
+            },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp)
         ) {

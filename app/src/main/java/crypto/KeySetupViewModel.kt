@@ -58,6 +58,12 @@ class KeySetupViewModel(
                 )
 
             try {
+                val recoveryPassword = password.trim()
+
+                if (recoveryPassword.length < 8) {
+                    throw Exception("Recovery passcode must be at least 8 characters.")
+                }
+
                 val backup =
                     remoteKeyBackupRepository.fetchBackup()
                         ?: throw Exception("No remote key backup found.")
@@ -65,7 +71,7 @@ class KeySetupViewModel(
                 val restored =
                     keyBackupCrypto.decryptRemoteBackup(
                         backup = backup,
-                        password = password.trim()
+                        password = recoveryPassword
                     )
 
                 val serverUser = authRepository.fetchMe()
@@ -151,6 +157,12 @@ class KeySetupViewModel(
                 )
 
             try {
+                val recoveryPassword = password.trim()
+
+                if (recoveryPassword.length < 8) {
+                    throw Exception("Recovery passcode must be at least 8 characters.")
+                }
+
                 val publicKey =
                     keyStorage.readPublicKey()
                         ?: throw Exception("No local public key found.")
@@ -163,7 +175,7 @@ class KeySetupViewModel(
                     keyBackupCrypto.createRemoteBackup(
                         publicKey = publicKey,
                         privateKey = privateKey,
-                        password = password
+                        password = recoveryPassword
                     )
 
                 remoteKeyBackupRepository.uploadBackup(payload)
