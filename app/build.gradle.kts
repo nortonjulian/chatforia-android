@@ -18,6 +18,12 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        manifestPlaceholders["admobAppId"] =
+            project.findProperty("ADMOB_APP_ID")
+                ?.toString()
+                ?: "ca-app-pub-3940256099942544~3347511713"
+
+
         buildConfigField(
             "String",
             "POSTHOG_API_KEY",
@@ -32,7 +38,33 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField(
+                "String",
+                "ADMOB_BANNER_AD_UNIT_ID",
+                "\"ca-app-pub-3940256099942544/9214589741\""
+            )
+
+            buildConfigField(
+                "String",
+                "ADMOB_INTERSTITIAL_AD_UNIT_ID",
+                "\"ca-app-pub-3940256099942544/1033173712\""
+            )
+        }
+
         release {
+            buildConfigField(
+                "String",
+                "ADMOB_BANNER_AD_UNIT_ID",
+                "\"${project.findProperty("ADMOB_REAL_BANNER_AD_UNIT_ID") ?: "ca-app-pub-3940256099942544/9214589741"}\""
+            )
+
+            buildConfigField(
+                "String",
+                "ADMOB_INTERSTITIAL_AD_UNIT_ID",
+                "\"${project.findProperty("ADMOB_REAL_INTERSTITIAL_AD_UNIT_ID") ?: "ca-app-pub-3940256099942544/1033173712"}\""
+            )
+
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -65,6 +97,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+
+    implementation("com.google.android.gms:play-services-ads:25.4.0")
 
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-messaging")

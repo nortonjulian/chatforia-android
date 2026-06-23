@@ -68,7 +68,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
-
+import com.chatforia.android.ads.AdMobBanner
+import com.chatforia.android.ads.shouldShowAds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,6 +86,7 @@ fun ChatsScreen(
     tenorRepository: TenorRepository,
     uploadRepository: UploadRepository,
     apiClient: ApiClient,
+    onMaybeShowInterstitial: () -> Unit = {}
 ) {
     var searchText by remember {
         mutableStateOf("")
@@ -242,7 +244,10 @@ fun ChatsScreen(
             viewModel = riaViewModel,
             memoryEnabled = true,
             filterProfanity = false,
-            onClose = { showRia = false }
+            onClose = {
+                showRia = false
+                onMaybeShowInterstitial()
+            }
         )
 
         return
@@ -351,7 +356,9 @@ fun ChatsScreen(
 
         if (filtered.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 Text(stringResource(R.string.android_chats_no_chats_yet))
@@ -391,20 +398,16 @@ fun ChatsScreen(
         }
 
 
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-                .padding(horizontal = 12.dp),
-            tonalElevation = 1.dp,
-            shape = RoundedCornerShape(2.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text(stringResource(R.string.android_chats_admob_ad))
-            }
-        }
+        if (currentUser.shouldShowAds()) {
+            AdMobBanner(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .padding(horizontal = 12.dp)
+            )
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+        }
     }
 
     pendingDeleteConversation?.let { conversation ->

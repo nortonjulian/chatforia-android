@@ -67,7 +67,7 @@ data class DeviceRegisterRequest(
 data class ApproveDeviceRequest(
     val deviceId: String,
     val wrappedAccountKey: String,
-    val wrappedAccountKeyAlgo: String = "x25519-xsalsa20poly1305",
+    val wrappedAccountKeyAlgo: String = "x25519-aesgcm",
     val wrappedAccountKeyVer: Int = 1
 )
 

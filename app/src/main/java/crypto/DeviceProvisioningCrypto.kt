@@ -10,6 +10,8 @@ import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+import javax.crypto.Cipher
+import javax.crypto.spec.GCMParameterSpec
 
 class DeviceProvisioningCrypto {
     private val sodium = LazySodiumAndroid(SodiumAndroid())
@@ -37,7 +39,7 @@ class DeviceProvisioningCrypto {
 
         val wrappingKey = deriveProvisioningKey(sharedSecret)
 
-        val nonce = ByteArray(24)
+        val nonce = ByteArray(12)
         SecureRandom().nextBytes(nonce)
 
         val plaintext = json.encodeToString(
@@ -46,23 +48,19 @@ class DeviceProvisioningCrypto {
             )
         ).toByteArray(StandardCharsets.UTF_8)
 
-        val ciphertext = ByteArray(plaintext.size + 16)
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
 
-        val ok = sodium.cryptoSecretBoxEasy(
-            ciphertext,
-            plaintext,
-            plaintext.size.toLong(),
-            nonce,
-            wrappingKey
+        cipher.init(
+            Cipher.ENCRYPT_MODE,
+            SecretKeySpec(wrappingKey, "AES"),
+            GCMParameterSpec(128, nonce)
         )
 
-        if (!ok) {
-            throw IllegalStateException("Failed to encrypt account key")
-        }
+        val ciphertext = cipher.doFinal(plaintext)
 
         return json.encodeToString(
             WrappedAccountKeyPayload(
-                alg = "x25519-xsalsa20poly1305",
+                alg = "x25519-aesgcm",
                 epk = encodeB64(ephemeralPublicKey),
                 nonce = encodeB64(nonce),
                 ciphertext = encodeB64(ciphertext)
@@ -76,7 +74,7 @@ class DeviceProvisioningCrypto {
     ): String {
         val wrapped = json.decodeFromString<WrappedAccountKeyPayload>(wrappedAccountKeyJson)
 
-        if (wrapped.alg != "x25519-xsalsa20poly1305") {
+        if (wrapped.alg != "x25519-aesgcm") {
             throw IllegalArgumentException("Unsupported provisioning algorithm: ${wrapped.alg}")
         }
 
@@ -87,20 +85,20 @@ class DeviceProvisioningCrypto {
 
         val wrappingKey = deriveProvisioningKey(sharedSecret)
 
-        val ciphertext = decodeB64Any(wrapped.ciphertext)
-        val decrypted = ByteArray(ciphertext.size - 16)
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
 
-        val ok = sodium.cryptoSecretBoxOpenEasy(
-            decrypted,
-            ciphertext,
-            ciphertext.size.toLong(),
-            decodeB64Any(wrapped.nonce),
-            wrappingKey
+        cipher.init(
+            Cipher.DECRYPT_MODE,
+            SecretKeySpec(wrappingKey, "AES"),
+            GCMParameterSpec(128, decodeB64Any(wrapped.nonce))
         )
 
-        if (!ok) {
-            throw IllegalStateException("Failed to decrypt provisioned account key")
-        }
+        val decrypted =
+            try {
+                cipher.doFinal(decodeB64Any(wrapped.ciphertext))
+            } catch (e: Exception) {
+                throw IllegalStateException("Failed to decrypt provisioned account key", e)
+            }
 
         val payload = json.decodeFromString<ProvisionedAccountKeyPayload>(
             decrypted.toString(StandardCharsets.UTF_8)

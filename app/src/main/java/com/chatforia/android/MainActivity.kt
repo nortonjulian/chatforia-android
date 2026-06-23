@@ -82,6 +82,10 @@ import android.content.Context
 import android.util.Log
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
+import com.google.android.gms.ads.MobileAds
+import com.chatforia.android.ads.InterstitialAdManager
+import com.chatforia.android.ads.shouldShowAds
+
 enum class AppTab {
     CHATS,
     CALLS,
@@ -122,6 +126,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        Thread {
+            MobileAds.initialize(this) {}
+        }.start()
 
 
         setContent {
@@ -375,6 +383,17 @@ class MainActivity : ComponentActivity() {
 
         var pendingCallChoice by remember {
             mutableStateOf<com.chatforia.android.calls.CallDto?>(null)
+        }
+
+        val interstitialAdManager =
+            remember {
+                InterstitialAdManager(this@MainActivity)
+            }
+
+        LaunchedEffect(user.id) {
+            if (user.shouldShowAds()) {
+                interstitialAdManager.load()
+            }
         }
 
         val context = LocalContext.current
@@ -841,7 +860,12 @@ class MainActivity : ComponentActivity() {
                             tenorRepository = tenorRepository,
                             uploadRepository = uploadRepository,
                             startChatViewModel = startChatViewModel,
-                            apiClient = apiClient
+                            apiClient = apiClient,
+                            onMaybeShowInterstitial = {
+                                if (user.shouldShowAds()) {
+                                    interstitialAdManager.showIfReady()
+                                }
+                            }
                         )
 
                     AppTab.CALLS ->
