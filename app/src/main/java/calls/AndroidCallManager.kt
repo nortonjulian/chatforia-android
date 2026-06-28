@@ -79,7 +79,29 @@ class AndroidCallManager(
                         }
 
                         override fun onFailed(message: String) {
-                            _state.value = AndroidCallState.Failed(message)
+                            viewModelScope.launch(callDispatcher) {
+                                runCatching {
+                                    callService.endCall(
+                                        callId = callId,
+                                        reason = "failed"
+                                    )
+                                }
+                            }
+
+                            val lower = message.lowercase()
+
+                            if (
+                                lower.contains("cancel") ||
+                                lower.contains("declin") ||
+                                lower.contains("disconnect") ||
+                                lower.contains("busy") ||
+                                lower.contains("no answer")
+                            ) {
+                                trackCallEnded("remote_ended")
+                                _state.value = AndroidCallState.Ended()
+                            } else {
+                                _state.value = AndroidCallState.Failed(message)
+                            }
                         }
 
                         override fun onDisconnected() {
@@ -131,7 +153,29 @@ class AndroidCallManager(
                         }
 
                         override fun onFailed(message: String) {
-                            _state.value = AndroidCallState.Failed(message)
+                            viewModelScope.launch(callDispatcher) {
+                                runCatching {
+                                    callService.endCall(
+                                        callId = callId,
+                                        reason = "failed"
+                                    )
+                                }
+                            }
+
+                            val lower = message.lowercase()
+
+                            if (
+                                lower.contains("cancel") ||
+                                lower.contains("declin") ||
+                                lower.contains("disconnect") ||
+                                lower.contains("busy") ||
+                                lower.contains("no answer")
+                            ) {
+                                trackCallEnded("remote_ended")
+                                _state.value = AndroidCallState.Ended()
+                            } else {
+                                _state.value = AndroidCallState.Failed(message)
+                            }
                         }
 
                         override fun onDisconnected() {
@@ -238,17 +282,6 @@ class AndroidCallManager(
     }
 
     private fun acceptIncomingAudio(payload: IncomingCallPayload) {
-        val accepted =
-            voiceManager.acceptCall()
-
-        if (!accepted) {
-            _state.value =
-                AndroidCallState.Failed(
-                    "Incoming audio calls are not available yet on this device."
-                )
-            return
-        }
-
         val session =
             CallSession(
                 callId = payload.callId,
@@ -259,13 +292,39 @@ class AndroidCallManager(
                 isVideo = false
             )
 
-        _state.value = AndroidCallState.Active(session)
+        val accepted =
+            voiceManager.acceptCall(
+                object : CallAudioClient.Listener {
+                    override fun onConnected() {
+                        _state.value = AndroidCallState.Active(session)
 
-        trackCallStarted(
-            session = session,
-            callType = "audio",
-            direction = "inbound"
-        )
+                        trackCallStarted(
+                            session = session,
+                            callType = "audio",
+                            direction = "inbound"
+                        )
+                    }
+
+                    override fun onFailed(message: String) {
+                        _state.value = AndroidCallState.Failed(message)
+                    }
+
+                    override fun onDisconnected() {
+                        trackCallEnded("disconnected")
+                        _state.value = AndroidCallState.Ended()
+                    }
+                }
+            )
+
+        if (!accepted) {
+            _state.value =
+                AndroidCallState.Failed(
+                    "Incoming audio calls are not available yet on this device."
+                )
+            return
+        }
+
+        _state.value = AndroidCallState.Connecting(session)
     }
 
     private fun acceptIncomingVideo(
@@ -333,6 +392,8 @@ class AndroidCallManager(
             _state.value as? AndroidCallState.Ringing ?: return
 
         val callId = ringing.payload.callId
+
+        voiceManager.rejectIncomingCall()
 
         if (callId != null) {
             viewModelScope.launch(callDispatcher) {
@@ -506,6 +567,16 @@ class AndroidCallManager(
                     ringtonePlayer.playSavedRingtone()
                     _state.value = AndroidCallState.Ringing(payload)
                 }
+            }
+        }
+
+        viewModelScope.launch {
+            TwilioVoiceCallEvents.remoteEnded.collect {
+                ringtonePlayer.stop()
+                voiceManager.endCall()
+                videoManager.disconnect()
+                trackCallEnded("remote_ended")
+                _state.value = AndroidCallState.Ended()
             }
         }
 

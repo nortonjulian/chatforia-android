@@ -2,6 +2,7 @@ package com.chatforia.android.calls
 
 import android.content.Context
 import android.media.AudioManager
+import android.util.Log
 import com.twilio.voice.Call
 import com.twilio.voice.CallException
 import com.twilio.voice.ConnectOptions
@@ -10,12 +11,6 @@ import com.twilio.voice.Voice
 class TwilioVoiceManager(
     private val context: Context
 ) : CallAudioClient {
-    interface Listener {
-        fun onRinging() {}
-        fun onConnected() {}
-        fun onFailed(message: String) {}
-        fun onDisconnected() {}
-    }
 
     private var activeCall: Call? = null
     private var isMuted: Boolean = false
@@ -39,15 +34,31 @@ class TwilioVoiceManager(
                         call: Call,
                         error: CallException
                     ) {
+                        Log.e(
+                            "ChatforiaTwilioVoice",
+                            "Twilio outgoing connect failure. sid=${call.sid}, state=${call.state}, message=${error.message}, exception=$error",
+                            error
+                        )
+
                         activeCall = null
                         listener.onFailed(error.message ?: "Call failed.")
                     }
 
                     override fun onRinging(call: Call) {
+                        Log.d(
+                            "ChatforiaTwilioVoice",
+                            "Twilio outgoing call is ringing. sid=${call.sid}, state=${call.state}"
+                        )
+
                         listener.onRinging()
                     }
 
                     override fun onConnected(call: Call) {
+                        Log.d(
+                            "ChatforiaTwilioVoice",
+                            "Twilio outgoing call connected"
+                        )
+
                         activeCall = call
                         listener.onConnected()
                     }
@@ -67,21 +78,133 @@ class TwilioVoiceManager(
                         isMuted = false
 
                         if (error != null) {
-                            listener.onFailed(error.message ?: "Call disconnected.")
+                            Log.w(
+                                "ChatforiaTwilioVoice",
+                                "Twilio call disconnected with error/warning: ${error.message}",
+                                error
+                            )
                         } else {
-                            listener.onDisconnected()
+                            Log.d(
+                                "ChatforiaTwilioVoice",
+                                "Twilio call disconnected normally"
+                            )
                         }
+
+                        listener.onDisconnected()
                     }
                 }
             )
     }
 
-    override fun acceptCall(): Boolean {
-        return activeCall != null
+    override fun acceptCall(
+        listener: CallAudioClient.Listener
+    ): Boolean {
+        if (activeCall != null) {
+            return true
+        }
+
+        val invite =
+            TwilioIncomingCallStore.take()
+                ?: return false
+
+        return try {
+            activeCall =
+                invite.accept(
+                    context,
+                    object : Call.Listener {
+                        override fun onConnectFailure(
+                            call: Call,
+                            error: CallException
+                        ) {
+                            Log.e(
+                                "ChatforiaTwilioVoice",
+                                "Twilio incoming connect failure: ${error.message}",
+                                error
+                            )
+
+                            activeCall = null
+                            listener.onFailed(error.message ?: "Incoming call failed.")
+                        }
+
+                        override fun onRinging(call: Call) {
+                            listener.onRinging()
+                        }
+
+                        override fun onConnected(call: Call) {
+                            activeCall = call
+                            listener.onConnected()
+                        }
+
+                        override fun onReconnecting(
+                            call: Call,
+                            error: CallException
+                        ) {}
+
+                        override fun onReconnected(call: Call) {}
+
+                        override fun onDisconnected(
+                            call: Call,
+                            error: CallException?
+                        ) {
+                            activeCall = null
+                            isMuted = false
+
+                            if (error != null) {
+                                Log.w(
+                                    "ChatforiaTwilioVoice",
+                                    "Twilio call disconnected with error/warning: ${error.message}",
+                                    error
+                                )
+                            } else {
+                                Log.d(
+                                    "ChatforiaTwilioVoice",
+                                    "Twilio call disconnected normally"
+                                )
+                            }
+
+                            listener.onDisconnected()
+                        }
+                    }
+                )
+
+            true
+        } catch (e: Exception) {
+            Log.e("ChatforiaTwilioVoice", "Failed to accept Twilio call invite", e)
+            activeCall = null
+            listener.onFailed(e.message ?: "Could not accept incoming call.")
+            false
+        }
+    }
+
+    override fun rejectIncomingCall(): Boolean {
+        val invite =
+            TwilioIncomingCallStore.take()
+                ?: return false
+
+        return try {
+            invite.reject(context)
+            true
+        } catch (e: Exception) {
+            Log.e("ChatforiaTwilioVoice", "Failed to reject Twilio call invite", e)
+            false
+        } finally {
+            TwilioIncomingCallStore.clear()
+        }
     }
 
     override fun endCall() {
-        activeCall?.disconnect()
+        try {
+            activeCall?.disconnect()
+        } catch (e: Exception) {
+            Log.e("ChatforiaTwilioVoice", "Failed to disconnect active call", e)
+        }
+
+        try {
+            TwilioIncomingCallStore.clear()
+        } catch (e: Exception) {
+            Log.e("ChatforiaTwilioVoice", "Failed to clear pending invite", e)
+        }
+
         activeCall = null
         isMuted = false
     }

@@ -11,7 +11,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-
+import com.chatforia.android.calls.TwilioIncomingCallStore
+import com.twilio.voice.CallException
+import com.twilio.voice.CallInvite
+import com.twilio.voice.CancelledCallInvite
+import com.twilio.voice.MessageListener
+import com.twilio.voice.Voice
+import com.chatforia.android.calls.TwilioVoiceCallEvents
 class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
 
     private val serviceScope =
@@ -58,6 +64,68 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
         super.onMessageReceived(message)
 
         Log.d("ChatforiaFCM", "FCM data: ${message.data}")
+
+        val handledByTwilio =
+            Voice.handleMessage(
+                applicationContext,
+                HashMap(message.data),
+                object : MessageListener {
+                    override fun onCallInvite(callInvite: CallInvite) {
+                        Log.d(
+                            "ChatforiaTwilioVoice",
+                            "Received Twilio call invite: ${callInvite.callSid}"
+                        )
+
+                        TwilioIncomingCallStore.save(callInvite)
+
+                        val custom =
+                            callInvite.customParameters ?: emptyMap()
+
+                        val data =
+                            mapOf(
+                                "type" to "call_incoming",
+                                "callId" to (custom["callId"] ?: ""),
+                                "callerId" to (custom["callerId"] ?: ""),
+                                "callerName" to (
+                                        custom["callerName"]
+                                            ?: callInvite.from
+                                            ?: "Incoming call"
+                                        ),
+                                "fromNumber" to (
+                                        custom["fromNumber"]
+                                            ?: callInvite.from
+                                            ?: "Unknown caller"
+                                        ),
+                                "mode" to "AUDIO",
+                                "roomName" to ""
+                            )
+
+                        NotificationCoordinator(this@ChatforiaFirebaseMessagingService)
+                            .showIncomingCallNotification(data)
+                    }
+
+                    override fun onCancelledCallInvite(
+                        cancelledCallInvite: CancelledCallInvite,
+                        callException: CallException?
+                    ) {
+                        Log.d(
+                            "ChatforiaTwilioVoice",
+                            "Twilio call invite cancelled"
+                        )
+
+                        TwilioIncomingCallStore.clear()
+
+                        NotificationCoordinator(this@ChatforiaFirebaseMessagingService)
+                            .cancelIncomingCallNotification()
+
+                        TwilioVoiceCallEvents.notifyRemoteEnded()
+                    }
+                }
+            )
+
+        if (handledByTwilio) {
+            return
+        }
 
         when (message.data["type"]) {
             "call_incoming" -> {

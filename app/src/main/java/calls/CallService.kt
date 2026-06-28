@@ -80,6 +80,7 @@ class CallService(
             ApiRequest(
                 path = "voice/client/token",
                 method = HttpMethod.POST,
+                bodyJson = """{"platform":"android"}""",
                 requiresAuth = true
             )
         )

@@ -85,6 +85,7 @@ import androidx.compose.material3.TextButton
 import com.google.android.gms.ads.MobileAds
 import com.chatforia.android.ads.InterstitialAdManager
 import com.chatforia.android.ads.shouldShowAds
+import com.chatforia.android.calls.TwilioVoicePushRegistrar
 
 enum class AppTab {
     CHATS,
@@ -189,7 +190,10 @@ class MainActivity : ComponentActivity() {
                         remember {
                             PushTokenRegistrar(
                                 deviceIdentityStorage = DeviceIdentityStorage(applicationContext),
-                                linkedDevicesRepository = LinkedDevicesRepository(apiClient)
+                                linkedDevicesRepository = LinkedDevicesRepository(apiClient),
+                                twilioVoicePushRegistrar = TwilioVoicePushRegistrar(
+                                    callService = CallService(apiClient)
+                                )
                             )
                         }
 

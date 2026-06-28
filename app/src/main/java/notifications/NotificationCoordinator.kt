@@ -131,6 +131,11 @@ class NotificationCoordinator(
             .notify(1002, notification)
     }
 
+    fun cancelIncomingCallNotification() {
+        NotificationManagerCompat.from(context)
+            .cancel(1001)
+    }
+
     private fun canPostNotifications(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
 
