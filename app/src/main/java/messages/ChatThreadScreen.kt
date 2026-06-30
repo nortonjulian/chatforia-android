@@ -64,6 +64,11 @@ import com.chatforia.android.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import com.chatforia.android.ads.InterstitialAdManager
+import com.chatforia.android.ads.shouldShowAds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -128,6 +133,14 @@ fun ChatThreadScreen(
 
     val context = LocalContext.current
 
+    val activity = remember(context) {
+        context.findActivity()
+    }
+
+    val interstitialAdManager = remember(activity) {
+        activity?.let { InterstitialAdManager(it) }
+    }
+
     val recorder = remember(context) {
         AudioRecorderService(context)
     }
@@ -175,6 +188,22 @@ fun ChatThreadScreen(
                 )
             }
         }
+
+    LaunchedEffect(
+        conversation.id,
+        conversation.kind,
+        currentUser.id,
+        currentUser.isAdmin,
+        currentUser.isPremium,
+        currentUser.plan
+    ) {
+        if (
+            conversation.kind == "sms" &&
+            currentUser.shouldShowAds()
+        ) {
+            interstitialAdManager?.showIfReady()
+        }
+    }
 
     LaunchedEffect(conversation.id, conversation.kind, currentUserId) {
         val userId = currentUserId ?: return@LaunchedEffect
@@ -878,6 +907,14 @@ fun ChatThreadScreen(
                 )
             }
         }
+    }
+}
+
+private tailrec fun Context.findActivity(): Activity? {
+    return when (this) {
+        is Activity -> this
+        is ContextWrapper -> baseContext.findActivity()
+        else -> null
     }
 }
 

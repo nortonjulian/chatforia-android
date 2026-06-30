@@ -93,6 +93,20 @@ class MainActivity : ComponentActivity() {
 
     private var latestLaunchIntent by mutableStateOf<Intent?>(null)
 
+    private var pendingNotificationChatRoomId by mutableStateOf<Int?>(null)
+
+    private fun handleMessageNotificationIntent(intent: Intent?) {
+        if (intent?.getStringExtra("type") != "message_new") return
+
+        val chatRoomId =
+            intent.getStringExtra("chatRoomId")
+                ?.toIntOrNull()
+
+        if (chatRoomId != null) {
+            pendingNotificationChatRoomId = chatRoomId
+        }
+    }
+
     private fun consumeAppleOAuthToken(
         intent: Intent?,
         onToken: (String) -> Unit
@@ -130,6 +144,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         latestLaunchIntent = intent
+        handleMessageNotificationIntent(intent)
 
         Thread {
             MobileAds.initialize(this) {}
@@ -372,8 +387,8 @@ class MainActivity : ComponentActivity() {
 
         setIntent(intent)
         latestLaunchIntent = intent
+        handleMessageNotificationIntent(intent)
     }
-
 
     @Composable
     fun ChatforiaApp(
@@ -888,6 +903,10 @@ class MainActivity : ComponentActivity() {
                             uploadRepository = uploadRepository,
                             startChatViewModel = startChatViewModel,
                             apiClient = apiClient,
+                            pendingOpenChatRoomId = pendingNotificationChatRoomId,
+                            onPendingOpenChatConsumed = {
+                                pendingNotificationChatRoomId = null
+                            },
                             onMaybeShowInterstitial = {
                                 if (user.shouldShowAds()) {
                                     interstitialAdManager.showIfReady()

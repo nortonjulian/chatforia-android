@@ -65,6 +65,16 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
 
         Log.d("ChatforiaFCM", "FCM data: ${message.data}")
 
+        val pushData = message.data.toMutableMap()
+
+        message.notification?.title?.let {
+            pushData["title"] = it
+        }
+
+        message.notification?.body?.let {
+            pushData["body"] = it
+        }
+
         val handledByTwilio =
             Voice.handleMessage(
                 applicationContext,
@@ -127,7 +137,12 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
             return
         }
 
-        when (message.data["type"]) {
+        when (pushData["type"]) {
+            "message_new" -> {
+                NotificationCoordinator(this)
+                    .showMessageNotification(pushData)
+            }
+
             "call_incoming" -> {
                 NotificationCoordinator(this)
                     .showIncomingCallNotification(message.data)

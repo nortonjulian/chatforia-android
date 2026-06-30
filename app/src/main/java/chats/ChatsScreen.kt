@@ -86,6 +86,8 @@ fun ChatsScreen(
     tenorRepository: TenorRepository,
     uploadRepository: UploadRepository,
     apiClient: ApiClient,
+    pendingOpenChatRoomId: Int? = null,
+    onPendingOpenChatConsumed: () -> Unit = {},
     onMaybeShowInterstitial: () -> Unit = {}
 ) {
     var searchText by remember {
@@ -187,6 +189,21 @@ fun ChatsScreen(
             selectedConversation = conversation
             startChatViewModel.clearOpenedConversation()
             viewModel.loadConversations()
+        }
+    }
+
+    LaunchedEffect(pendingOpenChatRoomId, conversations) {
+        val chatRoomId = pendingOpenChatRoomId ?: return@LaunchedEffect
+
+        val conversation =
+            conversations.firstOrNull { it.id == chatRoomId }
+
+        if (conversation != null) {
+            showStartChat = false
+            showRia = false
+            showRandomMatching = false
+            selectedConversation = conversation
+            onPendingOpenChatConsumed()
         }
     }
 

@@ -15,11 +15,24 @@ class InterstitialAdManager(
     private var interstitialAd: InterstitialAd? = null
     private var isLoading = false
     private var lastShownAt = 0L
+    private var showAfterLoad = false
 
     private val minimumGapMillis = 3 * 60 * 1000L
 
-    fun load() {
-        if (isLoading || interstitialAd != null) return
+    fun load(showWhenReady: Boolean = false) {
+        if (showWhenReady) {
+            showAfterLoad = true
+        }
+
+        if (isLoading) return
+
+        val readyAd = interstitialAd
+        if (readyAd != null) {
+            if (showWhenReady) {
+                showIfReady()
+            }
+            return
+        }
 
         isLoading = true
 
@@ -44,6 +57,7 @@ class InterstitialAdManager(
 
                             override fun onAdDismissedFullScreenContent() {
                                 interstitialAd = null
+                                showAfterLoad = false
                                 load()
                             }
 
@@ -51,14 +65,21 @@ class InterstitialAdManager(
                                 adError: AdError
                             ) {
                                 interstitialAd = null
+                                showAfterLoad = false
                                 load()
                             }
                         }
+
+                    if (showAfterLoad) {
+                        showAfterLoad = false
+                        showIfReady()
+                    }
                 }
 
                 override fun onAdFailedToLoad(error: LoadAdError) {
                     interstitialAd = null
                     isLoading = false
+                    showAfterLoad = false
                 }
             }
         )
@@ -72,7 +93,7 @@ class InterstitialAdManager(
         val ad = interstitialAd
 
         if (ad == null) {
-            load()
+            load(showWhenReady = true)
             return
         }
 

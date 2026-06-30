@@ -7,20 +7,22 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.chatforia.android.MainActivity
 import com.chatforia.android.R
-import android.media.AudioAttributes
-import android.media.RingtoneManager
+
 class NotificationCoordinator(
     private val context: Context
 ) {
     companion object {
         const val CALLS_CHANNEL_ID = "chatforia_calls_v2"
         const val MISSED_CALLS_CHANNEL_ID = "chatforia_missed_calls"
+        const val MESSAGES_CHANNEL_ID = "chatforia_messages"
     }
 
     init {
@@ -61,8 +63,19 @@ class NotificationCoordinator(
             enableVibration(true)
         }
 
+        val messagesChannel = NotificationChannel(
+            MESSAGES_CHANNEL_ID,
+            "Messages",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = "New Chatforia message alerts"
+            enableVibration(true)
+            setShowBadge(true)
+        }
+
         manager.createNotificationChannel(callsChannel)
         manager.createNotificationChannel(missedCallsChannel)
+        manager.createNotificationChannel(messagesChannel)
     }
 
     fun showIncomingCallNotification(data: Map<String, String>) {
@@ -99,14 +112,14 @@ class NotificationCoordinator(
             NotificationCompat.Builder(context, CALLS_CHANNEL_ID)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle("Incoming call")
-                .setContentText("Call from $callerName")
-                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setContentText(callerName)
+                .setStyle(NotificationCompat.BigTextStyle().bigText("Call from $callerName"))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_CALL)
-                .setSound(callSoundUri)
-                .setFullScreenIntent(pendingIntent, true)
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setContentIntent(pendingIntent)
-                .setOngoing(true)
-                .setAutoCancel(false)
+                .setAutoCancel(true)
                 .build()
 
         NotificationManagerCompat.from(context)
@@ -129,6 +142,56 @@ class NotificationCoordinator(
 
         NotificationManagerCompat.from(context)
             .notify(1002, notification)
+    }
+
+    fun showMessageNotification(data: Map<String, String>) {
+        if (!canPostNotifications()) return
+
+        val title =
+            data["title"]
+                ?: data["senderName"]
+                ?: "Chatforia"
+
+        val body =
+            data["body"]
+                ?: "New encrypted message"
+
+        val messageId = data["messageId"]
+        val chatRoomId = data["chatRoomId"]
+
+        val notificationId =
+            ("chat_room_${chatRoomId ?: messageId ?: System.currentTimeMillis().toString()}").hashCode()
+
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+
+            putExtra("type", "message_new")
+            putExtra("chatRoomId", data["chatRoomId"])
+            putExtra("messageId", messageId)
+            putExtra("senderId", data["senderId"])
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            notificationId,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification =
+            NotificationCompat.Builder(context, MESSAGES_CHANNEL_ID)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(title)
+                .setContentText(body)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
+                .build()
+
+        NotificationManagerCompat.from(context)
+            .notify(notificationId, notification)
     }
 
     fun cancelIncomingCallNotification() {
