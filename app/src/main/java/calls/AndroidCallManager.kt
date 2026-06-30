@@ -230,16 +230,46 @@ class AndroidCallManager(
                     roomName = start.roomName,
                     listener = object : CallVideoClient.Listener {
                         override fun onConnected() {
-                            _state.value = AndroidCallState.Active(session)
+                            val connectedSession =
+                                when (val current = _state.value) {
+                                    is AndroidCallState.Connecting -> current.session
+                                    is AndroidCallState.Active -> current.session
+                                    else -> session
+                                }
+
+                            _state.value = AndroidCallState.Active(connectedSession)
 
                             trackCallStarted(
-                                session = session,
+                                session = connectedSession,
                                 callType = "video",
                                 direction = "outbound"
                             )
                         }
 
+                        override fun onLocalVideoTrack(track: com.twilio.video.LocalVideoTrack?) {
+                            updateVideoSession {
+                                it.copy(localVideoTrack = track)
+                            }
+                        }
+
+                        override fun onRemoteVideoTrack(track: com.twilio.video.RemoteVideoTrack?) {
+                            updateVideoSession {
+                                it.copy(remoteVideoTrack = track)
+                            }
+                        }
+
                         override fun onFailed(message: String) {
+                            videoManager.disconnect()
+
+                            viewModelScope.launch(callDispatcher) {
+                                runCatching {
+                                    callService.endCall(
+                                        callId = start.callId,
+                                        reason = "failed"
+                                    )
+                                }
+                            }
+
                             _state.value = AndroidCallState.Failed(message)
                         }
 
@@ -251,6 +281,8 @@ class AndroidCallManager(
                 )
 
             } catch (e: Exception) {
+                videoManager.disconnect()
+
                 _state.value =
                     AndroidCallState.Failed(
                         e.message ?: "Failed to start video call."
@@ -292,6 +324,8 @@ class AndroidCallManager(
                 isVideo = false
             )
 
+        _state.value = AndroidCallState.Connecting(session)
+
         val accepted =
             voiceManager.acceptCall(
                 object : CallAudioClient.Listener {
@@ -324,7 +358,6 @@ class AndroidCallManager(
             return
         }
 
-        _state.value = AndroidCallState.Connecting(session)
     }
 
     private fun acceptIncomingVideo(
@@ -352,21 +385,55 @@ class AndroidCallManager(
                         speakerEnabled = true
                     )
 
+                _state.value = AndroidCallState.Connecting(session)
+
                 videoManager.connect(
                     accessToken = token.token,
                     roomName = roomName,
                     listener = object : CallVideoClient.Listener {
                         override fun onConnected() {
-                            _state.value = AndroidCallState.Active(session)
+                            val connectedSession =
+                                when (val current = _state.value) {
+                                    is AndroidCallState.Connecting -> current.session
+                                    is AndroidCallState.Active -> current.session
+                                    else -> session
+                                }
+
+                            _state.value = AndroidCallState.Active(connectedSession)
 
                             trackCallStarted(
-                                session = session,
+                                session = connectedSession,
                                 callType = "video",
                                 direction = "inbound"
                             )
                         }
 
+                        override fun onLocalVideoTrack(track: com.twilio.video.LocalVideoTrack?) {
+                            updateVideoSession {
+                                it.copy(localVideoTrack = track)
+                            }
+                        }
+
+                        override fun onRemoteVideoTrack(track: com.twilio.video.RemoteVideoTrack?) {
+                            updateVideoSession {
+                                it.copy(remoteVideoTrack = track)
+                            }
+                        }
+
                         override fun onFailed(message: String) {
+                            videoManager.disconnect()
+
+                            payload.callId?.let { callId ->
+                                viewModelScope.launch(callDispatcher) {
+                                    runCatching {
+                                        callService.endCall(
+                                            callId = callId,
+                                            reason = "failed"
+                                        )
+                                    }
+                                }
+                            }
+
                             _state.value = AndroidCallState.Failed(message)
                         }
 
@@ -378,6 +445,19 @@ class AndroidCallManager(
                 )
 
             } catch (e: Exception) {
+                videoManager.disconnect()
+
+                payload.callId?.let { callId ->
+                    viewModelScope.launch(callDispatcher) {
+                        runCatching {
+                            callService.endCall(
+                                callId = callId,
+                                reason = "failed"
+                            )
+                        }
+                    }
+                }
+
                 _state.value =
                     AndroidCallState.Failed(
                         e.message ?: "Failed to accept video call."
@@ -393,7 +473,11 @@ class AndroidCallManager(
 
         val callId = ringing.payload.callId
 
-        voiceManager.rejectIncomingCall()
+        if (ringing.payload.mode?.uppercase() == "VIDEO" || ringing.payload.roomName != null) {
+            videoManager.disconnect()
+        } else {
+            voiceManager.rejectIncomingCall()
+        }
 
         if (callId != null) {
             viewModelScope.launch(callDispatcher) {
@@ -463,19 +547,28 @@ class AndroidCallManager(
 
     fun endCall() {
         ringtonePlayer.stop()
+
         val current = _state.value
 
-        val callId =
+        val session =
             when (current) {
-                is AndroidCallState.Active -> current.session.callId
-                is AndroidCallState.Connecting -> current.session.callId
+                is AndroidCallState.Active -> current.session
+                is AndroidCallState.Connecting -> current.session
                 else -> null
             }
 
+        val callId = session?.callId
+        val isVideo = session?.isVideo == true
+
         trackCallEnded("hangup")
 
-        voiceManager.endCall()
-        videoManager.disconnect()
+        _state.value = AndroidCallState.Ended()
+
+        if (isVideo) {
+            videoManager.disconnect()
+        } else {
+            voiceManager.endCall()
+        }
 
         if (callId != null) {
             viewModelScope.launch(callDispatcher) {
@@ -487,8 +580,6 @@ class AndroidCallManager(
                 }
             }
         }
-
-        _state.value = AndroidCallState.Ended()
     }
 
     fun clearEndedState() {
@@ -501,6 +592,23 @@ class AndroidCallManager(
         val direction: String,
         val startedAtMillis: Long
     )
+
+    private fun updateVideoSession(
+        update: (CallSession) -> CallSession
+    ) {
+        val current = _state.value
+
+        _state.value =
+            when (current) {
+                is AndroidCallState.Connecting ->
+                    AndroidCallState.Connecting(update(current.session))
+
+                is AndroidCallState.Active ->
+                    AndroidCallState.Active(update(current.session))
+
+                else -> current
+            }
+    }
 
     private fun trackCallStarted(
         session: CallSession,

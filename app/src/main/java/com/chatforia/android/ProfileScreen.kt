@@ -618,6 +618,35 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         ChatforiaSectionCard(title = stringResource(R.string.android_profile_privacy)) {
+            Text(
+                text = "Who can find me",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = ChatforiaColors.primaryText
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            DiscoverabilityPicker(
+                selectedValue = settingsState.discoverability,
+                onValueChange = { value ->
+                    settingsViewModel.update {
+                        it.copy(discoverability = value)
+                    }
+                }
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Choose who can find your Chatforia account in search.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = ChatforiaColors.secondaryText
+            )
+
+            HorizontalDivider(color = ChatforiaColors.border)
+
+
             SettingSwitchRow(
                 title = stringResource(R.string.android_profile_allow_explicit_content),
                 subtitle = "",
@@ -1403,6 +1432,64 @@ private fun AgeRangePicker(
                     },
                     onClick = {
                         onAgeBandChange(option.first)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DiscoverabilityPicker(
+    selectedValue: String,
+    onValueChange: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    val options = listOf(
+        "EVERYONE" to "Everyone",
+        "CONTACTS_ONLY" to "My contacts only",
+        "NO_ONE" to "No one"
+    )
+
+    val selectedLabel =
+        options.firstOrNull { it.first == selectedValue }?.second
+            ?: "Everyone"
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded }
+    ) {
+        OutlinedButton(
+            onClick = { expanded = true },
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = ChatforiaColors.accent
+            )
+        ) {
+            Text(selectedLabel)
+        }
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(ChatforiaColors.cardBackground)
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            option.second,
+                            color = ChatforiaColors.primaryText
+                        )
+                    },
+                    onClick = {
+                        onValueChange(option.first)
                         expanded = false
                     }
                 )

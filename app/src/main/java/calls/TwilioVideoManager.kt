@@ -9,6 +9,13 @@ import com.twilio.video.RemoteParticipant
 import com.twilio.video.Room
 import com.twilio.video.TwilioException
 import com.twilio.video.Video
+import tvi.webrtc.Camera1Enumerator
+import com.twilio.video.RemoteAudioTrack
+import com.twilio.video.RemoteAudioTrackPublication
+import com.twilio.video.RemoteDataTrack
+import com.twilio.video.RemoteDataTrackPublication
+import com.twilio.video.RemoteVideoTrack
+import com.twilio.video.RemoteVideoTrackPublication
 
 class TwilioVideoManager(
     private val context: Context
@@ -31,6 +38,13 @@ class TwilioVideoManager(
         roomName: String,
         listener: CallVideoClient.Listener
     ) {
+        try {
+            room?.disconnect()
+        } catch (_: Exception) {
+        }
+
+        cleanup()
+
         this.listener = listener
 
         localAudioTrack =
@@ -59,6 +73,8 @@ class TwilioVideoManager(
                 "camera"
             )
 
+        listener.onLocalVideoTrack(localVideoTrack)
+
         val optionsBuilder =
             ConnectOptions.Builder(accessToken)
                 .roomName(roomName)
@@ -80,8 +96,20 @@ class TwilioVideoManager(
     }
 
     override fun disconnect() {
-        room?.disconnect()
+        val currentListener = listener
+        val hadRoom = room != null
+
+        try {
+            room?.disconnect()
+        } catch (_: Exception) {
+        }
+
         cleanup()
+
+        if (!hadRoom) {
+            listener = null
+            currentListener?.onDisconnected()
+        }
     }
 
     override fun setMuted(isMuted: Boolean) {
@@ -97,27 +125,190 @@ class TwilioVideoManager(
     }
 
     private fun preferredCameraId(): String {
-        return "front"
+        val enumerator = Camera1Enumerator(false)
+
+        val frontCamera =
+            enumerator.deviceNames.firstOrNull { cameraName ->
+                enumerator.isFrontFacing(cameraName)
+            }
+
+        return frontCamera
+            ?: enumerator.deviceNames.firstOrNull()
+            ?: throw IllegalStateException("No camera device found.")
     }
 
+    private fun wireRemoteParticipant(remoteParticipant: RemoteParticipant) {
+        remoteParticipant.setListener(remoteParticipantListener)
+
+        val existingVideoTrack =
+            remoteParticipant.remoteVideoTracks
+                .firstOrNull { publication ->
+                    publication.isTrackSubscribed &&
+                            publication.remoteVideoTrack != null
+                }
+                ?.remoteVideoTrack
+
+        if (existingVideoTrack != null) {
+            listener?.onRemoteVideoTrack(existingVideoTrack)
+        }
+    }
+
+    private val remoteParticipantListener =
+        object : RemoteParticipant.Listener {
+            override fun onAudioTrackPublished(
+                remoteParticipant: RemoteParticipant,
+                remoteAudioTrackPublication: RemoteAudioTrackPublication
+            ) {}
+
+            override fun onAudioTrackUnpublished(
+                remoteParticipant: RemoteParticipant,
+                remoteAudioTrackPublication: RemoteAudioTrackPublication
+            ) {}
+
+            override fun onAudioTrackSubscribed(
+                remoteParticipant: RemoteParticipant,
+                remoteAudioTrackPublication: RemoteAudioTrackPublication,
+                remoteAudioTrack: RemoteAudioTrack
+            ) {}
+
+            override fun onAudioTrackUnsubscribed(
+                remoteParticipant: RemoteParticipant,
+                remoteAudioTrackPublication: RemoteAudioTrackPublication,
+                remoteAudioTrack: RemoteAudioTrack
+            ) {}
+
+            override fun onAudioTrackSubscriptionFailed(
+                remoteParticipant: RemoteParticipant,
+                remoteAudioTrackPublication: RemoteAudioTrackPublication,
+                twilioException: TwilioException
+            ) {}
+
+            override fun onVideoTrackPublished(
+                remoteParticipant: RemoteParticipant,
+                remoteVideoTrackPublication: RemoteVideoTrackPublication
+            ) {}
+
+            override fun onVideoTrackUnpublished(
+                remoteParticipant: RemoteParticipant,
+                remoteVideoTrackPublication: RemoteVideoTrackPublication
+            ) {}
+
+            override fun onVideoTrackSubscribed(
+                remoteParticipant: RemoteParticipant,
+                remoteVideoTrackPublication: RemoteVideoTrackPublication,
+                remoteVideoTrack: RemoteVideoTrack
+            ) {
+                listener?.onRemoteVideoTrack(remoteVideoTrack)
+            }
+
+            override fun onVideoTrackUnsubscribed(
+                remoteParticipant: RemoteParticipant,
+                remoteVideoTrackPublication: RemoteVideoTrackPublication,
+                remoteVideoTrack: RemoteVideoTrack
+            ) {
+                listener?.onRemoteVideoTrack(null)
+            }
+
+            override fun onVideoTrackSubscriptionFailed(
+                remoteParticipant: RemoteParticipant,
+                remoteVideoTrackPublication: RemoteVideoTrackPublication,
+                twilioException: TwilioException
+            ) {}
+
+            override fun onDataTrackPublished(
+                remoteParticipant: RemoteParticipant,
+                remoteDataTrackPublication: RemoteDataTrackPublication
+            ) {}
+
+            override fun onDataTrackUnpublished(
+                remoteParticipant: RemoteParticipant,
+                remoteDataTrackPublication: RemoteDataTrackPublication
+            ) {}
+
+            override fun onDataTrackSubscribed(
+                remoteParticipant: RemoteParticipant,
+                remoteDataTrackPublication: RemoteDataTrackPublication,
+                remoteDataTrack: RemoteDataTrack
+            ) {}
+
+            override fun onDataTrackUnsubscribed(
+                remoteParticipant: RemoteParticipant,
+                remoteDataTrackPublication: RemoteDataTrackPublication,
+                remoteDataTrack: RemoteDataTrack
+            ) {}
+
+            override fun onDataTrackSubscriptionFailed(
+                remoteParticipant: RemoteParticipant,
+                remoteDataTrackPublication: RemoteDataTrackPublication,
+                twilioException: TwilioException
+            ) {}
+
+            override fun onAudioTrackEnabled(
+                remoteParticipant: RemoteParticipant,
+                remoteAudioTrackPublication: RemoteAudioTrackPublication
+            ) {}
+
+            override fun onAudioTrackDisabled(
+                remoteParticipant: RemoteParticipant,
+                remoteAudioTrackPublication: RemoteAudioTrackPublication
+            ) {}
+
+            override fun onVideoTrackEnabled(
+                remoteParticipant: RemoteParticipant,
+                remoteVideoTrackPublication: RemoteVideoTrackPublication
+            ) {}
+
+            override fun onVideoTrackDisabled(
+                remoteParticipant: RemoteParticipant,
+                remoteVideoTrackPublication: RemoteVideoTrackPublication
+            ) {}
+        }
+
     private fun cleanup() {
+        try {
+            localVideoTrack?.enable(false)
+        } catch (_: Exception) {
+        }
+
+        try {
+            localAudioTrack?.enable(false)
+        } catch (_: Exception) {
+        }
+
+        try {
+            cameraCapturer?.stopCapture()
+        } catch (_: Exception) {
+        }
+
+        try {
+            localVideoTrack?.release()
+        } catch (_: Exception) {
+        }
+
+        try {
+            localAudioTrack?.release()
+        } catch (_: Exception) {
+        }
+
+        listener?.onRemoteVideoTrack(null)
+        listener?.onLocalVideoTrack(null)
+
         room = null
-
-        localVideoTrack?.release()
         localVideoTrack = null
-
-        localAudioTrack?.release()
         localAudioTrack = null
-
         cameraCapturer = null
         currentCameraId = null
-        listener = null
     }
 
     private val roomListener =
         object : Room.Listener {
             override fun onConnected(room: Room) {
                 this@TwilioVideoManager.room = room
+
+                room.remoteParticipants.forEach { participant ->
+                    wireRemoteParticipant(participant)
+                }
+
                 listener?.onConnected()
             }
 
@@ -136,6 +327,7 @@ class TwilioVideoManager(
                 val message = twilioException.message ?: "Video call failed."
 
                 cleanup()
+                listener = null
 
                 currentListener?.onFailed(message)
             }
@@ -148,6 +340,7 @@ class TwilioVideoManager(
                 val message = twilioException?.message
 
                 cleanup()
+                listener = null
 
                 if (message != null) {
                     currentListener?.onFailed(message)
@@ -159,12 +352,16 @@ class TwilioVideoManager(
             override fun onParticipantConnected(
                 room: Room,
                 remoteParticipant: RemoteParticipant
-            ) {}
+            ) {
+                wireRemoteParticipant(remoteParticipant)
+            }
 
             override fun onParticipantDisconnected(
                 room: Room,
                 remoteParticipant: RemoteParticipant
-            ) {}
+            ) {
+                listener?.onRemoteVideoTrack(null)
+            }
 
             override fun onRecordingStarted(room: Room) {}
 

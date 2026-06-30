@@ -38,7 +38,9 @@ fun StartChatView(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     val isSearching =
-        state.username.trim().isNotEmpty()
+        state.username.trim().isNotEmpty() ||
+                state.isGroupMode ||
+                state.selectedContacts.isNotEmpty()
 
     Column(
         modifier = Modifier
@@ -108,6 +110,47 @@ fun StartChatView(
             Spacer(modifier = Modifier.height(12.dp))
         }
 
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(
+                onClick = { viewModel.setGroupMode(false) },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor =
+                        if (!state.isGroupMode) {
+                            ChatforiaColors.accent
+                        } else {
+                            ChatforiaColors.cardBackground
+                        },
+                    contentColor = ChatforiaColors.primaryText
+                )
+            ) {
+                Text(stringResource(R.string.android_start_chat_direct))
+            }
+
+            Button(
+                onClick = { viewModel.setGroupMode(true) },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor =
+                        if (state.isGroupMode) {
+                            ChatforiaColors.accent
+                        } else {
+                            ChatforiaColors.cardBackground
+                        },
+                    contentColor = ChatforiaColors.primaryText
+                )
+            ) {
+                Text(stringResource(R.string.android_start_chat_group))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
         OutlinedTextField(
             value = state.username,
             onValueChange = {
@@ -129,11 +172,58 @@ fun StartChatView(
             ),
             keyboardActions = KeyboardActions(
                 onSearch = {
-                    viewModel.startChat()
+                    if (!state.isGroupMode) {
+                        viewModel.startChat()
+                    }
                 }
             ),
             modifier = Modifier.fillMaxWidth()
         )
+
+        if (state.isGroupMode) {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = state.groupName,
+                onValueChange = {
+                    viewModel.updateGroupName(it)
+                },
+                placeholder = {
+                    Text(stringResource(R.string.android_start_chat_group_name_optional))
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = stringResource(
+                    R.string.android_start_chat_selected_count,
+                    state.selectedContacts.size
+                ),
+                color = ChatforiaColors.secondaryText,
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = {
+                    viewModel.createGroupChat()
+                },
+                enabled = state.selectedContacts.size >= 2 && !state.isLoading,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ChatforiaColors.accent,
+                    contentColor = ChatforiaColors.primaryText
+                )
+            ) {
+                Text(stringResource(R.string.android_start_chat_create_group_chat))
+            }
+        }
 
         state.error?.let { error ->
             Spacer(modifier = Modifier.height(8.dp))
@@ -176,10 +266,19 @@ fun StartChatView(
                     .heightIn(max = 320.dp)
             ) {
                 items(state.contactResults) { contact ->
+                    val contactUserId = contact.user?.id ?: contact.userId
+
+                    val selected =
+                        state.selectedContacts.any {
+                            (it.user?.id ?: it.userId) == contactUserId
+                        }
+
                     StartChatContactRow(
                         contact = contact,
+                        isGroupMode = state.isGroupMode,
+                        selected = selected,
                         onClick = {
-                            viewModel.openContact(contact)
+                            viewModel.handleContactTap(contact)
                         }
                     )
                 }
@@ -193,6 +292,8 @@ fun StartChatView(
 @Composable
 private fun StartChatContactRow(
     contact: ContactDto,
+    isGroupMode: Boolean = false,
+    selected: Boolean = false,
     onClick: () -> Unit
 ) {
     val title =
@@ -200,12 +301,12 @@ private fun StartChatContactRow(
             ?: contact.user?.username?.trim()?.takeIf { it.isNotBlank() }
             ?: contact.externalName?.trim()?.takeIf { it.isNotBlank() }
             ?: contact.externalPhone?.trim()?.takeIf { it.isNotBlank() }
-            ?: "Unknown contact"
+            ?: stringResource(R.string.android_contacts_unknown_contact)
 
     val subtitle =
         contact.user?.username?.trim()?.takeIf { it.isNotBlank() }?.let { "@$it" }
             ?: contact.externalPhone?.trim()?.takeIf { it.isNotBlank() }
-            ?: "Tap to chat"
+            ?: stringResource(R.string.android_start_chat_tap_to_chat)
 
     Row(
         modifier = Modifier
@@ -232,10 +333,19 @@ private fun StartChatContactRow(
             )
         }
 
-        Icon(
-            Icons.Default.KeyboardArrowRight,
-            contentDescription = stringResource(R.string.android_start_chat_open_chat),
-            tint = ChatforiaColors.secondaryText
-        )
+        if (isGroupMode) {
+            Text(
+                text = if (selected) "✓" else "+",
+                color = ChatforiaColors.accent,
+                fontWeight = FontWeight.Bold,
+                fontSize = 22.sp
+            )
+        } else {
+            Icon(
+                Icons.Default.KeyboardArrowRight,
+                contentDescription = stringResource(R.string.android_start_chat_open_chat),
+                tint = ChatforiaColors.secondaryText
+            )
+        }
     }
 }

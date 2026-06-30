@@ -249,7 +249,7 @@ private fun SwipeRevealCallRow(
             IconButton(onClick = onMessage) {
                 Icon(
                     Icons.Default.Message,
-                    contentDescription = "Message",
+                    contentDescription = stringResource(R.string.android_calls_message_call),
                     tint = Color.White
                 )
             }
@@ -383,14 +383,9 @@ private fun CallHistoryRow(
                 }
 
             Text(
-                listOfNotNull(
-                    call.direction?.replaceFirstChar {
-                        it.uppercase()
-                    },
-                    friendlyStatus,
-                    call.durationSec?.let { "${it}s" }
-                ).joinToString(" • "),
-                color = ChatforiaColors.secondaryText
+                text = callMetadata(call, friendlyStatus),
+                color = ChatforiaColors.secondaryText,
+                maxLines = 1
             )
 
             Text(
@@ -496,5 +491,42 @@ private fun friendlyCallTime(value: String?): String {
         }
     } catch (_: Exception) {
         value
+    }
+}
+
+private fun callMetadata(
+    call: CallDto,
+    friendlyStatus: String?
+): String {
+    val direction =
+        when (call.direction?.uppercase()) {
+            "OUTGOING" -> "Outgoing"
+            "INCOMING" -> "Incoming"
+            else -> call.direction?.replaceFirstChar { it.uppercase() }
+        }
+
+    val duration =
+        call.durationSec?.let {
+            friendlyDuration(it)
+        }
+
+    return listOfNotNull(
+        direction,
+        friendlyStatus,
+        duration
+    ).joinToString(" • ")
+}
+
+private fun friendlyDuration(seconds: Int): String {
+    val safeSeconds = seconds.coerceAtLeast(0)
+
+    val hours = safeSeconds / 3600
+    val minutes = (safeSeconds % 3600) / 60
+    val remainingSeconds = safeSeconds % 60
+
+    return if (hours > 0) {
+        "%d:%02d:%02d".format(hours, minutes, remainingSeconds)
+    } else {
+        "%d:%02d".format(minutes, remainingSeconds)
     }
 }

@@ -16,6 +16,7 @@ data class SettingsUiState(
     val theme: String = "dawn",
     val allowExplicitContent: Boolean = false,
     val showReadReceipts: Boolean = false,
+    val discoverability: String = "EVERYONE",
     val autoDeleteSeconds: Int = 0,
 
     val a11yUiFont: String = "md",
@@ -74,6 +75,7 @@ class SettingsViewModel(
             allowExplicitContent = user.allowExplicitContent ?: false,
             showReadReceipts =
                 user.showReadReceipts ?: false,
+            discoverability = user.discoverability ?: "EVERYONE",
             autoDeleteSeconds = user.autoDeleteSeconds ?: 0,
             privacyBlurEnabled = user.privacyBlurEnabled ?: false,
             privacyBlurOnUnfocus = user.privacyBlurOnUnfocus ?: false,
@@ -174,6 +176,7 @@ class SettingsViewModel(
                         theme = current.theme,
                         allowExplicitContent = current.allowExplicitContent,
                         showReadReceipts = current.showReadReceipts,
+                        discoverability = current.discoverability,
                         autoDeleteSeconds = current.autoDeleteSeconds,
                         privacyBlurEnabled = current.privacyBlurEnabled,
                         privacyBlurOnUnfocus = current.privacyBlurOnUnfocus,

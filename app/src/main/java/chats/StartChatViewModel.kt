@@ -240,6 +240,150 @@ class StartChatViewModel(
                 openedConversation = null
             )
     }
+
+
+    fun setGroupMode(enabled: Boolean) {
+        _state.value =
+            _state.value.copy(
+                isGroupMode = enabled,
+                selectedContacts =
+                    if (enabled) {
+                        _state.value.selectedContacts
+                    } else {
+                        emptyList()
+                    },
+                groupName =
+                    if (enabled) {
+                        _state.value.groupName
+                    } else {
+                        ""
+                    },
+                error = null
+            )
+    }
+
+    fun updateGroupName(value: String) {
+        _state.value =
+            _state.value.copy(
+                groupName = value
+            )
+    }
+
+    fun handleContactTap(contact: ContactDto) {
+        if (_state.value.isGroupMode) {
+            toggleSelectedContact(contact)
+        } else {
+            openContact(contact)
+        }
+    }
+
+    fun toggleSelectedContact(contact: ContactDto) {
+        val userId =
+            contact.user?.id ?: contact.userId
+
+        if (userId == null) {
+            _state.value =
+                _state.value.copy(
+                    error = "Only Chatforia users can be added to group chats."
+                )
+            return
+        }
+
+        val current = _state.value.selectedContacts
+
+        val alreadySelected =
+            current.any {
+                (it.user?.id ?: it.userId) == userId
+            }
+
+        val next =
+            if (alreadySelected) {
+                current.filterNot {
+                    (it.user?.id ?: it.userId) == userId
+                }
+            } else {
+                current + contact
+            }
+
+        _state.value =
+            _state.value.copy(
+                selectedContacts = next,
+                error = null
+            )
+    }
+
+    fun createGroupChat() {
+        val current = _state.value
+
+        val userIds =
+            current.selectedContacts
+                .mapNotNull { it.user?.id ?: it.userId }
+                .distinct()
+
+        if (userIds.size < 2) {
+            _state.value =
+                current.copy(
+                    error = "Select at least 2 Chatforia users for a group chat."
+                )
+            return
+        }
+
+        viewModelScope.launch {
+            _state.value =
+                _state.value.copy(
+                    isLoading = true,
+                    error = null,
+                    openedConversation = null
+                )
+
+            try {
+                val response =
+                    contactsRepository.createGroupChat(
+                        userIds = userIds,
+                        name = current.groupName
+                    )
+
+                val roomId =
+                    response.resolvedRoomId
+                        ?: throw Exception("Could not create group chat.")
+
+                val fallbackTitle =
+                    current.selectedContacts
+                        .map {
+                            it.alias?.trim()?.takeIf { value -> value.isNotBlank() }
+                                ?: it.user?.username?.trim()?.takeIf { value -> value.isNotBlank() }
+                                ?: "Chatforia user"
+                        }
+                        .joinToString(", ")
+
+                val title =
+                    current.groupName.trim().takeIf { it.isNotBlank() }
+                        ?: fallbackTitle.takeIf { it.isNotBlank() }
+                        ?: "Group chat"
+
+                _state.value =
+                    _state.value.copy(
+                        isLoading = false,
+                        openedConversation =
+                            ConversationDto(
+                                kind = "chat",
+                                id = roomId,
+                                title = title,
+                                displayName = title,
+                                isGroup = true,
+                                unreadCount = 0
+                            )
+                    )
+
+            } catch (e: Exception) {
+                _state.value =
+                    _state.value.copy(
+                        isLoading = false,
+                        error = e.message ?: "Failed to create group chat."
+                    )
+            }
+        }
+    }
 }
 
 data class StartChatState(
@@ -247,5 +391,9 @@ data class StartChatState(
     val contactResults: List<ContactDto> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val openedConversation: ConversationDto? = null
+    val openedConversation: ConversationDto? = null,
+
+    val isGroupMode: Boolean = false,
+    val selectedContacts: List<ContactDto> = emptyList(),
+    val groupName: String = ""
 )

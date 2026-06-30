@@ -78,6 +78,30 @@ class ContactsRepository(
             )
         }
     }
+
+    suspend fun createGroupChat(
+        userIds: List<Int>,
+        name: String? = null
+    ): DirectChatRoomResponse {
+        val bodyJson =
+            apiClient.json.encodeToString(
+                CreateGroupChatRequest(
+                    userIds = userIds,
+                    name = name?.trim()?.ifBlank { null }
+                )
+            )
+
+        return withContext(Dispatchers.IO) {
+            apiClient.send(
+                ApiRequest(
+                    path = "chatrooms/group",
+                    method = HttpMethod.POST,
+                    bodyJson = bodyJson,
+                    requiresAuth = true
+                )
+            )
+        }
+    }
     suspend fun saveUserContact(
         userId: Int,
         alias: String? = null,
@@ -270,4 +294,10 @@ private data class UpdateContactRequest(
     val alias: String? = null,
     val externalName: String? = null,
     val favorite: Boolean? = null
+)
+
+@Serializable
+private data class CreateGroupChatRequest(
+    val userIds: List<Int>,
+    val name: String? = null
 )

@@ -269,11 +269,6 @@ class ContactsViewModel(
         alias: String? = null,
         favorite: Boolean = false
     ) {
-        android.util.Log.d(
-            "CONTACTS",
-            "saveExternalContact called phone=$phone"
-        )
-
         viewModelScope.launch {
             try {
                 repository.saveExternalContact(
@@ -283,21 +278,9 @@ class ContactsViewModel(
                     favorite = favorite
                 )
 
-                android.util.Log.d(
-                    "CONTACTS",
-                    "saveExternalContact success"
-                )
-
                 loadContacts()
 
             } catch (e: Exception) {
-
-                android.util.Log.e(
-                    "CONTACTS",
-                    "saveExternalContact failed",
-                    e
-                )
-
                 _state.value =
                     _state.value.copy(
                         error = e.message ?: "Failed to save contact."

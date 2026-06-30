@@ -1,5 +1,8 @@
 package com.chatforia.android.calls
 
+import com.twilio.video.LocalVideoTrack
+import com.twilio.video.RemoteVideoTrack
+
 data class CallSession(
     val callId: Int? = null,
     val roomName: String? = null,
@@ -8,7 +11,9 @@ data class CallSession(
     val startedAtMillis: Long = System.currentTimeMillis(),
     val muted: Boolean = false,
     val speakerEnabled: Boolean = false,
-    val cameraEnabled: Boolean = true
+    val cameraEnabled: Boolean = true,
+    val localVideoTrack: LocalVideoTrack? = null,
+    val remoteVideoTrack: RemoteVideoTrack? = null
 )
 
 sealed class AndroidCallState {

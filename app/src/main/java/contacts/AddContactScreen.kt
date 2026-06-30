@@ -59,10 +59,28 @@ fun AddContactScreen(
     val name = nameText.trim().ifBlank { null }
     val alias = aliasText.trim().ifBlank { null }
 
+    val isEditing = editingContact != null
+
+    val isEditingLinkedUser =
+        editingContact?.let {
+            it.user?.id != null || it.userId != null
+        } == true
+
+    val isEditingExternalPhone =
+        editingContact?.let {
+            !it.externalPhone.isNullOrBlank() &&
+                    it.user?.id == null &&
+                    it.userId == null
+        } == true
+
     val canSave =
-        when (mode) {
-            AddContactMode.USERNAME -> username.isNotBlank()
-            AddContactMode.PHONE -> phone.isNotBlank()
+        if (isEditing) {
+            true
+        } else {
+            when (mode) {
+                AddContactMode.USERNAME -> username.isNotBlank()
+                AddContactMode.PHONE -> phone.isNotBlank()
+            }
         }
 
     Column(
@@ -82,9 +100,9 @@ fun AddContactScreen(
             Text(
                 text =
                     if (editingContact == null) {
-                        "Add Contact"
+                        stringResource(R.string.android_add_contact_add_contact)
                     } else {
-                        "Edit Contact"
+                        stringResource(R.string.android_add_contact_edit_contact)
                     },
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
@@ -102,6 +120,7 @@ fun AddContactScreen(
         ) {
             Button(
                 onClick = { mode = AddContactMode.USERNAME },
+                enabled = !isEditing,
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(24.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -119,6 +138,7 @@ fun AddContactScreen(
 
             Button(
                 onClick = { mode = AddContactMode.PHONE },
+                enabled = !isEditing,
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(24.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -149,7 +169,12 @@ fun AddContactScreen(
                 if (mode == AddContactMode.USERNAME) {
                     OutlinedTextField(
                         value = usernameText,
-                        onValueChange = { usernameText = it },
+                        onValueChange = {
+                            if (!isEditingLinkedUser) {
+                                usernameText = it
+                            }
+                        },
+                        enabled = !isEditingLinkedUser,
                         label = { Text(stringResource(R.string.android_profile_username)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
@@ -157,7 +182,12 @@ fun AddContactScreen(
                 } else {
                     OutlinedTextField(
                         value = phoneText,
-                        onValueChange = { phoneText = it },
+                        onValueChange = {
+                            if (!isEditingExternalPhone) {
+                                phoneText = it
+                            }
+                        },
+                        enabled = !isEditingExternalPhone,
                         label = { Text(stringResource(R.string.android_profile_phone_number)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
@@ -207,9 +237,9 @@ fun AddContactScreen(
                 Text(
                     text =
                         if (mode == AddContactMode.USERNAME) {
-                            "Use this tab only for existing Chatforia users."
+                            stringResource(R.string.android_add_contact_existing_users_only)
                         } else {
-                            "Save any phone number, even if they are not on Chatforia."
+                            stringResource(R.string.android_add_contact_phone_help)
                         },
                     style = MaterialTheme.typography.bodyMedium,
                     color = ChatforiaColors.secondaryText
@@ -221,7 +251,7 @@ fun AddContactScreen(
 
         Button(
             onClick = {
-                println("🔥 Save Contact tapped. mode=$mode username=$username phone=$phone favorite=$favorite")
+
                 when (mode) {
                     AddContactMode.USERNAME ->
                         onSaveUsername(username, alias, favorite)
@@ -245,9 +275,9 @@ fun AddContactScreen(
             Text(
                 text =
                     if (editingContact == null) {
-                        "Save Contact"
+                        stringResource(R.string.android_add_contact_save_contact)
                     } else {
-                        "Save Changes"
+                        stringResource(R.string.android_add_contact_save_changes)
                     },
                 fontWeight = FontWeight.Bold
             )

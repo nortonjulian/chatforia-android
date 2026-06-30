@@ -12,12 +12,19 @@ import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.VideocamOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
+import com.chatforia.android.ui.theme.ChatforiaColors
+import com.twilio.video.LocalVideoTrack
+import com.twilio.video.RemoteVideoTrack
+import com.twilio.video.VideoView
 
 @Composable
 fun VideoCallScreen(
@@ -32,16 +39,21 @@ fun VideoCallScreen(
             .fillMaxSize()
             .background(ChatforiaColors.screenBackground)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Video room: ${session.roomName ?: "Connecting..."}",
-                color = ChatforiaColors.primaryText
+        if (session.remoteVideoTrack != null) {
+            RemoteVideoRenderer(
+                track = session.remoteVideoTrack,
+                modifier = Modifier.fillMaxSize()
             )
+        } else {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Waiting for video…",
+                    color = ChatforiaColors.primaryText
+                )
+            }
         }
 
         Surface(
@@ -52,11 +64,18 @@ fun VideoCallScreen(
             color = ChatforiaColors.cardBackground,
             shape = MaterialTheme.shapes.large
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text(
-                    if (session.cameraEnabled) "Local video" else "Camera off",
-                    color = ChatforiaColors.secondaryText
+            if (session.localVideoTrack != null && session.cameraEnabled) {
+                LocalVideoRenderer(
+                    track = session.localVideoTrack,
+                    modifier = Modifier.fillMaxSize()
                 )
+            } else {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "Camera off",
+                        color = ChatforiaColors.secondaryText
+                    )
+                }
             }
         }
 
@@ -110,4 +129,68 @@ fun VideoCallScreen(
             }
         }
     }
+}
+
+@Composable
+private fun LocalVideoRenderer(
+    track: LocalVideoTrack?,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+
+    val videoView =
+        remember {
+            VideoView(context).apply {
+                setMirror(true)
+            }
+        }
+
+    DisposableEffect(track) {
+        if (track != null) {
+            track.addSink(videoView)
+        }
+
+        onDispose {
+            if (track != null) {
+                track.removeSink(videoView)
+            }
+        }
+    }
+
+    AndroidView(
+        factory = { videoView },
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun RemoteVideoRenderer(
+    track: RemoteVideoTrack?,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+
+    val videoView =
+        remember {
+            VideoView(context).apply {
+                setMirror(false)
+            }
+        }
+
+    DisposableEffect(track) {
+        if (track != null) {
+            track.addSink(videoView)
+        }
+
+        onDispose {
+            if (track != null) {
+                track.removeSink(videoView)
+            }
+        }
+    }
+
+    AndroidView(
+        factory = { videoView },
+        modifier = modifier
+    )
 }

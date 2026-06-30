@@ -136,12 +136,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             val context = LocalContext.current
 
-            LaunchedEffect(Unit) {
-                Log.d(
-                    "LocaleTest",
-                    "Compose resource profile=${context.getString(R.string.android_main_activity_profile)}"
-                )
-            }
 
             key(AppLocaleManager.readLanguage(applicationContext)) {
                 ChatforiaTheme {
@@ -589,9 +583,25 @@ class MainActivity : ComponentActivity() {
         when (val state = callState) {
 
             is AndroidCallState.Failed -> {
-                Text(
-                    text = state.message,
-                    color = MaterialTheme.colorScheme.error
+                AlertDialog(
+                    onDismissRequest = {
+                        androidCallManager.clearEndedState()
+                    },
+                    title = {
+                        Text("Call failed")
+                    },
+                    text = {
+                        Text(state.message)
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                androidCallManager.clearEndedState()
+                            }
+                        ) {
+                            Text("OK")
+                        }
+                    }
                 )
             }
 
@@ -630,6 +640,7 @@ class MainActivity : ComponentActivity() {
 
                 AudioCallScreen(
                     session = state.session,
+                    statusText = "Calling…",
                     onToggleMute = {
                         androidCallManager.toggleMute()
                     },
@@ -673,6 +684,7 @@ class MainActivity : ComponentActivity() {
 
                 AudioCallScreen(
                     session = state.session,
+                    statusText = "Connected",
 
                     onToggleMute = {
                         androidCallManager.toggleMute()
@@ -879,7 +891,7 @@ class MainActivity : ComponentActivity() {
 
                             onMessageCall = { call ->
                                 val otherUserId =
-                                    if (call.callerId == user.id) {
+                                    call.otherUserId ?: if (call.callerId == user.id) {
                                         call.calleeId
                                     } else {
                                         call.callerId
@@ -929,7 +941,7 @@ class MainActivity : ComponentActivity() {
 
                             onStartVideoCall = { call ->
                                 val otherUserId =
-                                    if (call.callerId == user.id) {
+                                    call.otherUserId ?: if (call.callerId == user.id) {
                                         call.calleeId
                                     } else {
                                         call.callerId

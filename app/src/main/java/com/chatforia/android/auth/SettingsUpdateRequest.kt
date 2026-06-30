@@ -11,6 +11,7 @@ data class SettingsUpdateRequest(
     val allowExplicitContent: Boolean = false,
     val showReadReceipts: Boolean = false,
     val autoDeleteSeconds: Int = 0,
+    val discoverability: String? = null,
 
     val privacyBlurEnabled: Boolean = false,
     val privacyBlurOnUnfocus: Boolean = false,

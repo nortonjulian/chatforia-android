@@ -8,6 +8,7 @@ data class UserDto(
     val email: String? = null,
     val username: String? = null,
     val phone: String? = null,
+    val discoverability: String? = null,
 
     val publicKey: String? = null,
     val privateKey: String? = null,

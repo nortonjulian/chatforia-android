@@ -20,6 +20,7 @@ import com.chatforia.android.R
 @Composable
 fun AudioCallScreen(
     session: CallSession,
+    statusText: String = "Calling…",
     onToggleMute: () -> Unit,
     onToggleSpeaker: () -> Unit,
     onEndCall: () -> Unit
@@ -41,7 +42,7 @@ fun AudioCallScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = if (session.callId != null) "Calling…" else "Audio call",
+            text = statusText,
             style = MaterialTheme.typography.bodyLarge,
             color = ChatforiaColors.secondaryText
         )

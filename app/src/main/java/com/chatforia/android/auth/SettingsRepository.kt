@@ -70,7 +70,7 @@ class SettingsRepository(
         val bodyJson =
             json.encodeToString(request)
 
-        return sendJson(
+        sendRawRequest(
             ApiRequest(
                 path = "users/me",
                 method = HttpMethod.PATCH,
@@ -78,6 +78,17 @@ class SettingsRepository(
                 requiresAuth = true
             )
         )
+
+        val response: MeResponse =
+            sendJson(
+                ApiRequest(
+                    path = "auth/me",
+                    method = HttpMethod.GET,
+                    requiresAuth = true
+                )
+            )
+
+        return response.user
     }
 
     override suspend fun updateAccessibility(

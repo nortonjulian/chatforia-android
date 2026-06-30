@@ -36,7 +36,7 @@ class TwilioVoiceManager(
                     ) {
                         Log.e(
                             "ChatforiaTwilioVoice",
-                            "Twilio outgoing connect failure. sid=${call.sid}, state=${call.state}, message=${error.message}, exception=$error",
+                            "Twilio outgoing connect failure: ${error.message}",
                             error
                         )
 
@@ -45,20 +45,10 @@ class TwilioVoiceManager(
                     }
 
                     override fun onRinging(call: Call) {
-                        Log.d(
-                            "ChatforiaTwilioVoice",
-                            "Twilio outgoing call is ringing. sid=${call.sid}, state=${call.state}"
-                        )
-
                         listener.onRinging()
                     }
 
                     override fun onConnected(call: Call) {
-                        Log.d(
-                            "ChatforiaTwilioVoice",
-                            "Twilio outgoing call connected"
-                        )
-
                         activeCall = call
                         listener.onConnected()
                     }
@@ -82,11 +72,6 @@ class TwilioVoiceManager(
                                 "ChatforiaTwilioVoice",
                                 "Twilio call disconnected with error/warning: ${error.message}",
                                 error
-                            )
-                        } else {
-                            Log.d(
-                                "ChatforiaTwilioVoice",
-                                "Twilio call disconnected normally"
                             )
                         }
 
@@ -154,11 +139,6 @@ class TwilioVoiceManager(
                                     "ChatforiaTwilioVoice",
                                     "Twilio call disconnected with error/warning: ${error.message}",
                                     error
-                                )
-                            } else {
-                                Log.d(
-                                    "ChatforiaTwilioVoice",
-                                    "Twilio call disconnected normally"
                                 )
                             }
 
