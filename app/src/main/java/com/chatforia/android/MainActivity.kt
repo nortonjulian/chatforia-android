@@ -55,12 +55,7 @@ import com.chatforia.android.calls.AudioCallScreen
 import com.chatforia.android.calls.VideoCallScreen
 import com.chatforia.android.calls.TwilioVoiceManager
 import com.chatforia.android.calls.TwilioVideoManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import com.chatforia.android.calls.CallPermissionHelper
-import androidx.compose.material3.MaterialTheme
 import com.chatforia.android.random.RandomChatViewModel
-import androidx.compose.runtime.SideEffect
 import android.content.Intent
 import android.net.Uri
 import com.chatforia.android.crypto.DeviceProvisioningCrypto
@@ -95,6 +90,9 @@ enum class AppTab {
 }
 
 class MainActivity : ComponentActivity() {
+
+    private var latestLaunchIntent by mutableStateOf<Intent?>(null)
+
     private fun consumeAppleOAuthToken(
         intent: Intent?,
         onToken: (String) -> Unit
@@ -110,7 +108,10 @@ class MainActivity : ComponentActivity() {
 
             if (!token.isNullOrBlank()) {
                 onToken(token)
-                setIntent(Intent())
+
+                val emptyIntent = Intent()
+                setIntent(emptyIntent)
+                latestLaunchIntent = emptyIntent
             }
         }
     }
@@ -128,10 +129,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        latestLaunchIntent = intent
+
         Thread {
             MobileAds.initialize(this) {}
         }.start()
-
 
         setContent {
             val context = LocalContext.current
@@ -306,9 +308,11 @@ class MainActivity : ComponentActivity() {
                                 apiClient = apiClient,
                                 tokenStorage = tokenStorage,
                                 authRepository = repository,
-                                launchIntent = intent,
+                                launchIntent = latestLaunchIntent,
                                 onIncomingCallIntentConsumed = {
-                                    setIntent(Intent())
+                                    val emptyIntent = Intent()
+                                    setIntent(emptyIntent)
+                                    latestLaunchIntent = emptyIntent
                                 },
                                 onUserUpdated = { updatedUser ->
                                     authViewModel.replaceCurrentUser(updatedUser)
@@ -361,6 +365,13 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+
+        setIntent(intent)
+        latestLaunchIntent = intent
     }
 
 
