@@ -201,4 +201,21 @@ class TwilioVoiceManager(
         audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
         audioManager.isSpeakerphoneOn = enabled
     }
+
+    override fun sendDigits(digits: String) {
+        val cleanedDigits =
+            digits.filter { it in "0123456789*#" }
+
+        if (cleanedDigits.isEmpty()) return
+
+        try {
+            activeCall?.sendDigits(cleanedDigits)
+        } catch (e: Exception) {
+            Log.e(
+                "ChatforiaTwilioVoice",
+                "Failed to send DTMF digits",
+                e
+            )
+        }
+    }
 }

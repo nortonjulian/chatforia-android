@@ -511,6 +511,20 @@ class AndroidCallManager(
         _state.value = AndroidCallState.Active(updated)
     }
 
+    fun sendDigit(digit: String) {
+        val active =
+            _state.value as? AndroidCallState.Active ?: return
+
+        if (active.session.isVideo) return
+
+        val allowedDigits =
+            setOf("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "#")
+
+        if (digit !in allowedDigits) return
+
+        voiceManager.sendDigits(digit)
+    }
+
     fun toggleSpeaker() {
         val active =
             _state.value as? AndroidCallState.Active ?: return

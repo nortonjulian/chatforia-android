@@ -87,8 +87,10 @@ class ComposeSmokeTest {
                         displayName = "Audio Friend",
                         isVideo = false
                     ),
+                    statusText = "Calling…",
                     onToggleMute = {},
                     onToggleSpeaker = {},
+                    onSendDigit = {},
                     onEndCall = {}
                 )
             }

@@ -673,6 +673,9 @@ class MainActivity : ComponentActivity() {
                     onToggleSpeaker = {
                         androidCallManager.toggleSpeaker()
                     },
+                    onSendDigit = {
+                        androidCallManager.sendDigit(it)
+                    },
                     onEndCall = {
                         androidCallManager.endCall()
                     }
@@ -718,6 +721,10 @@ class MainActivity : ComponentActivity() {
 
                     onToggleSpeaker = {
                         androidCallManager.toggleSpeaker()
+                    },
+
+                    onSendDigit = {
+                        androidCallManager.sendDigit(it)
                     },
 
                     onEndCall = {
