@@ -54,6 +54,28 @@ class CallService(
         return response.resolvedCallId
     }
 
+    fun addParticipant(
+        callId: Int,
+        userId: Int
+    ) {
+        apiClient.sendRaw(
+            ApiRequest(
+                path = "calls/$callId/add-participant",
+                method = HttpMethod.POST,
+                bodyJson = json.encodeToString(
+                    AddParticipantRequest(
+                        userId = userId,
+                        offer = CallOffer(
+                            type = "offer",
+                            sdp = "android-placeholder"
+                        )
+                    )
+                ),
+                requiresAuth = true
+            )
+        )
+    }
+
     override fun endCall(
         callId: Int,
         reason: String?,
@@ -85,5 +107,20 @@ class CallService(
             )
         )
     }
+
+    @kotlinx.serialization.Serializable
+    data class AddParticipantRequest(
+        val userId: Int,
+        val offer: CallOffer
+    )
+
+
+    @kotlinx.serialization.Serializable
+    data class CallOffer(
+        val type: String,
+        val sdp: String
+    )
+
+
 }
 

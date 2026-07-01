@@ -22,6 +22,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.MoreHoriz
+import com.chatforia.android.contacts.ContactDto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,9 +33,15 @@ fun AudioCallScreen(
     onToggleMute: () -> Unit,
     onToggleSpeaker: () -> Unit,
     onSendDigit: (String) -> Unit,
-    onEndCall: () -> Unit
+    onEndCall: () -> Unit,
+    onAddParticipant: (ContactDto) -> Unit,
+    contacts: List<ContactDto> = emptyList(),
 ) {
     var showKeypad by remember { mutableStateOf(false) }
+
+    var showCallOptions by remember { mutableStateOf(false) }
+
+    var showAddParticipant by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -81,12 +89,12 @@ fun AudioCallScreen(
             }
 
             FilledIconButton(
-                onClick = { showKeypad = true },
+                onClick = { showCallOptions = true },
                 shape = CircleShape
             ) {
                 Icon(
-                    Icons.Default.Dialpad,
-                    contentDescription = "Keypad"
+                    Icons.Default.MoreHoriz,
+                    contentDescription = "More"
                 )
             }
 
@@ -114,6 +122,120 @@ fun AudioCallScreen(
                 onDone = { showKeypad = false }
             )
         }
+    }
+
+    if (showCallOptions) {
+        ModalBottomSheet(
+            onDismissRequest = { showCallOptions = false }
+        ) {
+            InCallOptionsSheet(
+                onAddParticipant = {
+                    showCallOptions = false
+                    showAddParticipant = true
+                },
+                onKeypad = {
+                    showCallOptions = false
+                    showKeypad = true
+                }
+            )
+        }
+    }
+
+    if (showAddParticipant) {
+        ModalBottomSheet(
+            onDismissRequest = { showAddParticipant = false }
+        ) {
+            InCallAddParticipantSheet(
+                contacts = contacts,
+                onPick = { contact ->
+                    onAddParticipant(contact)
+                    showAddParticipant = false
+                }
+            )
+        }
+    }
+
+}
+
+@Composable
+private fun InCallOptionsSheet(
+    onAddParticipant: () -> Unit,
+    onKeypad: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(ChatforiaColors.screenBackground)
+            .padding(22.dp)
+    ) {
+        Text(
+            text = "Call Options",
+            style = MaterialTheme.typography.titleLarge,
+            color = ChatforiaColors.primaryText
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TextButton(onClick = onAddParticipant) {
+            Text("Add Participant")
+        }
+
+        TextButton(onClick = onKeypad) {
+            Text("Keypad")
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+    }
+}
+
+@Composable
+private fun InCallAddParticipantSheet(
+    contacts: List<ContactDto>,
+    onPick: (ContactDto) -> Unit
+) {
+    val appContacts =
+        contacts.filter { contact ->
+            contact.user?.id != null || contact.userId != null
+        }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(ChatforiaColors.screenBackground)
+            .padding(22.dp)
+    ) {
+        Text(
+            text = "Add Participant",
+            style = MaterialTheme.typography.titleLarge,
+            color = ChatforiaColors.primaryText
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        appContacts.forEach { contact ->
+            TextButton(
+                onClick = { onPick(contact) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text =
+                        contact.alias
+                            ?: contact.user?.username
+                            ?: contact.externalName
+                            ?: contact.externalPhone
+                            ?: "Unknown Contact"
+                )
+            }
+        }
+
+        if (appContacts.isEmpty()) {
+            Text(
+                text = "No Chatforia contacts available to add.",
+                color = ChatforiaColors.secondaryText
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
     }
 }
 

@@ -831,6 +831,12 @@ fun ProfileScreen(
             HorizontalDivider(color = ChatforiaColors.border)
 
             LegalSupportRow(
+                title = "Open Source Licenses",
+                url = "https://chatforia.com/legal/open-source"
+            )
+            HorizontalDivider(color = ChatforiaColors.border)
+
+            LegalSupportRow(
                 title = stringResource(R.string.android_profile_contact_support),
                 url = "mailto:support@chatforia.com"
             )

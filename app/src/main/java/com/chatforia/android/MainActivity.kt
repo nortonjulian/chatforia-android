@@ -678,7 +678,20 @@ class MainActivity : ComponentActivity() {
                     },
                     onEndCall = {
                         androidCallManager.endCall()
-                    }
+                    },
+                    onAddParticipant = { contact ->
+                        val userId = contact.user?.id ?: contact.userId
+                        val callId = state.session.callId
+
+                        if (userId != null && callId != null) {
+                            callsViewModel.addParticipant(
+                                callId = callId,
+                                userId = userId
+                            )
+                        }
+                    },
+                    contacts = contactsViewModel.state.collectAsState().value.contacts
+
                 )
 
                 return
@@ -729,7 +742,19 @@ class MainActivity : ComponentActivity() {
 
                     onEndCall = {
                         androidCallManager.endCall()
-                    }
+                    },
+                    onAddParticipant = { contact ->
+                        val userId = contact.user?.id ?: contact.userId
+                        val callId = state.session.callId
+
+                        if (userId != null && callId != null) {
+                            callsViewModel.addParticipant(
+                                callId = callId,
+                                userId = userId
+                            )
+                        }
+                    },
+                    contacts = contactsViewModel.state.collectAsState().value.contacts
                 )
 
                 return

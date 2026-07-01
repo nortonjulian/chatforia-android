@@ -93,6 +93,28 @@ class CallsViewModel(
         _state.value = _state.value.copy(incomingCall = null)
     }
 
+    fun addParticipant(
+        callId: Int,
+        userId: Int,
+        onDone: () -> Unit = {}
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                callService.addParticipant(
+                    callId = callId,
+                    userId = userId
+                )
+
+                onDone()
+            } catch (e: Exception) {
+                _state.value =
+                    _state.value.copy(
+                        error = e.message ?: "Failed to add participant."
+                    )
+            }
+        }
+    }
+
     fun deleteCall(call: CallDto) {
         viewModelScope.launch(Dispatchers.IO) {
             val previousCalls = _state.value.calls
