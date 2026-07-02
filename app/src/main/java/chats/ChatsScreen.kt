@@ -242,8 +242,14 @@ fun ChatsScreen(
             tenorRepository = tenorRepository,
             riaRepository = RiaRepository(apiClient),
             onBack = {
+                val wasSmsThread = room.kind == "sms"
+
                 selectedConversation = null
                 viewModel.loadConversations()
+
+                if (wasSmsThread) {
+                    onMaybeShowInterstitial()
+                }
             }
         )
 

@@ -294,9 +294,15 @@ class MainActivity : ComponentActivity() {
                             RegisterScreen(
                                 viewModel = registerViewModel,
                                 onGoogleLogin = {
-                                    authViewModel.loginWithGoogle(
-                                        GoogleAuthClient(applicationContext).getIdToken()
-                                    )
+                                    try {
+                                        val googleAuthClient = GoogleAuthClient(applicationContext)
+                                        val idToken = googleAuthClient.getIdToken()
+                                        authViewModel.loginWithGoogle(idToken)
+                                    } catch (e: Exception) {
+                                        authViewModel.setError(
+                                            "Google sign-in is not available on this device. Try email login instead."
+                                        )
+                                    }
                                 },
                                 onAppleLogin = {
                                     authViewModel.loginWithApple(applicationContext)
@@ -941,7 +947,7 @@ class MainActivity : ComponentActivity() {
                             },
                             onMaybeShowInterstitial = {
                                 if (user.shouldShowAds()) {
-                                    interstitialAdManager.showIfReady()
+                                    interstitialAdManager.recordSmsThreadExitAndMaybeShow()
                                 }
                             }
                         )

@@ -33,6 +33,11 @@
     <string name="android_start_chat_create_group_chat">Create Group Chat</string>
     <string name="android_contacts_unknown_contact">Unknown contact</string>
     <string name="android_start_chat_tap_to_chat">Tap to chat</string>
+    <string name="android_key_setup_checking_secure_message_recovery">Checking secure message recovery…</string>
+    <string name="android_key_setup_type_start_fresh">Type START FRESH to continue</string>
+    <string name="android_key_setup_start_fresh_secure_messages">Start fresh with secure messages</string>
+    <string name="android_key_setup_start_fresh_title">Start fresh with secure messages?</string>
+    <string name="android_key_setup_start_fresh_dialog_body">This creates a new secure message key for your account.%1$s%1$sOlder app-to-app secure messages may no longer be readable on any device.%1$s%1$sSMS/text message conversations are not affected.</string>
     <string name="accessibilitySettings_accessibility">Accessibility</string>
     <string name="accessibilitySettings_accessibilityDesc">Options to make Chatforia easier to use without relying on sound.</string>
     <string name="accessibilitySettings_autoTranscribeVoiceNotes">Auto-transcribe voice notes</string>
@@ -273,19 +278,34 @@
     <string name="android_invite_friends_invite_friends">Invite Friends</string>
     <string name="android_invite_friends_share_a_invite_link_with_friends_using_messages_">Share a Chatforia invite link with friends using Messages, email, or any app on your phone.</string>
     <string name="android_invite_friends_share_invite_link">Share Invite Link</string>
-    <string name="android_key_restore_gate_i_ve_restored_my_key">I\'ve restored my key</string>
-    <string name="android_key_restore_gate_restore_encryption">Restore Encryption</string>
-    <string name="android_key_setup_clear_local_key">Clear local key</string>
-    <string name="android_key_setup_confirm_recovery_passcode">Confirm Recovery Passcode</string>
-    <string name="android_key_setup_encryption">Encryption</string>
+    <string name="android_key_setup_encryption">Secure Messages</string>
+    <string name="android_key_setup_recovery_passcode">Secure Messages Passcode</string>
+
+    <string name="android_key_setup_secure_message_recovery">Secure Message Recovery</string>
+    <string name="android_key_setup_create_recovery_backup">Create Recovery Backup</string>
+    <string name="android_key_setup_update_recovery_backup">Update Recovery Backup</string>
+
+    <string name="android_key_setup_restore_encrypted_chats">Restore secure messages</string>
+    <string name="android_key_setup_restore_chats">Restore secure messages</string>
+
     <string name="android_key_setup_no_recovery_backup_found">No recovery backup found</string>
-    <string name="android_key_setup_no_recovery_backup_found_yet_create_one_from_thi">No Recovery Backup found yet. Create one from this device so you can restore chats on iOS, Android, and web.</string>
+    <string name="android_key_setup_open_on_a_device_that_can_already_read_your_encr">Open Chatforia on a device that can already read your secure messages, then create a Secure Messages Passcode there.</string>
+    <string name="android_key_setup_no_recovery_backup_found_yet_create_one_from_thi">No recovery backup found yet. Create one from this device so you can restore secure messages on iOS, Android, and web.</string>
+
+    <string name="android_key_setup_clear_secure_message_key">Clear secure message key</string>
+    <string name="android_key_setup_device_can_read_secure_messages">This device can already read your secure messages.</string>
+    <string name="android_key_setup_recovery_backup_found">A recovery backup was found for this account. Restore it to read secure messages on this device.</string>
+    <string name="android_key_setup_missing_secure_message_key">This device does not have your secure message key yet.</string>
+
+    <string name="android_key_setup_cannot_recover_secure_messages">I can’t recover my secure messages</string>
+    <string name="android_key_setup_start_fresh_warning">Only use this as a last resort. This creates a new secure message key for your account. Older app-to-app secure messages may no longer be readable on any device. SMS/text message conversations are not affected.</string>
+    <string name="android_key_setup_start_fresh_confirm">Start Fresh</string>
+    <string name="android_key_restore_gate_i_ve_restored_my_key">I’ve restored secure messages</string>
+    <string name="android_key_restore_gate_restore_encryption">Restore secure messages</string>
+    <string name="android_key_setup_clear_local_key">Clear local key</string>
+    <string name="android_key_setup_confirm_recovery_passcode">Confirm Secure Messages Passcode</string>
     <string name="android_key_setup_only_use_this_if_you_have_lost_all_trusted_devic">Only use this if you have lost all trusted devices and cannot restore your original key.</string>
-    <string name="android_key_setup_open_on_a_device_that_can_already_read_your_encr">Open Chatforia on a device that can already read your encrypted chats and create a Recovery Passcode there.</string>
-    <string name="android_key_setup_recovery_passcode">Recovery Passcode</string>
     <string name="android_key_setup_reset_encryption">Reset Encryption?</string>
-    <string name="android_key_setup_restore_chats">Restore Chats</string>
-    <string name="android_key_setup_restore_encrypted_chats">Restore encrypted chats</string>
     <string name="android_key_setup_this_will_permanently_replace_your_encryption_ke">This will permanently replace your encryption key.</string>
     <string name="android_language_selection_select_language">Select language</string>
     <string name="android_linked_devices_approve">Approve</string>

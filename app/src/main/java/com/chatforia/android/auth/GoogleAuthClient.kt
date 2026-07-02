@@ -16,7 +16,7 @@ class GoogleAuthClient(
     suspend fun getIdToken(): String {
         val googleIdOption =
             GetGoogleIdOption.Builder()
-                .setFilterByAuthorizedAccounts(true)
+                .setFilterByAuthorizedAccounts(false)
                 .setServerClientId(Environment.GOOGLE_WEB_CLIENT_ID)
                 .build()
 

@@ -35,9 +35,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Alignment
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.res.stringResource
@@ -58,6 +55,14 @@ fun KeySetupScreen(
     }
 
     var showResetDialog by remember {
+        mutableStateOf(false)
+    }
+
+    var startFreshText by remember {
+        mutableStateOf("")
+    }
+
+    var showStartFreshSection by remember {
         mutableStateOf(false)
     }
 
@@ -87,16 +92,16 @@ fun KeySetupScreen(
             Text(
                 text = when {
                     state.hasLocalPrivateKey ->
-                        "This device has your encryption key and can decrypt messages."
+                        stringResource(R.string.android_key_setup_device_can_read_secure_messages)
 
                     state.isCheckingBackup ->
-                        "Checking encryption backup…"
+                        stringResource(R.string.android_key_setup_checking_secure_message_recovery)
 
                     state.hasRemoteBackup ->
-                        "A backup was found for this account. Restore it to decrypt encrypted messages on this device."
+                        stringResource(R.string.android_key_setup_recovery_backup_found)
 
                     else ->
-                        "No local encryption key was found on this device."
+                        stringResource(R.string.android_key_setup_missing_secure_message_key)
                 },
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -113,9 +118,9 @@ fun KeySetupScreen(
 
                     Text(
                         text = if (state.hasRemoteBackup) {
-                            "Recovery Backup"
+                            stringResource(R.string.android_key_setup_secure_message_recovery)
                         } else {
-                            "Create Recovery Backup"
+                            stringResource(R.string.android_key_setup_create_recovery_backup)
                         },
                         style = MaterialTheme.typography.titleMedium
                     )
@@ -175,9 +180,9 @@ fun KeySetupScreen(
                         } else {
                             Text(
                                 if (state.hasRemoteBackup) {
-                                    "Update Recovery Backup"
+                                    stringResource(R.string.android_key_setup_update_recovery_backup)
                                 } else {
-                                    "Create Recovery Backup"
+                                    stringResource(R.string.android_key_setup_create_recovery_backup)
                                 }
                             )
                         }
@@ -276,7 +281,7 @@ fun KeySetupScreen(
                         }
                     ) {
                         Text(
-                            "Clear local key",
+                            stringResource(R.string.android_key_setup_clear_secure_message_key),
                             color = ChatforiaColors.accent
                         )
                     }
@@ -285,40 +290,69 @@ fun KeySetupScreen(
 
             HorizontalDivider(color = ChatforiaColors.border)
 
-            Text(
-                text = stringResource(R.string.android_login_reset_encryption),
-                style = MaterialTheme.typography.titleMedium,
-                color = ChatforiaColors.primaryText
-            )
+            TextButton(
+                onClick = {
+                    showStartFreshSection = !showStartFreshSection
 
-            Text(
-                text = stringResource(R.string.android_key_setup_only_use_this_if_you_have_lost_all_trusted_devic),
-                color = ChatforiaColors.secondaryText
-            )
-
-
-            Box(
-                modifier = Modifier
-                    .height(44.dp)
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(
-                                ChatforiaColors.buttonStart,
-                                ChatforiaColors.buttonEnd
-                            )
-                        )
-                    )
-                    .clickable {
-                        showResetDialog = true
+                    if (!showStartFreshSection) {
+                        startFreshText = ""
                     }
-                    .padding(horizontal = 22.dp),
-                contentAlignment = Alignment.Center
+                }
             ) {
                 Text(
-                    text = stringResource(R.string.android_login_reset_encryption),
-                    color = ChatforiaColors.buttonForeground
+                    text = stringResource(R.string.android_key_setup_cannot_recover_secure_messages),
+                    color = ChatforiaColors.accent
                 )
+            }
+
+            if (showStartFreshSection) {
+                Text(
+                    text = stringResource(R.string.android_key_setup_start_fresh_warning),
+                    color = ChatforiaColors.secondaryText
+                )
+
+                OutlinedTextField(
+                    value = startFreshText,
+                    onValueChange = { startFreshText = it },
+                    label = { Text(stringResource(R.string.android_key_setup_type_start_fresh)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = ChatforiaColors.primaryText,
+                        unfocusedTextColor = ChatforiaColors.primaryText,
+                        focusedLabelColor = ChatforiaColors.secondaryText,
+                        unfocusedLabelColor = ChatforiaColors.secondaryText,
+                        focusedBorderColor = ChatforiaColors.border,
+                        unfocusedBorderColor = ChatforiaColors.border,
+                        cursorColor = ChatforiaColors.accent
+                    )
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(
+                                    ChatforiaColors.buttonStart,
+                                    ChatforiaColors.buttonEnd
+                                )
+                            )
+                        )
+                        .clickable {
+                            if (startFreshText.trim().uppercase() == "START FRESH") {
+                                showResetDialog = true
+                            }
+                        }
+                        .padding(horizontal = 22.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.android_key_setup_start_fresh_confirm),
+                        color = ChatforiaColors.buttonForeground
+                    )
+                }
             }
         }
     }
@@ -330,14 +364,15 @@ fun KeySetupScreen(
             },
 
             title = {
-                Text(stringResource(R.string.android_key_setup_reset_encryption))
+                Text(stringResource(R.string.android_key_setup_start_fresh_title))
             },
 
             text = {
                 Text(
-                    "This will permanently replace your encryption key.\n\n" +
-                            "Encrypted chats protected by your old key may no longer be readable.\n\n" +
-                            "Only continue if you have lost all trusted devices and cannot restore your Recovery Backup."
+                    stringResource(
+                        R.string.android_key_setup_start_fresh_dialog_body,
+                        "\n"
+                    )
                 )
             },
 
@@ -348,7 +383,7 @@ fun KeySetupScreen(
                         viewModel.resetEncryption()
                     }
                 ) {
-                    Text(stringResource(R.string.android_login_reset_encryption))
+                    Text(stringResource(R.string.android_key_setup_start_fresh_confirm))
                 }
             },
 

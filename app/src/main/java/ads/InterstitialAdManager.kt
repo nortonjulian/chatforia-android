@@ -17,7 +17,19 @@ class InterstitialAdManager(
     private var lastShownAt = 0L
     private var showAfterLoad = false
 
-    private val minimumGapMillis = 3 * 60 * 1000L
+    private val minimumGapMillis = 15 * 60 * 1000L
+
+    private var smsThreadExitCount = 0
+    private val showEverySmsThreadExits = 10
+
+    fun recordSmsThreadExitAndMaybeShow() {
+        smsThreadExitCount += 1
+        load()
+
+        if (smsThreadExitCount % showEverySmsThreadExits != 0) return
+
+        showIfReady()
+    }
 
     fun load(showWhenReady: Boolean = false) {
         if (showWhenReady) {

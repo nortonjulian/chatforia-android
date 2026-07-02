@@ -68,7 +68,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import com.chatforia.android.ads.InterstitialAdManager
-import com.chatforia.android.ads.shouldShowAds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -188,22 +187,6 @@ fun ChatThreadScreen(
                 )
             }
         }
-
-    LaunchedEffect(
-        conversation.id,
-        conversation.kind,
-        currentUser.id,
-        currentUser.isAdmin,
-        currentUser.isPremium,
-        currentUser.plan
-    ) {
-        if (
-            conversation.kind == "sms" &&
-            currentUser.shouldShowAds()
-        ) {
-            interstitialAdManager?.showIfReady()
-        }
-    }
 
     LaunchedEffect(conversation.id, conversation.kind, currentUserId) {
         val userId = currentUserId ?: return@LaunchedEffect

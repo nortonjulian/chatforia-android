@@ -61,7 +61,7 @@ class KeySetupViewModel(
                 val recoveryPassword = password.trim()
 
                 if (recoveryPassword.length < 8) {
-                    throw Exception("Recovery passcode must be at least 8 characters.")
+                    throw Exception("Secure Messages Passcode must be at least 8 characters.")
                 }
 
                 val backup =
@@ -79,11 +79,11 @@ class KeySetupViewModel(
                 val restoredPublicKey = restored.publicKey.trim()
 
                 if (serverPublicKey.isBlank()) {
-                    throw Exception("This account does not have a server encryption key.")
+                    throw Exception("This account does not have a secure message key.")
                 }
 
                 if (restoredPublicKey != serverPublicKey) {
-                    throw Exception("The restored encryption key does not match this account.")
+                    throw Exception("The restored secure message key does not match this account.")
                 }
 
                 keyStorage.saveKeyPair(
@@ -96,7 +96,7 @@ class KeySetupViewModel(
                         isRestoring = false,
                         hasLocalPrivateKey = true,
                         hasRemoteBackup = true,
-                        successMessage = "Encrypted chats restored."
+                        successMessage = "Secure messages restored."
                     )
 
             } catch (e: Exception) {
@@ -141,7 +141,7 @@ class KeySetupViewModel(
                     _state.value.copy(
                         error =
                             e.message
-                                ?: "Failed to reset encryption."
+                                ?: "Failed to start fresh with secure messages."
                     )
             }
         }
@@ -160,7 +160,7 @@ class KeySetupViewModel(
                 val recoveryPassword = password.trim()
 
                 if (recoveryPassword.length < 8) {
-                    throw Exception("Recovery passcode must be at least 8 characters.")
+                    throw Exception("Secure Messages Passcode must be at least 8 characters.")
                 }
 
                 val publicKey =
@@ -185,7 +185,7 @@ class KeySetupViewModel(
                         isCreatingBackup = false,
                         hasLocalPrivateKey = true,
                         hasRemoteBackup = true,
-                        successMessage = "Recovery Backup created."
+                        successMessage = "Recovery backup created."
                     )
 
             } catch (e: Exception) {
@@ -205,7 +205,7 @@ class KeySetupViewModel(
         _state.value =
             _state.value.copy(
                 hasLocalPrivateKey = false,
-                successMessage = "Local encryption keys removed.",
+                successMessage = "Secure message keys were removed from this device.",
                 error = null
             )
 

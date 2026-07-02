@@ -34,13 +34,13 @@ class AccountKeyManager(
 
         if (hasPrivateKey && localPublicKey.isNullOrBlank()) {
             throw IllegalStateException(
-                "This device has a private key but no public key. Reset encryption."
+                "This device has incomplete secure message information. Start fresh with secure messages only if recovery does not work."
             )
         }
 
         if (!serverPublicKey.isNullOrBlank() && !hasPrivateKey) {
             throw IllegalStateException(
-                "This device is missing your encryption key. Restore your backup key or reset encryption."
+                "This device is missing your secure message key. Restore your secure message backup or start fresh with secure messages."
             )
         }
 
@@ -51,7 +51,7 @@ class AccountKeyManager(
             localPublicKey.trim() != serverPublicKey.trim()
         ) {
             throw IllegalStateException(
-                "Local encryption key does not match server public key. Restore your backup key or reset encryption."
+                "The secure message key on this device does not match your account. Restore your secure message backup or start fresh with secure messages."
             )
         }
 
