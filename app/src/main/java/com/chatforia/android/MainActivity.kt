@@ -113,12 +113,16 @@ class MainActivity : ComponentActivity() {
     ) {
         val data: Uri = intent?.data ?: return
 
+        Log.d("ChatforiaAppleAuth", "Apple OAuth deep link received")
+
         if (
             data.scheme == "chatforia" &&
             data.host == "oauth" &&
             data.path == "/apple"
         ) {
             val token = data.getQueryParameter("token")
+
+            Log.d("ChatforiaAppleAuth", "Apple token present: ${!token.isNullOrBlank()}")
 
             if (!token.isNullOrBlank()) {
                 onToken(token)
@@ -217,8 +221,8 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                    LaunchedEffect(Unit) {
-                        consumeAppleOAuthToken(intent) { token ->
+                    LaunchedEffect(latestLaunchIntent) {
+                        consumeAppleOAuthToken(latestLaunchIntent) { token ->
                             authViewModel.loginWithExternalToken(token)
                         }
                     }
@@ -248,8 +252,9 @@ class MainActivity : ComponentActivity() {
                                         authViewModel.loginWithGoogle(idToken)
 
                                     } catch (e: Exception) {
+                                        Log.e("ChatforiaGoogleAuth", "Google login failed", e)
                                         authViewModel.setError(
-                                            "Google sign-in is not available on this device. Try email login instead."
+                                            "Google sign-in failed: ${e.message ?: e.javaClass.simpleName}"
                                         )
                                     }
                                 },
@@ -299,8 +304,9 @@ class MainActivity : ComponentActivity() {
                                         val idToken = googleAuthClient.getIdToken()
                                         authViewModel.loginWithGoogle(idToken)
                                     } catch (e: Exception) {
+                                        Log.e("ChatforiaGoogleAuth", "Google login failed", e)
                                         authViewModel.setError(
-                                            "Google sign-in is not available on this device. Try email login instead."
+                                            "Google sign-in failed: ${e.message ?: e.javaClass.simpleName}"
                                         )
                                     }
                                 },
@@ -390,6 +396,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+
+        Log.d("ChatforiaAppleAuth", "Apple OAuth intent received")
 
         setIntent(intent)
         latestLaunchIntent = intent
