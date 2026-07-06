@@ -51,7 +51,6 @@ import com.chatforia.android.auth.UserDto
 import com.chatforia.android.calls.AndroidCallManager
 import com.chatforia.android.StartChatView
 import com.chatforia.android.chats.StartChatViewModel
-import com.chatforia.android.random.RandomChatSheet
 import androidx.compose.ui.platform.LocalContext
 import com.chatforia.android.sounds.AudioPlayerService
 import kotlinx.serialization.json.Json
@@ -110,6 +109,10 @@ fun ChatsScreen(
 
     var pendingDeleteConversation by remember {
         mutableStateOf<ConversationDto?>(null)
+    }
+
+    var activeRandomTitle by remember {
+        mutableStateOf<String?>(null)
     }
 
     val context = LocalContext.current
@@ -173,12 +176,35 @@ fun ChatsScreen(
     LaunchedEffect(randomState.session) {
         val session = randomState.session ?: return@LaunchedEffect
 
+        activeRandomTitle =
+            session.partnerAlias
+                .takeIf { it.isNotBlank() }
+                ?: "Someone"
+
         showRandomMatching = false
 
+        socketManager.joinRoom(session.roomId)
+
+        val randomTitle =
+            session.partnerAlias
+                .takeIf { it.isNotBlank() }
+                ?: "Someone"
+
         selectedConversation =
-            conversations.firstOrNull {
-                it.id == session.roomId
-            }
+            ConversationDto(
+                kind = "chat",
+                id = session.roomId,
+                title = randomTitle,
+                displayName = randomTitle,
+                isRandomChat = true,
+                randomChatRoomId = session.randomChatRoomId,
+                randomChat = RandomChatDto(
+                    chatRoomId = session.roomId,
+                    id = session.randomChatRoomId,
+                    myAlias = session.myAlias,
+                    partnerAlias = randomTitle
+                )
+            )
 
         viewModel.loadConversations()
     }
@@ -230,6 +256,10 @@ fun ChatsScreen(
 
     selectedConversation?.let { room ->
 
+        val isTemporaryRandomChat =
+            room.isTemporaryRandomChat ||
+                    randomState.session?.roomId == room.id
+
         ChatThreadScreen(
             conversation = room,
             viewModel = threadViewModel,
@@ -241,8 +271,35 @@ fun ChatsScreen(
             uploadRepository = uploadRepository,
             tenorRepository = tenorRepository,
             riaRepository = RiaRepository(apiClient),
+            isTemporaryRandomChat = isTemporaryRandomChat,
+            randomChatTitle = activeRandomTitle,
+            isRandomAlreadyFriend = randomState.session?.isAlreadyFriend == true,
+            didRequestRandomFriend = randomState.session?.iRequestedFriend == true,
+            onRandomAddFriend = {
+                room.id?.let { socketManager.requestRandomFriend(it) }
+            },
+            onRandomNext = {
+                randomChatViewModel.skip()
+                activeRandomTitle = null
+                selectedConversation = null
+                showRandomMatching = true
+            },
+            onRandomLeave = {
+                randomChatViewModel.endChat()
+                activeRandomTitle = null
+                selectedConversation = null
+                viewModel.deleteConversation(room)
+            },
             onBack = {
                 val wasSmsThread = room.kind == "sms"
+
+                if (isTemporaryRandomChat) {
+                    randomChatViewModel.endChat()
+                    activeRandomTitle = null
+                    selectedConversation = null
+                    viewModel.deleteConversation(room)
+                    return@ChatThreadScreen
+                }
 
                 selectedConversation = null
                 viewModel.loadConversations()
@@ -482,23 +539,6 @@ fun ChatsScreen(
             )
         }
     }
-
-    if (randomState.session != null) {
-        ModalBottomSheet(
-            onDismissRequest = {
-                randomChatViewModel.endChat()
-            }
-        ) {
-            RandomChatSheet(
-                session = randomState.session!!,
-                messages = randomState.messages,
-                onSend = randomChatViewModel::sendMessage,
-                onAddFriend = randomChatViewModel::requestFriend,
-                onSkip = randomChatViewModel::skip,
-                onClose = randomChatViewModel::endChat
-            )
-        }
-    }
 }
 
 private fun formatConversationTime(
@@ -539,9 +579,7 @@ private fun ConversationRow(
     conversation: ConversationDto,
     onClick: () -> Unit
 ) {
-    val title =
-        conversation.displayName
-            ?: conversation.title
+    val title = conversation.randomAwareTitle
 
     val subtitle =
         conversation.last?.text

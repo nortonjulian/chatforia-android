@@ -13,7 +13,11 @@ data class ConversationDto(
     val phone: String? = null,
     val unreadCount: Int? = null,
     val avatarUsers: List<ConversationAvatarUserDto>? = null,
-    val last: ConversationLastDto? = null
+    val last: ConversationLastDto? = null,
+
+    val isRandomChat: Boolean? = null,
+    val randomChatRoomId: Int? = null,
+    val randomChat: RandomChatDto? = null
 ) {
     val uniqueId: String
         get() =
@@ -22,7 +26,35 @@ data class ConversationDto(
             } else {
                 "$kind-draft-${phone ?: title}"
             }
+
+    val isTemporaryRandomChat: Boolean
+        get() =
+            kind.equals("chat", ignoreCase = true) &&
+                    (
+                            isRandomChat == true ||
+                                    randomChatRoomId != null ||
+                                    randomChat != null
+                            ) &&
+                    randomChat?.endedAt == null &&
+                    randomChat?.unlockedAt == null
+
+    val randomAwareTitle: String
+        get() =
+            randomChat?.partnerAlias?.takeIf { it.isNotBlank() }
+                ?: displayName?.takeIf { it.isNotBlank() }
+                ?: title
 }
+
+@Serializable
+data class RandomChatDto(
+    val id: Int? = null,
+    val chatRoomId: Int? = null,
+    val myAlias: String? = null,
+    val partnerAlias: String? = null,
+    val aliasByUser: Map<String, String>? = null,
+    val unlockedAt: String? = null,
+    val endedAt: String? = null
+)
 
 @Serializable
 data class ConversationAvatarUserDto(

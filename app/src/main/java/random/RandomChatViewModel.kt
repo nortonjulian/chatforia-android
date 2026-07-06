@@ -21,8 +21,17 @@ class RandomChatViewModel(
     }
 
     fun startSearch() {
-        _state.value = RandomChatUiState(isSearching = true)
-        socketManager.startRandomChat()
+        _state.value = RandomChatUiState(
+            isSearching = true,
+            error = null
+        )
+
+        socketManager.cancelRandomChat()
+
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(200)
+            socketManager.startRandomChat()
+        }
     }
 
     fun cancelSearch() {
@@ -45,10 +54,35 @@ class RandomChatViewModel(
                 try {
                     val json = JSONObject(raw)
 
+                    val chatRoomId =
+                        json.optInt("chatRoomId", 0)
+                            .takeIf { it > 0 }
+                            ?: json.optInt("roomId", 0)
+                                .takeIf { it > 0 }
+                            ?: throw Exception("Missing random chat room id.")
+
+                    val randomChatRoomId =
+                        json.optInt("randomChatRoomId", 0)
+                            .takeIf { it > 0 }
+
+                    val partnerAlias = json.optString("partnerAlias", "Someone")
+                        .takeIf { it.isNotBlank() }
+                        ?: "Someone"
+
+                    val partnerDisplayName = json.optString("partnerDisplayName")
+                        .takeIf { it.isNotBlank() }
+
+                    val relationshipStatus = json.optString("relationshipStatus", "none")
+                        .takeIf { it.isNotBlank() }
+                        ?: "none"
+
                     val session = RandomSession(
-                        roomId = json.optInt("roomId"),
+                        roomId = chatRoomId,
+                        randomChatRoomId = randomChatRoomId,
                         myAlias = json.optString("myAlias", "You"),
-                        partnerAlias = json.optString("partnerAlias", "Someone")
+                        partnerAlias = partnerAlias,
+                        partnerDisplayName = partnerDisplayName,
+                        relationshipStatus = relationshipStatus
                     )
 
                     _state.value = RandomChatUiState(
@@ -114,11 +148,21 @@ class RandomChatViewModel(
         }
 
         viewModelScope.launch {
-            socketManager.randomFriendAccepted.collect {
+            socketManager.randomFriendAccepted.collect { raw ->
                 val session = _state.value.session ?: return@collect
 
+                val json = JSONObject(raw)
+
+                val username = json.optString("username")
+                    .takeIf { it.isNotBlank() }
+
                 _state.value = _state.value.copy(
-                    session = session.copy(partnerRequestedFriend = true)
+                    session = session.copy(
+                        iRequestedFriend = true,
+                        partnerRequestedFriend = true,
+                        partnerDisplayName = username ?: session.partnerDisplayName,
+                        relationshipStatus = "friends"
+                    )
                 )
             }
         }
@@ -136,7 +180,11 @@ class RandomChatViewModel(
     fun skip() {
         socketManager.skipRandomChat()
         _state.value = RandomChatUiState(isSearching = true)
-        socketManager.startRandomChat()
+
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(200)
+            socketManager.startRandomChat()
+        }
     }
 
     fun requestFriend() {
@@ -149,7 +197,7 @@ class RandomChatViewModel(
     }
 
     fun endChat() {
-        socketManager.skipRandomChat()
+        socketManager.cancelRandomChat()
         _state.value = RandomChatUiState()
     }
 

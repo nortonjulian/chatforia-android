@@ -47,17 +47,17 @@ fun RandomChatSheet(
                 .padding(16.dp)
         ) {
             Text(
-                text = session.partnerAlias,
+                text = session.displayName,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = ChatforiaColors.primaryText
             )
 
             Text(
-                text = if (session.isFriendUnlocked) {
-                    "Friend unlocked"
-                } else {
-                    "Anonymous random chat"
+                text = when {
+                    session.isAlreadyFriend -> "Already friends"
+                    session.isFriendUnlocked -> "Friend unlocked"
+                    else -> "Anonymous random chat"
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = ChatforiaColors.secondaryText
@@ -68,11 +68,19 @@ fun RandomChatSheet(
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedButton(
                     onClick = onAddFriend,
+                    enabled = !session.isAlreadyFriend && !session.iRequestedFriend,
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.PersonAdd, contentDescription = null)
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(stringResource(R.string.android_random_chat_add_friend))
+
+                    Text(
+                        when {
+                            session.isAlreadyFriend -> "Already Friends ✓"
+                            session.iRequestedFriend -> "Friend Requested"
+                            else -> stringResource(R.string.android_random_chat_add_friend)
+                        }
+                    )
                 }
 
                 OutlinedButton(

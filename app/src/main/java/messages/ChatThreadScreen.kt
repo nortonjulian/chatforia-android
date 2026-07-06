@@ -31,7 +31,7 @@ import com.chatforia.android.pickers.MediaPickerSheet
 import com.chatforia.android.socket.SocketManager
 import com.chatforia.android.ui.theme.ChatforiaColors
 import com.chatforia.android.tenor.TenorRepository
-
+import androidx.compose.foundation.border
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -82,6 +82,14 @@ fun ChatThreadScreen(
     uploadRepository: UploadRepository,
     tenorRepository: TenorRepository,
     riaRepository: RiaRepository,
+    isTemporaryRandomChat: Boolean = false,
+    randomChatTitle: String? = null,
+    isRandomAlreadyFriend: Boolean = false,
+    didRequestRandomFriend: Boolean = false,
+    onRandomAddFriend: (() -> Unit)? = null,
+
+    onRandomNext: (() -> Unit)? = null,
+    onRandomLeave: (() -> Unit)? = null,
     onBack: () -> Unit
 ) {
     val chatMessages by viewModel.messages.collectAsState()
@@ -147,14 +155,25 @@ fun ChatThreadScreen(
     var showSearchSheet by remember { mutableStateOf(false) }
     var threadSearchText by remember { mutableStateOf("") }
 
+    val scope = rememberCoroutineScope()
+
+    val randomDisclaimerText = "You've been paired for a random chat. Be kind!"
+
+    val visibleChatMessages =
+        if (isTemporaryRandomChat) {
+            chatMessages.filterNot { message ->
+                message.randomNoticeText() == randomDisclaimerText
+            }
+        } else {
+            chatMessages
+        }
+
     val isThreadEmpty =
         if (conversation.kind == "sms") {
             smsMessages.isEmpty()
         } else {
-            chatMessages.isEmpty()
+            !isTemporaryRandomChat && visibleChatMessages.isEmpty()
         }
-
-    val scope = rememberCoroutineScope()
 
     val photoPicker =
         rememberLauncherForActivityResult(
@@ -241,6 +260,84 @@ fun ChatThreadScreen(
         listState.scrollToItem(itemCount - 1)
     }
 
+    val topActions = buildList {
+        add(
+            ChatforiaAction(
+                icon = Icons.Default.Search,
+                contentDescription = stringResource(R.string.android_chats_search),
+                onClick = {
+                    showSearchSheet = true
+                }
+            )
+        )
+
+        if (!isTemporaryRandomChat) {
+            add(
+                ChatforiaAction(
+                    icon = Icons.Default.Call,
+                    contentDescription = stringResource(R.string.android_chat_thread_audio_call),
+                    onClick = {
+                        conversation.phone?.let { phone ->
+                            androidCallManager.startPhoneCall(phone)
+                            return@ChatforiaAction
+                        }
+
+                        val callee = conversation.avatarUsers
+                            ?.firstOrNull { it.id != currentUser.id }
+
+                        if (callee != null) {
+                            androidCallManager.startAudioCall(
+                                calleeId = callee.id,
+                                displayName = callee.displayName
+                                    ?: callee.username
+                                    ?: conversation.displayName
+                                    ?: conversation.title
+                            )
+                        }
+                    }
+                )
+            )
+
+            add(
+                ChatforiaAction(
+                    icon = Icons.Default.Videocam,
+                    contentDescription = stringResource(R.string.android_chat_thread_video_call),
+                    onClick = {
+                        val callee = conversation.avatarUsers
+                            ?.firstOrNull { it.id != currentUser.id }
+
+                        if (
+                            conversation.kind != "sms" &&
+                            conversation.isGroup != true &&
+                            callee != null
+                        ) {
+                            androidCallManager.startVideoCall(
+                                currentUser = currentUser,
+                                calleeId = callee.id,
+                                displayName = callee.displayName
+                                    ?: callee.username
+                                    ?: conversation.displayName
+                                    ?: conversation.title,
+                                chatRoomId = conversation.id
+                            )
+                        }
+                    }
+                )
+            )
+        }
+    }
+
+    val headerTitle =
+        if (isTemporaryRandomChat) {
+            randomChatTitle
+                ?.takeIf { it.isNotBlank() }
+                ?: conversation.randomChat?.partnerAlias
+                    ?.takeIf { it.isNotBlank() }
+                ?: "Someone"
+        } else {
+            conversation.randomAwareTitle
+        }
+
     Scaffold(
         topBar = {
             Box(
@@ -274,9 +371,7 @@ fun ChatThreadScreen(
                     Spacer(modifier = Modifier.width(14.dp))
 
                     Text(
-                        text = conversation.displayName
-                            ?: conversation.title
-                            ?: "Chat",
+                        text = headerTitle,
                         fontSize = 21.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = ChatforiaColors.primaryText,
@@ -289,62 +384,7 @@ fun ChatThreadScreen(
 
                     ChatforiaActionPill(
                         modifier = Modifier,
-                        actions = listOf(
-                            ChatforiaAction(
-                                icon = Icons.Default.Search,
-                                contentDescription = stringResource(R.string.android_chats_search),
-                                onClick = {
-                                    showSearchSheet = true
-                                }
-                            ),
-                            ChatforiaAction(
-                                icon = Icons.Default.Call,
-                                contentDescription = stringResource(R.string.android_chat_thread_audio_call),
-                                onClick = {
-                                    conversation.phone?.let { phone ->
-                                        androidCallManager.startPhoneCall(phone)
-                                        return@ChatforiaAction
-                                    }
-
-                                    val callee = conversation.avatarUsers
-                                        ?.firstOrNull { it.id != currentUser.id }
-
-                                    if (callee != null) {
-                                        androidCallManager.startAudioCall(
-                                            calleeId = callee.id,
-                                            displayName = callee.displayName
-                                                ?: callee.username
-                                                ?: conversation.displayName
-                                                ?: conversation.title
-                                        )
-                                    }
-                                }
-                            ),
-                            ChatforiaAction(
-                                icon = Icons.Default.Videocam,
-                                contentDescription = stringResource(R.string.android_chat_thread_video_call),
-                                onClick = {
-                                    val callee = conversation.avatarUsers
-                                        ?.firstOrNull { it.id != currentUser.id }
-
-                                    if (
-                                        conversation.kind != "sms" &&
-                                        conversation.isGroup != true &&
-                                        callee != null
-                                    ) {
-                                        androidCallManager.startVideoCall(
-                                            currentUser = currentUser,
-                                            calleeId = callee.id,
-                                            displayName = callee.displayName
-                                                ?: callee.username
-                                                ?: conversation.displayName
-                                                ?: conversation.title,
-                                            chatRoomId = conversation.id
-                                        )
-                                    }
-                                }
-                            )
-                        )
+                        actions = topActions
                     )
                 }
             }
@@ -359,6 +399,26 @@ fun ChatThreadScreen(
                 .imePadding()
                 .padding(12.dp)
         ) {
+            if (isTemporaryRandomChat) {
+                CompactRandomChatControls(
+                    isAlreadyFriend = isRandomAlreadyFriend,
+                    didRequestFriend = didRequestRandomFriend,
+                    onAddFriend = {
+                        onRandomAddFriend?.invoke()
+                    },
+                    onNext = {
+                        onRandomNext?.invoke()
+                    },
+                    onLeave = {
+                        onRandomLeave?.invoke() ?: onBack()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .offset(y = (-6).dp)
+                        .padding(start = 18.dp, top = 0.dp, bottom = 4.dp)
+                )
+            }
+
             Box(
                 modifier = Modifier.weight(1f)
             ) {
@@ -403,8 +463,14 @@ fun ChatThreadScreen(
                                     )
                                 }
                             } else {
+                                if (isTemporaryRandomChat) {
+                                    item(key = "random-disclaimer") {
+                                        RandomChatDisclaimerBanner()
+                                    }
+                                }
+
                                 items(
-                                    items = chatMessages,
+                                    items = visibleChatMessages,
                                     key = { message ->
                                         if (message.id > 0) {
                                             "server-${message.id}"
@@ -540,6 +606,7 @@ fun ChatThreadScreen(
 
             val smartRepliesEnabled = currentUser.enableSmartReplies == true
             val riaAvailable = smartRepliesEnabled && draft.isNotBlank()
+
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -893,6 +960,43 @@ fun ChatThreadScreen(
     }
 }
 
+@Composable
+private fun RandomChatDisclaimerBanner() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Surface(
+            shape = RoundedCornerShape(999.dp),
+            color = ChatforiaColors.cardBackground.copy(alpha = 0.9f),
+            modifier = Modifier.widthIn(max = 310.dp)
+        ) {
+            Text(
+                text = "You've been paired for a random chat. Be kind!",
+                color = ChatforiaColors.secondaryText,
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+                modifier = Modifier.padding(
+                    horizontal = 14.dp,
+                    vertical = 8.dp
+                )
+            )
+        }
+    }
+}
+
+private fun MessageDto.randomNoticeText(): String {
+    return (
+            decryptedContent
+                ?: translatedForMe
+                ?: rawContent
+                ?: content
+                ?: ""
+            ).trim()
+}
+
 private tailrec fun Context.findActivity(): Activity? {
     return when (this) {
         is Activity -> this
@@ -956,6 +1060,80 @@ private fun sendVoiceNote(
     }
 }
 
+@Composable
+private fun CompactRandomChatControls(
+    isAlreadyFriend: Boolean,
+    didRequestFriend: Boolean,
+    onAddFriend: () -> Unit,
+    onNext: () -> Unit,
+    onLeave: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val addFriendText =
+        when {
+            isAlreadyFriend -> "Already Friends ✓"
+            didRequestFriend -> "Friend Requested"
+            else -> "Add Friend"
+        }
+
+    val canAddFriend = !isAlreadyFriend && !didRequestFriend
+
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .width(120.dp)
+                .height(28.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .border(
+                    width = 1.dp,
+                    color = ChatforiaColors.border,
+                    shape = RoundedCornerShape(999.dp)
+                )
+                .clickable(enabled = canAddFriend) {
+                    onAddFriend()
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = addFriendText,
+                fontSize = 11.sp,
+                color = if (canAddFriend) {
+                    ChatforiaColors.secondaryText
+                } else {
+                    ChatforiaColors.secondaryText.copy(alpha = 0.65f)
+                }
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .width(88.dp)
+                .height(28.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .background(ChatforiaColors.accent)
+                .clickable { onNext() },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Next",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.Black
+            )
+        }
+
+        Text(
+            text = "Leave",
+            fontSize = 11.sp,
+            color = ChatforiaColors.accent,
+            modifier = Modifier.clickable { onLeave() }
+        )
+    }
+}
 
 @Composable
 private fun SmsMessageBubble(
