@@ -50,9 +50,12 @@ class ChatsViewModel(
             _error.value = null
 
             try {
+                val loaded =
+                    repository.loadConversations()
+
                 _conversations.value =
                     sortConversations(
-                        repository.loadConversations()
+                        hydrateEncryptedPreviews(loaded)
                     )
 
             } catch (e: Exception) {
@@ -101,6 +104,107 @@ class ChatsViewModel(
         }
     }
 
+    private suspend fun hydrateEncryptedPreviews(
+        conversations: List<ConversationDto>
+    ): List<ConversationDto> {
+        val userId = currentUserId
+            ?: return conversations
+
+        val privateKey = keyStorage.readPrivateKey()
+
+        return conversations.map { conversation ->
+            if (!conversation.needsPreviewHydration()) {
+                return@map conversation
+            }
+
+            val roomId = conversation.id
+                ?: return@map conversation
+
+            val latestMessage =
+                try {
+                    repository
+                        .loadRecentMessages(roomId = roomId, limit = 10)
+                        .maxWithOrNull(
+                            compareBy<MessageDto> { it.createdAt }
+                                .thenBy { it.id }
+                        )
+                } catch (e: Exception) {
+                    null
+                } ?: return@map conversation
+
+            val decryptedText =
+                messageDecryptor.decryptMessageOrNull(
+                    message = latestMessage,
+                    currentUserPrivateKeyB64 = privateKey,
+                    currentUserId = userId
+                )
+
+            val previewText =
+                decryptedText
+                    ?.takeIf { it.isNotBlank() }
+                    ?: latestMessage.decryptedContent
+                        ?.takeIf { it.isNotBlank() }
+                    ?: latestMessage.translatedForMe
+                        ?.takeIf { it.isNotBlank() }
+                    ?: latestMessage.rawContent
+                        ?.takeIf { it.isNotBlank() }
+                    ?: latestMessage.content
+                        ?.takeIf { it.isNotBlank() }
+                    ?: if (latestMessage.attachments.isNotEmpty() || latestMessage.attachmentsInline.isNotEmpty()) {
+                        "[media]"
+                    } else {
+                        conversation.last?.text
+                    }
+
+            if (previewText.isNullOrBlank()) {
+                return@map conversation
+            }
+
+            conversation.copy(
+                updatedAt = latestMessage.createdAt,
+                last = ConversationLastDto(
+                    text = previewText,
+                    messageId = latestMessage.id.takeIf { it > 0 }
+                        ?: conversation.last?.messageId,
+                    at = latestMessage.createdAt,
+                    hasMedia =
+                        latestMessage.attachments.isNotEmpty() ||
+                                latestMessage.attachmentsInline.isNotEmpty() ||
+                                conversation.last?.hasMedia == true,
+                    mediaCount = conversation.last?.mediaCount,
+                    mediaKinds = conversation.last?.mediaKinds,
+                    thumbUrl = conversation.last?.thumbUrl,
+                    senderName =
+                        latestMessage.sender.username
+                            ?: conversation.last?.senderName
+                )
+            )
+        }
+    }
+
+    private fun ConversationDto.needsPreviewHydration(): Boolean {
+        if (!kind.equals("chat", ignoreCase = true)) {
+            return false
+        }
+
+        val text =
+            last?.text
+                ?.trim()
+                .orEmpty()
+
+        return text.isBlank() ||
+                text.equals("Message", ignoreCase = true) ||
+                text.equals("Tap to open", ignoreCase = true) ||
+                text.equals("[encrypted message]", ignoreCase = true)
+    }
+
+    private fun MessageDto.hasEncryptedBody(): Boolean {
+        return !encryptedPayloadForMe?.contentCiphertext.isNullOrBlank() ||
+                !encryptedPayloadForMe?.encryptedKey.isNullOrBlank() ||
+                !contentCiphertext.isNullOrBlank() ||
+                !encryptedKeyForMe.isNullOrBlank() ||
+                !encryptedKeys.isNullOrEmpty()
+    }
     private fun applyRealtimeMessage(message: MessageDto) {
         val roomId =
             message.chatRoomId ?: return
@@ -141,7 +245,7 @@ class ChatsViewModel(
                     ?.takeIf { it.isNotBlank() }
                 ?: message.content
                     ?.takeIf { it.isNotBlank() }
-                ?: if (!message.contentCiphertext.isNullOrBlank()) {
+                ?: if (message.hasEncryptedBody()) {
                     "[encrypted message]"
                 } else if (message.attachments.isNotEmpty() || message.attachmentsInline.isNotEmpty()) {
                     "[media]"

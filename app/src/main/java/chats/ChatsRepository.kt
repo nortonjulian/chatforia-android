@@ -5,6 +5,8 @@ import com.chatforia.android.network.ApiRequest
 import com.chatforia.android.network.HttpMethod
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.chatforia.android.messages.MessageDto
+import com.chatforia.android.messages.MessagesResponse
 
 class ChatsRepository(
     private val apiClient: ApiClient
@@ -23,6 +25,24 @@ class ChatsRepository(
                 )
             )
         }
+    }
+
+    suspend fun loadRecentMessages(
+        roomId: Int,
+        limit: Int = 10
+    ): List<MessageDto> {
+        val response: MessagesResponse =
+            withContext(Dispatchers.IO) {
+                apiClient.send(
+                    ApiRequest(
+                        path = "messages/$roomId?limit=$limit",
+                        method = HttpMethod.GET,
+                        requiresAuth = true
+                    )
+                )
+            }
+
+        return response.items
     }
     suspend fun loadConversations(): List<ConversationDto> {
         val response: ConversationsResponse =
