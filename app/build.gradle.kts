@@ -13,8 +13,9 @@ android {
         applicationId = "com.chatforia.android"
         minSdk = 26
         targetSdk = 35
-        versionCode = 12
-        versionName = "1.0.3"
+
+        versionCode = 15
+        versionName = "1.0.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -22,7 +23,6 @@ android {
             project.findProperty("ADMOB_APP_ID")
                 ?.toString()
                 ?: "ca-app-pub-3940256099942544~3347511713"
-
 
         buildConfigField(
             "String",
@@ -66,6 +66,7 @@ android {
             )
 
             isMinifyEnabled = false
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -98,51 +99,66 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
+    // Google AdMob
     implementation("com.google.android.gms:play-services-ads:25.4.0")
 
+    // Unity Ads through AdMob mediation
+    implementation("com.unity3d.ads:unity-ads:4.18.1")
+    implementation("com.google.ads.mediation:unity:4.18.1.0")
+
+    // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-messaging")
 
+    // Android UI and security
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
-
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
-
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
-
-    implementation("io.coil-kt:coil-compose:2.7.0")
-
-    implementation("com.posthog:posthog-android:3.47.0")
-
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.core:core-ktx:1.13.1")
 
+    // Networking and serialization
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
     implementation("io.socket:socket.io-client:2.1.0") {
         exclude(group = "org.json", module = "json")
     }
 
-    implementation("com.goterl:lazysodium-android:5.1.0") {
+    // Images
+    implementation("io.coil-kt:coil-compose:2.7.0")
+
+    // Analytics
+    implementation("com.posthog:posthog-android:3.47.0")
+
+    // Encryption
+    implementation("com.goterl:lazysodium-android:5.2.0") {
         exclude(group = "net.java.dev.jna", module = "jna")
     }
 
+    implementation("net.java.dev.jna:jna:4.5.1@aar")
+
+    // Twilio
     implementation("com.twilio:voice-android:6.9.0")
     implementation("com.twilio:video-android:7.8.0")
 
-    implementation("net.java.dev.jna:jna:4.5.1@aar")
-
+    // Google sign-in and credentials
     implementation("androidx.credentials:credentials:1.7.0-alpha02")
     implementation("androidx.credentials:credentials-play-services-auth:1.7.0-alpha02")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
+    // Unit tests
     testImplementation(libs.junit)
     testImplementation("androidx.test:core:1.6.1")
     testImplementation("org.robolectric:robolectric:4.13")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+
+    // Android instrumented tests
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+
+    // Debug tools
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

@@ -580,13 +580,36 @@ private fun ConversationRow(
 ) {
     val title = conversation.randomAwareTitle
 
-    val subtitle =
-        conversation.last?.text
-            ?: if (conversation.last?.hasMedia == true) {
+    val last = conversation.last
+
+    val baseSubtitle =
+        last?.text
+            ?.takeIf { it.isNotBlank() }
+            ?: if (last?.hasMedia == true) {
                 "[media]"
             } else {
                 "No messages yet"
             }
+
+    val senderName =
+        last?.senderName
+            ?.trim()
+            .orEmpty()
+
+    val hasMessagePreview =
+        !last?.text.isNullOrBlank() ||
+                last?.hasMedia == true
+
+    val subtitle =
+        if (
+            conversation.isGroup == true &&
+            senderName.isNotEmpty() &&
+            hasMessagePreview
+        ) {
+            "$senderName: $baseSubtitle"
+        } else {
+            baseSubtitle
+        }
 
     val timestamp =
         formatConversationTime(

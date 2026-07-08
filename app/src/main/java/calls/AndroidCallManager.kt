@@ -68,8 +68,15 @@ class AndroidCallManager(
                     to = calleeId.toString(),
                     listener = object : CallAudioClient.Listener {
 
+                        override fun onRinging() {
+                            ringtonePlayer.playOutgoingRingback()
+                        }
+
                         override fun onConnected() {
-                            _state.value = AndroidCallState.Active(session)
+                            ringtonePlayer.stop()
+
+                            _state.value =
+                                AndroidCallState.Active(session)
 
                             trackCallStarted(
                                 session = session,
@@ -79,6 +86,8 @@ class AndroidCallManager(
                         }
 
                         override fun onFailed(message: String) {
+                            ringtonePlayer.stop()
+
                             viewModelScope.launch(callDispatcher) {
                                 runCatching {
                                     callService.endCall(
@@ -98,20 +107,27 @@ class AndroidCallManager(
                                 lower.contains("no answer")
                             ) {
                                 trackCallEnded("remote_ended")
-                                _state.value = AndroidCallState.Ended()
+                                _state.value =
+                                    AndroidCallState.Ended()
                             } else {
-                                _state.value = AndroidCallState.Failed(message)
+                                _state.value =
+                                    AndroidCallState.Failed(message)
                             }
                         }
 
                         override fun onDisconnected() {
+                            ringtonePlayer.stop()
+
                             trackCallEnded("disconnected")
-                            _state.value = AndroidCallState.Ended()
+                            _state.value =
+                                AndroidCallState.Ended()
                         }
                     }
                 )
 
             } catch (e: Exception) {
+                ringtonePlayer.stop()
+
                 _state.value =
                     AndroidCallState.Failed(
                         e.message ?: "Failed to start audio call."
@@ -142,8 +158,15 @@ class AndroidCallManager(
                     to = phoneNumber,
                     listener = object : CallAudioClient.Listener {
 
+                        override fun onRinging() {
+                            ringtonePlayer.playOutgoingRingback()
+                        }
+
                         override fun onConnected() {
-                            _state.value = AndroidCallState.Active(session)
+                            ringtonePlayer.stop()
+
+                            _state.value =
+                                AndroidCallState.Active(session)
 
                             trackCallStarted(
                                 session = session,
@@ -153,6 +176,8 @@ class AndroidCallManager(
                         }
 
                         override fun onFailed(message: String) {
+                            ringtonePlayer.stop()
+
                             viewModelScope.launch(callDispatcher) {
                                 runCatching {
                                     callService.endCall(
@@ -172,20 +197,27 @@ class AndroidCallManager(
                                 lower.contains("no answer")
                             ) {
                                 trackCallEnded("remote_ended")
-                                _state.value = AndroidCallState.Ended()
+                                _state.value =
+                                    AndroidCallState.Ended()
                             } else {
-                                _state.value = AndroidCallState.Failed(message)
+                                _state.value =
+                                    AndroidCallState.Failed(message)
                             }
                         }
 
                         override fun onDisconnected() {
+                            ringtonePlayer.stop()
+
                             trackCallEnded("disconnected")
-                            _state.value = AndroidCallState.Ended()
+                            _state.value =
+                                AndroidCallState.Ended()
                         }
                     }
                 )
 
             } catch (e: Exception) {
+                ringtonePlayer.stop()
+
                 _state.value =
                     AndroidCallState.Failed(
                         e.message ?: "Failed to start phone call."

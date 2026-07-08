@@ -57,11 +57,11 @@ class AudioPlayerService(
     }
 
     fun playMessageTone(filename: String, volume: Int) {
-        playSound(filename, volume)
+        playSound(filename, volume, looping = false)
     }
 
     fun playRingtone(filename: String, volume: Int) {
-        playSound(filename, volume)
+        playSound(filename, volume, looping = false)
     }
 
     fun playSavedMessageTone() {
@@ -78,14 +78,34 @@ class AudioPlayerService(
         )
     }
 
-    fun stop() {
-        player?.setOnCompletionListener(null)
-        player?.stop()
-        player?.release()
-        player = null
+    fun playOutgoingRingback() {
+        playSound(
+            filename = "ringback.wav",
+            volume = savedSoundVolume(context),
+            looping = true,
+            usage = AudioAttributes.USAGE_VOICE_COMMUNICATION_SIGNALLING
+        )
     }
 
-    private fun playSound(filename: String, volume: Int) {
+    fun stop() {
+        val currentPlayer = player
+        player = null
+
+        currentPlayer?.setOnCompletionListener(null)
+
+        runCatching {
+            currentPlayer?.stop()
+        }
+
+        currentPlayer?.release()
+    }
+
+    private fun playSound(
+        filename: String,
+        volume: Int,
+        looping: Boolean = false,
+        usage: Int = AudioAttributes.USAGE_NOTIFICATION_RINGTONE
+    ) {
         stop()
 
         val rawName = rawResourceName(filename)
@@ -108,7 +128,9 @@ class AudioPlayerService(
         }
 
         val uri =
-            Uri.parse("android.resource://${context.packageName}/$resId")
+            Uri.parse(
+                "android.resource://${context.packageName}/$resId"
+            )
 
         val safeVolume =
             volume.coerceIn(0, 100) / 100f
@@ -116,16 +138,22 @@ class AudioPlayerService(
         player = MediaPlayer().apply {
             setAudioAttributes(
                 AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(usage)
+                    .setContentType(
+                        AudioAttributes.CONTENT_TYPE_SONIFICATION
+                    )
                     .build()
             )
 
             setDataSource(context, uri)
             setVolume(safeVolume, safeVolume)
 
-            setOnCompletionListener {
-                stop()
+            isLooping = looping
+
+            if (!looping) {
+                setOnCompletionListener {
+                    this@AudioPlayerService.stop()
+                }
             }
 
             prepare()
