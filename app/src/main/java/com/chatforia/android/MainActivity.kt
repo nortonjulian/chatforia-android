@@ -81,6 +81,11 @@ import com.google.android.gms.ads.MobileAds
 import com.chatforia.android.ads.InterstitialAdManager
 import com.chatforia.android.ads.shouldShowAds
 import com.chatforia.android.calls.TwilioVoicePushRegistrar
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import com.chatforia.android.calls.CallPermissionHelper
 
 enum class AppTab {
     CHATS,
@@ -469,6 +474,10 @@ class MainActivity : ComponentActivity() {
                 ContactsViewModel(contactsRepository)
             }
 
+        LaunchedEffect(user.id) {
+            contactsViewModel.loadContacts()
+        }
+
         val startChatViewModel =
             remember {
                 StartChatViewModel(contactsRepository)
@@ -582,6 +591,18 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
+        val callPermissionLauncher =
+            rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestMultiplePermissions()
+            ) { results ->
+                val allGranted =
+                    results.values.all { granted -> granted }
+
+                if (allGranted) {
+                    androidCallManager.acceptIncoming(user)
+                }
+            }
+
         LaunchedEffect(launchIntent) {
             val intent = launchIntent
 
@@ -649,7 +670,32 @@ class MainActivity : ComponentActivity() {
                 IncomingCallSheet(
                     payload = state.payload,
                     onAccept = {
-                        androidCallManager.acceptIncoming(user)
+                        val isVideoCall =
+                            state.payload.mode?.uppercase() == "VIDEO" ||
+                                    state.payload.roomName != null
+
+                        val requiredPermissions =
+                            if (isVideoCall) {
+                                CallPermissionHelper.videoPermissions()
+                            } else {
+                                CallPermissionHelper.audioPermissions()
+                            }
+
+                        val missingPermissions =
+                            requiredPermissions.filter { permission ->
+                                ContextCompat.checkSelfPermission(
+                                    context,
+                                    permission
+                                ) != PackageManager.PERMISSION_GRANTED
+                            }
+
+                        if (missingPermissions.isEmpty()) {
+                            androidCallManager.acceptIncoming(user)
+                        } else {
+                            callPermissionLauncher.launch(
+                                missingPermissions.toTypedArray()
+                            )
+                        }
                     },
                     onDecline = {
                         androidCallManager.declineIncoming()
