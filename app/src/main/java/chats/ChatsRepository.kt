@@ -14,7 +14,7 @@ class ChatsRepository(
 
     suspend fun deleteConversation(conversation: ConversationDto) {
         val id = conversation.id ?: return
-        val kind = conversation.kind
+        val kind = conversation.kind.lowercase()
 
         withContext(Dispatchers.IO) {
             apiClient.send<Unit>(
