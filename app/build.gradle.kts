@@ -14,8 +14,8 @@ android {
         minSdk = 26
         targetSdk = 35
 
-        versionCode = 15
-        versionName = "1.0.5"
+        versionCode = 19
+        versionName = "1.0.8"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -99,6 +99,9 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
+    // Google Play Billing
+    implementation("com.android.billingclient:billing-ktx:9.1.0")
+
     // Google AdMob
     implementation("com.google.android.gms:play-services-ads:25.4.0")
 
@@ -136,6 +139,9 @@ dependencies {
     }
 
     implementation("net.java.dev.jna:jna:4.5.1@aar")
+
+    // Secure hosted checkout
+    implementation("androidx.browser:browser:1.8.0")
 
     // Twilio
     implementation("com.twilio:voice-android:6.9.0")

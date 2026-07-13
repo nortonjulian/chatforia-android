@@ -20,7 +20,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.network.ApiClient
 import com.chatforia.android.ui.theme.ChatforiaColors
-import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.clickable
@@ -29,18 +28,195 @@ import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
 import analytics.AnalyticsManager
 import analytics.AnalyticsTracker
+import com.chatforia.android.auth.AuthRepository
+import com.chatforia.android.auth.UserDto
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import com.android.billingclient.api.Purchase
+import kotlinx.coroutines.flow.collect
 @Composable
 fun UpgradeView(
     apiClient: ApiClient,
+    authRepository: AuthRepository,
+    onUserUpdated: (UserDto) -> Unit,
     onClose: () -> Unit,
-    onUpgradeTapped: (PricingProduct) -> Unit = {},
     analytics: AnalyticsTracker = AnalyticsManager
 ) {
-    val scope = rememberCoroutineScope()
-    val pricingService = remember { PricingQuoteService(apiClient) }
+    val context = LocalContext.current
+    val activity = remember(context) {
+        context.findActivity()
+    }
+
+    val pricingService = remember(apiClient) {
+        PricingQuoteService(apiClient)
+    }
+
+    val billingManager = remember(context.applicationContext) {
+        GooglePlayBillingManager(context.applicationContext)
+    }
+
+    val billingRepository = remember(apiClient) {
+        GooglePlayBillingRepository(apiClient)
+    }
+
+    val billingState by billingManager.state.collectAsState()
+
+    val currentOnUserUpdated by rememberUpdatedState(onUserUpdated)
+    val currentOnClose by rememberUpdatedState(onClose)
+
+    var isVerifyingPurchase by remember {
+        mutableStateOf(false)
+    }
+
+    val launchPurchase: (PricingProduct) -> Unit = { product ->
+        val currentActivity = activity
+
+        when {
+            isVerifyingPurchase -> {
+                Toast.makeText(
+                    context,
+                    "Your purchase is still being verified.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            currentActivity == null -> {
+                Toast.makeText(
+                    context,
+                    "Google Play Billing could not open.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            else -> {
+                billingManager.launchPurchase(
+                    activity = currentActivity,
+                    product = product
+                )
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         analytics.capture("upgrade screen viewed")
+    }
+
+    DisposableEffect(billingManager) {
+        billingManager.start()
+
+        onDispose {
+            billingManager.close()
+        }
+    }
+
+    LaunchedEffect(
+        billingManager,
+        billingRepository,
+        authRepository
+    ) {
+        billingManager.events.collect { event ->
+            when (event) {
+                is GooglePlayBillingEvent.Message -> {
+                    Toast.makeText(
+                        context,
+                        event.text,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                is GooglePlayBillingEvent.PurchasesFound -> {
+                    val completedPurchases =
+                        event.purchases
+                            .distinctBy { it.purchaseToken }
+                            .filter {
+                                it.purchaseState ==
+                                        Purchase.PurchaseState.PURCHASED
+                            }
+
+                    val hasPendingPurchase =
+                        event.purchases.any {
+                            it.purchaseState ==
+                                    Purchase.PurchaseState.PENDING
+                        }
+
+                    if (completedPurchases.isEmpty()) {
+                        val message =
+                            when {
+                                hasPendingPurchase ->
+                                    "Your purchase is pending approval."
+
+                                event.fromRestore ->
+                                    "No active Google Play purchases were found."
+
+                                else ->
+                                    null
+                            }
+
+                        if (message != null) {
+                            Toast.makeText(
+                                context,
+                                message,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    } else {
+                        isVerifyingPurchase = true
+
+                        try {
+                            val verificationResponses =
+                                mutableListOf<GooglePlayVerifyResponse>()
+
+                            for (purchase in completedPurchases) {
+                                verificationResponses +=
+                                    billingRepository.verifyPurchase(
+                                        purchaseToken =
+                                            purchase.purchaseToken
+                                    )
+                            }
+
+                            val accessGranted =
+                                verificationResponses.any {
+                                    it.ok &&
+                                            it.grantsAccess != false
+                                }
+
+                            if (accessGranted) {
+                                val refreshedUser =
+                                    authRepository.fetchMe()
+
+                                currentOnUserUpdated(refreshedUser)
+
+                                Toast.makeText(
+                                    context,
+                                    "Your Chatforia subscription is active.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+
+                                currentOnClose()
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Google Play could not activate this subscription.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        } catch (error: Exception) {
+                            Toast.makeText(
+                                context,
+                                error.message
+                                    ?: "Your purchase could not be verified.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        } finally {
+                            isVerifyingPurchase = false
+                        }
+                    }
+                }
+            }
+        }
     }
 
     var quotes by remember {
@@ -101,10 +277,14 @@ fun UpgradeView(
                 badge = "PLUS",
                 title = stringResource(R.string.android_upgrade_plus),
                 subtitle = stringResource(R.string.android_upgrade_remove_ads_and_unlock_more_everyday_features),
-                price = pricingService.formattedPrice(
-                    quote = quotes[PricingProduct.Plus],
-                    fallbackProduct = PricingProduct.Plus
-                ) ?: "$6.99",
+                price =
+                    billingState.offers[PricingProduct.Plus]
+                        ?.formattedPrice
+                        ?: pricingService.formattedPrice(
+                            quote = quotes[PricingProduct.Plus],
+                            fallbackProduct = PricingProduct.Plus
+                        )
+                        ?: "$6.99",
                 period = "/ month",
                 features = listOf(
                     "Ad-free experience",
@@ -122,7 +302,7 @@ fun UpgradeView(
                         )
                     )
 
-                    onUpgradeTapped(PricingProduct.Plus)
+                    launchPurchase(PricingProduct.Plus)
                 }
             )
 
@@ -132,10 +312,14 @@ fun UpgradeView(
                 badge = "PREMIUM",
                 title = stringResource(R.string.android_upgrade_premium),
                 subtitle = stringResource(R.string.android_upgrade_the_full_experience),
-                price = pricingService.formattedPrice(
-                    quote = quotes[PricingProduct.PremiumMonthly],
-                    fallbackProduct = PricingProduct.PremiumMonthly
-                ) ?: "$12.99",
+                price =
+                    billingState.offers[PricingProduct.PremiumMonthly]
+                        ?.formattedPrice
+                        ?: pricingService.formattedPrice(
+                            quote = quotes[PricingProduct.PremiumMonthly],
+                            fallbackProduct = PricingProduct.PremiumMonthly
+                        )
+                        ?: "$12.99",
                 period = "/ month",
                 features = listOf(
                     "Everything in Plus",
@@ -155,7 +339,7 @@ fun UpgradeView(
                         )
                     )
 
-                    onUpgradeTapped(PricingProduct.PremiumMonthly)
+                    launchPurchase(PricingProduct.PremiumMonthly)
                 }
             )
 
@@ -165,10 +349,14 @@ fun UpgradeView(
                 badge = "BEST VALUE",
                 title = stringResource(R.string.android_upgrade_premium_annual),
                 subtitle = stringResource(R.string.android_upgrade_save_compared_to_monthly_premium),
-                price = pricingService.formattedPrice(
-                    quote = quotes[PricingProduct.PremiumAnnual],
-                    fallbackProduct = PricingProduct.PremiumAnnual
-                ) ?: "$99.00",
+                price =
+                    billingState.offers[PricingProduct.PremiumAnnual]
+                        ?.formattedPrice
+                        ?: pricingService.formattedPrice(
+                            quote = quotes[PricingProduct.PremiumAnnual],
+                            fallbackProduct = PricingProduct.PremiumAnnual
+                        )
+                        ?: "$99.99",
                 period = "/ year",
                 features = listOf(
                     "Full Premium access",
@@ -186,7 +374,7 @@ fun UpgradeView(
                         )
                     )
 
-                    onUpgradeTapped(PricingProduct.PremiumAnnual)
+                    launchPurchase(PricingProduct.PremiumAnnual)
                 }
             )
 
@@ -196,8 +384,14 @@ fun UpgradeView(
                 onClick = {
                     analytics.capture("restore purchases tapped")
 
-                    scope.launch {
-                        println("Restore purchases tapped")
+                    if (isVerifyingPurchase) {
+                        Toast.makeText(
+                            context,
+                            "Your purchase is still being verified.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        billingManager.restorePurchases()
                     }
                 }
             ) {
@@ -387,6 +581,14 @@ private fun UpgradePlanCard(
                 )
             }
         }
+    }
+}
+
+private fun Context.findActivity(): Activity? {
+    return when (this) {
+        is Activity -> this
+        is ContextWrapper -> baseContext.findActivity()
+        else -> null
     }
 }
 

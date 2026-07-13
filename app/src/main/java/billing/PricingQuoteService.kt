@@ -10,10 +10,32 @@ import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
 
-enum class PricingProduct(val rawValue: String) {
-    Plus("chatforia_plus"),
-    PremiumMonthly("chatforia_premium_monthly"),
-    PremiumAnnual("chatforia_premium_annual")
+enum class PricingProduct(
+    val rawValue: String,
+    val playProductId: String,
+    val basePlanId: String,
+    val entitlementPlan: String
+) {
+    Plus(
+        rawValue = "chatforia_plus",
+        playProductId = "chatforia_plus",
+        basePlanId = "monthly",
+        entitlementPlan = "PLUS"
+    ),
+
+    PremiumMonthly(
+        rawValue = "chatforia_premium_monthly",
+        playProductId = "chatforia_premium",
+        basePlanId = "monthly",
+        entitlementPlan = "PREMIUM"
+    ),
+
+    PremiumAnnual(
+        rawValue = "chatforia_premium_annual",
+        playProductId = "chatforia_premium",
+        basePlanId = "annual",
+        entitlementPlan = "PREMIUM"
+    )
 }
 
 @Serializable

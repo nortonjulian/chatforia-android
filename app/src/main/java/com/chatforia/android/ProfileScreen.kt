@@ -274,6 +274,8 @@ fun ProfileScreen(
     if (showUpgrade) {
         UpgradeView(
             apiClient = apiClient,
+            authRepository = authRepository,
+            onUserUpdated = onUserUpdated,
             onClose = { showUpgrade = false }
         )
         return
