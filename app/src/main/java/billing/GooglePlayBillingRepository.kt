@@ -11,7 +11,8 @@ import kotlinx.serialization.json.Json
 
 @Serializable
 data class GooglePlayVerifyRequest(
-    val purchaseToken: String
+    val purchaseToken: String,
+    val allowProviderMigration: Boolean = false
 )
 
 @Serializable
@@ -34,10 +35,12 @@ class GooglePlayBillingRepository(
     private val json = Json {
         explicitNulls = false
         encodeDefaults = true
+        ignoreUnknownKeys = true
     }
 
     suspend fun verifyPurchase(
-        purchaseToken: String
+        purchaseToken: String,
+        allowProviderMigration: Boolean
     ): GooglePlayVerifyResponse {
         require(purchaseToken.isNotBlank()) {
             "Google Play purchase token is missing."
@@ -45,7 +48,8 @@ class GooglePlayBillingRepository(
 
         val requestBody =
             GooglePlayVerifyRequest(
-                purchaseToken = purchaseToken
+                purchaseToken = purchaseToken,
+                allowProviderMigration = allowProviderMigration
             )
 
         return withContext(Dispatchers.IO) {

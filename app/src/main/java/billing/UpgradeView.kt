@@ -169,14 +169,17 @@ fun UpgradeView(
                             val verificationResponses =
                                 mutableListOf<GooglePlayVerifyResponse>()
 
+                            val allowProviderMigration =
+                                event.fromRestore ||
+                                        event.requestedProduct != null
+
                             for (purchase in completedPurchases) {
                                 verificationResponses +=
                                     billingRepository.verifyPurchase(
-                                        purchaseToken =
-                                            purchase.purchaseToken
+                                        purchaseToken = purchase.purchaseToken,
+                                        allowProviderMigration = allowProviderMigration
                                     )
                             }
-
                             val accessGranted =
                                 verificationResponses.any {
                                     it.ok &&
