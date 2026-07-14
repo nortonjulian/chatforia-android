@@ -393,11 +393,19 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        UpgradeCard(
-            onClick = { showUpgrade = true }
-        )
+        val normalizedPlan =
+            user.plan
+                ?.trim()
+                ?.uppercase()
+                ?: "FREE"
 
-        Spacer(modifier = Modifier.height(16.dp))
+        if (normalizedPlan == "FREE") {
+            UpgradeCard(
+                onClick = { showUpgrade = true }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         ChatforiaSectionCard(title = stringResource(R.string.android_profile_account)) {
             ProfileRow(
