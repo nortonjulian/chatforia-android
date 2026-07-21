@@ -1,5 +1,10 @@
 package com.chatforia.android.messages
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.widget.Toast
+import androidx.core.content.ContextCompat
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -151,6 +156,37 @@ fun ChatThreadScreen(
     val recorder = remember(context) {
         AudioRecorderService(context)
     }
+
+    fun startVoiceRecording() {
+        try {
+            recorder.start()
+            isRecordingVoice = true
+        } catch (exception: Exception) {
+            isRecordingVoice = false
+
+            Toast.makeText(
+                context,
+                exception.message
+                    ?: "Voice recording could not be started.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    val microphonePermissionLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission()
+        ) { granted ->
+            if (granted) {
+                startVoiceRecording()
+            } else {
+                Toast.makeText(
+                    context,
+                    "Microphone permission is required to record voice notes.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
 
     var showSearchSheet by remember { mutableStateOf(false) }
     var threadSearchText by remember { mutableStateOf("") }
@@ -719,13 +755,21 @@ fun ChatThreadScreen(
                             }
 
                             else -> {
-                                scope.launch {
-                                    try {
-                                        recorder.start()
-                                        isRecordingVoice = true
-                                    } catch (_: Exception) {
-                                        isRecordingVoice = false
-                                    }
+                                val microphonePermission =
+                                    Manifest.permission.RECORD_AUDIO
+
+                                val permissionGranted =
+                                    ContextCompat.checkSelfPermission(
+                                        context,
+                                        microphonePermission
+                                    ) == PackageManager.PERMISSION_GRANTED
+
+                                if (permissionGranted) {
+                                    startVoiceRecording()
+                                } else {
+                                    microphonePermissionLauncher.launch(
+                                        microphonePermission
+                                    )
                                 }
                             }
                         }

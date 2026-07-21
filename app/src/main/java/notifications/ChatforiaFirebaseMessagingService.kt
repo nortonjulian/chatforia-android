@@ -1,6 +1,8 @@
 package com.chatforia.android.notifications
 
 import android.util.Log
+import com.chatforia.android.ChatforiaAppState
+import com.chatforia.android.sounds.AudioPlayerService
 import com.chatforia.android.auth.TokenStorage
 import com.chatforia.android.crypto.DeviceIdentityStorage
 import com.chatforia.android.crypto.LinkedDevicesRepository
@@ -139,8 +141,20 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
 
         when (pushData["type"]) {
             "message_new" -> {
-                NotificationCoordinator(this)
-                    .showMessageNotification(pushData)
+                if (ChatforiaAppState.isInForeground) {
+                    Log.d(
+                        "ChatforiaFCM",
+                        "App is foreground; playing selected Chatforia message tone"
+                    )
+
+                    AudioPlayerService
+                        .playSavedMessageToneShared(
+                            applicationContext
+                        )
+                } else {
+                    NotificationCoordinator(this)
+                        .showMessageNotification(pushData)
+                }
             }
 
             "call_incoming" -> {

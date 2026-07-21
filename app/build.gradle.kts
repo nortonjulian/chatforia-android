@@ -5,6 +5,15 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+val chatforiaUploadStoreFile =
+    providers.gradleProperty("CHATFORIA_UPLOAD_STORE_FILE")
+val chatforiaUploadKeyAlias =
+    providers.gradleProperty("CHATFORIA_UPLOAD_KEY_ALIAS")
+val chatforiaUploadStorePassword =
+    providers.gradleProperty("CHATFORIA_UPLOAD_STORE_PASSWORD")
+val chatforiaUploadKeyPassword =
+    providers.gradleProperty("CHATFORIA_UPLOAD_KEY_PASSWORD")
+
 android {
     namespace = "com.chatforia.android"
     compileSdk = 35
@@ -14,8 +23,8 @@ android {
         minSdk = 26
         targetSdk = 35
 
-        versionCode = 20
-        versionName = "1.0.9"
+        versionCode = 30
+        versionName = "1.0.17"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -37,6 +46,16 @@ android {
         )
     }
 
+
+    signingConfigs {
+        create("release") {
+            storeFile = file(chatforiaUploadStoreFile.get())
+            storePassword = chatforiaUploadStorePassword.get()
+            keyAlias = chatforiaUploadKeyAlias.get()
+            keyPassword = chatforiaUploadKeyPassword.get()
+        }
+    }
+
     buildTypes {
         debug {
             buildConfigField(
@@ -53,6 +72,8 @@ android {
         }
 
         release {
+            signingConfig = signingConfigs.getByName("release")
+
             buildConfigField(
                 "String",
                 "ADMOB_BANNER_AD_UNIT_ID",
