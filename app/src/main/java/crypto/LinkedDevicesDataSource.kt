@@ -7,7 +7,7 @@ interface LinkedDevicesDataSource {
 
     fun registerCurrentDevice(
         request: DeviceRegisterRequest
-    )
+    ): DeviceRegistrationResponse
 
     fun approve(
         deviceId: String,

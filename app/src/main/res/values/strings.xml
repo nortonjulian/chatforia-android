@@ -3227,4 +3227,12 @@
     <string name="android_sound_settings_current_plan">Current plan</string>
     <string name="android_sound_settings_requires_premium">Requires Premium</string>
     <string name="android_sound_settings_available_now">Available now</string>
+
+    <!-- Device replacement -->
+    <string name="android_device_replacement_title">Replace an existing device?</string>
+    <string name="android_device_replacement_body">Your plan allows one active device. Choose the existing device to replace. This will remove it from your active Chatforia devices and stop device notifications on it.</string>
+    <string name="android_device_replacement_existing_device">Existing device</string>
+    <string name="android_device_replacement_unknown_platform">Unknown platform</string>
+    <string name="android_device_replacement_item">%1$s • %2$s</string>
+    <string name="android_device_replacement_replace">Replace Device</string>
 </resources>
