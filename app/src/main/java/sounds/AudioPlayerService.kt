@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.util.Log
 
 class AudioPlayerService(
     private val context: Context
@@ -19,6 +20,20 @@ class AudioPlayerService(
         private const val MESSAGE_TONE_KEY = "chatforia.messageTone"
         private const val RINGTONE_KEY = "chatforia.ringtone"
         private const val SOUND_VOLUME_KEY = "chatforia.soundVolume"
+
+        @Volatile
+        private var sharedMessageTonePlayer: AudioPlayerService? = null
+
+        @Synchronized
+        fun playSavedMessageToneShared(context: Context) {
+            sharedMessageTonePlayer?.stop()
+
+            val nextPlayer =
+                AudioPlayerService(context.applicationContext)
+
+            sharedMessageTonePlayer = nextPlayer
+            nextPlayer.playSavedMessageTone()
+        }
 
         fun save(
             context: Context,
@@ -57,11 +72,21 @@ class AudioPlayerService(
     }
 
     fun playMessageTone(filename: String, volume: Int) {
-        playSound(filename, volume, looping = false)
+        playSound(
+            filename = filename,
+            volume = volume,
+            looping = false,
+            usage = AudioAttributes.USAGE_NOTIFICATION
+        )
     }
 
     fun playRingtone(filename: String, volume: Int) {
-        playSound(filename, volume, looping = false)
+        playSound(
+            filename = filename,
+            volume = volume,
+            looping = false,
+            usage = AudioAttributes.USAGE_NOTIFICATION_RINGTONE
+        )
     }
 
     fun playSavedMessageTone() {
@@ -104,13 +129,17 @@ class AudioPlayerService(
         filename: String,
         volume: Int,
         looping: Boolean = false,
-        usage: Int = AudioAttributes.USAGE_NOTIFICATION_RINGTONE
+        usage: Int = AudioAttributes.USAGE_NOTIFICATION
     ) {
         stop()
 
         val rawName = rawResourceName(filename)
 
         if (rawName == "vibrate") {
+            Log.d(
+                "ChatforiaTone",
+                "Playing vibration message alert"
+            )
             vibrate()
             return
         }
@@ -123,7 +152,10 @@ class AudioPlayerService(
             )
 
         if (resId == 0) {
-            println("❌ Sound resource not found: $filename -> $rawName")
+            Log.e(
+                "ChatforiaTone",
+                "Sound resource missing: $filename -> $rawName"
+            )
             return
         }
 
@@ -135,8 +167,16 @@ class AudioPlayerService(
         val safeVolume =
             volume.coerceIn(0, 100) / 100f
 
-        player = MediaPlayer().apply {
-            setAudioAttributes(
+        Log.d(
+            "ChatforiaTone",
+            "Preparing sound filename=$filename, resource=$rawName, " +
+                    "volume=$volume, usage=$usage"
+        )
+
+        val nextPlayer = MediaPlayer()
+
+        try {
+            nextPlayer.setAudioAttributes(
                 AudioAttributes.Builder()
                     .setUsage(usage)
                     .setContentType(
@@ -145,19 +185,39 @@ class AudioPlayerService(
                     .build()
             )
 
-            setDataSource(context, uri)
-            setVolume(safeVolume, safeVolume)
-
-            isLooping = looping
+            nextPlayer.setDataSource(context, uri)
+            nextPlayer.setVolume(safeVolume, safeVolume)
+            nextPlayer.isLooping = looping
 
             if (!looping) {
-                setOnCompletionListener {
+                nextPlayer.setOnCompletionListener {
                     this@AudioPlayerService.stop()
                 }
             }
 
-            prepare()
-            start()
+            nextPlayer.prepare()
+
+            player = nextPlayer
+            nextPlayer.start()
+
+            Log.d(
+                "ChatforiaTone",
+                "Sound playback started: $filename"
+            )
+        } catch (e: Exception) {
+            if (player === nextPlayer) {
+                player = null
+            }
+
+            runCatching {
+                nextPlayer.release()
+            }
+
+            Log.e(
+                "ChatforiaTone",
+                "Sound playback failed: $filename",
+                e
+            )
         }
     }
 
@@ -189,16 +249,37 @@ class AudioPlayerService(
 
         if (!vibrator.hasVibrator()) return
 
+        val pattern =
+            longArrayOf(
+                0L,
+                500L,
+                200L,
+                500L
+            )
+
+        val attributes =
+            AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(
+                    AudioAttributes.CONTENT_TYPE_SONIFICATION
+                )
+                .build()
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator.vibrate(
-                VibrationEffect.createOneShot(
-                    500,
-                    VibrationEffect.DEFAULT_AMPLITUDE
-                )
+                VibrationEffect.createWaveform(
+                    pattern,
+                    -1
+                ),
+                attributes
             )
         } else {
             @Suppress("DEPRECATION")
-            vibrator.vibrate(500)
+            vibrator.vibrate(
+                pattern,
+                -1,
+                attributes
+            )
         }
     }
 }

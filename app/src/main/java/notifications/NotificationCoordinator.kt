@@ -9,12 +9,15 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.AudioAttributes
 import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.chatforia.android.MainActivity
 import com.chatforia.android.R
+import com.chatforia.android.sounds.AudioPlayerService
 
 class NotificationCoordinator(
     private val context: Context
@@ -22,7 +25,7 @@ class NotificationCoordinator(
     companion object {
         const val CALLS_CHANNEL_ID = "chatforia_calls_v2"
         const val MISSED_CALLS_CHANNEL_ID = "chatforia_missed_calls"
-        const val MESSAGES_CHANNEL_ID = "chatforia_messages"
+        const val MESSAGES_CHANNEL_ID = "chatforia_messages_v4_default_tone"
     }
 
     init {
@@ -63,19 +66,150 @@ class NotificationCoordinator(
             enableVibration(true)
         }
 
-        val messagesChannel = NotificationChannel(
-            MESSAGES_CHANNEL_ID,
-            "Messages",
-            NotificationManager.IMPORTANCE_HIGH
-        ).apply {
-            description = "New Chatforia message alerts"
-            enableVibration(true)
-            setShowBadge(true)
-        }
+        val messagesChannel =
+            createMessageChannel(
+                channelId = MESSAGES_CHANNEL_ID,
+                filename = "Default.mp3",
+                channelName = "Messages"
+            )
+
 
         manager.createNotificationChannel(callsChannel)
         manager.createNotificationChannel(missedCallsChannel)
         manager.createNotificationChannel(messagesChannel)
+
+        ensureSelectedMessageChannel(manager)
+    }
+
+    private fun ensureSelectedMessageChannel(
+        existingManager: NotificationManager? = null
+    ): String {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return MESSAGES_CHANNEL_ID
+        }
+
+        val manager =
+            existingManager
+                ?: context.getSystemService(
+                    Context.NOTIFICATION_SERVICE
+                ) as NotificationManager
+
+        val filename =
+            AudioPlayerService.savedMessageTone(context)
+
+        val rawName =
+            messageToneRawResourceName(filename)
+
+        val channelId =
+            "chatforia_messages_v4_$rawName"
+
+        if (manager.getNotificationChannel(channelId) == null) {
+            val displayName =
+                filename
+                    .substringBeforeLast(".")
+                    .ifBlank { "Default" }
+
+            manager.createNotificationChannel(
+                createMessageChannel(
+                    channelId = channelId,
+                    filename = filename,
+                    channelName = "Messages – $displayName"
+                )
+            )
+        }
+
+        return channelId
+    }
+
+    private fun createMessageChannel(
+        channelId: String,
+        filename: String,
+        channelName: String
+    ): NotificationChannel {
+        val rawName =
+            messageToneRawResourceName(filename)
+
+        val channel =
+            NotificationChannel(
+                channelId,
+                channelName,
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "New Chatforia message alerts"
+                enableVibration(true)
+                setShowBadge(true)
+            }
+
+        if (rawName == "vibrate") {
+            channel.setSound(null, null)
+            channel.enableVibration(true)
+            channel.setVibrationPattern(
+                longArrayOf(
+                    0L,
+                    500L,
+                    200L,
+                    500L
+                )
+            )
+            return channel
+        }
+
+        val requestedResourceId =
+            context.resources.getIdentifier(
+                rawName,
+                "raw",
+                context.packageName
+            )
+
+        val soundResourceId =
+            if (requestedResourceId != 0) {
+                requestedResourceId
+            } else {
+                Log.w(
+                    "ChatforiaNotifications",
+                    "Message tone resource missing: " +
+                            "$filename -> $rawName; using Default.mp3"
+                )
+
+                R.raw.default_tone
+            }
+
+        val soundUri =
+            Uri.parse(
+                "android.resource://" +
+                        "${context.packageName}/$soundResourceId"
+            )
+
+        val audioAttributes =
+            AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(
+                    AudioAttributes.CONTENT_TYPE_SONIFICATION
+                )
+                .build()
+
+        channel.setSound(
+            soundUri,
+            audioAttributes
+        )
+
+        return channel
+    }
+
+    private fun messageToneRawResourceName(
+        filename: String
+    ): String {
+        val base =
+            filename
+                .substringBeforeLast(".")
+                .lowercase()
+                .replace(" ", "_")
+                .replace("-", "_")
+
+        return when (base) {
+            "default" -> "default_tone"
+            else -> base
+        }
     }
 
     fun showIncomingCallNotification(data: Map<String, String>) {
@@ -178,20 +312,32 @@ class NotificationCoordinator(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val messageChannelId =
+            ensureSelectedMessageChannel()
+
         val notification =
-            NotificationCompat.Builder(context, MESSAGES_CHANNEL_ID)
+            NotificationCompat.Builder(
+                context,
+                messageChannelId
+            )
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(title)
                 .setContentText(body)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(body))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                .setOnlyAlertOnce(false)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
                 .build()
 
-        NotificationManagerCompat.from(context)
-            .notify(notificationId, notification)
+        val notificationManager =
+            NotificationManagerCompat.from(context)
+
+        // Repost so a new message alerts even when this room
+        // already has an existing notification.
+        notificationManager.cancel(notificationId)
+        notificationManager.notify(notificationId, notification)
     }
 
     fun cancelIncomingCallNotification() {

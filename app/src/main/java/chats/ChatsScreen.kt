@@ -51,10 +51,6 @@ import com.chatforia.android.calls.AndroidCallManager
 import com.chatforia.android.StartChatView
 import com.chatforia.android.chats.StartChatViewModel
 import androidx.compose.ui.platform.LocalContext
-import com.chatforia.android.sounds.AudioPlayerService
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
@@ -129,48 +125,6 @@ fun ChatsScreen(
     viewModel.error.collectAsState()
 
     val startChatState by startChatViewModel.state.collectAsState()
-
-    LaunchedEffect(currentUserId) {
-        viewModel.configureCurrentUser(currentUserId)
-
-        if (currentUserId != null) {
-            viewModel.loadConversations()
-        }
-    }
-
-    LaunchedEffect(socketManager) {
-        socketManager.messageUpserts.collect { messageJson ->
-
-            viewModel.applyRealtimeMessageJson(messageJson)
-
-            try {
-                val senderId =
-                    Json.parseToJsonElement(messageJson)
-                        .jsonObject["sender"]
-                        ?.jsonObject?.get("id")
-                        ?.jsonPrimitive?.content
-                        ?.toIntOrNull()
-
-                if (
-                    senderId != null &&
-                    senderId != currentUserId
-                ) {
-                    AudioPlayerService(context)
-                        .playSavedMessageTone()
-                }
-            } catch (_: Exception) {
-            }
-        }
-    }
-
-    LaunchedEffect(conversations) {
-        conversations
-            .filter { it.kind.equals("chat", ignoreCase = true) }
-            .mapNotNull { it.id }
-            .forEach { roomId ->
-                socketManager.joinRoom(roomId)
-            }
-    }
 
     LaunchedEffect(randomState.session) {
         val session = randomState.session ?: return@LaunchedEffect

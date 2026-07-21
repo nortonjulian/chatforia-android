@@ -159,6 +159,7 @@ private fun shouldShowTextBubble(
         "[image]",
         "[video]",
         "[audio]",
+        "[voice note]",
         "[file]",
         "[attachment]",
         "[gif]",
@@ -167,7 +168,10 @@ private fun shouldShowTextBubble(
     )
 
     if (normalized.isBlank()) return false
-    if (placeholderTexts.contains(normalized)) return false
+
+    if (hasAttachments && placeholderTexts.contains(normalized)) {
+        return false
+    }
 
     return true
 }
