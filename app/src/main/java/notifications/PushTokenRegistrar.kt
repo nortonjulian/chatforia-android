@@ -1,39 +1,73 @@
 package com.chatforia.android.notifications
 
 import android.util.Log
+import com.chatforia.android.calls.TwilioVoicePushRegistrar
 import com.chatforia.android.crypto.DeviceIdentityStore
 import com.chatforia.android.crypto.DeviceRegisterRequest
+import com.chatforia.android.crypto.DeviceReplacementRequiredException
+import com.chatforia.android.crypto.DeviceReplacementTargetStaleException
 import com.chatforia.android.crypto.LinkedDevicesDataSource
-import com.chatforia.android.calls.TwilioVoicePushRegistrar
+
 class PushTokenRegistrar(
     private val deviceIdentityStorage: DeviceIdentityStore,
     private val linkedDevicesRepository: LinkedDevicesDataSource,
-    private val fcmTokenProvider: FcmTokenProvider = FirebaseFcmTokenProvider(),
-    private val twilioVoicePushRegistrar: TwilioVoicePushRegistrar? = null
+    private val fcmTokenProvider: FcmTokenProvider =
+        FirebaseFcmTokenProvider(),
+    private val twilioVoicePushRegistrar:
+        TwilioVoicePushRegistrar? = null
 ) : PushTokenRegisterer {
 
-    override suspend fun registerCurrentFcmToken() {
-        Log.d("ChatforiaFCM", "Starting FCM registration")
+    override suspend fun registerCurrentFcmToken(
+        replaceDeviceId: String?
+    ): PushRegistrationResult {
+        Log.d(
+            "ChatforiaFCM",
+            "Starting FCM registration"
+        )
 
         val deviceId =
             try {
                 deviceIdentityStorage.getOrCreateDeviceId()
-            } catch (e: Exception) {
-                Log.e("ChatforiaFCM", "Could not get device ID", e)
-                return
+            } catch (error: Exception) {
+                Log.e(
+                    "ChatforiaFCM",
+                    "Could not get device ID",
+                    error
+                )
+
+                return PushRegistrationResult.Failed(
+                    error.message
+                        ?: "Could not identify this device."
+                )
             }
 
-        Log.d("ChatforiaFCM", "Device ID: $deviceId")
+        Log.d(
+            "ChatforiaFCM",
+            "Device ID: $deviceId"
+        )
 
         val publicKey =
             try {
-                deviceIdentityStorage.getOrCreateKeyPair().first
-            } catch (e: Exception) {
-                Log.e("ChatforiaFCM", "Could not get device public key", e)
-                return
+                deviceIdentityStorage
+                    .getOrCreateKeyPair()
+                    .first
+            } catch (error: Exception) {
+                Log.e(
+                    "ChatforiaFCM",
+                    "Could not get device public key",
+                    error
+                )
+
+                return PushRegistrationResult.Failed(
+                    error.message
+                        ?: "Could not prepare this device's encryption key."
+                )
             }
 
-        Log.d("ChatforiaFCM", "Device public key ready")
+        Log.d(
+            "ChatforiaFCM",
+            "Device public key ready"
+        )
 
         try {
             linkedDevicesRepository.registerCurrentDevice(
@@ -41,28 +75,76 @@ class PushTokenRegistrar(
                     deviceId = deviceId,
                     name = "Android Device",
                     platform = "Android",
-                    publicKey = publicKey
+                    publicKey = publicKey,
+                    replaceExistingDevice =
+                        replaceDeviceId?.let { true },
+                    replaceDeviceId = replaceDeviceId
                 )
             )
 
-            Log.d("ChatforiaFCM", "Device registered with backend")
-        } catch (e: Exception) {
+            Log.d(
+                "ChatforiaFCM",
+                "Device registered with backend"
+            )
+        } catch (
+            error: DeviceReplacementRequiredException
+        ) {
+            Log.w(
+                "ChatforiaFCM",
+                "Device replacement confirmation required"
+            )
+
+            return PushRegistrationResult.ReplacementRequired(
+                existingDevices = error.existingDevices,
+                message = error.message
+                    ?: "Confirm which existing device should be replaced."
+            )
+        } catch (
+            error: DeviceReplacementTargetStaleException
+        ) {
+            Log.w(
+                "ChatforiaFCM",
+                "Replacement target is stale"
+            )
+
+            return PushRegistrationResult.ReplacementRequired(
+                existingDevices = error.existingDevices,
+                message = error.message
+                    ?: "The selected device is no longer active."
+            )
+        } catch (error: Exception) {
             Log.e(
                 "ChatforiaFCM",
-                "Device registration failed, continuing with push registration anyway",
-                e
+                "Device registration failed",
+                error
+            )
+
+            return PushRegistrationResult.Failed(
+                error.message
+                    ?: "Could not register this device."
             )
         }
 
         val token =
             try {
                 fcmTokenProvider.currentToken()
-            } catch (e: Exception) {
-                Log.e("ChatforiaFCM", "Could not get FCM token", e)
-                return
+            } catch (error: Exception) {
+                Log.e(
+                    "ChatforiaFCM",
+                    "Could not get FCM token",
+                    error
+                )
+
+                return PushRegistrationResult.Failed(
+                    error.message
+                        ?: "Could not obtain the notification token."
+                )
             }
 
-        Log.d("ChatforiaFCM", "FCM token acquired: ${token.take(24)}...")
+        Log.d(
+            "ChatforiaFCM",
+            "FCM token acquired: ${token.take(24)}..."
+        )
 
         try {
             linkedDevicesRepository.registerPushToken(
@@ -70,20 +152,35 @@ class PushTokenRegistrar(
                 pushToken = token
             )
 
-            Log.d("ChatforiaFCM", "Registered FCM token with backend for device $deviceId")
-        } catch (e: Exception) {
+            Log.d(
+                "ChatforiaFCM",
+                "Registered FCM token with backend for device $deviceId"
+            )
+        } catch (error: Exception) {
             Log.e(
                 "ChatforiaFCM",
-                "Backend FCM token registration failed, continuing with Twilio registration anyway",
-                e
+                "Backend FCM token registration failed",
+                error
+            )
+
+            return PushRegistrationResult.Failed(
+                error.message
+                    ?: "Could not register notifications for this device."
             )
         }
 
         val twilioRegistered =
             try {
-                twilioVoicePushRegistrar?.register(token) ?: false
-            } catch (e: Exception) {
-                Log.e("ChatforiaTwilioVoice", "Twilio Voice push registration crashed", e)
+                twilioVoicePushRegistrar
+                    ?.register(token)
+                    ?: false
+            } catch (error: Exception) {
+                Log.e(
+                    "ChatforiaTwilioVoice",
+                    "Twilio Voice push registration crashed",
+                    error
+                )
+
                 false
             }
 
@@ -91,5 +188,7 @@ class PushTokenRegistrar(
             "ChatforiaTwilioVoice",
             "Twilio Voice push registration result: $twilioRegistered"
         )
+
+        return PushRegistrationResult.Success
     }
 }

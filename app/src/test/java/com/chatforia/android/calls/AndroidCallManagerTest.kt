@@ -589,9 +589,20 @@ class AndroidCallManagerTest {
             )
         }
 
-        override fun acceptCall(): Boolean {
+        override fun acceptCall(
+            listener: CallAudioClient.Listener
+        ): Boolean {
             acceptCallCount++
+
+            if (acceptCallResult) {
+                listener.onConnected()
+            }
+
             return acceptCallResult
+        }
+
+        override fun rejectIncomingCall(): Boolean {
+            return true
         }
 
         override fun endCall() {
@@ -608,6 +619,12 @@ class AndroidCallManagerTest {
             enabled: Boolean
         ) {
             speakerValues.add(enabled)
+        }
+
+        override fun sendDigits(
+            digits: String
+        ) {
+            // No-op for test.
         }
     }
 
@@ -666,6 +683,10 @@ class AndroidCallManagerTest {
 
         override fun playSavedRingtone() {
             playCount++
+        }
+
+        override fun playOutgoingRingback() {
+            // No-op for test.
         }
 
         override fun stop() {

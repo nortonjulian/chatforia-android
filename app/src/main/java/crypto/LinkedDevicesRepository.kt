@@ -3,13 +3,15 @@ package com.chatforia.android.crypto
 import com.chatforia.android.network.ApiClient
 import com.chatforia.android.network.ApiRequest
 import com.chatforia.android.network.HttpMethod
+import com.chatforia.android.network.ApiException
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @Serializable
 data class LinkedDeviceDto(
-    val id: Int? = null,
+    val id: String? = null,
     val userId: Int? = null,
     val deviceId: String,
     val name: String? = null,
@@ -60,8 +62,33 @@ data class DeviceRegisterRequest(
     val platform: String,
     val publicKey: String,
     val keyAlgorithm: String = "curve25519",
-    val keyVersion: Int = 1
+    val keyVersion: Int = 1,
+    val replaceExistingDevice: Boolean? = null,
+    val replaceDeviceId: String? = null
 )
+
+@Serializable
+data class DeviceRegistrationResponse(
+    val device: LinkedDeviceDto? = null,
+    val replacedDeviceIds: List<String> = emptyList()
+)
+
+@Serializable
+private data class DeviceRegistrationErrorResponse(
+    val error: String? = null,
+    val code: String? = null,
+    val existingDevices: List<LinkedDeviceDto> = emptyList()
+)
+
+class DeviceReplacementRequiredException(
+    val existingDevices: List<LinkedDeviceDto>,
+    message: String
+) : Exception(message)
+
+class DeviceReplacementTargetStaleException(
+    val existingDevices: List<LinkedDeviceDto>,
+    message: String
+) : Exception(message)
 
 @Serializable
 data class ApproveDeviceRequest(
@@ -106,15 +133,50 @@ class LinkedDevicesRepository(
         return response.resolvedItems
     }
 
-    override fun registerCurrentDevice(request: DeviceRegisterRequest) {
-        apiClient.sendRaw(
-            ApiRequest(
-                path = "devices/register",
-                method = HttpMethod.POST,
-                bodyJson = json.encodeToString(request),
-                requiresAuth = true
+    override fun registerCurrentDevice(
+        request: DeviceRegisterRequest
+    ): DeviceRegistrationResponse {
+        try {
+            return apiClient.send(
+                ApiRequest(
+                    path = "devices/register",
+                    method = HttpMethod.POST,
+                    bodyJson = json.encodeToString(request),
+                    requiresAuth = true
+                )
             )
-        )
+        } catch (error: ApiException) {
+            if (error.statusCode == 409) {
+                val decodedError =
+                    runCatching {
+                        json.decodeFromString<DeviceRegistrationErrorResponse>(
+                            error.responseBody
+                        )
+                    }.getOrNull()
+
+                when (decodedError?.code) {
+                    "DEVICE_REPLACEMENT_REQUIRED" -> {
+                        throw DeviceReplacementRequiredException(
+                            existingDevices = decodedError.existingDevices,
+                            message =
+                                decodedError.error
+                                    ?: "Device replacement confirmation is required."
+                        )
+                    }
+
+                    "DEVICE_REPLACEMENT_TARGET_STALE" -> {
+                        throw DeviceReplacementTargetStaleException(
+                            existingDevices = decodedError.existingDevices,
+                            message =
+                                decodedError.error
+                                    ?: "The selected device is no longer active."
+                        )
+                    }
+                }
+            }
+
+            throw error
+        }
     }
 
     override fun approve(deviceId: String, wrappedAccountKey: String) {

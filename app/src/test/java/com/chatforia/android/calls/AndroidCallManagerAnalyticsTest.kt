@@ -324,8 +324,20 @@ private class FakeCallAudioClient(
         lastListener = listener
     }
 
-    override fun acceptCall(): Boolean {
+    override fun acceptCall(
+        listener: CallAudioClient.Listener
+    ): Boolean {
+        lastListener = listener
+
+        if (acceptCallResult) {
+            listener.onConnected()
+        }
+
         return acceptCallResult
+    }
+
+    override fun rejectIncomingCall(): Boolean {
+        return true
     }
 
     override fun endCall() {
@@ -340,6 +352,12 @@ private class FakeCallAudioClient(
 
     override fun setSpeaker(
         enabled: Boolean
+    ) {
+        // No-op for test.
+    }
+
+    override fun sendDigits(
+        digits: String
     ) {
         // No-op for test.
     }
@@ -384,6 +402,10 @@ private class FakeCallRingtonePlayer : CallRingtonePlayer {
 
     override fun playSavedRingtone() {
         played = true
+    }
+
+    override fun playOutgoingRingback() {
+        // No-op for test.
     }
 
     override fun stop() {

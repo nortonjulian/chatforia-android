@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import com.chatforia.android.crypto.AccountKeyService
+import com.chatforia.android.notifications.PushRegistrationResult
 import com.chatforia.android.notifications.PushTokenRegisterer
 import kotlinx.coroutines.CoroutineDispatcher
 import analytics.AnalyticsManager
@@ -25,13 +26,22 @@ class AuthViewModel(
     private val _state = MutableStateFlow<AuthState>(AuthState.Loading)
     val state: StateFlow<AuthState> = _state
 
+    private val _deviceReplacementPrompt =
+        MutableStateFlow<PushRegistrationResult.ReplacementRequired?>(null)
+
+    val deviceReplacementPrompt:
+        StateFlow<PushRegistrationResult.ReplacementRequired?> =
+        _deviceReplacementPrompt
+
     init {
         if (autoBootstrap) {
             bootstrap()
         }
     }
 
-    private fun registerPushTokenIfPossible() {
+    private fun registerPushTokenIfPossible(
+        replaceDeviceId: String? = null
+    ) {
         val registrar = pushTokenRegistrar ?: return
 
         viewModelScope.launch(pushDispatcher) {
@@ -40,8 +50,40 @@ class AuthViewModel(
                 "registerPushTokenIfPossible called."
             )
 
-            registrar.registerCurrentFcmToken()
+            when (
+                val result =
+                    registrar.registerCurrentFcmToken(
+                        replaceDeviceId = replaceDeviceId
+                    )
+            ) {
+                PushRegistrationResult.Success -> {
+                    _deviceReplacementPrompt.value = null
+                }
+
+                is PushRegistrationResult.ReplacementRequired -> {
+                    _deviceReplacementPrompt.value = result
+                }
+
+                is PushRegistrationResult.Failed -> {
+                    android.util.Log.e(
+                        "ChatforiaFCM",
+                        "Push registration failed: ${result.message}"
+                    )
+                }
+            }
         }
+    }
+
+    fun confirmDeviceReplacement(
+        replaceDeviceId: String
+    ) {
+        registerPushTokenIfPossible(
+            replaceDeviceId = replaceDeviceId
+        )
+    }
+
+    fun dismissDeviceReplacement() {
+        _deviceReplacementPrompt.value = null
     }
 
     private suspend fun prepareEncryptionKeys(user: UserDto): UserDto {
@@ -200,6 +242,7 @@ class AuthViewModel(
         analytics.reset()
 
         repository.logout()
+        _deviceReplacementPrompt.value = null
         _state.value = AuthState.LoggedOut
     }
 

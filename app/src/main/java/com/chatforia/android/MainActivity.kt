@@ -1,9 +1,15 @@
 package com.chatforia.android
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -11,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
@@ -86,6 +93,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.chatforia.android.calls.CallPermissionHelper
+import kotlinx.coroutines.flow.collect
 
 enum class AppTab {
     CHATS,
@@ -162,6 +170,31 @@ class MainActivity : ComponentActivity() {
         setContent {
             val context = LocalContext.current
 
+            val notificationPermissionLauncher =
+                rememberLauncherForActivityResult(
+                    contract =
+                        ActivityResultContracts.RequestPermission()
+                ) { granted ->
+                    Log.d(
+                        "ChatforiaNotifications",
+                        "Notification permission granted: $granted"
+                    )
+                }
+
+            LaunchedEffect(Unit) {
+                if (
+                    Build.VERSION.SDK_INT >=
+                        Build.VERSION_CODES.TIRAMISU &&
+                    ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    notificationPermissionLauncher.launch(
+                        Manifest.permission.POST_NOTIFICATIONS
+                    )
+                }
+            }
 
             key(AppLocaleManager.readLanguage(applicationContext)) {
                 ChatforiaTheme {
@@ -234,6 +267,119 @@ class MainActivity : ComponentActivity() {
 
                     val authState by
                     authViewModel.state.collectAsState()
+
+                    val deviceReplacementPrompt by
+                    authViewModel.deviceReplacementPrompt.collectAsState()
+
+                    var selectedReplacementDeviceId by
+                    remember(deviceReplacementPrompt) {
+                        mutableStateOf(
+                            deviceReplacementPrompt
+                                ?.existingDevices
+                                ?.firstOrNull()
+                                ?.deviceId
+                        )
+                    }
+
+                    deviceReplacementPrompt?.let { prompt ->
+                        AlertDialog(
+                            onDismissRequest = {
+                                authViewModel.dismissDeviceReplacement()
+                            },
+                            title = {
+                                Text(
+                                    stringResource(
+                                        R.string.android_device_replacement_title
+                                    )
+                                )
+                            },
+                            text = {
+                                Column {
+                                    Text(
+                                        stringResource(
+                                            R.string.android_device_replacement_body
+                                        )
+                                    )
+
+                                    Spacer(
+                                        modifier = Modifier.height(12.dp)
+                                    )
+
+                                    prompt.existingDevices.forEach { device ->
+                                        val selected =
+                                            selectedReplacementDeviceId ==
+                                                device.deviceId
+
+                                        val deviceName =
+                                            device.name
+                                                ?.takeIf { it.isNotBlank() }
+                                                ?: stringResource(
+                                                    R.string.android_device_replacement_existing_device
+                                                )
+
+                                        val platform =
+                                            device.platform
+                                                ?.takeIf { it.isNotBlank() }
+                                                ?: stringResource(
+                                                    R.string.android_device_replacement_unknown_platform
+                                                )
+
+                                        TextButton(
+                                            modifier =
+                                                Modifier.fillMaxWidth(),
+                                            onClick = {
+                                                selectedReplacementDeviceId =
+                                                    device.deviceId
+                                            }
+                                        ) {
+                                            Text(
+                                                text =
+                                                    (if (selected) "✓ " else "") +
+                                                        stringResource(
+                                                            R.string.android_device_replacement_item,
+                                                            deviceName,
+                                                            platform
+                                                        )
+                                            )
+                                        }
+                                    }
+                                }
+                            },
+                            confirmButton = {
+                                TextButton(
+                                    enabled =
+                                        selectedReplacementDeviceId != null,
+                                    onClick = {
+                                        selectedReplacementDeviceId
+                                            ?.let {
+                                                authViewModel
+                                                    .confirmDeviceReplacement(it)
+                                            }
+                                    }
+                                ) {
+                                    Text(
+                                        stringResource(
+                                            R.string.android_device_replacement_replace
+                                        )
+                                    )
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(
+                                    onClick = {
+                                        authViewModel
+                                            .dismissDeviceReplacement()
+                                    }
+                                ) {
+                                    Text(
+                                        stringResource(
+                                            R.string.common_cancel
+                                        )
+                                    )
+                                }
+                            }
+                        )
+                    }
 
                     when (authState) {
 
@@ -543,6 +689,37 @@ class MainActivity : ComponentActivity() {
             remember {
                 SocketManager()
             }
+
+        LaunchedEffect(chatsViewModel, user.id) {
+            chatsViewModel.configureCurrentUser(user.id)
+            chatsViewModel.loadConversations()
+        }
+
+        LaunchedEffect(socketManager, user.id) {
+            chatsViewModel.configureCurrentUser(user.id)
+
+            socketManager.messageUpserts.collect { messageJson ->
+                chatsViewModel.applyRealtimeMessageJson(
+                    messageJson
+                )
+            }
+        }
+
+        LaunchedEffect(chatsViewModel, socketManager) {
+            chatsViewModel.conversations.collect { conversations ->
+                conversations
+                    .filter {
+                        it.kind.equals(
+                            "chat",
+                            ignoreCase = true
+                        )
+                    }
+                    .mapNotNull { it.id }
+                    .forEach { roomId ->
+                        socketManager.joinRoom(roomId)
+                    }
+            }
+        }
 
         val randomChatViewModel =
             remember(user.id) {

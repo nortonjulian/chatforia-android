@@ -1,6 +1,8 @@
 package com.chatforia.android.auth
 
 import com.chatforia.android.crypto.AccountKeyService
+import com.chatforia.android.crypto.LinkedDeviceDto
+import com.chatforia.android.notifications.PushRegistrationResult
 import com.chatforia.android.notifications.PushTokenRegisterer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -394,6 +396,123 @@ class AuthViewModelTest {
         }
     }
 
+    @Test
+    fun bootstrap_whenReplacementIsRequiredExposesPrompt() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeAuthSessionRepository()
+            val pushRegisterer = FakePushTokenRegisterer()
+
+            val user = user(
+                id = 9,
+                username = "bob",
+                preferredLanguage = "en"
+            )
+
+            repository.bootstrapUser = user
+            repository.fetchMeUser = user
+
+            pushRegisterer.result =
+                PushRegistrationResult.ReplacementRequired(
+                    existingDevices =
+                        listOf(
+                            LinkedDeviceDto(
+                                deviceId = "device-old",
+                                name = "Old Android Device",
+                                platform = "Android"
+                            )
+                        ),
+                    message =
+                        "Confirm which existing device should be replaced."
+                )
+
+            val viewModel =
+                createViewModel(
+                    repository = repository,
+                    pushRegisterer = pushRegisterer
+                )
+
+            viewModel.bootstrap()
+
+            advanceUntilIdle()
+
+            val prompt =
+                viewModel.deviceReplacementPrompt.value
+
+            assertTrue(prompt != null)
+
+            assertEquals(
+                "device-old",
+                prompt?.existingDevices?.single()?.deviceId
+            )
+
+            assertEquals(
+                listOf<String?>(null),
+                pushRegisterer.replaceDeviceIds
+            )
+        }
+
+    @Test
+    fun confirmDeviceReplacementRetriesWithSelectedDeviceAndClearsPrompt() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeAuthSessionRepository()
+            val pushRegisterer = FakePushTokenRegisterer()
+
+            val user = user(
+                id = 10,
+                username = "bob",
+                preferredLanguage = "en"
+            )
+
+            repository.bootstrapUser = user
+            repository.fetchMeUser = user
+
+            pushRegisterer.result =
+                PushRegistrationResult.ReplacementRequired(
+                    existingDevices =
+                        listOf(
+                            LinkedDeviceDto(
+                                deviceId = "device-old",
+                                name = "Old Android Device",
+                                platform = "Android"
+                            )
+                        ),
+                    message =
+                        "Confirm which existing device should be replaced."
+                )
+
+            val viewModel =
+                createViewModel(
+                    repository = repository,
+                    pushRegisterer = pushRegisterer
+                )
+
+            viewModel.bootstrap()
+            advanceUntilIdle()
+
+            assertTrue(
+                viewModel.deviceReplacementPrompt.value != null
+            )
+
+            pushRegisterer.result =
+                PushRegistrationResult.Success
+
+            viewModel.confirmDeviceReplacement(
+                replaceDeviceId = "device-old"
+            )
+
+            advanceUntilIdle()
+
+            assertEquals(
+                listOf<String?>(null, "device-old"),
+                pushRegisterer.replaceDeviceIds
+            )
+
+            assertEquals(
+                null,
+                viewModel.deviceReplacementPrompt.value
+            )
+        }
+
     private class FakeAccountKeyService : AccountKeyService {
         var ensureShouldFail = false
         var resetShouldFail = false
@@ -430,9 +549,18 @@ class AuthViewModelTest {
 
     private class FakePushTokenRegisterer : PushTokenRegisterer {
         var registerCallCount = 0
+        val replaceDeviceIds = mutableListOf<String?>()
 
-        override suspend fun registerCurrentFcmToken() {
+        var result: PushRegistrationResult =
+            PushRegistrationResult.Success
+
+        override suspend fun registerCurrentFcmToken(
+            replaceDeviceId: String?
+        ): PushRegistrationResult {
             registerCallCount++
+            replaceDeviceIds.add(replaceDeviceId)
+
+            return result
         }
     }
 }

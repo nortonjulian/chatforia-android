@@ -85,7 +85,10 @@ class ApiClient(
         val responseBody = response.body?.string().orEmpty()
 
         if (!response.isSuccessful) {
-            throw Exception("HTTP ${response.code}: $responseBody")
+            throw ApiException(
+                statusCode = response.code,
+                responseBody = responseBody
+            )
         }
 
         return decode(
@@ -138,7 +141,10 @@ class ApiClient(
             response.body?.string().orEmpty()
 
         if (!response.isSuccessful) {
-            throw Exception("HTTP ${response.code}: $responseBody")
+            throw ApiException(
+                statusCode = response.code,
+                responseBody = responseBody
+            )
         }
 
         return json.decodeFromString<UploadImageResponse>(
@@ -206,7 +212,10 @@ class ApiClient(
         val responseBody = response.body?.string().orEmpty()
 
         if (!response.isSuccessful) {
-            throw Exception("HTTP ${response.code}: $responseBody")
+            throw ApiException(
+                statusCode = response.code,
+                responseBody = responseBody
+            )
         }
 
         @Suppress("UNCHECKED_CAST")

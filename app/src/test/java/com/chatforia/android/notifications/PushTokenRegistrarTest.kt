@@ -2,6 +2,8 @@ package com.chatforia.android.notifications
 
 import com.chatforia.android.crypto.DeviceIdentityStore
 import com.chatforia.android.crypto.DeviceRegisterRequest
+import com.chatforia.android.crypto.DeviceRegistrationResponse
+import com.chatforia.android.crypto.DeviceReplacementRequiredException
 import com.chatforia.android.crypto.LinkedDeviceDto
 import com.chatforia.android.crypto.LinkedDevicesDataSource
 import kotlinx.coroutines.test.runTest
@@ -206,6 +208,127 @@ class PushTokenRegistrarTest {
             )
         }
 
+    @Test
+    fun registerCurrentFcmToken_returnsReplacementRequiredWithoutFetchingToken() =
+        runTest {
+            val identityStore = FakeDeviceIdentityStore()
+
+            val linkedDevices = FakeLinkedDevicesDataSource().apply {
+                replacementRequiredDevices =
+                    listOf(
+                        LinkedDeviceDto(
+                            deviceId = "device-old",
+                            name = "Old Android Device",
+                            platform = "Android"
+                        )
+                    )
+            }
+
+            val fcmTokenProvider = FakeFcmTokenProvider()
+
+            val registrar =
+                PushTokenRegistrar(
+                    deviceIdentityStorage = identityStore,
+                    linkedDevicesRepository = linkedDevices,
+                    fcmTokenProvider = fcmTokenProvider
+                )
+
+            val result =
+                registrar.registerCurrentFcmToken()
+
+            assertTrue(
+                result is PushRegistrationResult.ReplacementRequired
+            )
+
+            val replacement =
+                result as PushRegistrationResult.ReplacementRequired
+
+            assertEquals(
+                "device-old",
+                replacement.existingDevices.single().deviceId
+            )
+
+            assertEquals(
+                0,
+                fcmTokenProvider.currentTokenCallCount
+            )
+
+            assertTrue(
+                linkedDevices.pushTokenRequests.isEmpty()
+            )
+        }
+
+    @Test
+    fun registerCurrentFcmToken_confirmedReplacementRegistersDeviceThenPushToken() =
+        runTest {
+            val identityStore = FakeDeviceIdentityStore()
+
+            val linkedDevices = FakeLinkedDevicesDataSource().apply {
+                replacementRequiredDevices =
+                    listOf(
+                        LinkedDeviceDto(
+                            deviceId = "device-old",
+                            name = "Old Android Device",
+                            platform = "Android"
+                        )
+                    )
+            }
+
+            val fcmTokenProvider = FakeFcmTokenProvider()
+
+            val registrar =
+                PushTokenRegistrar(
+                    deviceIdentityStorage = identityStore,
+                    linkedDevicesRepository = linkedDevices,
+                    fcmTokenProvider = fcmTokenProvider
+                )
+
+            val firstResult =
+                registrar.registerCurrentFcmToken()
+
+            assertTrue(
+                firstResult is PushRegistrationResult.ReplacementRequired
+            )
+
+            val secondResult =
+                registrar.registerCurrentFcmToken(
+                    replaceDeviceId = "device-old"
+                )
+
+            assertEquals(
+                PushRegistrationResult.Success,
+                secondResult
+            )
+
+            assertEquals(
+                2,
+                linkedDevices.registerCurrentDeviceRequests.size
+            )
+
+            val replacementRequest =
+                linkedDevices.registerCurrentDeviceRequests.last()
+
+            assertEquals(
+                true,
+                replacementRequest.replaceExistingDevice
+            )
+
+            assertEquals(
+                "device-old",
+                replacementRequest.replaceDeviceId
+            )
+
+            assertEquals(
+                1,
+                fcmTokenProvider.currentTokenCallCount
+            )
+
+            assertEquals(
+                listOf("device-123" to "fcm-token-123"),
+                linkedDevices.pushTokenRequests
+            )
+        }
+
     private class FakeDeviceIdentityStore(
         private val deviceId: String = "device-123",
         private val publicKey: String = "public-key-123",
@@ -262,6 +385,9 @@ class PushTokenRegistrarTest {
         var throwOnRegisterCurrentDevice = false
         var throwOnRegisterPushToken = false
 
+        var replacementRequiredDevices:
+            List<LinkedDeviceDto>? = null
+
         override fun fetchMine(): List<LinkedDeviceDto> {
             return emptyList()
         }
@@ -272,12 +398,28 @@ class PushTokenRegistrarTest {
 
         override fun registerCurrentDevice(
             request: DeviceRegisterRequest
-        ) {
+        ): DeviceRegistrationResponse {
             registerCurrentDeviceRequests.add(request)
 
             if (throwOnRegisterCurrentDevice) {
                 throw Exception("Register device boom")
             }
+
+            val replacementDevices =
+                replacementRequiredDevices
+
+            if (
+                replacementDevices != null &&
+                request.replaceExistingDevice != true
+            ) {
+                throw DeviceReplacementRequiredException(
+                    existingDevices = replacementDevices,
+                    message =
+                        "Confirm which existing device should be replaced."
+                )
+            }
+
+            return DeviceRegistrationResponse()
         }
 
         override fun approve(
