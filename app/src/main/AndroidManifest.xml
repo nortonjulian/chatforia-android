@@ -16,6 +16,14 @@
     <!-- Required because Chatforia uses AdMob / Advertising ID -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+
     <application
         android:name=".ChatforiaApplication"
         android:allowBackup="true"
@@ -57,6 +65,18 @@
                     android:scheme="chatforia"
                     android:host="oauth"
                     android:path="/apple" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="chatforia"
+                    android:host="checkout"
+                    android:pathPrefix="/esim/" />
             </intent-filter>
 
         </activity>

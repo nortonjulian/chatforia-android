@@ -6,7 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material3.*
@@ -23,8 +23,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+
 @Composable
 fun WirelessHomeView(
     apiClient: ApiClient,
@@ -62,6 +66,29 @@ fun WirelessHomeView(
         reload()
     }
 
+    val lifecycleOwner =
+        LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (
+                    event ==
+                    Lifecycle.Event.ON_RESUME
+                ) {
+                    reload()
+                }
+            }
+
+        lifecycleOwner.lifecycle
+            .addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle
+                .removeObserver(observer)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -76,7 +103,7 @@ fun WirelessHomeView(
         ) {
             IconButton(onClick = onBack) {
                 Icon(
-                    Icons.Default.ArrowBack,
+                    Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = stringResource(R.string.android_plan_back),
                     tint = ChatforiaColors.primaryText
                 )
@@ -108,7 +135,7 @@ fun WirelessHomeView(
                 context.startActivity(
                     Intent(
                         Intent.ACTION_VIEW,
-                        Uri.parse("https://chatforia.com/account/esim")
+                        "https://chatforia.com/account/esim".toUri()
                     )
                 )
             },
@@ -116,7 +143,7 @@ fun WirelessHomeView(
                 context.startActivity(
                     Intent(
                         Intent.ACTION_VIEW,
-                        Uri.parse("https://chatforia.com/upgrade?section=mobile")
+                        "https://chatforia.com/upgrade?section=mobile".toUri()
                     )
                 )
             }
@@ -136,19 +163,40 @@ fun WirelessHomeView(
             packs = packsFor(selectedScope),
             isPurchasing = isPurchasing,
             onChoosePack = { pack ->
-                error = null
+                if (isPurchasing) {
+                    return@PackListSection
+                }
 
-                val url = webCheckoutUrl(
-                    pack = pack,
-                    scope = selectedScope
-                )
+                scope.launch {
+                    error = null
+                    isPurchasing = true
 
-                context.startActivity(
-                    Intent(
-                        Intent.ACTION_VIEW,
-                        Uri.parse(url)
-                    )
-                )
+                    try {
+                        val response =
+                            repository.startCheckout(
+                                product = pack.product
+                            )
+
+                        val checkoutUrl =
+                            response.resolvedCheckoutUrl()
+                                ?: throw IllegalStateException(
+                                    "Stripe checkout did not return a valid URL."
+                                )
+
+                        context.startActivity(
+                            Intent(
+                                Intent.ACTION_VIEW,
+                                checkoutUrl.toUri()
+                            )
+                        )
+                    } catch (e: Exception) {
+                        error =
+                            e.message
+                                ?: "Could not start wireless checkout."
+                    } finally {
+                        isPurchasing = false
+                    }
+                }
             }
         )
 
@@ -160,7 +208,7 @@ fun WirelessHomeView(
                     context.startActivity(
                         Intent(
                             Intent.ACTION_VIEW,
-                            Uri.parse("https://chatforia.com/account/esim")
+                            "https://chatforia.com/account/esim".toUri()
                         )
                     )
                 },
@@ -471,19 +519,6 @@ private fun FeatureRow(
             color = ChatforiaColors.primaryText
         )
     }
-}
-
-private fun webCheckoutUrl(
-    pack: DataPackOption,
-    scope: EsimScope
-): String {
-    val scopeValue = when (scope) {
-        EsimScope.LOCAL -> "local"
-        EsimScope.EUROPE -> "europe"
-        EsimScope.GLOBAL -> "global"
-    }
-
-    return "https://chatforia.com/upgrade?section=mobile&scope=$scopeValue&product=${pack.product}"
 }
 
 private fun formatGb(
