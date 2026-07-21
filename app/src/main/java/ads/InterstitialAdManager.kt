@@ -14,41 +14,66 @@ class InterstitialAdManager(
 ) {
     private var interstitialAd: InterstitialAd? = null
     private var isLoading = false
+    private var adsEnabled = false
     private var lastShownAt = 0L
-    private var showAfterLoad = false
 
     private val minimumGapMillis = 15 * 60 * 1000L
 
     private var smsThreadExitCount = 0
     private val showEverySmsThreadExits = 10
 
-    fun recordSmsThreadExitAndMaybeShow() {
-        smsThreadExitCount += 1
-        load()
+    /**
+     * Call whenever the signed-in user's plan or ad eligibility changes.
+     */
+    fun setAdsEnabled(enabled: Boolean) {
+        if (adsEnabled == enabled) {
+            return
+        }
 
-        if (smsThreadExitCount % showEverySmsThreadExits != 0) return
+        adsEnabled = enabled
+
+        if (!enabled) {
+            // Drop any previously loaded Free-plan ad.
+            interstitialAd = null
+            smsThreadExitCount = 0
+            return
+        }
+
+        load()
+    }
+
+    fun recordSmsThreadExitAndMaybeShow() {
+        if (!adsEnabled) {
+            return
+        }
+
+        smsThreadExitCount += 1
+
+        if (
+            smsThreadExitCount %
+            showEverySmsThreadExits != 0
+        ) {
+            load()
+            return
+        }
 
         showIfReady()
     }
 
-    fun load(showWhenReady: Boolean = false) {
-        if (showWhenReady) {
-            showAfterLoad = true
+    fun load() {
+        if (!adsEnabled) {
+            return
         }
 
-        if (isLoading) return
-
-        val readyAd = interstitialAd
-        if (readyAd != null) {
-            if (showWhenReady) {
-                showIfReady()
-            }
+        if (isLoading || interstitialAd != null) {
             return
         }
 
         isLoading = true
 
-        val request = AdRequest.Builder().build()
+        val request =
+            AdRequest.Builder()
+                .build()
 
         InterstitialAd.load(
             activity,
@@ -56,59 +81,99 @@ class InterstitialAdManager(
             request,
             object : InterstitialAdLoadCallback() {
 
-                override fun onAdLoaded(ad: InterstitialAd) {
-                    interstitialAd = ad
+                override fun onAdLoaded(
+                    ad: InterstitialAd
+                ) {
                     isLoading = false
 
+                    /*
+                     * The user's plan may have changed while
+                     * the network request was in progress.
+                     */
+                    if (!adsEnabled) {
+                        interstitialAd = null
+                        return
+                    }
+
+                    interstitialAd = ad
+
                     ad.fullScreenContentCallback =
-                        object : FullScreenContentCallback() {
+                        object :
+                            FullScreenContentCallback() {
 
                             override fun onAdShowedFullScreenContent() {
-                                lastShownAt = SystemClock.elapsedRealtime()
+                                lastShownAt =
+                                    SystemClock.elapsedRealtime()
                             }
 
                             override fun onAdDismissedFullScreenContent() {
                                 interstitialAd = null
-                                showAfterLoad = false
-                                load()
+
+                                if (adsEnabled) {
+                                    load()
+                                }
                             }
 
                             override fun onAdFailedToShowFullScreenContent(
                                 adError: AdError
                             ) {
                                 interstitialAd = null
-                                showAfterLoad = false
-                                load()
+
+                                if (adsEnabled) {
+                                    load()
+                                }
                             }
                         }
-
-                    if (showAfterLoad) {
-                        showAfterLoad = false
-                        showIfReady()
-                    }
                 }
 
-                override fun onAdFailedToLoad(error: LoadAdError) {
+                override fun onAdFailedToLoad(
+                    error: LoadAdError
+                ) {
                     interstitialAd = null
                     isLoading = false
-                    showAfterLoad = false
                 }
             }
         )
     }
 
     fun showIfReady() {
-        val now = SystemClock.elapsedRealtime()
+        if (!adsEnabled) {
+            return
+        }
 
-        if (now - lastShownAt < minimumGapMillis) return
+        val now =
+            SystemClock.elapsedRealtime()
+
+        if (
+            now - lastShownAt <
+            minimumGapMillis
+        ) {
+            return
+        }
 
         val ad = interstitialAd
 
         if (ad == null) {
-            load(showWhenReady = true)
+            /*
+             * Load for a future eligible checkpoint,
+             * but never display automatically later.
+             */
+            load()
             return
         }
 
+        /*
+         * Clear the stored reference before showing so
+         * this ad cannot accidentally be reused.
+         */
+        interstitialAd = null
         ad.show(activity)
+    }
+
+    fun clear() {
+        adsEnabled = false
+        interstitialAd = null
+        isLoading = false
+        smsThreadExitCount = 0
     }
 }

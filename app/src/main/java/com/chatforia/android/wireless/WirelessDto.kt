@@ -61,6 +61,25 @@ data class ReserveEsimResponse(
     val region: String? = null
 )
 
+@Serializable
+data class WirelessCheckoutRequest(
+    val product: String,
+    val platform: String = "android"
+)
+
+@Serializable
+data class WirelessCheckoutResponse(
+    val url: String? = null,
+    val checkoutUrl: String? = null,
+    val sessionId: String? = null
+) {
+    fun resolvedCheckoutUrl(): String? {
+        return checkoutUrl
+            ?.takeIf { it.isNotBlank() }
+            ?: url?.takeIf { it.isNotBlank() }
+    }
+}
+
 data class DataPackOption(
     val product: String,
     val scope: EsimScope,

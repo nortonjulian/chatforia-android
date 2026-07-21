@@ -108,6 +108,32 @@ class MainActivity : ComponentActivity() {
 
     private var pendingNotificationChatRoomId by mutableStateOf<Int?>(null)
 
+    private var pendingOpenWireless by mutableStateOf(false)
+
+    private fun handleEsimCheckoutIntent(
+        intent: Intent?
+    ) {
+        val data = intent?.data ?: return
+
+        val isEsimCheckout =
+            data.scheme.equals(
+                "chatforia",
+                ignoreCase = true
+            ) &&
+                    data.host.equals(
+                        "checkout",
+                        ignoreCase = true
+                    ) &&
+                    (
+                            data.path == "/esim/complete" ||
+                                    data.path == "/esim/canceled"
+                            )
+
+        if (isEsimCheckout) {
+            pendingOpenWireless = true
+        }
+    }
+
     private fun handleMessageNotificationIntent(intent: Intent?) {
         if (intent?.getStringExtra("type") != "message_new") return
 
@@ -162,6 +188,7 @@ class MainActivity : ComponentActivity() {
 
         latestLaunchIntent = intent
         handleMessageNotificationIntent(intent)
+        handleEsimCheckoutIntent(intent)
 
         Thread {
             MobileAds.initialize(this) {}
@@ -487,14 +514,30 @@ class MainActivity : ComponentActivity() {
                                 tokenStorage = tokenStorage,
                                 authRepository = repository,
                                 launchIntent = latestLaunchIntent,
+
+                                openWirelessFromDeepLink =
+                                    pendingOpenWireless,
+
+                                onWirelessDeepLinkConsumed = {
+                                    pendingOpenWireless = false
+
+                                    val emptyIntent = Intent()
+                                    setIntent(emptyIntent)
+                                    latestLaunchIntent = emptyIntent
+                                },
+
                                 onIncomingCallIntentConsumed = {
                                     val emptyIntent = Intent()
                                     setIntent(emptyIntent)
                                     latestLaunchIntent = emptyIntent
                                 },
+
                                 onUserUpdated = { updatedUser ->
-                                    authViewModel.replaceCurrentUser(updatedUser)
+                                    authViewModel.replaceCurrentUser(
+                                        updatedUser
+                                    )
                                 },
+
                                 onLogout = {
                                     authViewModel.logout()
                                 }
@@ -548,11 +591,15 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
-        Log.d("ChatforiaAppleAuth", "Apple OAuth intent received")
+        Log.d(
+            "ChatforiaDeepLink",
+            "New intent received: ${intent.data}"
+        )
 
         setIntent(intent)
         latestLaunchIntent = intent
         handleMessageNotificationIntent(intent)
+        handleEsimCheckoutIntent(intent)
     }
 
     @Composable
@@ -562,6 +609,8 @@ class MainActivity : ComponentActivity() {
         tokenStorage: TokenStorage,
         authRepository: AuthRepository,
         launchIntent: Intent?,
+        openWirelessFromDeepLink: Boolean,
+        onWirelessDeepLinkConsumed: () -> Unit,
         onIncomingCallIntentConsumed: () -> Unit,
         onUserUpdated: (UserDto) -> Unit,
         onLogout: () -> Unit
@@ -570,18 +619,39 @@ class MainActivity : ComponentActivity() {
             mutableStateOf(AppTab.CHATS)
         }
 
+        LaunchedEffect(
+            openWirelessFromDeepLink
+        ) {
+            if (openWirelessFromDeepLink) {
+                selectedTab = AppTab.PROFILE
+            }
+        }
+
         var pendingCallChoice by remember {
             mutableStateOf<com.chatforia.android.calls.CallDto?>(null)
         }
 
         val interstitialAdManager =
             remember {
-                InterstitialAdManager(this@MainActivity)
+                InterstitialAdManager(
+                    this@MainActivity
+                )
             }
 
-        LaunchedEffect(user.id) {
-            if (user.shouldShowAds()) {
-                interstitialAdManager.load()
+        LaunchedEffect(
+            user.id,
+            user.plan,
+            user.isPremium,
+            user.isAdmin
+        ) {
+            interstitialAdManager.setAdsEnabled(
+                user.shouldShowAds()
+            )
+        }
+
+        DisposableEffect(interstitialAdManager) {
+            onDispose {
+                interstitialAdManager.clear()
             }
         }
 
@@ -1177,9 +1247,8 @@ class MainActivity : ComponentActivity() {
                                 pendingNotificationChatRoomId = null
                             },
                             onMaybeShowInterstitial = {
-                                if (user.shouldShowAds()) {
-                                    interstitialAdManager.recordSmsThreadExitAndMaybeShow()
-                                }
+                                interstitialAdManager
+                                    .recordSmsThreadExitAndMaybeShow()
                             }
                         )
 
@@ -1285,10 +1354,16 @@ class MainActivity : ComponentActivity() {
                             user = user,
                             apiClient = apiClient,
                             authRepository = authRepository,
-                            settingsRepository = settingsRepository,
-                            linkedDevicesViewModel = linkedDevicesViewModel,
+                            settingsRepository =
+                                settingsRepository,
+                            linkedDevicesViewModel =
+                                linkedDevicesViewModel,
                             onUserUpdated = onUserUpdated,
-                            onLogout = onLogout
+                            onLogout = onLogout,
+                            openWirelessFromDeepLink =
+                                openWirelessFromDeepLink,
+                            onWirelessDeepLinkConsumed =
+                                onWirelessDeepLinkConsumed
                         )
                 }
             }

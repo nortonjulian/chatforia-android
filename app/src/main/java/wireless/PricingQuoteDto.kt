@@ -1,4 +1,0 @@
-package wireless
-
-class PricingQuoteDto {
-}

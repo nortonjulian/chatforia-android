@@ -108,8 +108,13 @@ fun ProfileScreen(
     authRepository: AuthRepository,
     onLogout: () -> Unit,
     settingsRepository: SettingsRepository,
-    linkedDevicesViewModel: LinkedDevicesViewModel,
+    linkedDevicesViewModel:
+    LinkedDevicesViewModel,
     onUserUpdated: (UserDto) -> Unit,
+    openWirelessFromDeepLink:
+    Boolean = false,
+    onWirelessDeepLinkConsumed:
+        () -> Unit = {},
 ) {
     val context = LocalContext.current
 
@@ -220,6 +225,15 @@ fun ProfileScreen(
     var showUpgrade by remember { mutableStateOf(false) }
 
     var showWireless by remember { mutableStateOf(false) }
+
+    LaunchedEffect(
+        openWirelessFromDeepLink
+    ) {
+        if (openWirelessFromDeepLink) {
+            showWireless = true
+            onWirelessDeepLinkConsumed()
+        }
+    }
 
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
