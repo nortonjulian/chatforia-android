@@ -42,14 +42,20 @@ class WirelessRepository(
     }
 
     suspend fun startCheckout(
-        product: String
+        product: String,
+        checkoutAttemptId: String
     ): WirelessCheckoutResponse {
         require(product.isNotBlank()) {
             "A wireless product is required."
         }
 
+        require(checkoutAttemptId.isNotBlank()) {
+            "A checkout attempt ID is required."
+        }
+
         val requestBody = WirelessCheckoutRequest(
             product = product,
+            checkoutAttemptId = checkoutAttemptId,
             platform = "android"
         )
 

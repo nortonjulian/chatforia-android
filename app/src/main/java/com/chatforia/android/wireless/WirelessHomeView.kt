@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import java.util.UUID
 
 @Composable
 fun WirelessHomeView(
@@ -167,14 +168,21 @@ fun WirelessHomeView(
                     return@PackListSection
                 }
 
-                scope.launch {
-                    error = null
-                    isPurchasing = true
+                // Set this immediately, before launching the coroutine.
+                // Additional rapid taps will now be ignored.
+                isPurchasing = true
+                error = null
 
+                val checkoutAttemptId =
+                    UUID.randomUUID().toString()
+
+                scope.launch {
                     try {
                         val response =
                             repository.startCheckout(
-                                product = pack.product
+                                product = pack.product,
+                                checkoutAttemptId =
+                                    checkoutAttemptId
                             )
 
                         val checkoutUrl =
