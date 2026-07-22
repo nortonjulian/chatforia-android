@@ -25,7 +25,87 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.R
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
 
+private val webUrlRegex =
+    Regex("""(?i)(?:https?://|www\.)[^\s<]+""")
+
+private fun buildLinkifiedMessageText(
+    text: String,
+    linkColor: Color
+): AnnotatedString {
+    return buildAnnotatedString {
+        var currentIndex = 0
+
+        webUrlRegex.findAll(text).forEach { match ->
+            if (match.range.first > currentIndex) {
+                append(
+                    text.substring(
+                        currentIndex,
+                        match.range.first
+                    )
+                )
+            }
+
+            val matchedText = match.value
+
+            val trailingPunctuation =
+                matchedText.takeLastWhile { character ->
+                    character in ".,!?;:"
+                }
+
+            val visibleUrl = matchedText.dropLast(
+                trailingPunctuation.length
+            )
+
+            if (visibleUrl.isNotEmpty()) {
+                val destinationUrl =
+                    if (
+                        visibleUrl.startsWith(
+                            "www.",
+                            ignoreCase = true
+                        )
+                    ) {
+                        "https://$visibleUrl"
+                    } else {
+                        visibleUrl
+                    }
+
+                withLink(
+                    LinkAnnotation.Url(
+                        url = destinationUrl,
+                        styles = TextLinkStyles(
+                            style = SpanStyle(
+                                color = linkColor,
+                                textDecoration =
+                                    TextDecoration.Underline
+                            )
+                        )
+                    )
+                ) {
+                    append(visibleUrl)
+                }
+
+                append(trailingPunctuation)
+            } else {
+                append(matchedText)
+            }
+
+            currentIndex = match.range.last + 1
+        }
+
+        if (currentIndex < text.length) {
+            append(text.substring(currentIndex))
+        }
+    }
+}
 @Composable
 fun MessageBubble(
     message: MessageDto,
@@ -92,6 +172,13 @@ fun MessageBubble(
     val outgoingTextColor = ChatforiaColors.outgoingBubbleText
     val outgoingMetaTextColor = ChatforiaColors.outgoingBubbleText.copy(alpha = 0.75f)
 
+    val messageTextColor =
+        if (isMine) {
+            outgoingTextColor
+        } else {
+            ChatforiaColors.primaryText
+        }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start
@@ -135,8 +222,11 @@ fun MessageBubble(
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
                 ) {
                     Text(
-                        text = displayText,
-                        color = if (isMine) outgoingTextColor else ChatforiaColors.primaryText
+                        text = buildLinkifiedMessageText(
+                            text = displayText,
+                            linkColor = messageTextColor
+                        ),
+                        color = messageTextColor
                     )
 
                     if (message.editedAt != null && !isDeleted) {
