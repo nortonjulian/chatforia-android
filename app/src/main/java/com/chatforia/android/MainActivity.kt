@@ -351,6 +351,29 @@ class MainActivity : ComponentActivity() {
                                                     R.string.android_device_replacement_unknown_platform
                                                 )
 
+                                        val activityDate =
+                                            (device.lastSeenAt ?: device.createdAt)
+                                                ?.substringBefore('T')
+                                                ?.takeIf { it.isNotBlank() }
+
+                                        val deviceIdSuffix =
+                                            device.deviceId.takeLast(8)
+
+                                        val displayDeviceName =
+                                            buildString {
+                                                append(deviceName)
+                                                append(" (")
+
+                                                if (activityDate != null) {
+                                                    append(activityDate)
+                                                    append(" • ")
+                                                }
+
+                                                append("…")
+                                                append(deviceIdSuffix)
+                                                append(")")
+                                            }
+
                                         TextButton(
                                             modifier =
                                                 Modifier.fillMaxWidth(),
@@ -364,7 +387,7 @@ class MainActivity : ComponentActivity() {
                                                     (if (selected) "✓ " else "") +
                                                         stringResource(
                                                             R.string.android_device_replacement_item,
-                                                            deviceName,
+                                                            displayDeviceName,
                                                             platform
                                                         )
                                             )
