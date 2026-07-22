@@ -64,6 +64,7 @@ data class ReserveEsimResponse(
 @Serializable
 data class WirelessCheckoutRequest(
     val product: String,
+    val checkoutAttemptId: String,
     val platform: String = "android"
 )
 
