@@ -1,5 +1,6 @@
 package com.chatforia.android.notifications
 
+import android.os.Build
 import android.util.Log
 import com.chatforia.android.calls.TwilioVoicePushRegistrar
 import com.chatforia.android.crypto.DeviceIdentityStore
@@ -7,6 +8,35 @@ import com.chatforia.android.crypto.DeviceRegisterRequest
 import com.chatforia.android.crypto.DeviceReplacementRequiredException
 import com.chatforia.android.crypto.DeviceReplacementTargetStaleException
 import com.chatforia.android.crypto.LinkedDevicesDataSource
+
+private fun currentAndroidDeviceName(): String {
+    val manufacturer = Build.MANUFACTURER.trim()
+    val model = Build.MODEL.trim()
+
+    if (model.isBlank()) {
+        return "Android Device"
+    }
+
+    if (manufacturer.isBlank()) {
+        return model
+    }
+
+    if (
+        model.startsWith(
+            manufacturer,
+            ignoreCase = true
+        )
+    ) {
+        return model
+    }
+
+    val formattedManufacturer =
+        manufacturer.replaceFirstChar { character ->
+            character.uppercase()
+        }
+
+    return "$formattedManufacturer $model"
+}
 
 class PushTokenRegistrar(
     private val deviceIdentityStorage: DeviceIdentityStore,
@@ -73,7 +103,7 @@ class PushTokenRegistrar(
             linkedDevicesRepository.registerCurrentDevice(
                 DeviceRegisterRequest(
                     deviceId = deviceId,
-                    name = "Android Device",
+                    name = currentAndroidDeviceName(),
                     platform = "Android",
                     publicKey = publicKey,
                     replaceExistingDevice =
