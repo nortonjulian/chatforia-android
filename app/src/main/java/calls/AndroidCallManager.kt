@@ -74,6 +74,7 @@ class AndroidCallManager(
                 voiceManager.startCall(
                     accessToken = token.token,
                     to = calleeId.toString(),
+                    backendCallId = callId,
                     listener = object : CallAudioClient.Listener {
 
                         override fun onRinging() {
@@ -164,6 +165,7 @@ class AndroidCallManager(
                 voiceManager.startCall(
                     accessToken = token.token,
                     to = phoneNumber,
+                    backendCallId = callId,
                     listener = object : CallAudioClient.Listener {
 
                         override fun onRinging() {

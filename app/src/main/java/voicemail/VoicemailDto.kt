@@ -5,9 +5,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class VoicemailDto(
     val id: String,
+    val callerUserId: Int? = null,
     val from: String? = null,
     val fromNumber: String? = null,
     val displayName: String? = null,
+    val username: String? = null,
     val audioUrl: String? = null,
     val transcript: String? = null,
     val durationSec: Int? = null,
