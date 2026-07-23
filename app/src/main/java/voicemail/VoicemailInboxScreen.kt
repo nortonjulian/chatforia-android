@@ -1,5 +1,11 @@
 package com.chatforia.android.voicemail
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.ContactsContract
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,12 +15,15 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chatforia.android.socket.SocketManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -25,6 +34,10 @@ import com.chatforia.android.ui.theme.ChatforiaColors
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 data class VoicemailUiState(
     val items: List<VoicemailDto> = emptyList(),
@@ -145,6 +158,45 @@ private fun VoicemailRow(
     onPlay: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val context = LocalContext.current
+
+    val callerNumber =
+        item.fromNumber
+            ?: item.from
+
+    val localContactName by produceState<String?>(
+        initialValue = null,
+        key1 = item.callerUserId,
+        key2 = callerNumber
+    ) {
+        value =
+            if (
+                item.callerUserId != null ||
+                callerNumber.isNullOrBlank()
+            ) {
+                null
+            } else {
+                withContext(Dispatchers.IO) {
+                    lookupPhoneContactName(
+                        context = context,
+                        rawNumber = callerNumber
+                    )
+                }
+            }
+    }
+
+    val callerLabel =
+        item.displayName
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+            ?: item.username
+                ?.trim()
+                ?.takeIf { it.isNotBlank() }
+                ?.let { "@$it" }
+            ?: localContactName
+            ?: callerNumber
+            ?: "Unknown caller"
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -153,21 +205,23 @@ private fun VoicemailRow(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                item.displayName
-                    ?: item.fromNumber
-                    ?: item.from
-                    ?: "Unknown caller",
-                fontWeight = if (item.isRead == false) FontWeight.Bold else FontWeight.Normal
+                text = callerLabel,
+                fontWeight =
+                    if (item.isRead == false) {
+                        FontWeight.Bold
+                    } else {
+                        FontWeight.Normal
+                    }
             )
 
             Text(
-                item.createdAt ?: "",
+                text = formatVoicemailDate(item.createdAt),
                 style = MaterialTheme.typography.bodySmall
             )
 
             if (!item.transcript.isNullOrBlank()) {
                 Text(
-                    item.transcript,
+                    text = item.transcript,
                     maxLines = 2,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -175,12 +229,180 @@ private fun VoicemailRow(
         }
 
         IconButton(onClick = onPlay) {
-            Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.android_voicemail_inbox_play_voicemail))
+            Icon(
+                Icons.Default.PlayArrow,
+                contentDescription = stringResource(
+                    R.string.android_voicemail_inbox_play_voicemail
+                )
+            )
         }
 
         IconButton(onClick = onDelete) {
-            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.android_voicemail_inbox_delete_voicemail))
+            Icon(
+                Icons.Default.Delete,
+                contentDescription = stringResource(
+                    R.string.android_voicemail_inbox_delete_voicemail
+                )
+            )
         }
+    }
+}
+
+private fun lookupPhoneContactName(
+    context: Context,
+    rawNumber: String
+): String? {
+    val hasPermission =
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.READ_CONTACTS
+        ) == PackageManager.PERMISSION_GRANTED
+
+    if (!hasPermission) {
+        return null
+    }
+
+    val directLookupUri =
+        Uri.withAppendedPath(
+            ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
+            Uri.encode(rawNumber)
+        )
+
+    val directMatch =
+        runCatching {
+            context.contentResolver.query(
+                directLookupUri,
+                arrayOf(
+                    ContactsContract.PhoneLookup.DISPLAY_NAME
+                ),
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                if (!cursor.moveToFirst()) {
+                    null
+                } else {
+                    val nameIndex =
+                        cursor.getColumnIndex(
+                            ContactsContract.PhoneLookup.DISPLAY_NAME
+                        )
+
+                    if (nameIndex < 0) {
+                        null
+                    } else {
+                        cursor
+                            .getString(nameIndex)
+                            ?.trim()
+                            ?.takeIf { it.isNotBlank() }
+                    }
+                }
+            }
+        }.getOrNull()
+
+    if (!directMatch.isNullOrBlank()) {
+        return directMatch
+    }
+
+    val targetDigits =
+        rawNumber.filter { character ->
+            character.isDigit()
+        }
+
+    if (targetDigits.length < 7) {
+        return null
+    }
+
+    return runCatching {
+        context.contentResolver.query(
+            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+            arrayOf(
+                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                ContactsContract.CommonDataKinds.Phone.NUMBER
+            ),
+            null,
+            null,
+            null
+        )?.use { cursor ->
+            val nameIndex =
+                cursor.getColumnIndex(
+                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+                )
+
+            val numberIndex =
+                cursor.getColumnIndex(
+                    ContactsContract.CommonDataKinds.Phone.NUMBER
+                )
+
+            if (nameIndex < 0 || numberIndex < 0) {
+                return@use null
+            }
+
+            var matchedName: String? = null
+
+            while (
+                cursor.moveToNext() &&
+                matchedName == null
+            ) {
+                val storedNumber =
+                    cursor.getString(numberIndex).orEmpty()
+
+                val storedDigits =
+                    storedNumber.filter { character ->
+                        character.isDigit()
+                    }
+
+                val androidMatch =
+                    android.telephony.PhoneNumberUtils.compare(
+                        rawNumber,
+                        storedNumber
+                    )
+
+                val exactDigitMatch =
+                    targetDigits == storedDigits
+
+                val nationalNumberMatch =
+                    targetDigits.length >= 10 &&
+                        storedDigits.length >= 10 &&
+                        targetDigits.takeLast(10) ==
+                            storedDigits.takeLast(10)
+
+                if (
+                    androidMatch ||
+                    exactDigitMatch ||
+                    nationalNumberMatch
+                ) {
+                    matchedName =
+                        cursor
+                            .getString(nameIndex)
+                            ?.trim()
+                            ?.takeIf { it.isNotBlank() }
+                }
+            }
+
+            matchedName
+        }
+    }.getOrNull()
+}
+
+private fun formatVoicemailDate(
+    rawDate: String?
+): String {
+    if (rawDate.isNullOrBlank()) {
+        return ""
+    }
+
+    return runCatching {
+        val instant = Instant.parse(rawDate)
+
+        DateTimeFormatter
+            .ofPattern(
+                "MMM d, yyyy 'at' h:mm a",
+                Locale.getDefault()
+            )
+            .withZone(ZoneId.systemDefault())
+            .format(instant)
+    }.getOrElse {
+        rawDate
     }
 }
 

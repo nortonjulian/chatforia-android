@@ -18,11 +18,17 @@ class TwilioVoiceManager(
     override fun startCall(
         accessToken: String,
         to: String,
+        backendCallId: Int,
         listener: CallAudioClient.Listener
     ) {
         val connectOptions =
             ConnectOptions.Builder(accessToken)
-                .params(mapOf("To" to to))
+                .params(
+                    mapOf(
+                        "To" to to,
+                        "backendCallId" to backendCallId.toString()
+                    )
+                )
                 .build()
 
         activeCall =
