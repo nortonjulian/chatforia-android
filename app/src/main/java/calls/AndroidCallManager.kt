@@ -1,12 +1,17 @@
 package com.chatforia.android.calls
 
+import android.util.Log
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chatforia.android.auth.UserDto
+import com.chatforia.android.notifications.NotificationCoordinator
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 import kotlinx.serialization.json.Json
 import android.content.Context
 import kotlinx.coroutines.CoroutineDispatcher
@@ -35,6 +40,9 @@ class AndroidCallManager(
     val state: StateFlow<AndroidCallState> = _state
 
     private var activeCallAnalytics: CallAnalyticsContext? = null
+
+    private val appContext = context.applicationContext
+    private var incomingRingTimeoutJob: Job? = null
 
     init {
         observeSockets()
@@ -323,22 +331,73 @@ class AndroidCallManager(
         }
     }
 
-    fun restoreIncomingCall(payload: IncomingCallPayload) {
-        ringtonePlayer.playSavedRingtone()
+    private fun cancelIncomingRingTimeout() {
+        incomingRingTimeoutJob?.cancel()
+        incomingRingTimeoutJob = null
+    }
 
-        _state.value =
-            AndroidCallState.Ringing(payload)
+    private fun beginIncomingRinging(payload: IncomingCallPayload) {
+        cancelIncomingRingTimeout()
+
+        ringtonePlayer.playSavedRingtone()
+        _state.value = AndroidCallState.Ringing(payload)
+
+        incomingRingTimeoutJob =
+            viewModelScope.launch {
+                delay(40_000L)
+
+                val ringing =
+                    _state.value as? AndroidCallState.Ringing
+                        ?: return@launch
+
+                if (ringing.payload.callId != payload.callId) {
+                    return@launch
+                }
+
+                Log.d(
+                    "AndroidCallManager",
+                    "Incoming call timed out locally callId=${payload.callId}"
+                )
+
+                ringtonePlayer.stop()
+
+                NotificationCoordinator(appContext)
+                    .cancelIncomingCallNotification()
+
+                if (
+                    payload.mode?.uppercase() == "VIDEO" ||
+                    !payload.roomName.isNullOrBlank()
+                ) {
+                    videoManager.disconnect()
+                } else {
+                    voiceManager.rejectIncomingCall()
+                }
+
+                TwilioIncomingCallStore.clear()
+                _state.value = AndroidCallState.Ended()
+                incomingRingTimeoutJob = null
+            }
+    }
+
+    fun restoreIncomingCall(payload: IncomingCallPayload) {
+        beginIncomingRinging(payload)
     }
 
 
     fun acceptIncoming(currentUser: UserDto) {
+        cancelIncomingRingTimeout()
         ringtonePlayer.stop()
         val ringing =
             _state.value as? AndroidCallState.Ringing ?: return
 
         val payload = ringing.payload
 
-        if (payload.mode?.uppercase() == "VIDEO" || payload.roomName != null) {
+        Log.d(
+            "AndroidCallManager",
+            "acceptIncoming callId=${payload.callId} mode='${payload.mode}' roomName='${payload.roomName}'"
+        )
+
+        if (payload.mode?.uppercase() == "VIDEO" || !payload.roomName.isNullOrBlank()) {
             acceptIncomingVideo(currentUser, payload)
         } else {
             acceptIncomingAudio(payload)
@@ -358,38 +417,68 @@ class AndroidCallManager(
 
         _state.value = AndroidCallState.Connecting(session)
 
-        val accepted =
-            voiceManager.acceptCall(
-                object : CallAudioClient.Listener {
-                    override fun onConnected() {
-                        _state.value = AndroidCallState.Active(session)
+        val listener =
+            object : CallAudioClient.Listener {
+                override fun onConnected() {
+                    _state.value = AndroidCallState.Active(session)
 
-                        trackCallStarted(
-                            session = session,
-                            callType = "audio",
-                            direction = "inbound"
-                        )
-                    }
-
-                    override fun onFailed(message: String) {
-                        _state.value = AndroidCallState.Failed(message)
-                    }
-
-                    override fun onDisconnected() {
-                        trackCallEnded("disconnected")
-                        _state.value = AndroidCallState.Ended()
-                    }
+                    trackCallStarted(
+                        session = session,
+                        callType = "audio",
+                        direction = "inbound"
+                    )
                 }
-            )
 
-        if (!accepted) {
-            _state.value =
-                AndroidCallState.Failed(
-                    "Incoming audio calls are not available yet on this device."
-                )
-            return
+                override fun onFailed(message: String) {
+                    _state.value = AndroidCallState.Failed(message)
+                }
+
+                override fun onDisconnected() {
+                    trackCallEnded("disconnected")
+                    _state.value = AndroidCallState.Ended()
+                }
+            }
+
+        viewModelScope.launch {
+            repeat(60) { attempt ->
+                val currentState = _state.value
+
+                if (
+                    currentState !is AndroidCallState.Connecting ||
+                    currentState.session.callId != session.callId
+                ) {
+                    return@launch
+                }
+
+                if (voiceManager.acceptCall(listener)) {
+                    Log.d(
+                        "AndroidCallManager",
+                        "Twilio invite accepted after ${attempt * 100}ms"
+                    )
+                    return@launch
+                }
+
+                if (attempt == 0) {
+                    Log.d(
+                        "AndroidCallManager",
+                        "Waiting for Twilio invite for callId=${payload.callId}"
+                    )
+                }
+
+                delay(100)
+            }
+
+            val currentState = _state.value
+            if (
+                currentState is AndroidCallState.Connecting &&
+                currentState.session.callId == session.callId
+            ) {
+                _state.value =
+                    AndroidCallState.Failed(
+                        "The incoming voice invitation did not arrive."
+                    )
+            }
         }
-
     }
 
     private fun acceptIncomingVideo(
@@ -499,13 +588,14 @@ class AndroidCallManager(
     }
 
     fun declineIncoming() {
+        cancelIncomingRingTimeout()
         ringtonePlayer.stop()
         val ringing =
             _state.value as? AndroidCallState.Ringing ?: return
 
         val callId = ringing.payload.callId
 
-        if (ringing.payload.mode?.uppercase() == "VIDEO" || ringing.payload.roomName != null) {
+        if (ringing.payload.mode?.uppercase() == "VIDEO" || !ringing.payload.roomName.isNullOrBlank()) {
             videoManager.disconnect()
         } else {
             voiceManager.rejectIncomingCall()
@@ -592,6 +682,7 @@ class AndroidCallManager(
     }
 
     fun endCall() {
+        cancelIncomingRingTimeout()
         ringtonePlayer.stop()
 
         val current = _state.value
@@ -718,14 +809,14 @@ class AndroidCallManager(
                     }.getOrNull()
 
                 if (payload != null) {
-                    ringtonePlayer.playSavedRingtone()
-                    _state.value = AndroidCallState.Ringing(payload)
+                    beginIncomingRinging(payload)
                 }
             }
         }
 
         viewModelScope.launch {
             TwilioVoiceCallEvents.remoteEnded.collect {
+                cancelIncomingRingTimeout()
                 ringtonePlayer.stop()
                 voiceManager.endCall()
                 videoManager.disconnect()
@@ -742,18 +833,16 @@ class AndroidCallManager(
                     }.getOrNull()
 
                 if (payload != null) {
-                    ringtonePlayer.playSavedRingtone()
-
-                    _state.value =
-                        AndroidCallState.Ringing(
-                            payload.copy(mode = payload.mode ?: "VIDEO")
-                        )
+                    beginIncomingRinging(
+                        payload.copy(mode = payload.mode ?: "VIDEO")
+                    )
                 }
             }
         }
 
         viewModelScope.launch {
             socketManager.callEnded.collect {
+                cancelIncomingRingTimeout()
                 ringtonePlayer.stop()
                 voiceManager.endCall()
                 videoManager.disconnect()
@@ -764,6 +853,7 @@ class AndroidCallManager(
 
         viewModelScope.launch {
             socketManager.videoCallEnded.collect {
+                cancelIncomingRingTimeout()
                 ringtonePlayer.stop()
                 videoManager.disconnect()
                 trackCallEnded("remote_ended")

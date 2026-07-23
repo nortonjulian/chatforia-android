@@ -15,18 +15,22 @@ class AudioCallRingtonePlayer(
     context: Context
 ) : CallRingtonePlayer {
 
-    private val audioPlayerService =
-        AudioPlayerService(context)
+    private val appContext =
+        context.applicationContext
+
+    private val outgoingAudioPlayerService =
+        AudioPlayerService(appContext)
 
     override fun playSavedRingtone() {
-        audioPlayerService.playSavedRingtone()
+        AudioPlayerService.playSavedRingtoneShared(appContext)
     }
 
     override fun playOutgoingRingback() {
-        audioPlayerService.playOutgoingRingback()
+        outgoingAudioPlayerService.playOutgoingRingback()
     }
 
     override fun stop() {
-        audioPlayerService.stop()
+        AudioPlayerService.stopSavedRingtoneShared()
+        outgoingAudioPlayerService.stop()
     }
 }

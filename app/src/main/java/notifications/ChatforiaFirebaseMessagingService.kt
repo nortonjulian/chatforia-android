@@ -28,7 +28,7 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
 
-        Log.d("ChatforiaFCM", "New FCM token: ${token.take(24)}...")
+        Log.d("ChatforiaFCM", "Received refreshed FCM token")
 
         serviceScope.launch {
             try {
@@ -65,7 +65,10 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
-        Log.d("ChatforiaFCM", "FCM data: ${message.data}")
+        Log.d(
+            "ChatforiaFCM",
+            "Received push type=${message.data["type"] ?: "unknown"}"
+        )
 
         val pushData = message.data.toMutableMap()
 
@@ -93,23 +96,63 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                         val custom =
                             callInvite.customParameters ?: emptyMap()
 
+                        val cached =
+                            IncomingCallDisplayStore.recent(
+                                applicationContext
+                            )
+
+                        fun friendlyValue(
+                            value: String?
+                        ): String? {
+                            return value
+                                ?.takeIf { it.isNotBlank() }
+                                ?.takeUnless {
+                                    it.startsWith(
+                                        "client:user_",
+                                        ignoreCase = true
+                                    )
+                                }
+                        }
+
+                        val callerName =
+                            friendlyValue(cached?.get("callerName"))
+                                ?: friendlyValue(custom["callerName"])
+                                ?: friendlyValue(callInvite.from)
+                                ?: "Chatforia user"
+
                         val data =
                             mapOf(
                                 "type" to "call_incoming",
-                                "callId" to (custom["callId"] ?: ""),
-                                "callerId" to (custom["callerId"] ?: ""),
-                                "callerName" to (
-                                        custom["callerName"]
-                                            ?: callInvite.from
-                                            ?: "Incoming call"
-                                        ),
+                                "callId" to (
+                                    custom["callId"]
+                                        ?.takeIf { it.isNotBlank() }
+                                        ?: cached?.get("callId")
+                                        ?: ""
+                                    ),
+                                "callerId" to (
+                                    custom["callerId"]
+                                        ?.takeIf { it.isNotBlank() }
+                                        ?: cached?.get("callerId")
+                                        ?: ""
+                                    ),
+                                "callerName" to callerName,
                                 "fromNumber" to (
-                                        custom["fromNumber"]
-                                            ?: callInvite.from
-                                            ?: "Unknown caller"
-                                        ),
-                                "mode" to "AUDIO",
-                                "roomName" to ""
+                                    friendlyValue(custom["fromNumber"])
+                                        ?: friendlyValue(
+                                            cached?.get("fromNumber")
+                                        )
+                                        ?: callerName
+                                    ),
+                                "mode" to (
+                                    cached?.get("mode")
+                                        ?: "AUDIO"
+                                    ),
+                                "roomName" to (
+                                    custom["roomName"]
+                                        ?.takeIf { it.isNotBlank() }
+                                        ?: cached?.get("roomName")
+                                        ?: ""
+                                    )
                             )
 
                         NotificationCoordinator(this@ChatforiaFirebaseMessagingService)
@@ -126,6 +169,9 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                         )
 
                         TwilioIncomingCallStore.clear()
+                        IncomingCallDisplayStore.clear(
+                            applicationContext
+                        )
 
                         NotificationCoordinator(this@ChatforiaFirebaseMessagingService)
                             .cancelIncomingCallNotification()
@@ -158,8 +204,13 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
             }
 
             "call_incoming" -> {
+                IncomingCallDisplayStore.save(
+                    applicationContext,
+                    pushData
+                )
+
                 NotificationCoordinator(this)
-                    .showIncomingCallNotification(message.data)
+                    .showIncomingCallNotification(pushData)
             }
 
             "call_missed" -> {

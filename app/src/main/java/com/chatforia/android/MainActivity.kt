@@ -69,6 +69,7 @@ import com.chatforia.android.crypto.DeviceProvisioningCrypto
 import com.chatforia.android.crypto.DeviceIdentityStorage
 import com.chatforia.android.crypto.KeyRestoreGate
 import com.chatforia.android.notifications.PushTokenRegistrar
+import com.chatforia.android.notifications.NotificationCoordinator
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
@@ -869,6 +870,9 @@ class MainActivity : ComponentActivity() {
                     results.values.all { granted -> granted }
 
                 if (allGranted) {
+                    NotificationCoordinator(context)
+                        .cancelIncomingCallNotification()
+
                     androidCallManager.acceptIncoming(user)
                 }
             }
@@ -942,7 +946,7 @@ class MainActivity : ComponentActivity() {
                     onAccept = {
                         val isVideoCall =
                             state.payload.mode?.uppercase() == "VIDEO" ||
-                                    state.payload.roomName != null
+                                    !state.payload.roomName.isNullOrBlank()
 
                         val requiredPermissions =
                             if (isVideoCall) {
@@ -960,6 +964,9 @@ class MainActivity : ComponentActivity() {
                             }
 
                         if (missingPermissions.isEmpty()) {
+                            NotificationCoordinator(context)
+                                .cancelIncomingCallNotification()
+
                             androidCallManager.acceptIncoming(user)
                         } else {
                             callPermissionLauncher.launch(
@@ -968,6 +975,9 @@ class MainActivity : ComponentActivity() {
                         }
                     },
                     onDecline = {
+                        NotificationCoordinator(context)
+                            .cancelIncomingCallNotification()
+
                         androidCallManager.declineIncoming()
                     }
                 )
