@@ -24,6 +24,9 @@ class AudioPlayerService(
         @Volatile
         private var sharedMessageTonePlayer: AudioPlayerService? = null
 
+        @Volatile
+        private var sharedIncomingRingtonePlayer: AudioPlayerService? = null
+
         @Synchronized
         fun playSavedMessageToneShared(context: Context) {
             sharedMessageTonePlayer?.stop()
@@ -33,6 +36,32 @@ class AudioPlayerService(
 
             sharedMessageTonePlayer = nextPlayer
             nextPlayer.playSavedMessageTone()
+        }
+
+        @Synchronized
+        fun playSavedRingtoneShared(context: Context) {
+            if (sharedIncomingRingtonePlayer != null) {
+                return
+            }
+
+            val nextPlayer =
+                AudioPlayerService(context.applicationContext)
+
+            sharedIncomingRingtonePlayer = nextPlayer
+
+            nextPlayer.playSound(
+                filename = savedRingtone(context),
+                volume = savedSoundVolume(context),
+                looping = true,
+                usage = AudioAttributes.USAGE_NOTIFICATION_RINGTONE
+            )
+        }
+
+        @Synchronized
+        fun stopSavedRingtoneShared() {
+            val currentPlayer = sharedIncomingRingtonePlayer
+            sharedIncomingRingtonePlayer = null
+            currentPlayer?.stop()
         }
 
         fun save(

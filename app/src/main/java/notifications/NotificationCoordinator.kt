@@ -8,9 +8,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.AudioAttributes
-import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -23,9 +24,82 @@ class NotificationCoordinator(
     private val context: Context
 ) {
     companion object {
-        const val CALLS_CHANNEL_ID = "chatforia_calls_v2"
+        const val CALLS_CHANNEL_ID = "chatforia_calls_v3_custom_ringtone"
         const val MISSED_CALLS_CHANNEL_ID = "chatforia_missed_calls"
         const val MESSAGES_CHANNEL_ID = "chatforia_messages_v4_default_tone"
+
+        private const val INCOMING_CALL_NOTIFICATION_ID = 1001
+        private const val INCOMING_CALL_TIMEOUT_MS = 40_000L
+
+        private val incomingCallTimeoutHandler =
+            Handler(Looper.getMainLooper())
+
+        private val incomingCallTimeoutLock = Any()
+        private var incomingCallTimeoutRunnable: Runnable? = null
+        private var incomingCallTimeoutGeneration = 0L
+
+        private fun scheduleIncomingCallTimeout(context: Context) {
+            val appContext = context.applicationContext
+
+            synchronized(incomingCallTimeoutLock) {
+                incomingCallTimeoutRunnable?.let {
+                    incomingCallTimeoutHandler.removeCallbacks(it)
+                }
+
+                incomingCallTimeoutGeneration += 1L
+                val generation = incomingCallTimeoutGeneration
+
+                val timeoutRunnable =
+                    Runnable {
+                        val shouldRun =
+                            synchronized(incomingCallTimeoutLock) {
+                                if (
+                                    generation !=
+                                    incomingCallTimeoutGeneration
+                                ) {
+                                    false
+                                } else {
+                                    incomingCallTimeoutRunnable = null
+                                    true
+                                }
+                            }
+
+                        if (!shouldRun) {
+                            return@Runnable
+                        }
+
+                        Log.d(
+                            "ChatforiaNotifications",
+                            "Incoming call timed out locally"
+                        )
+
+                        AudioPlayerService.stopSavedRingtoneShared()
+
+                        NotificationManagerCompat
+                            .from(appContext)
+                            .cancel(INCOMING_CALL_NOTIFICATION_ID)
+                    }
+
+                incomingCallTimeoutRunnable = timeoutRunnable
+
+                incomingCallTimeoutHandler.postDelayed(
+                    timeoutRunnable,
+                    INCOMING_CALL_TIMEOUT_MS
+                )
+            }
+        }
+
+        private fun cancelIncomingCallTimeout() {
+            synchronized(incomingCallTimeoutLock) {
+                incomingCallTimeoutGeneration += 1L
+
+                incomingCallTimeoutRunnable?.let {
+                    incomingCallTimeoutHandler.removeCallbacks(it)
+                }
+
+                incomingCallTimeoutRunnable = null
+            }
+        }
     }
 
     init {
@@ -38,23 +112,17 @@ class NotificationCoordinator(
         val manager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        val callSoundUri =
-            RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-
-        val callAudioAttributes =
-            AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .build()
-
         val callsChannel = NotificationChannel(
             CALLS_CHANNEL_ID,
             "Incoming Calls",
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
             description = "Incoming Chatforia call alerts"
-            setSound(callSoundUri, callAudioAttributes)
+            setSound(null, null)
             enableVibration(true)
+            setShowBadge(false)
+            lockscreenVisibility =
+                android.app.Notification.VISIBILITY_PUBLIC
         }
 
         val missedCallsChannel = NotificationChannel(
@@ -220,8 +288,11 @@ class NotificationCoordinator(
         val callerName =
             data["callerName"] ?: fromNumber
 
-        val callSoundUri =
-            RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+        AudioPlayerService.playSavedRingtoneShared(
+            context.applicationContext
+        )
+
+        scheduleIncomingCallTimeout(context)
 
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -237,7 +308,7 @@ class NotificationCoordinator(
 
         val pendingIntent = PendingIntent.getActivity(
             context,
-            1001,
+            INCOMING_CALL_NOTIFICATION_ID,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -247,17 +318,27 @@ class NotificationCoordinator(
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle("Incoming call")
                 .setContentText(callerName)
-                .setStyle(NotificationCompat.BigTextStyle().bigText("Call from $callerName"))
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setStyle(
+                    NotificationCompat.BigTextStyle()
+                        .bigText("Call from $callerName")
+                )
+                .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_CALL)
-                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setDefaults(NotificationCompat.DEFAULT_VIBRATE)
+                .setSound(null)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setContentIntent(pendingIntent)
-                .setAutoCancel(true)
+                .setFullScreenIntent(pendingIntent, true)
+                .setOngoing(true)
+                .setAutoCancel(false)
+                .setOnlyAlertOnce(true)
                 .build()
 
         NotificationManagerCompat.from(context)
-            .notify(1001, notification)
+            .notify(
+                INCOMING_CALL_NOTIFICATION_ID,
+                notification
+            )
     }
 
     fun showMissedCallNotification(data: Map<String, String>) {
@@ -341,8 +422,11 @@ class NotificationCoordinator(
     }
 
     fun cancelIncomingCallNotification() {
+        cancelIncomingCallTimeout()
+        AudioPlayerService.stopSavedRingtoneShared()
+
         NotificationManagerCompat.from(context)
-            .cancel(1001)
+            .cancel(INCOMING_CALL_NOTIFICATION_ID)
     }
 
     private fun canPostNotifications(): Boolean {
