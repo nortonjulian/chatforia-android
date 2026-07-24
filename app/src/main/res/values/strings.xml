@@ -3235,4 +3235,19 @@
     <string name="android_device_replacement_unknown_platform">Unknown platform</string>
     <string name="android_device_replacement_item">%1$s • %2$s</string>
     <string name="android_device_replacement_replace">Replace Device</string>
+
+    <string name="android_voicemail_unknown_caller">Unknown caller</string>
+    <string name="android_voicemail_options">Voicemail options</string>
+    <string name="android_voicemail_mark_read">Mark read</string>
+    <string name="android_voicemail_mark_unread">Mark unread</string>
+    <string name="android_voicemail_delete">Delete</string>
+    <string name="android_voicemail_delete_message">This voicemail will be removed from your inbox.</string>
+    <string name="android_voicemail_cancel">Cancel</string>
+    <string name="android_voicemail_call_back">Call Back</string>
+    <string name="android_voicemail_empty_description">When someone leaves you a voicemail,\nit will show up here.</string>
+    <string name="android_voicemail_player_loading">Loading…</string>
+    <string name="android_voicemail_player_pause">Pause</string>
+    <string name="android_voicemail_player_sign_in_again">Please sign in again to play this voicemail.</string>
+    <string name="android_voicemail_player_unable_to_play">Unable to play this voicemail.</string>
+    <string name="android_voicemail_player_unable_to_load">Unable to load this voicemail.</string>
 </resources>

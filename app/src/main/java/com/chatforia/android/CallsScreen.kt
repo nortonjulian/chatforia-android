@@ -24,6 +24,7 @@ import com.chatforia.android.calls.CallsViewModel
 import com.chatforia.android.ui.theme.ChatforiaColors
 import com.chatforia.android.voicemail.VoicemailInboxScreen
 import com.chatforia.android.voicemail.VoicemailViewModel
+import com.chatforia.android.voicemail.VoicemailDto
 import androidx.compose.material.icons.filled.Dialpad
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Phone
@@ -51,7 +52,8 @@ fun CallsScreen(
     onStartAudioCall: (CallDto) -> Unit = {},
     onStartVideoCall: (CallDto) -> Unit = {},
     onDialNumber: (String) -> Unit = {},
-    onMessageCall: (CallDto) -> Unit = {}
+    onMessageCall: (CallDto) -> Unit = {},
+    onCallBackVoicemail: (VoicemailDto) -> Unit = {}
 ) {
     var selectedSegment by remember {
         mutableStateOf(CallsSegment.Recents)
@@ -192,7 +194,8 @@ fun CallsScreen(
 
             CallsSegment.Voicemail -> {
                 VoicemailInboxScreen(
-                    viewModel = voicemailViewModel
+                    viewModel = voicemailViewModel,
+                    onCallBack = onCallBackVoicemail
                 )
             }
         }

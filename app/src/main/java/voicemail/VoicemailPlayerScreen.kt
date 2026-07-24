@@ -1,6 +1,8 @@
 package com.chatforia.android.voicemail
 
 import android.media.AudioAttributes
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import android.media.MediaPlayer
 import android.net.Uri
 import androidx.compose.foundation.layout.Column
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -20,10 +23,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.auth.TokenStorage
+import com.chatforia.android.R
 import com.chatforia.android.network.Environment
+import com.chatforia.android.ui.theme.ChatforiaColors
 
 @Composable
 fun VoicemailPlayerScreen(
@@ -60,6 +69,8 @@ fun VoicemailPlayerScreen(
         mutableStateOf<String?>(null)
     }
 
+    val playButtonShape = RoundedCornerShape(28.dp)
+
     DisposableEffect(player) {
         onDispose {
             runCatching {
@@ -74,14 +85,32 @@ fun VoicemailPlayerScreen(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
-            text = "Selected voicemail",
+            text = stringResource(R.string.android_calls_voicemail),
             style = MaterialTheme.typography.titleMedium
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         Button(
+            modifier = Modifier
+                .clip(playButtonShape)
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            ChatforiaColors.buttonStart,
+                            ChatforiaColors.buttonEnd
+                        )
+                    )
+                ),
             enabled = !isPreparing,
+            shape = playButtonShape,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                contentColor = ChatforiaColors.buttonForeground,
+                disabledContainerColor = Color.Transparent,
+                disabledContentColor =
+                    ChatforiaColors.buttonForeground.copy(alpha = 0.65f)
+            ),
             onClick = {
                 playbackError = null
 
@@ -98,7 +127,9 @@ fun VoicemailPlayerScreen(
 
                     token.isNullOrBlank() -> {
                         playbackError =
-                            "Please sign in again to play this voicemail."
+                            context.getString(
+                                R.string.android_voicemail_player_sign_in_again
+                            )
                     }
 
                     else -> {
@@ -146,7 +177,9 @@ fun VoicemailPlayerScreen(
                                 isPrepared = false
                                 isPlaying = false
                                 playbackError =
-                                    "Unable to play this voicemail."
+                                    context.getString(
+                                        R.string.android_voicemail_player_unable_to_play
+                                    )
                                 true
                             }
 
@@ -156,7 +189,9 @@ fun VoicemailPlayerScreen(
                             isPrepared = false
                             isPlaying = false
                             playbackError =
-                                "Unable to load this voicemail."
+                                context.getString(
+                                    R.string.android_voicemail_player_unable_to_load
+                                )
                         }
                     }
                 }
@@ -170,13 +205,19 @@ fun VoicemailPlayerScreen(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Text("Loading…")
+                Text(
+                    stringResource(
+                        R.string.android_voicemail_player_loading
+                    )
+                )
             } else {
                 Text(
                     if (isPlaying) {
-                        "Pause"
+                        stringResource(R.string.android_voicemail_player_pause)
                     } else {
-                        "Play voicemail"
+                        stringResource(
+                            R.string.android_voicemail_inbox_play_voicemail
+                        )
                     }
                 )
             }
