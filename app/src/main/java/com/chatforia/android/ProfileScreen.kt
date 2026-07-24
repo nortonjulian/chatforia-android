@@ -11,7 +11,8 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Security
@@ -62,9 +63,9 @@ import androidx.compose.runtime.setValue
 import com.chatforia.android.billing.UpgradeView
 import com.chatforia.android.billing.PlanView
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.rememberCoroutineScope
@@ -961,7 +962,7 @@ fun ProfileScreen(
                 contentColor = logoutForeground
             )
         ) {
-            Icon(Icons.Default.Logout, contentDescription = stringResource(R.string.android_profile_log_out))
+            Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = stringResource(R.string.android_profile_log_out))
             Spacer(Modifier.width(8.dp))
             Text(stringResource(R.string.android_profile_log_out))
         }
@@ -1495,7 +1496,10 @@ private fun DiscoverabilityPicker(
         OutlinedButton(
             onClick = { expanded = true },
             modifier = Modifier
-                .menuAnchor()
+                .menuAnchor(
+                    type = ExposedDropdownMenuAnchorType.PrimaryNotEditable,
+                    enabled = true
+                )
                 .fillMaxWidth(),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.outlinedButtonColors(
@@ -1587,7 +1591,7 @@ private fun LegalSupportRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                 context.startActivity(intent)
             }
             .padding(vertical = 14.dp),
@@ -1601,7 +1605,7 @@ private fun LegalSupportRow(
         )
 
         Icon(
-            imageVector = Icons.Default.OpenInNew,
+            imageVector = Icons.AutoMirrored.Filled.OpenInNew,
             contentDescription = stringResource(R.string.android_profile_open),
             tint = ChatforiaColors.secondaryText
         )
