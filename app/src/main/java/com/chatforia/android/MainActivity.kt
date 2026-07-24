@@ -1290,6 +1290,34 @@ class MainActivity : ComponentActivity() {
                             callsViewModel = callsViewModel,
                             voicemailViewModel = voicemailViewModel,
 
+                            onCallBackVoicemail = { voicemail ->
+                                val displayName =
+                                    voicemail.displayName
+                                        ?: voicemail.username
+                                        ?: voicemail.fromNumber
+                                        ?: voicemail.from
+                                        ?: "Audio Call"
+
+                                val phoneNumber =
+                                    voicemail.fromNumber
+                                        ?: voicemail.from
+
+                                when {
+                                    voicemail.callerUserId != null -> {
+                                        androidCallManager.startAudioCall(
+                                            calleeId = voicemail.callerUserId,
+                                            displayName = displayName
+                                        )
+                                    }
+
+                                    !phoneNumber.isNullOrBlank() -> {
+                                        androidCallManager.startPhoneCall(
+                                            phoneNumber
+                                        )
+                                    }
+                                }
+                            },
+
                             onMessageCall = { call ->
                                 val otherUserId =
                                     call.otherUserId ?: if (call.callerId == user.id) {
