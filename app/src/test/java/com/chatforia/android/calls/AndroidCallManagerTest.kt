@@ -12,6 +12,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.Assert.assertEquals
@@ -77,6 +78,7 @@ class AndroidCallManagerTest {
             )
 
             manager.acceptIncoming(currentUser())
+            runCurrent()
 
             val state = manager.state.value
 
@@ -108,12 +110,13 @@ class AndroidCallManagerTest {
             )
 
             manager.acceptIncoming(currentUser())
+            advanceUntilIdle()
 
             val state = manager.state.value
 
             assertTrue(state is AndroidCallState.Failed)
             assertEquals(
-                "Incoming audio calls are not available yet on this device.",
+                "The incoming voice invitation did not arrive.",
                 (state as AndroidCallState.Failed).message
             )
         }
@@ -169,34 +172,50 @@ class AndroidCallManagerTest {
         }
 
     @Test
-    fun declineIncomingStopsRingtoneEndsCallAndReturnsIdle() =
+    fun declineIncomingPersistsDeclineBeforeRejectingVoiceInvite() =
         runTest(mainDispatcherRule.testDispatcher) {
+            val events = mutableListOf<String>()
             val ringtone = FakeCallRingtonePlayer()
-            val callBackend = FakeCallBackendService()
+            val callBackend = FakeCallBackendService(events)
+            val voice = FakeCallAudioClient(events)
 
             val manager =
                 createManager(
                     ringtonePlayer = ringtone,
-                    callService = callBackend
+                    callService = callBackend,
+                    voiceManager = voice
                 )
 
             manager.restoreIncomingCall(
                 IncomingCallPayload(
                     callId = 14,
-                    callerName = "Decline Caller"
+                    callerName = "Decline Caller",
+                    mode = "AUDIO"
                 )
             )
 
             manager.declineIncoming()
 
+            // The Android interface should close without waiting for HTTP.
+            assertEquals(AndroidCallState.Idle, manager.state.value)
+
             advanceUntilIdle()
 
             assertEquals(1, ringtone.stopCount)
             assertEquals(
-                listOf(EndCallRecord(callId = 14, reason = "declined", durationSec = null)),
+                listOf(
+                    EndCallRecord(
+                        callId = 14,
+                        reason = "declined",
+                        durationSec = null
+                    )
+                ),
                 callBackend.endCallRecords
             )
-            assertEquals(AndroidCallState.Idle, manager.state.value)
+            assertEquals(
+                listOf("backend:declined", "voice:rejected"),
+                events
+            )
         }
 
     @Test
@@ -225,7 +244,7 @@ class AndroidCallManagerTest {
                 """.trimIndent()
             )
 
-            advanceUntilIdle()
+            runCurrent()
 
             assertEquals(1, ringtone.playCount)
 
@@ -266,7 +285,7 @@ class AndroidCallManagerTest {
                 """.trimIndent()
             )
 
-            advanceUntilIdle()
+            runCurrent()
 
             assertEquals(1, ringtone.playCount)
 
@@ -357,6 +376,7 @@ class AndroidCallManagerTest {
 
             assertEquals("voice-token", request.accessToken)
             assertEquals("44", request.to)
+            assertEquals(111, request.backendCallId)
 
             assertTrue(manager.state.value is AndroidCallState.Connecting)
 
@@ -490,7 +510,9 @@ class AndroidCallManagerTest {
         val durationSec: Int?
     )
 
-    private class FakeCallBackendService : CallBackendService {
+    private class FakeCallBackendService(
+        private val eventLog: MutableList<String>? = null
+    ) : CallBackendService {
         val createAppCallRequests = mutableListOf<Pair<Int, Boolean>>()
         val externalCallRequests = mutableListOf<String>()
         val endCallRecords = mutableListOf<EndCallRecord>()
@@ -519,6 +541,8 @@ class AndroidCallManagerTest {
             reason: String?,
             durationSec: Int?
         ) {
+            eventLog?.add("backend:${reason ?: "none"}")
+
             endCallRecords.add(
                 EndCallRecord(
                     callId = callId,
@@ -563,10 +587,13 @@ class AndroidCallManagerTest {
     private data class VoiceStartCallRequest(
         val accessToken: String,
         val to: String,
+        val backendCallId: Int,
         val listener: CallAudioClient.Listener
     )
 
-    private class FakeCallAudioClient : CallAudioClient {
+    private class FakeCallAudioClient(
+        private val eventLog: MutableList<String>? = null
+    ) : CallAudioClient {
         val startCallRequests = mutableListOf<VoiceStartCallRequest>()
 
         var acceptCallResult = true
@@ -578,12 +605,14 @@ class AndroidCallManagerTest {
         override fun startCall(
             accessToken: String,
             to: String,
+            backendCallId: Int,
             listener: CallAudioClient.Listener
         ) {
             startCallRequests.add(
                 VoiceStartCallRequest(
                     accessToken = accessToken,
                     to = to,
+                    backendCallId = backendCallId,
                     listener = listener
                 )
             )
@@ -602,6 +631,7 @@ class AndroidCallManagerTest {
         }
 
         override fun rejectIncomingCall(): Boolean {
+            eventLog?.add("voice:rejected")
             return true
         }
 
