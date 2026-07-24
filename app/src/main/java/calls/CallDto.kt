@@ -31,7 +31,7 @@ data class CallDto(
 data class CallsResponse(
     val items: List<CallDto> = emptyList(),
     val calls: List<CallDto> = emptyList(),
-    val nextCursor: String? = null
+    val nextCursor: Int? = null
 ) {
     val resolvedItems: List<CallDto>
         get() = if (items.isNotEmpty()) items else calls
