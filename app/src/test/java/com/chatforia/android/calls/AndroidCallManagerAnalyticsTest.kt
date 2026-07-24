@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import androidx.test.core.app.ApplicationProvider
@@ -153,6 +154,7 @@ class AndroidCallManagerAnalyticsTest {
         manager.acceptIncoming(
             UserDto(id = 999)
         )
+        runCurrent()
 
         val startedEvent =
             analytics.events.first { event ->
@@ -319,6 +321,7 @@ private class FakeCallAudioClient(
     override fun startCall(
         accessToken: String,
         to: String,
+        backendCallId: Int,
         listener: CallAudioClient.Listener
     ) {
         lastListener = listener

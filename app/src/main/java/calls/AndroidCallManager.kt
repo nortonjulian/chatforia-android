@@ -11,6 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
 import kotlinx.serialization.json.Json
 import android.content.Context
@@ -592,19 +593,24 @@ class AndroidCallManager(
     fun declineIncoming() {
         cancelIncomingRingTimeout()
         ringtonePlayer.stop()
+
         val ringing =
             _state.value as? AndroidCallState.Ringing ?: return
 
-        val callId = ringing.payload.callId
+        val payload = ringing.payload
+        val callId = payload.callId
+        val isVideo =
+            payload.mode?.uppercase() == "VIDEO" ||
+            !payload.roomName.isNullOrBlank()
 
-        if (ringing.payload.mode?.uppercase() == "VIDEO" || !ringing.payload.roomName.isNullOrBlank()) {
-            videoManager.disconnect()
-        } else {
-            voiceManager.rejectIncomingCall()
-        }
+        // Dismiss the incoming-call interface immediately.
+        _state.value = AndroidCallState.Idle
 
-        if (callId != null) {
-            viewModelScope.launch(callDispatcher) {
+        viewModelScope.launch(callDispatcher) {
+            // Persist the explicit decline before rejecting the Twilio leg.
+            // This lets the completion webhook see DECLINED and prevents
+            // it from routing the caller into voicemail.
+            if (callId != null) {
                 runCatching {
                     callService.endCall(
                         callId = callId,
@@ -612,9 +618,15 @@ class AndroidCallManager(
                     )
                 }
             }
-        }
 
-        _state.value = AndroidCallState.Idle
+            withContext(Dispatchers.Main.immediate) {
+                if (isVideo) {
+                    videoManager.disconnect()
+                } else {
+                    voiceManager.rejectIncomingCall()
+                }
+            }
+        }
     }
 
     fun toggleMute() {
