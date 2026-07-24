@@ -1,5 +1,6 @@
 package com.chatforia.android.calls
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -25,6 +26,8 @@ import com.chatforia.android.ui.theme.ChatforiaColors
 import com.twilio.video.LocalVideoTrack
 import com.twilio.video.RemoteVideoTrack
 import com.twilio.video.VideoView
+
+private const val VIDEO_RENDERER_LOG_TAG = "VideoCallScreen"
 
 @Composable
 fun VideoCallScreen(
@@ -145,14 +148,22 @@ private fun LocalVideoRenderer(
             }
         }
 
-    DisposableEffect(track) {
+    DisposableEffect(track, videoView) {
         if (track != null) {
             track.addSink(videoView)
         }
 
         onDispose {
             if (track != null) {
-                track.removeSink(videoView)
+                runCatching {
+                    track.removeSink(videoView)
+                }.onFailure { error ->
+                    Log.w(
+                        VIDEO_RENDERER_LOG_TAG,
+                        "Local video sink was already detached or the track was released.",
+                        error
+                    )
+                }
             }
         }
     }
@@ -177,14 +188,22 @@ private fun RemoteVideoRenderer(
             }
         }
 
-    DisposableEffect(track) {
+    DisposableEffect(track, videoView) {
         if (track != null) {
             track.addSink(videoView)
         }
 
         onDispose {
             if (track != null) {
-                track.removeSink(videoView)
+                runCatching {
+                    track.removeSink(videoView)
+                }.onFailure { error ->
+                    Log.w(
+                        VIDEO_RENDERER_LOG_TAG,
+                        "Remote video sink was already detached or the track was released.",
+                        error
+                    )
+                }
             }
         }
     }

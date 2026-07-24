@@ -16,6 +16,7 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.chatforia.android.ChatforiaAppState
 import com.chatforia.android.MainActivity
 import com.chatforia.android.R
 import com.chatforia.android.sounds.AudioPlayerService
@@ -281,21 +282,16 @@ class NotificationCoordinator(
     }
 
     fun showIncomingCallNotification(data: Map<String, String>) {
-        if (!canPostNotifications()) return
-
         val fromNumber = data["fromNumber"] ?: "Unknown caller"
 
         val callerName =
             data["callerName"] ?: fromNumber
 
-        AudioPlayerService.playSavedRingtoneShared(
-            context.applicationContext
-        )
-
-        scheduleIncomingCallTimeout(context)
-
         val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            flags =
+                Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                        Intent.FLAG_ACTIVITY_SINGLE_TOP
 
             putExtra("type", "call_incoming")
             putExtra("callId", data["callId"])
@@ -305,6 +301,24 @@ class NotificationCoordinator(
             putExtra("mode", data["mode"])
             putExtra("roomName", data["roomName"])
         }
+
+        if (ChatforiaAppState.isInForeground) {
+            Log.d(
+                "ChatforiaNotifications",
+                "App is foreground; opening incoming-call interface directly"
+            )
+
+            context.startActivity(intent)
+            return
+        }
+
+        if (!canPostNotifications()) return
+
+        AudioPlayerService.playSavedRingtoneShared(
+            context.applicationContext
+        )
+
+        scheduleIncomingCallTimeout(context)
 
         val pendingIntent = PendingIntent.getActivity(
             context,

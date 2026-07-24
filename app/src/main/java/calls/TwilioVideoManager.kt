@@ -1,6 +1,8 @@
 package com.chatforia.android.calls
 
 import android.content.Context
+import android.util.Log
+import android.os.SystemClock
 import com.twilio.video.CameraCapturer
 import com.twilio.video.ConnectOptions
 import com.twilio.video.LocalAudioTrack
@@ -32,6 +34,7 @@ class TwilioVideoManager(
     private var localAudioTrack: LocalAudioTrack? = null
     private var localVideoTrack: LocalVideoTrack? = null
     private var listener: CallVideoClient.Listener? = null
+    private var lastCameraSwitchAtMillis: Long = 0L
 
     override fun connect(
         accessToken: String,
@@ -121,7 +124,58 @@ class TwilioVideoManager(
     }
 
     override fun flipCamera() {
-        // TODO: wire camera switching after confirming Twilio Android camera API.
+        val now = SystemClock.elapsedRealtime()
+
+        if (now - lastCameraSwitchAtMillis < 750L) {
+            Log.d(
+                "TwilioVideoManager",
+                "Ignoring camera switch while the previous switch settles"
+            )
+            return
+        }
+
+        val capturer = cameraCapturer ?: return
+        val nextCameraId = nextCameraId() ?: return
+
+        if (nextCameraId == currentCameraId) return
+
+        try {
+            capturer.switchCamera(nextCameraId)
+            currentCameraId = nextCameraId
+            lastCameraSwitchAtMillis = now
+
+            Log.d(
+                "TwilioVideoManager",
+                "Switched video camera to $nextCameraId"
+            )
+        } catch (e: Exception) {
+            Log.e(
+                "TwilioVideoManager",
+                "Failed to switch video camera",
+                e
+            )
+        }
+    }
+
+    private fun nextCameraId(): String? {
+        val enumerator = Camera1Enumerator(false)
+        val cameraIds = enumerator.deviceNames.toList()
+        val currentId = currentCameraId
+
+        if (cameraIds.size < 2) return null
+
+        val currentIsFrontFacing =
+            currentId?.let { enumerator.isFrontFacing(it) } == true
+
+        val preferredNext =
+            if (currentIsFrontFacing) {
+                cameraIds.firstOrNull { enumerator.isBackFacing(it) }
+            } else {
+                cameraIds.firstOrNull { enumerator.isFrontFacing(it) }
+            }
+
+        return preferredNext
+            ?: cameraIds.firstOrNull { it != currentId }
     }
 
     private fun preferredCameraId(): String {
@@ -298,6 +352,7 @@ class TwilioVideoManager(
         localAudioTrack = null
         cameraCapturer = null
         currentCameraId = null
+        lastCameraSwitchAtMillis = 0L
     }
 
     private val roomListener =

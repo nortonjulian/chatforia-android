@@ -340,6 +340,22 @@ class AndroidCallManager(
     }
 
     private fun beginIncomingRinging(payload: IncomingCallPayload) {
+        val currentCallId =
+            when (val current = _state.value) {
+                is AndroidCallState.Ringing -> current.payload.callId
+                is AndroidCallState.Connecting -> current.session.callId
+                is AndroidCallState.Active -> current.session.callId
+                else -> null
+            }
+
+        if (payload.callId != null && payload.callId == currentCallId) {
+            Log.d(
+                "AndroidCallManager",
+                "Ignoring duplicate incoming call event callId=${payload.callId}"
+            )
+            return
+        }
+
         cancelIncomingRingTimeout()
 
         ringtonePlayer.playSavedRingtone()
@@ -601,7 +617,7 @@ class AndroidCallManager(
         val callId = payload.callId
         val isVideo =
             payload.mode?.uppercase() == "VIDEO" ||
-            !payload.roomName.isNullOrBlank()
+                    !payload.roomName.isNullOrBlank()
 
         // Dismiss the incoming-call interface immediately.
         _state.value = AndroidCallState.Idle
