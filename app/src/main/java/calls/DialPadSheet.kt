@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Backspace
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
+import com.chatforia.android.ChatforiaGradientButton
 
 @Composable
 fun DialPadSheet(
@@ -134,7 +135,8 @@ fun DialPadSheet(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-            Button(
+            ChatforiaGradientButton(
+                text = "Call",
                 onClick = {
                     if (number.isNotBlank()) {
                         onCall(number)
@@ -144,21 +146,14 @@ fun DialPadSheet(
                 modifier = Modifier
                     .fillMaxWidth(0.56f)
                     .height(54.dp),
-                shape = RoundedCornerShape(32.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = ChatforiaColors.accent
-                )
-            ) {
-                Icon(Icons.Default.Call, contentDescription = null)
-
-                Spacer(modifier = Modifier.width(10.dp))
-
-                Text(
-                    "Call",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.Call,
+                        contentDescription = null,
+                        tint = ChatforiaColors.buttonForeground
+                    )
+                }
+            )
         }
     }
 }

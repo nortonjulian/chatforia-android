@@ -1,6 +1,7 @@
 package com.chatforia.android.calls
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -11,6 +12,9 @@ import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
@@ -68,46 +72,52 @@ fun AudioCallScreen(
         Spacer(modifier = Modifier.height(48.dp))
 
         Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
-            FilledIconButton(
+            InCallControlButton(
+                active = session.muted,
                 onClick = onToggleMute,
-                shape = CircleShape
-            ) {
-                Icon(
-                    if (session.muted) Icons.Default.MicOff else Icons.Default.Mic,
-                    contentDescription = stringResource(R.string.android_audio_call_mute)
+                icon =
+                    if (session.muted) {
+                        Icons.Default.MicOff
+                    } else {
+                        Icons.Default.Mic
+                    },
+                contentDescription = stringResource(
+                    R.string.android_audio_call_mute
                 )
-            }
+            )
 
-            FilledIconButton(
+            InCallControlButton(
+                active = session.speakerEnabled,
                 onClick = onToggleSpeaker,
-                shape = CircleShape
-            ) {
-                Icon(
-                    Icons.Default.VolumeUp,
-                    contentDescription = stringResource(R.string.android_audio_call_speaker)
+                icon = Icons.Default.VolumeUp,
+                contentDescription = stringResource(
+                    R.string.android_audio_call_speaker
                 )
-            }
+            )
 
-            FilledIconButton(
-                onClick = { showCallOptions = true },
-                shape = CircleShape
-            ) {
-                Icon(
-                    Icons.Default.MoreHoriz,
-                    contentDescription = "More"
-                )
-            }
+            InCallControlButton(
+                active = false,
+                onClick = {
+                    showCallOptions = true
+                },
+                icon = Icons.Default.MoreHoriz,
+                contentDescription = "More"
+            )
 
             FilledIconButton(
                 onClick = onEndCall,
+                modifier = Modifier.size(48.dp),
                 shape = CircleShape,
                 colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.error
+                    containerColor = Color(0xFFFF4D57),
+                    contentColor = Color.White
                 )
             ) {
                 Icon(
                     Icons.Default.CallEnd,
-                    contentDescription = stringResource(R.string.android_audio_call_end_call)
+                    contentDescription = stringResource(
+                        R.string.android_audio_call_end_call
+                    )
                 )
             }
         }
@@ -155,6 +165,51 @@ fun AudioCallScreen(
         }
     }
 
+}
+
+@Composable
+private fun InCallControlButton(
+    active: Boolean,
+    onClick: () -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String
+) {
+    val backgroundModifier =
+        if (active) {
+            Modifier.background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        ChatforiaColors.buttonStart,
+                        ChatforiaColors.buttonEnd
+                    )
+                )
+            )
+        } else {
+            Modifier.background(
+                color = ChatforiaColors.cardBackground
+            )
+        }
+
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .then(backgroundModifier)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint =
+                if (active) {
+                    ChatforiaColors.buttonForeground
+                } else {
+                    ChatforiaColors.primaryText
+                },
+            modifier = Modifier.size(23.dp)
+        )
+    }
 }
 
 @Composable
