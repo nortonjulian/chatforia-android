@@ -92,7 +92,10 @@ class ChatThreadViewModelTest {
                 viewModel.messages.value.map { it.id }
             )
             assertEquals(
-                listOf(listOf(1)),
+                listOf(
+                    listOf(1),
+                    listOf(3)
+                ),
                 repository.markReadCalls
             )
             assertEquals(

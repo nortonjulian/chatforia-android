@@ -64,11 +64,13 @@ class SettingsRepositoryTest {
         runTest {
             val api = FakeApiTransport()
 
+            api.enqueueResponse("{}")
             api.enqueueResponse(
-                userJson(
-                    id = 2,
-                    username = "settings_user"
-                )
+                """
+                {
+                  "user": ${userJson(id = 2, username = "settings_user")}
+                }
+                """.trimIndent()
             )
 
             val repository =
@@ -110,13 +112,20 @@ class SettingsRepositoryTest {
 
             assertEquals(2, user.id)
 
-            val request = api.requests.single()
+            assertEquals(2, api.requests.size)
 
-            assertEquals("users/me", request.path)
-            assertEquals(HttpMethod.PATCH, request.method)
-            assertTrue(request.requiresAuth)
+            val patchRequest = api.requests[0]
+            val getRequest = api.requests[1]
 
-            val body = parseBody(request)
+            assertEquals("users/me", patchRequest.path)
+            assertEquals(HttpMethod.PATCH, patchRequest.method)
+            assertTrue(patchRequest.requiresAuth)
+
+            assertEquals("auth/me", getRequest.path)
+            assertEquals(HttpMethod.GET, getRequest.method)
+            assertTrue(getRequest.requiresAuth)
+
+            val body = parseBody(patchRequest)
 
             assertEquals("es", body["preferredLanguage"]?.jsonPrimitive?.content)
             assertEquals(true, body["autoTranslate"]?.jsonPrimitive?.boolean)
