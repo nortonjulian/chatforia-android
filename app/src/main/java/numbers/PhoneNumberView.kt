@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
+import com.chatforia.android.ChatforiaGradientButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -169,13 +170,13 @@ fun PhoneNumberView(
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        Button(
+                        ChatforiaGradientButton(
+                            text = stringResource(R.string.android_phone_number_replace_number),
                             onClick = { showPicker = true },
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.widthIn(min = 180.dp, max = 260.dp)
-                        ) {
-                            Text(stringResource(R.string.android_phone_number_replace_number))
-                        }
+                            modifier = Modifier
+                                .widthIn(min = 180.dp, max = 260.dp)
+                                .height(50.dp)
+                        )
 
                         Spacer(modifier = Modifier.height(10.dp))
 
@@ -217,17 +218,13 @@ fun PhoneNumberView(
 
                         Spacer(modifier = Modifier.height(18.dp))
 
-                        Button(
+                        ChatforiaGradientButton(
+                            text = stringResource(R.string.android_phone_number_pick_a_number),
                             onClick = { showPicker = true },
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = ChatforiaColors.accent,
-                                contentColor = ChatforiaColors.buttonForeground
-                            ),
-                            modifier = Modifier.widthIn(min = 180.dp, max = 260.dp)
-                        ) {
-                            Text(stringResource(R.string.android_phone_number_pick_a_number))
-                        }
+                            modifier = Modifier
+                                .widthIn(min = 180.dp, max = 260.dp)
+                                .height(50.dp)
+                        )
                     }
                 }
             }

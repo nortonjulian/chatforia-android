@@ -1613,7 +1613,8 @@ fun ChatforiaGradientButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    leadingIcon: (@Composable () -> Unit)? = null
 ) {
     Box(
         modifier = modifier
@@ -1627,15 +1628,26 @@ fun ChatforiaGradientButton(
                     )
                 )
             )
+            .alpha(if (enabled) 1f else 0.55f)
             .clickable(enabled = enabled) {
                 onClick()
             },
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = text,
-            color = ChatforiaColors.buttonForeground,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            leadingIcon?.let { icon ->
+                icon()
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+
+            Text(
+                text = text,
+                color = ChatforiaColors.buttonForeground,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }

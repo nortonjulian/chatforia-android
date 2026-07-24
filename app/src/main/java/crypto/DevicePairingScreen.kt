@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
+import com.chatforia.android.ChatforiaGradientButton
 
 @Composable
 fun DevicePairingScreen(
@@ -28,11 +29,12 @@ fun DevicePairingScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Button(
+        ChatforiaGradientButton(
+            text = stringResource(R.string.android_device_pairing_view_pending_device_requests),
             onClick = onOpenLinkedDevices,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(stringResource(R.string.android_device_pairing_view_pending_device_requests))
-        }
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        )
     }
 }
