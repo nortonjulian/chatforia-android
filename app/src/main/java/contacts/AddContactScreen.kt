@@ -1,17 +1,23 @@
 package com.chatforia.android.contacts
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
+import com.chatforia.android.ChatforiaGradientButton
 
 private enum class AddContactMode {
     USERNAME,
@@ -118,41 +124,25 @@ fun AddContactScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Button(
-                onClick = { mode = AddContactMode.USERNAME },
+            ContactModeButton(
+                text = stringResource(R.string.android_profile_username),
+                selected = mode == AddContactMode.USERNAME,
                 enabled = !isEditing,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor =
-                        if (mode == AddContactMode.USERNAME) {
-                            ChatforiaColors.accent
-                        } else {
-                            ChatforiaColors.cardBackground
-                        },
-                    contentColor = ChatforiaColors.primaryText
-                )
-            ) {
-                Text(stringResource(R.string.android_profile_username))
-            }
+                onClick = {
+                    mode = AddContactMode.USERNAME
+                },
+                modifier = Modifier.weight(1f)
+            )
 
-            Button(
-                onClick = { mode = AddContactMode.PHONE },
+            ContactModeButton(
+                text = stringResource(R.string.android_add_contact_phone),
+                selected = mode == AddContactMode.PHONE,
                 enabled = !isEditing,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor =
-                        if (mode == AddContactMode.PHONE) {
-                            ChatforiaColors.accent
-                        } else {
-                            ChatforiaColors.cardBackground
-                        },
-                    contentColor = ChatforiaColors.primaryText
-                )
-            ) {
-                Text(stringResource(R.string.android_add_contact_phone))
-            }
+                onClick = {
+                    mode = AddContactMode.PHONE
+                },
+                modifier = Modifier.weight(1f)
+            )
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -249,9 +239,14 @@ fun AddContactScreen(
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        Button(
+        ChatforiaGradientButton(
+            text =
+                if (editingContact == null) {
+                    stringResource(R.string.android_add_contact_save_contact)
+                } else {
+                    stringResource(R.string.android_add_contact_save_changes)
+                },
             onClick = {
-
                 when (mode) {
                     AddContactMode.USERNAME ->
                         onSaveUsername(username, alias, favorite)
@@ -263,24 +258,60 @@ fun AddContactScreen(
             enabled = canSave,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(28.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = ChatforiaColors.accent,
-                contentColor = ChatforiaColors.primaryText,
-                disabledContainerColor = ChatforiaColors.highlightedSurface,
-                disabledContentColor = ChatforiaColors.secondaryText
+                .height(56.dp)
+        )
+    }
+}
+
+@Composable
+private fun ContactModeButton(
+    text: String,
+    selected: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val shape = RoundedCornerShape(24.dp)
+
+    Box(
+        modifier = modifier
+            .height(50.dp)
+            .clip(shape)
+            .then(
+                if (selected) {
+                    Modifier.background(
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                ChatforiaColors.buttonStart,
+                                ChatforiaColors.buttonEnd
+                            )
+                        )
+                    )
+                } else {
+                    Modifier
+                        .background(ChatforiaColors.cardBackground)
+                        .border(
+                            width = 1.dp,
+                            color = ChatforiaColors.border,
+                            shape = shape
+                        )
+                }
             )
-        ) {
-            Text(
-                text =
-                    if (editingContact == null) {
-                        stringResource(R.string.android_add_contact_save_contact)
-                    } else {
-                        stringResource(R.string.android_add_contact_save_changes)
-                    },
-                fontWeight = FontWeight.Bold
-            )
-        }
+            .alpha(if (enabled) 1f else 0.70f)
+            .clickable(enabled = enabled) {
+                onClick()
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color =
+                if (selected) {
+                    ChatforiaColors.buttonForeground
+                } else {
+                    ChatforiaColors.primaryText
+                },
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }

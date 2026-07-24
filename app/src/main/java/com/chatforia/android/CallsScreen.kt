@@ -1,10 +1,12 @@
 package com.chatforia.android
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.PhoneCallback
@@ -33,6 +35,7 @@ import com.chatforia.android.calls.DialPadSheet
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -399,35 +402,21 @@ private fun CallHistoryRow(
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilledIconButton(
+            GradientCallHistoryButton(
                 onClick = onStartVideoCall,
-                modifier = Modifier.size(36.dp),
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor =
-                        if (ChatforiaColors.screenBackground.luminance() > 0.5f)
-                            Color(0xFFFFF1C9)
-                        else
-                            Color(0xFF123A4A),
-                    contentColor = ChatforiaColors.accent
+                icon = Icons.Default.Videocam,
+                contentDescription = stringResource(
+                    R.string.android_calls_video_call
                 )
-            ) {
-                Icon(Icons.Default.Videocam, contentDescription = stringResource(R.string.android_calls_video_call))
-            }
+            )
 
-            FilledIconButton(
+            GradientCallHistoryButton(
                 onClick = onStartAudioCall,
-                modifier = Modifier.size(36.dp),
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor =
-                        if (ChatforiaColors.screenBackground.luminance() > 0.5f)
-                            Color(0xFFFFF1C9)
-                        else
-                            Color(0xFF123A4A),
-                    contentColor = ChatforiaColors.accent
+                icon = Icons.Default.Call,
+                contentDescription = stringResource(
+                    R.string.android_dial_pad_call
                 )
-            ) {
-                Icon(Icons.Default.Call, contentDescription = stringResource(R.string.android_dial_pad_call))
-            }
+            )
         }
     }
 }
@@ -531,5 +520,35 @@ private fun friendlyDuration(seconds: Int): String {
         "%d:%02d:%02d".format(hours, minutes, remainingSeconds)
     } else {
         "%d:%02d".format(minutes, remainingSeconds)
+    }
+}
+
+@Composable
+private fun GradientCallHistoryButton(
+    onClick: () -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String
+) {
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .clip(CircleShape)
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        ChatforiaColors.buttonStart,
+                        ChatforiaColors.buttonEnd
+                    )
+                )
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = ChatforiaColors.buttonForeground,
+            modifier = Modifier.size(20.dp)
+        )
     }
 }
