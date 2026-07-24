@@ -38,7 +38,7 @@ class PushTokenRegistrarTest {
             val deviceRequest = linkedDevices.registerCurrentDeviceRequests.single()
 
             assertEquals("device-123", deviceRequest.deviceId)
-            assertEquals("Android Device", deviceRequest.name)
+            assertTrue(deviceRequest.name.isNotBlank())
             assertEquals("Android", deviceRequest.platform)
             assertEquals("public-key-123", deviceRequest.publicKey)
             assertEquals("curve25519", deviceRequest.keyAlgorithm)

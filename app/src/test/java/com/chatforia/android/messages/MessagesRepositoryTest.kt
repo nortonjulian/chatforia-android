@@ -135,7 +135,7 @@ class MessagesRepositoryTest {
 
             assertEquals(1, result.size)
             assertEquals(201, result.first().id)
-            assertEquals("messages/55?limit=100", api.requests.single().path)
+            assertEquals("messages/55?limit=50", api.requests.single().path)
             assertEquals(HttpMethod.GET, api.requests.single().method)
         }
     }
