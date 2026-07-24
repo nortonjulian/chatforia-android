@@ -20,6 +20,7 @@ import com.chatforia.android.ui.components.ChatforiaSectionCard
 import com.chatforia.android.ui.theme.ChatforiaColors
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
+import com.chatforia.android.ChatforiaGradientButton
 import androidx.compose.runtime.LaunchedEffect
 import analytics.AnalyticsManager
 import analytics.AnalyticsTracker
@@ -132,7 +133,13 @@ fun PlanView(
                 PlanCompareRow(stringResource(R.string.billing_feature_prioritySupport), plus = false, premium = true)
                 Spacer(modifier = Modifier.height(16.dp))
 
-                OutlinedButton(
+                ChatforiaGradientButton(
+                    text =
+                        if (currentPlan == "premium") {
+                            stringResource(R.string.common_manageSubscription)
+                        } else {
+                            stringResource(R.string.android_upgrade_upgrade)
+                        },
                     onClick = {
                         analytics.capture(
                             "upgrade entry tapped",
@@ -144,18 +151,10 @@ fun PlanView(
 
                         onUpgrade()
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Text(
-                        text = if (currentPlan == "premium") {
-                            stringResource(R.string.common_manageSubscription)
-                        } else {
-                            stringResource(R.string.android_upgrade_upgrade)
-                        },
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(18.dp))

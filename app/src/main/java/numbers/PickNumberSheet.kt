@@ -1,6 +1,7 @@
 package com.chatforia.android.numbers
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -27,8 +28,11 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.draw.clip
 import com.chatforia.android.R
+import com.chatforia.android.ChatforiaGradientButton
 
 private enum class NumberPickMode {
     FREE,
@@ -131,7 +135,8 @@ fun PickNumberSheet(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                Button(
+                ChatforiaGradientButton(
+                    text = stringResource(R.string.android_chats_search),
                     onClick = {
                         scope.launch {
                             isSearching = true
@@ -152,12 +157,17 @@ fun PickNumberSheet(
                         }
                     },
                     enabled = !isSearching,
-                    shape = RoundedCornerShape(18.dp)
-                ) {
-                    Icon(Icons.Default.Search, contentDescription = null)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(stringResource(R.string.android_chats_search))
-                }
+                    modifier = Modifier
+                        .width(116.dp)
+                        .height(50.dp),
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = null,
+                            tint = ChatforiaColors.buttonForeground
+                        )
+                    }
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -305,25 +315,43 @@ private fun ModeButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        shape = RoundedCornerShape(50),
-        color =
-            if (selected)
-                ChatforiaColors.accent
-            else
-                ChatforiaColors.cardBackground,
-        modifier = modifier.clickable { onClick() }
+    val shape = RoundedCornerShape(50)
+
+    Box(
+        modifier = modifier
+            .clip(shape)
+            .then(
+                if (selected) {
+                    Modifier.background(
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                ChatforiaColors.buttonStart,
+                                ChatforiaColors.buttonEnd
+                            )
+                        )
+                    )
+                } else {
+                    Modifier
+                        .background(ChatforiaColors.cardBackground)
+                        .border(
+                            width = 1.dp,
+                            color = ChatforiaColors.border,
+                            shape = shape
+                        )
+                }
+            )
+            .clickable { onClick() }
+            .padding(vertical = 12.dp),
+        contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
             color =
                 if (selected)
-                    androidx.compose.ui.graphics.Color.White
+                    ChatforiaColors.buttonForeground
                 else
                     ChatforiaColors.primaryText,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(vertical = 12.dp),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            fontWeight = FontWeight.SemiBold
         )
     }
 }
@@ -343,25 +371,72 @@ private fun CapabilityPicker(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             listOf(
                 "sms" to "SMS",
                 "voice" to "Voice",
                 "both" to "SMS + Voice"
             ).forEach { option ->
-                FilterChip(
+                CapabilityButton(
+                    text = option.second,
                     selected = capability == option.first,
-                    onClick = { onChange(option.first) },
-                    label = { Text(option.second) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = ChatforiaColors.accent,
-                        selectedLabelColor = Color.White,
-                        containerColor = ChatforiaColors.cardBackground,
-                        labelColor = ChatforiaColors.primaryText
-                    )
+                    onClick = {
+                        onChange(option.first)
+                    },
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun CapabilityButton(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val shape = RoundedCornerShape(14.dp)
+
+    Box(
+        modifier = modifier
+            .height(48.dp)
+            .clip(shape)
+            .then(
+                if (selected) {
+                    Modifier.background(
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                ChatforiaColors.buttonStart,
+                                ChatforiaColors.buttonEnd
+                            )
+                        )
+                    )
+                } else {
+                    Modifier
+                        .background(ChatforiaColors.cardBackground)
+                        .border(
+                            width = 1.dp,
+                            color = ChatforiaColors.border,
+                            shape = shape
+                        )
+                }
+            )
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color =
+                if (selected)
+                    ChatforiaColors.buttonForeground
+                else
+                    ChatforiaColors.primaryText,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 
@@ -415,18 +490,18 @@ private fun NumberCard(
                 }
             }
 
-            Button(
-                onClick = onSelect,
-                enabled = !isLeasing && currentNumber == null,
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Text(
+            ChatforiaGradientButton(
+                text =
                     if (mode == NumberPickMode.PREMIUM)
                         "Keep"
                     else
-                        "Select"
-                )
-            }
+                        "Select",
+                onClick = onSelect,
+                enabled = !isLeasing && currentNumber == null,
+                modifier = Modifier
+                    .widthIn(min = 88.dp)
+                    .height(44.dp)
+            )
         }
     }
 }

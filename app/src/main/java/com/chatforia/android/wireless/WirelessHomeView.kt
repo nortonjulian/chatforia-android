@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
+import com.chatforia.android.ChatforiaGradientButton
 import android.content.Intent
 import androidx.core.net.toUri
 import androidx.compose.ui.platform.LocalContext
@@ -354,7 +355,8 @@ private fun EsimSection(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        Button(
+        ChatforiaGradientButton(
+            text = if (hasEsim) "Activate" else "Set up",
             onClick = {
                 if (hasEsim) {
                     onOpenEsim()
@@ -362,13 +364,17 @@ private fun EsimSection(
                     onSetupEsim()
                 }
             },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp)
-        ) {
-            Icon(Icons.Default.SimCard, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(if (hasEsim) "Activate" else "Set up")
-        }
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            leadingIcon = {
+                Icon(
+                    Icons.Default.SimCard,
+                    contentDescription = null,
+                    tint = ChatforiaColors.buttonForeground
+                )
+            }
+        )
     }
 }
 
@@ -492,14 +498,14 @@ private fun PackListSection(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                Button(
+                ChatforiaGradientButton(
+                    text = if (isPurchasing) "Processing…" else "Choose this pack",
                     onClick = { onChoosePack(pack) },
                     enabled = !isPurchasing,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp)
-                ) {
-                    Text(if (isPurchasing) "Processing…" else "Choose this pack")
-                }
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                )
             }
         }
     }
