@@ -7,6 +7,7 @@ import android.net.Uri
 import android.provider.ContactsContract
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,18 +16,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.GraphicEq
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -42,6 +47,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.roundToInt
 
 data class VoicemailUiState(
     val items: List<VoicemailDto> = emptyList(),
@@ -74,8 +80,14 @@ class VoicemailViewModel(
             )
 
             try {
+                val refreshedItems = repository.fetchVoicemails()
+                val selectedId = _state.value.selected?.id
+
                 _state.value = _state.value.copy(
-                    items = repository.fetchVoicemails(),
+                    items = refreshedItems,
+                    selected = selectedId?.let { id ->
+                        refreshedItems.firstOrNull { it.id == id }
+                    },
                     isLoading = false
                 )
             } catch (error: Exception) {
@@ -198,16 +210,10 @@ fun VoicemailInboxScreen(
                             items = state.items,
                             key = { it.id }
                         ) { item ->
-                            VoicemailRow(
+                            SwipeRevealVoicemailRow(
                                 item = item,
                                 onPlay = {
                                     viewModel.select(item)
-                                },
-                                onToggleRead = {
-                                    viewModel.markRead(
-                                        item = item,
-                                        isRead = item.isRead != true
-                                    )
                                 },
                                 onDelete = {
                                     pendingDelete = item
@@ -293,17 +299,92 @@ fun VoicemailInboxScreen(
 }
 
 @Composable
-private fun VoicemailRow(
+private fun SwipeRevealVoicemailRow(
     item: VoicemailDto,
     onPlay: () -> Unit,
-    onToggleRead: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val context = LocalContext.current
-    var menuExpanded by remember(item.id) {
-        mutableStateOf(false)
+    var offsetX by remember(item.id) {
+        mutableFloatStateOf(0f)
     }
 
+    val maxRevealPx =
+        92.dp.value * LocalDensity.current.density
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+    ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .width(92.dp)
+                .background(Color(0xFFE53935)),
+            contentAlignment = Alignment.Center
+        ) {
+            IconButton(onClick = onDelete) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = stringResource(
+                        R.string.android_voicemail_delete
+                    ),
+                    tint = Color.White
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .offset {
+                    IntOffset(
+                        offsetX.roundToInt(),
+                        0
+                    )
+                }
+                .background(ChatforiaColors.cardBackground)
+                .pointerInput(item.id) {
+                    detectHorizontalDragGestures(
+                        onHorizontalDrag = { _, dragAmount ->
+                            offsetX =
+                                (offsetX + dragAmount)
+                                    .coerceIn(
+                                        -maxRevealPx,
+                                        0f
+                                    )
+                        },
+                        onDragEnd = {
+                            offsetX =
+                                if (
+                                    offsetX <
+                                    -maxRevealPx / 2
+                                ) {
+                                    -maxRevealPx
+                                } else {
+                                    0f
+                                }
+                        },
+                        onDragCancel = {
+                            offsetX = 0f
+                        }
+                    )
+                }
+        ) {
+            VoicemailRow(
+                item = item,
+                onPlay = onPlay
+            )
+        }
+    }
+}
+
+@Composable
+private fun VoicemailRow(
+    item: VoicemailDto,
+    onPlay: () -> Unit
+) {
+    val context = LocalContext.current
     val callerNumber = item.fromNumber ?: item.from
 
     val localContactName by produceState<String?>(
@@ -385,19 +466,37 @@ private fun VoicemailRow(
                 maxLines = 1
             )
 
-            item.transcript
-                ?.trim()
-                ?.takeIf { it.isNotBlank() }
-                ?.let { transcript ->
-                    Spacer(modifier = Modifier.height(4.dp))
+            val transcriptPreview =
+                when (item.transcriptStatus) {
+                    VoicemailTranscriptStatus.COMPLETE -> {
+                        item.transcript
+                            ?.trim()
+                            ?.takeIf { it.isNotBlank() }
+                    }
 
-                    Text(
-                        text = transcript,
-                        maxLines = 2,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = ChatforiaColors.secondaryText
-                    )
+                    VoicemailTranscriptStatus.PENDING -> {
+                        stringResource(
+                            R.string.android_voicemail_transcript_pending
+                        )
+                    }
+
+                    VoicemailTranscriptStatus.FAILED -> {
+                        stringResource(
+                            R.string.android_voicemail_transcript_unavailable
+                        )
+                    }
                 }
+
+            transcriptPreview?.let { text ->
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = text,
+                    maxLines = 2,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = ChatforiaColors.secondaryText
+                )
+            }
         }
 
         IconButton(onClick = onPlay) {
@@ -410,58 +509,6 @@ private fun VoicemailRow(
             )
         }
 
-        Box {
-            IconButton(
-                onClick = {
-                    menuExpanded = true
-                }
-            ) {
-                Icon(
-                    Icons.Default.MoreVert,
-                    contentDescription = stringResource(R.string.android_voicemail_options),
-                    tint = ChatforiaColors.secondaryText
-                )
-            }
-
-            DropdownMenu(
-                expanded = menuExpanded,
-                onDismissRequest = {
-                    menuExpanded = false
-                }
-            ) {
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            if (unread) {
-                                stringResource(R.string.android_voicemail_mark_read)
-                            } else {
-                                stringResource(R.string.android_voicemail_mark_unread)
-                            }
-                        )
-                    },
-                    onClick = {
-                        menuExpanded = false
-                        onToggleRead()
-                    }
-                )
-
-                DropdownMenuItem(
-                    text = {
-                        Text(stringResource(R.string.android_voicemail_delete))
-                    },
-                    leadingIcon = {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = null
-                        )
-                    },
-                    onClick = {
-                        menuExpanded = false
-                        onDelete()
-                    }
-                )
-            }
-        }
     }
 }
 
