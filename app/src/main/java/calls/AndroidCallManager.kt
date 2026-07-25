@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import android.content.Context
 import kotlinx.coroutines.CoroutineDispatcher
@@ -46,6 +47,13 @@ class AndroidCallManager(
 
     private val appContext = context.applicationContext
     private var incomingRingTimeoutJob: Job? = null
+
+    @Serializable
+    private data class CallEndedPayload(
+        val callId: Int? = null,
+        val status: String? = null,
+        val reason: String? = null
+    )
 
     init {
         observeSockets()
@@ -93,7 +101,8 @@ class AndroidCallManager(
                     CallSession(
                         callId = callId,
                         displayName = displayName,
-                        isVideo = false
+                        isVideo = false,
+                        continuesToVoicemailOnDecline = true
                     )
 
                 _state.value = AndroidCallState.Connecting(session)
@@ -899,7 +908,45 @@ class AndroidCallManager(
         }
 
         viewModelScope.launch {
-            socketManager.callEnded.collect {
+            socketManager.callEnded.collect { raw ->
+                val payload =
+                    runCatching {
+                        json.decodeFromString<CallEndedPayload>(
+                            raw
+                        )
+                    }.getOrNull()
+
+                val currentSession =
+                    when (val current = _state.value) {
+                        is AndroidCallState.Connecting ->
+                            current.session
+
+                        is AndroidCallState.Active ->
+                            current.session
+
+                        else -> null
+                    }
+
+                val shouldContinueCallerToVoicemail =
+                    payload?.status?.uppercase() == "DECLINED" &&
+                        payload.callId != null &&
+                        currentSession?.callId == payload.callId &&
+                        currentSession.isVideo == false &&
+                        currentSession.continuesToVoicemailOnDecline
+
+                if (shouldContinueCallerToVoicemail) {
+                    ringtonePlayer.stop()
+
+                    Log.d(
+                        "AndroidCallManager",
+                        "Preserving outgoing audio call " +
+                            "${currentSession.callId} after decline " +
+                            "so voicemail can continue"
+                    )
+
+                    return@collect
+                }
+
                 cancelIncomingRingTimeout()
                 ringtonePlayer.stop()
                 voiceManager.endCall()

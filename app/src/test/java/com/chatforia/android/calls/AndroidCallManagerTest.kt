@@ -323,6 +323,52 @@ class AndroidCallManagerTest {
         }
 
     @Test
+    fun declinedSocketPreservesOutgoingAppAudioCallForVoicemail() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val socket = FakeCallRealtimeEvents()
+            val voice = FakeCallAudioClient()
+            val video = FakeCallVideoClient()
+
+            val manager =
+                createManager(
+                    socketManager = socket,
+                    voiceManager = voice,
+                    videoManager = video
+                )
+
+            manager.startAudioCall(
+                calleeId = 44,
+                displayName = "Audio Friend"
+            )
+
+            advanceUntilIdle()
+
+            val request = voice.startCallRequests.single()
+
+            request.listener.onConnected()
+
+            socket.emitCallEnded(
+                """
+                {
+                  "callId": 111,
+                  "status": "DECLINED",
+                  "reason": "declined"
+                }
+                """.trimIndent()
+            )
+
+            runCurrent()
+
+            assertTrue(
+                manager.state.value is
+                    AndroidCallState.Active
+            )
+
+            assertEquals(0, voice.endCallCount)
+            assertEquals(0, video.disconnectCount)
+        }
+
+    @Test
     fun callEndedSocketStopsEverythingAndSetsEnded() =
         runTest(mainDispatcherRule.testDispatcher) {
             val socket = FakeCallRealtimeEvents()

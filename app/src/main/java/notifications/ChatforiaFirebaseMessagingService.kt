@@ -80,8 +80,25 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
             pushData["body"] = it
         }
 
+        val pushType = pushData["type"]
+
+        val isRecognizedChatforiaPush =
+            pushType == "message_new" ||
+                pushType == "call_incoming" ||
+                pushType == "call_missed"
+
+        if (isRecognizedChatforiaPush) {
+            Log.d(
+                "ChatforiaFCM",
+                "Routing recognized Chatforia push directly: type=$pushType"
+            )
+        }
+
         val handledByTwilio =
-            Voice.handleMessage(
+            if (isRecognizedChatforiaPush) {
+                false
+            } else {
+                Voice.handleMessage(
                 applicationContext,
                 HashMap(message.data),
                 object : MessageListener {
@@ -196,9 +213,30 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                         cancelledCallInvite: CancelledCallInvite,
                         callException: CallException?
                     ) {
+                        val cancelledCallSid =
+                            cancelledCallInvite.callSid
+
+                        val pendingCallSid =
+                            TwilioIncomingCallStore.peek()?.callSid
+
+                        if (
+                            pendingCallSid.isNullOrBlank() ||
+                            cancelledCallSid.isNullOrBlank() ||
+                            pendingCallSid != cancelledCallSid
+                        ) {
+                            Log.d(
+                                "ChatforiaTwilioVoice",
+                                "Ignoring cancellation for non-current invite: " +
+                                    "cancelledCallSid=$cancelledCallSid " +
+                                    "pendingCallSid=$pendingCallSid"
+                            )
+
+                            return
+                        }
+
                         Log.d(
                             "ChatforiaTwilioVoice",
-                            "Twilio call invite cancelled"
+                            "Twilio call invite cancelled: $cancelledCallSid"
                         )
 
                         TwilioIncomingCallStore.clear()
@@ -212,7 +250,8 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                         TwilioVoiceCallEvents.notifyRemoteEnded()
                     }
                 }
-            )
+                )
+            }
 
         if (handledByTwilio) {
             return
