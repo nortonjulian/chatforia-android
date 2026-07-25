@@ -3250,4 +3250,11 @@
     <string name="android_voicemail_player_sign_in_again">Please sign in again to play this voicemail.</string>
     <string name="android_voicemail_player_unable_to_play">Unable to play this voicemail.</string>
     <string name="android_voicemail_player_unable_to_load">Unable to load this voicemail.</string>
+
+    <string name="android_voicemail_audio_output">Audio output</string>
+    <string name="android_voicemail_audio_output_earpiece">Earpiece</string>
+    <string name="android_voicemail_audio_output_speaker">Speaker</string>
+    <string name="android_voicemail_audio_output_bluetooth">Bluetooth</string>
+    <string name="android_voicemail_audio_output_headphones">Headphones</string>
+    <string name="android_voicemail_audio_output_unavailable">That audio output is unavailable.</string>
 </resources>
