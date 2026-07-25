@@ -86,6 +86,39 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                 HashMap(message.data),
                 object : MessageListener {
                     override fun onCallInvite(callInvite: CallInvite) {
+                        if (
+                            IncomingCallFreshness.isExpired(
+                                message.sentTime
+                            )
+                        ) {
+                            Log.w(
+                                "ChatforiaTwilioVoice",
+                                "Discarding expired Twilio call invite: ${callInvite.callSid}"
+                            )
+
+                            try {
+                                callInvite.reject(applicationContext)
+                            } catch (e: Exception) {
+                                Log.w(
+                                    "ChatforiaTwilioVoice",
+                                    "Expired Twilio invite could not be rejected",
+                                    e
+                                )
+                            }
+
+                            TwilioIncomingCallStore.clear()
+
+                            IncomingCallDisplayStore.clear(
+                                applicationContext
+                            )
+
+                            NotificationCoordinator(
+                                this@ChatforiaFirebaseMessagingService
+                            ).cancelIncomingCallNotification()
+
+                            return
+                        }
+
                         Log.d(
                             "ChatforiaTwilioVoice",
                             "Received Twilio call invite: ${callInvite.callSid}"
@@ -204,6 +237,26 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
             }
 
             "call_incoming" -> {
+                if (
+                    IncomingCallFreshness.isExpired(
+                        message.sentTime
+                    )
+                ) {
+                    Log.w(
+                        "ChatforiaFCM",
+                        "Discarding expired Chatforia incoming-call push"
+                    )
+
+                    IncomingCallDisplayStore.clear(
+                        applicationContext
+                    )
+
+                    NotificationCoordinator(this)
+                        .cancelIncomingCallNotification()
+
+                    return
+                }
+
                 IncomingCallDisplayStore.save(
                     applicationContext,
                     pushData
