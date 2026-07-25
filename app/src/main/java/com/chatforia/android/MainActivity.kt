@@ -83,6 +83,7 @@ import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
 import android.content.Context
 import android.util.Log
+import android.view.WindowManager
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import com.google.android.gms.ads.MobileAds
@@ -110,6 +111,44 @@ class MainActivity : ComponentActivity() {
     private var pendingNotificationChatRoomId by mutableStateOf<Int?>(null)
 
     private var pendingOpenWireless by mutableStateOf(false)
+
+    private fun updateIncomingCallWindow(
+        showWhenLocked: Boolean,
+        turnScreenOn: Boolean
+    ) {
+        if (
+            Build.VERSION.SDK_INT >=
+                Build.VERSION_CODES.O_MR1
+        ) {
+            setShowWhenLocked(showWhenLocked)
+            setTurnScreenOn(turnScreenOn)
+            return
+        }
+
+        if (showWhenLocked) {
+            window.addFlags(
+                WindowManager.LayoutParams
+                    .FLAG_SHOW_WHEN_LOCKED
+            )
+        } else {
+            window.clearFlags(
+                WindowManager.LayoutParams
+                    .FLAG_SHOW_WHEN_LOCKED
+            )
+        }
+
+        if (turnScreenOn) {
+            window.addFlags(
+                WindowManager.LayoutParams
+                    .FLAG_TURN_SCREEN_ON
+            )
+        } else {
+            window.clearFlags(
+                WindowManager.LayoutParams
+                    .FLAG_TURN_SCREEN_ON
+            )
+        }
+    }
 
     private fun handleEsimCheckoutIntent(
         intent: Intent?
@@ -190,6 +229,18 @@ class MainActivity : ComponentActivity() {
         latestLaunchIntent = intent
         handleMessageNotificationIntent(intent)
         handleEsimCheckoutIntent(intent)
+
+        val launchedForIncomingCall =
+            intent
+                ?.getStringExtra("type") ==
+                "call_incoming"
+
+        updateIncomingCallWindow(
+            showWhenLocked =
+                launchedForIncomingCall,
+            turnScreenOn =
+                launchedForIncomingCall
+        )
 
         Thread {
             MobileAds.initialize(this) {}
@@ -624,6 +675,15 @@ class MainActivity : ComponentActivity() {
         latestLaunchIntent = intent
         handleMessageNotificationIntent(intent)
         handleEsimCheckoutIntent(intent)
+
+        val incomingCall =
+            intent.getStringExtra("type") ==
+                "call_incoming"
+
+        updateIncomingCallWindow(
+            showWhenLocked = incomingCall,
+            turnScreenOn = incomingCall
+        )
     }
 
     @Composable
@@ -880,25 +940,117 @@ class MainActivity : ComponentActivity() {
         LaunchedEffect(launchIntent) {
             val intent = launchIntent
 
-            if (intent?.getStringExtra("type") == "call_incoming") {
+            if (
+                intent?.getStringExtra("type") ==
+                    "call_incoming"
+            ) {
                 val payload =
                     IncomingCallPayload(
-                        callId = intent.getStringExtra("callId")?.toIntOrNull(),
-                        fromNumber = intent.getStringExtra("fromNumber"),
+                        callId =
+                            intent
+                                .getStringExtra("callId")
+                                ?.toIntOrNull(),
+                        fromNumber =
+                            intent.getStringExtra(
+                                "fromNumber"
+                            ),
                         callerName =
-                            intent.getStringExtra("callerName")
-                                ?: intent.getStringExtra("fromNumber"),
-                        mode = intent.getStringExtra("mode"),
-                        roomName = intent.getStringExtra("roomName")
+                            intent.getStringExtra(
+                                "callerName"
+                            )
+                                ?: intent.getStringExtra(
+                                    "fromNumber"
+                                ),
+                        mode =
+                            intent.getStringExtra("mode"),
+                        roomName =
+                            intent.getStringExtra(
+                                "roomName"
+                            )
                     )
 
-                androidCallManager.restoreIncomingCall(payload)
+                androidCallManager
+                    .restoreIncomingCall(payload)
+
+                if (
+                    intent.getStringExtra(
+                        "callAction"
+                    ) == "answer"
+                ) {
+                    val isVideoCall =
+                        payload.mode
+                            ?.uppercase() == "VIDEO" ||
+                                !payload
+                                    .roomName
+                                    .isNullOrBlank()
+
+                    val requiredPermissions =
+                        if (isVideoCall) {
+                            CallPermissionHelper
+                                .videoPermissions()
+                        } else {
+                            CallPermissionHelper
+                                .audioPermissions()
+                        }
+
+                    val missingPermissions =
+                        requiredPermissions.filter {
+                            permission ->
+                            ContextCompat
+                                .checkSelfPermission(
+                                    context,
+                                    permission
+                                ) !=
+                                PackageManager
+                                    .PERMISSION_GRANTED
+                        }
+
+                    if (missingPermissions.isEmpty()) {
+                        NotificationCoordinator(context)
+                            .cancelIncomingCallNotification()
+
+                        androidCallManager
+                            .acceptIncoming(user)
+                    } else {
+                        callPermissionLauncher.launch(
+                            missingPermissions
+                                .toTypedArray()
+                        )
+                    }
+                }
+
                 onIncomingCallIntentConsumed()
             }
         }
 
         val callState by
         androidCallManager.state.collectAsState()
+
+        LaunchedEffect(callState) {
+            when (callState) {
+                is AndroidCallState.Ringing -> {
+                    updateIncomingCallWindow(
+                        showWhenLocked = true,
+                        turnScreenOn = true
+                    )
+                }
+
+                is AndroidCallState.Connecting,
+                is AndroidCallState.Active -> {
+                    updateIncomingCallWindow(
+                        showWhenLocked = true,
+                        turnScreenOn = false
+                    )
+                }
+
+                else -> {
+                    updateIncomingCallWindow(
+                        showWhenLocked = false,
+                        turnScreenOn = false
+                    )
+                }
+            }
+        }
 
         LaunchedEffect(user.id) {
             val token = tokenStorage.read()
@@ -981,6 +1133,8 @@ class MainActivity : ComponentActivity() {
                         androidCallManager.declineIncoming()
                     }
                 )
+
+                return
             }
 
             is AndroidCallState.Connecting -> {
