@@ -16,6 +16,7 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.Person
 import com.chatforia.android.ChatforiaAppState
 import com.chatforia.android.MainActivity
 import com.chatforia.android.R
@@ -281,13 +282,17 @@ class NotificationCoordinator(
         }
     }
 
-    fun showIncomingCallNotification(data: Map<String, String>) {
-        val fromNumber = data["fromNumber"] ?: "Unknown caller"
+    private fun incomingCallIntent(
+        data: Map<String, String>,
+        callAction: String? = null
+    ): Intent {
+        val fromNumber =
+            data["fromNumber"] ?: "Unknown caller"
 
         val callerName =
             data["callerName"] ?: fromNumber
 
-        val intent = Intent(context, MainActivity::class.java).apply {
+        return Intent(context, MainActivity::class.java).apply {
             flags =
                 Intent.FLAG_ACTIVITY_NEW_TASK or
                         Intent.FLAG_ACTIVITY_CLEAR_TOP or
@@ -300,7 +305,32 @@ class NotificationCoordinator(
             putExtra("fromNumber", fromNumber)
             putExtra("mode", data["mode"])
             putExtra("roomName", data["roomName"])
+
+            callAction?.let {
+                putExtra("callAction", it)
+            }
         }
+    }
+
+    fun showIncomingCallNotification(data: Map<String, String>) {
+        val fromNumber =
+            data["fromNumber"] ?: "Unknown caller"
+
+        val callerName =
+            data["callerName"] ?: fromNumber
+
+        val isVideo =
+            data["mode"]
+                ?.equals("VIDEO", ignoreCase = true) == true ||
+                    !data["roomName"].isNullOrBlank()
+
+        IncomingCallDisplayStore.save(
+            context.applicationContext,
+            data
+        )
+
+        val contentIntent =
+            incomingCallIntent(data)
 
         if (ChatforiaAppState.isInForeground) {
             Log.d(
@@ -308,7 +338,7 @@ class NotificationCoordinator(
                 "App is foreground; opening incoming-call interface directly"
             )
 
-            context.startActivity(intent)
+            context.startActivity(contentIntent)
             return
         }
 
@@ -320,35 +350,127 @@ class NotificationCoordinator(
 
         scheduleIncomingCallTimeout(context)
 
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            INCOMING_CALL_NOTIFICATION_ID,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+        val callRequestCode =
+            data["callId"]
+                ?.toIntOrNull()
+                ?: INCOMING_CALL_NOTIFICATION_ID
+
+        val contentPendingIntent =
+            PendingIntent.getActivity(
+                context,
+                callRequestCode,
+                contentIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or
+                        PendingIntent.FLAG_IMMUTABLE
+            )
+
+        val answerPendingIntent =
+            PendingIntent.getActivity(
+                context,
+                callRequestCode + 1,
+                incomingCallIntent(
+                    data = data,
+                    callAction = "answer"
+                ),
+                PendingIntent.FLAG_UPDATE_CURRENT or
+                        PendingIntent.FLAG_IMMUTABLE
+            )
+
+        val declineIntent =
+            Intent(
+                context,
+                IncomingCallActionReceiver::class.java
+            ).apply {
+                action =
+                    IncomingCallActionReceiver
+                        .ACTION_DECLINE_CALL
+
+                putExtra("callId", data["callId"])
+                putExtra("mode", data["mode"])
+                putExtra("roomName", data["roomName"])
+            }
+
+        val declinePendingIntent =
+            PendingIntent.getBroadcast(
+                context,
+                callRequestCode + 2,
+                declineIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or
+                        PendingIntent.FLAG_IMMUTABLE
+            )
+
+        val caller =
+            Person.Builder()
+                .setName(callerName)
+                .setImportant(true)
+                .build()
+
+        val callStyle =
+            NotificationCompat.CallStyle
+                .forIncomingCall(
+                    caller,
+                    declinePendingIntent,
+                    answerPendingIntent
+                )
+                .setIsVideo(isVideo)
+
+        if (
+            Build.VERSION.SDK_INT >=
+                Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+        ) {
+            val manager =
+                context.getSystemService(
+                    NotificationManager::class.java
+                )
+
+            Log.d(
+                "ChatforiaNotifications",
+                "Full-screen call permission available: " +
+                        manager.canUseFullScreenIntent()
+            )
+        }
 
         val notification =
-            NotificationCompat.Builder(context, CALLS_CHANNEL_ID)
+            NotificationCompat.Builder(
+                context,
+                CALLS_CHANNEL_ID
+            )
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle("Incoming call")
-                .setContentText(callerName)
-                .setStyle(
-                    NotificationCompat.BigTextStyle()
-                        .bigText("Call from $callerName")
+                .setContentTitle(
+                    if (isVideo) {
+                        "Incoming video call"
+                    } else {
+                        "Incoming call"
+                    }
                 )
-                .setPriority(NotificationCompat.PRIORITY_MAX)
-                .setCategory(NotificationCompat.CATEGORY_CALL)
-                .setDefaults(NotificationCompat.DEFAULT_VIBRATE)
+                .setContentText(callerName)
+                .setStyle(callStyle)
+                .addPerson(caller)
+                .setPriority(
+                    NotificationCompat.PRIORITY_MAX
+                )
+                .setCategory(
+                    NotificationCompat.CATEGORY_CALL
+                )
+                .setDefaults(
+                    NotificationCompat.DEFAULT_VIBRATE
+                )
                 .setSound(null)
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setContentIntent(pendingIntent)
-                .setFullScreenIntent(pendingIntent, true)
+                .setVisibility(
+                    NotificationCompat.VISIBILITY_PUBLIC
+                )
+                .setContentIntent(contentPendingIntent)
+                .setFullScreenIntent(
+                    contentPendingIntent,
+                    true
+                )
                 .setOngoing(true)
                 .setAutoCancel(false)
                 .setOnlyAlertOnce(true)
                 .build()
 
-        NotificationManagerCompat.from(context)
+        NotificationManagerCompat
+            .from(context)
             .notify(
                 INCOMING_CALL_NOTIFICATION_ID,
                 notification
@@ -441,6 +563,10 @@ class NotificationCoordinator(
 
         NotificationManagerCompat.from(context)
             .cancel(INCOMING_CALL_NOTIFICATION_ID)
+
+        IncomingCallDisplayStore.clear(
+            context.applicationContext
+        )
     }
 
     private fun canPostNotifications(): Boolean {

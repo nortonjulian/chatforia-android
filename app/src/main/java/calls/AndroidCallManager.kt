@@ -6,10 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chatforia.android.auth.UserDto
 import com.chatforia.android.notifications.NotificationCoordinator
+import com.chatforia.android.notifications.IncomingCallActionEvents
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
@@ -47,6 +49,32 @@ class AndroidCallManager(
 
     init {
         observeSockets()
+        observeNotificationActions()
+    }
+
+    private fun observeNotificationActions() {
+        viewModelScope.launch {
+            IncomingCallActionEvents
+                .declinedCallIds
+                .collect { declinedCallId ->
+                    val ringing =
+                        _state.value as?
+                            AndroidCallState.Ringing
+                            ?: return@collect
+
+                    if (
+                        declinedCallId != null &&
+                        ringing.payload.callId !=
+                            declinedCallId
+                    ) {
+                        return@collect
+                    }
+
+                    cancelIncomingRingTimeout()
+                    ringtonePlayer.stop()
+                    _state.value = AndroidCallState.Idle
+                }
+        }
     }
 
     fun startAudioCall(

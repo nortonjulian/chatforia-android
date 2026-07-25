@@ -81,6 +81,10 @@
 
         </activity>
 
+        <receiver
+            android:name=".notifications.IncomingCallActionReceiver"
+            android:exported="false" />
+
         <service
             android:name=".notifications.ChatforiaFirebaseMessagingService"
             android:exported="false">
