@@ -12,6 +12,10 @@
     <string name="about_privacyDesc">End-to-end encryption and privacy controls are built into Chatforia from the start.</string>
     <string name="about_privacyTitle">Privacy-first</string>
     <string name="about_title">About Chatforia</string>
+    <string name="android_voicemail_transcript">Transcript</string>
+    <string name="android_voicemail_no_transcript">No transcript is available.</string>
+    <string name="android_voicemail_transcript_pending">Transcribing voicemail…</string>
+    <string name="android_voicemail_transcript_unavailable">Transcript unavailable.</string>
     <string name="about_values_access">&lt;b&gt;Access for all:&lt;/b&gt; Auto-translate 100+ languages.</string>
     <string name="about_values_access_aria">Access for all: Auto-translate 100+ languages.</string>
     <string name="about_values_control">&lt;b&gt;Control:&lt;/b&gt; Disappearing messages &amp; read receipts are optional.</string>

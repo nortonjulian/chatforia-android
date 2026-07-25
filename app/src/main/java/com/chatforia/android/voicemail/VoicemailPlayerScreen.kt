@@ -10,11 +10,13 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -46,6 +48,8 @@ import com.chatforia.android.R
 import com.chatforia.android.auth.TokenStorage
 import com.chatforia.android.network.Environment
 import com.chatforia.android.ui.theme.ChatforiaColors
+import androidx.compose.ui.text.font.FontWeight
+import androidx.core.net.toUri
 
 private enum class VoicemailAudioRouteKind {
     Earpiece,
@@ -64,6 +68,19 @@ fun VoicemailPlayerScreen(
     voicemail: VoicemailDto
 ) {
     val context = LocalContext.current
+
+    val signInAgainMessage =
+        stringResource(R.string.android_voicemail_player_sign_in_again)
+
+    val unableToPlayMessage =
+        stringResource(R.string.android_voicemail_player_unable_to_play)
+
+    val unableToLoadMessage =
+        stringResource(R.string.android_voicemail_player_unable_to_load)
+
+    val audioOutputUnavailableMessage =
+        stringResource(R.string.android_voicemail_audio_output_unavailable)
+
     val audioManager = remember {
         context.getSystemService(AudioManager::class.java)
     }
@@ -130,7 +147,7 @@ fun VoicemailPlayerScreen(
 
             if (nextRoute != null) {
                 runCatching {
-                    player.setPreferredDevice(nextRoute.device)
+                    setPreferredDeviceCompat(player, nextRoute.device)
                 }
             }
         }
@@ -163,7 +180,7 @@ fun VoicemailPlayerScreen(
             }
 
             runCatching {
-                player.setPreferredDevice(null)
+                setPreferredDeviceCompat(player, null)
             }
 
             runCatching {
@@ -216,7 +233,7 @@ fun VoicemailPlayerScreen(
 
                     isPrepared -> {
                         selectedRoute?.let {
-                            player.setPreferredDevice(it.device)
+                            setPreferredDeviceCompat(player, it.device)
                         }
 
                         player.start()
@@ -224,10 +241,7 @@ fun VoicemailPlayerScreen(
                     }
 
                     token.isNullOrBlank() -> {
-                        playbackError =
-                            context.getString(
-                                R.string.android_voicemail_player_sign_in_again
-                            )
+                        playbackError = signInAgainMessage
                     }
 
                     else -> {
@@ -248,12 +262,12 @@ fun VoicemailPlayerScreen(
                             )
 
                             selectedRoute?.let {
-                                player.setPreferredDevice(it.device)
+                                setPreferredDeviceCompat(player, it.device)
                             }
 
                             player.setDataSource(
                                 context,
-                                Uri.parse(proxyUrl),
+                                proxyUrl.toUri(),
                                 mapOf(
                                     "Authorization" to "Bearer $token"
                                 )
@@ -268,7 +282,7 @@ fun VoicemailPlayerScreen(
                                     routes = routeOptions,
                                     isSpeakerEnabled = isSpeakerEnabled
                                 )?.let { route ->
-                                    it.setPreferredDevice(route.device)
+                                    setPreferredDeviceCompat(it, route.device)
                                 }
 
                                 it.start()
@@ -286,10 +300,7 @@ fun VoicemailPlayerScreen(
                                 isPreparing = false
                                 isPrepared = false
                                 isPlaying = false
-                                playbackError =
-                                    context.getString(
-                                        R.string.android_voicemail_player_unable_to_play
-                                    )
+                                playbackError = unableToPlayMessage
                                 true
                             }
 
@@ -298,10 +309,7 @@ fun VoicemailPlayerScreen(
                             isPreparing = false
                             isPrepared = false
                             isPlaying = false
-                            playbackError =
-                                context.getString(
-                                    R.string.android_voicemail_player_unable_to_load
-                                )
+                            playbackError = unableToLoadMessage
                         }
                     }
                 }
@@ -341,7 +349,9 @@ fun VoicemailPlayerScreen(
             modifier = Modifier
                 .align(Alignment.End)
                 .size(48.dp),
-            enabled = routeOptions.isNotEmpty(),
+            enabled =
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
+                        routeOptions.isNotEmpty(),
             shape = CircleShape,
             contentPadding = PaddingValues(0.dp),
             colors = ButtonDefaults.outlinedButtonColors(
@@ -374,16 +384,14 @@ fun VoicemailPlayerScreen(
                     )
 
                 if (nextRoute == null) {
-                    playbackError =
-                        context.getString(
-                            R.string.android_voicemail_audio_output_unavailable
-                        )
+                    playbackError = audioOutputUnavailableMessage
                     return@OutlinedButton
                 }
 
                 val applied =
-                    player.setPreferredDevice(
-                        nextRoute.device
+                    setPreferredDeviceCompat(
+                        player = player,
+                        device = nextRoute.device
                     )
 
                 if (applied) {
@@ -391,10 +399,7 @@ fun VoicemailPlayerScreen(
                         nextSpeakerEnabled
                     playbackError = null
                 } else {
-                    playbackError =
-                        context.getString(
-                            R.string.android_voicemail_audio_output_unavailable
-                        )
+                    playbackError = audioOutputUnavailableMessage
                 }
             }
         ) {
@@ -423,10 +428,56 @@ fun VoicemailPlayerScreen(
             )
         }
 
-        if (!voicemail.transcript.isNullOrBlank()) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(voicemail.transcript)
-        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = stringResource(
+                R.string.android_voicemail_transcript
+            ),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = ChatforiaColors.primaryText
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        val transcriptText =
+            when (voicemail.transcriptStatus) {
+                VoicemailTranscriptStatus.COMPLETE -> {
+                    voicemail.transcript
+                        ?.trim()
+                        ?.takeIf { it.isNotBlank() }
+                        ?: stringResource(
+                            R.string.android_voicemail_no_transcript
+                        )
+                }
+
+                VoicemailTranscriptStatus.PENDING -> {
+                    stringResource(
+                        R.string.android_voicemail_transcript_pending
+                    )
+                }
+
+                VoicemailTranscriptStatus.FAILED -> {
+                    stringResource(
+                        R.string.android_voicemail_transcript_unavailable
+                    )
+                }
+            }
+
+        Text(
+            text = transcriptText,
+            style = MaterialTheme.typography.bodyMedium,
+            color = ChatforiaColors.primaryText,
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    width = 1.dp,
+                    color = ChatforiaColors.border,
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(14.dp)
+        )
     }
 }
 
@@ -454,6 +505,17 @@ private fun preferredPrivateRoute(
         it.kind == VoicemailAudioRouteKind.Earpiece
     } ?: routes.firstOrNull {
         it.kind == VoicemailAudioRouteKind.Speaker
+    }
+}
+
+private fun setPreferredDeviceCompat(
+    player: MediaPlayer,
+    device: AudioDeviceInfo?
+): Boolean {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        player.setPreferredDevice(device)
+    } else {
+        false
     }
 }
 
