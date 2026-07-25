@@ -10,24 +10,20 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BluetoothAudio
-import androidx.compose.material.icons.filled.Headphones
-import androidx.compose.material.icons.filled.PhoneInTalk
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -43,10 +39,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.R
 import com.chatforia.android.auth.TokenStorage
@@ -99,6 +93,10 @@ fun VoicemailPlayerScreen(
         mutableStateOf(false)
     }
 
+    var isSpeakerEnabled by remember(voicemail.id) {
+        mutableStateOf(false)
+    }
+
     var playbackError by remember(voicemail.id) {
         mutableStateOf<String?>(null)
     }
@@ -107,18 +105,11 @@ fun VoicemailPlayerScreen(
         mutableStateOf<List<VoicemailAudioRouteOption>>(emptyList())
     }
 
-    var selectedRouteDeviceId by remember(voicemail.id) {
-        mutableStateOf<Int?>(null)
-    }
-
-    var routeMenuExpanded by remember(voicemail.id) {
-        mutableStateOf(false)
-    }
-
     val selectedRoute =
-        routeOptions.firstOrNull {
-            it.device.id == selectedRouteDeviceId
-        } ?: preferredDefaultRoute(routeOptions)
+        selectedVoicemailRoute(
+            routes = routeOptions,
+            isSpeakerEnabled = isSpeakerEnabled
+        )
 
     val playButtonShape = RoundedCornerShape(28.dp)
 
@@ -131,15 +122,11 @@ fun VoicemailPlayerScreen(
 
             routeOptions = refreshedRoutes
 
-            val retainedRoute =
-                refreshedRoutes.firstOrNull {
-                    it.device.id == selectedRouteDeviceId
-                }
-
             val nextRoute =
-                retainedRoute ?: preferredDefaultRoute(refreshedRoutes)
-
-            selectedRouteDeviceId = nextRoute?.device?.id
+                selectedVoicemailRoute(
+                    routes = refreshedRoutes,
+                    isSpeakerEnabled = isSpeakerEnabled
+                )
 
             if (nextRoute != null) {
                 runCatching {
@@ -164,6 +151,7 @@ fun VoicemailPlayerScreen(
             }
 
         refreshRoutes()
+
         audioManager.registerAudioDeviceCallback(
             callback,
             handler
@@ -196,239 +184,233 @@ fun VoicemailPlayerScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Column(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(playButtonShape)
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                ChatforiaColors.buttonStart,
-                                ChatforiaColors.buttonEnd
-                            )
+        Button(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(playButtonShape)
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            ChatforiaColors.buttonStart,
+                            ChatforiaColors.buttonEnd
                         )
-                    ),
-                enabled = !isPreparing,
-                shape = playButtonShape,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = ChatforiaColors.buttonForeground,
-                    disabledContainerColor = Color.Transparent,
-                    disabledContentColor =
-                        ChatforiaColors.buttonForeground.copy(alpha = 0.65f)
+                    )
                 ),
-                onClick = {
-                    playbackError = null
+            enabled = !isPreparing,
+            shape = playButtonShape,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                contentColor = ChatforiaColors.buttonForeground,
+                disabledContainerColor = Color.Transparent,
+                disabledContentColor =
+                    ChatforiaColors.buttonForeground.copy(alpha = 0.65f)
+            ),
+            onClick = {
+                playbackError = null
 
-                    when {
-                        isPlaying -> {
-                            player.pause()
-                            isPlaying = false
+                when {
+                    isPlaying -> {
+                        player.pause()
+                        isPlaying = false
+                    }
+
+                    isPrepared -> {
+                        selectedRoute?.let {
+                            player.setPreferredDevice(it.device)
                         }
 
-                        isPrepared -> {
+                        player.start()
+                        isPlaying = true
+                    }
+
+                    token.isNullOrBlank() -> {
+                        playbackError =
+                            context.getString(
+                                R.string.android_voicemail_player_sign_in_again
+                            )
+                    }
+
+                    else -> {
+                        isPreparing = true
+
+                        runCatching {
+                            player.reset()
+
+                            player.setAudioAttributes(
+                                AudioAttributes.Builder()
+                                    .setContentType(
+                                        AudioAttributes.CONTENT_TYPE_SPEECH
+                                    )
+                                    .setUsage(
+                                        AudioAttributes.USAGE_MEDIA
+                                    )
+                                    .build()
+                            )
+
                             selectedRoute?.let {
                                 player.setPreferredDevice(it.device)
                             }
 
-                            player.start()
-                            isPlaying = true
-                        }
-
-                        token.isNullOrBlank() -> {
-                            playbackError =
-                                context.getString(
-                                    R.string.android_voicemail_player_sign_in_again
+                            player.setDataSource(
+                                context,
+                                Uri.parse(proxyUrl),
+                                mapOf(
+                                    "Authorization" to "Bearer $token"
                                 )
-                        }
+                            )
 
-                        else -> {
-                            isPreparing = true
+                            player.setOnPreparedListener {
+                                isPreparing = false
+                                isPrepared = true
+                                isPlaying = true
 
-                            runCatching {
-                                player.reset()
-
-                                player.setAudioAttributes(
-                                    AudioAttributes.Builder()
-                                        .setContentType(
-                                            AudioAttributes.CONTENT_TYPE_SPEECH
-                                        )
-                                        .setUsage(
-                                            AudioAttributes.USAGE_MEDIA
-                                        )
-                                        .build()
-                                )
-
-                                selectedRoute?.let {
-                                    player.setPreferredDevice(it.device)
+                                selectedVoicemailRoute(
+                                    routes = routeOptions,
+                                    isSpeakerEnabled = isSpeakerEnabled
+                                )?.let { route ->
+                                    it.setPreferredDevice(route.device)
                                 }
 
-                                player.setDataSource(
-                                    context,
-                                    Uri.parse(proxyUrl),
-                                    mapOf(
-                                        "Authorization" to "Bearer $token"
-                                    )
-                                )
+                                it.start()
+                            }
 
-                                player.setOnPreparedListener {
-                                    isPreparing = false
-                                    isPrepared = true
-                                    isPlaying = true
+                            player.setOnCompletionListener {
+                                isPlaying = false
 
-                                    selectedRoute?.let { route ->
-                                        it.setPreferredDevice(route.device)
-                                    }
-
-                                    it.start()
+                                runCatching {
+                                    it.seekTo(0)
                                 }
+                            }
 
-                                player.setOnCompletionListener {
-                                    isPlaying = false
-
-                                    runCatching {
-                                        it.seekTo(0)
-                                    }
-                                }
-
-                                player.setOnErrorListener { _, _, _ ->
-                                    isPreparing = false
-                                    isPrepared = false
-                                    isPlaying = false
-                                    playbackError =
-                                        context.getString(
-                                            R.string.android_voicemail_player_unable_to_play
-                                        )
-                                    true
-                                }
-
-                                player.prepareAsync()
-                            }.onFailure {
+                            player.setOnErrorListener { _, _, _ ->
                                 isPreparing = false
                                 isPrepared = false
                                 isPlaying = false
                                 playbackError =
                                     context.getString(
-                                        R.string.android_voicemail_player_unable_to_load
+                                        R.string.android_voicemail_player_unable_to_play
                                     )
+                                true
                             }
-                        }
-                    }
-                }
-            ) {
-                if (isPreparing) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp
-                    )
 
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Text(
-                        stringResource(
-                            R.string.android_voicemail_player_loading
-                        )
-                    )
-                } else {
-                    Text(
-                        if (isPlaying) {
-                            stringResource(
-                                R.string.android_voicemail_player_pause
-                            )
-                        } else {
-                            stringResource(
-                                R.string.android_voicemail_inbox_play_voicemail
-                            )
-                        }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                val selectedLabel =
-                    selectedRoute?.let {
-                        voicemailRouteLabel(it.kind)
-                    } ?: stringResource(
-                        R.string.android_voicemail_audio_output
-                    )
-
-                OutlinedButton(
-                    enabled = routeOptions.isNotEmpty(),
-                    shape = playButtonShape,
-                    onClick = {
-                        routeMenuExpanded = true
-                    }
-                ) {
-                    Icon(
-                        imageVector =
-                            selectedRoute?.kind?.let {
-                                voicemailRouteIcon(it)
-                            } ?: Icons.AutoMirrored.Filled.VolumeUp,
-                        contentDescription = selectedLabel,
-                        modifier = Modifier.size(18.dp)
-                    )
-
-                    Spacer(modifier = Modifier.width(6.dp))
-
-                    Text(
-                        text = selectedLabel,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                DropdownMenu(
-                    expanded = routeMenuExpanded,
-                    onDismissRequest = {
-                        routeMenuExpanded = false
-                    }
-                ) {
-                    routeOptions.forEach { route ->
-                        val label =
-                            voicemailRouteLabel(route.kind)
-
-                        DropdownMenuItem(
-                            text = {
-                                Text(label)
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector =
-                                        voicemailRouteIcon(route.kind),
-                                    contentDescription = null
+                            player.prepareAsync()
+                        }.onFailure {
+                            isPreparing = false
+                            isPrepared = false
+                            isPlaying = false
+                            playbackError =
+                                context.getString(
+                                    R.string.android_voicemail_player_unable_to_load
                                 )
-                            },
-                            onClick = {
-                                routeMenuExpanded = false
-
-                                val applied =
-                                    player.setPreferredDevice(
-                                        route.device
-                                    )
-
-                                if (applied) {
-                                    selectedRouteDeviceId =
-                                        route.device.id
-                                    playbackError = null
-                                } else {
-                                    playbackError =
-                                        context.getString(
-                                            R.string.android_voicemail_audio_output_unavailable
-                                        )
-                                }
-                            }
-                        )
+                        }
                     }
                 }
             }
+        ) {
+            if (isPreparing) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    stringResource(
+                        R.string.android_voicemail_player_loading
+                    )
+                )
+            } else {
+                Text(
+                    if (isPlaying) {
+                        stringResource(
+                            R.string.android_voicemail_player_pause
+                        )
+                    } else {
+                        stringResource(
+                            R.string.android_voicemail_inbox_play_voicemail
+                        )
+                    }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        OutlinedButton(
+            modifier = Modifier
+                .align(Alignment.End)
+                .size(48.dp),
+            enabled = routeOptions.isNotEmpty(),
+            shape = CircleShape,
+            contentPadding = PaddingValues(0.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                containerColor =
+                    if (isSpeakerEnabled) {
+                        ChatforiaColors.buttonStart
+                    } else {
+                        Color.Transparent
+                    },
+                contentColor =
+                    if (isSpeakerEnabled) {
+                        ChatforiaColors.buttonForeground
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
+                disabledContainerColor = Color.Transparent,
+                disabledContentColor =
+                    MaterialTheme.colorScheme.onSurface.copy(
+                        alpha = 0.38f
+                    )
+            ),
+            onClick = {
+                val nextSpeakerEnabled =
+                    !isSpeakerEnabled
+
+                val nextRoute =
+                    selectedVoicemailRoute(
+                        routes = routeOptions,
+                        isSpeakerEnabled = nextSpeakerEnabled
+                    )
+
+                if (nextRoute == null) {
+                    playbackError =
+                        context.getString(
+                            R.string.android_voicemail_audio_output_unavailable
+                        )
+                    return@OutlinedButton
+                }
+
+                val applied =
+                    player.setPreferredDevice(
+                        nextRoute.device
+                    )
+
+                if (applied) {
+                    isSpeakerEnabled =
+                        nextSpeakerEnabled
+                    playbackError = null
+                } else {
+                    playbackError =
+                        context.getString(
+                            R.string.android_voicemail_audio_output_unavailable
+                        )
+                }
+            }
+        ) {
+            Icon(
+                imageVector =
+                    Icons.AutoMirrored.Filled.VolumeUp,
+                contentDescription =
+                    stringResource(
+                        if (isSpeakerEnabled) {
+                            R.string.android_voicemail_audio_output_earpiece
+                        } else {
+                            R.string.android_voicemail_audio_output_speaker
+                        }
+                    ),
+                modifier = Modifier.size(21.dp)
+            )
         }
 
         playbackError?.let { message ->
@@ -448,52 +430,20 @@ fun VoicemailPlayerScreen(
     }
 }
 
-@Composable
-private fun voicemailRouteLabel(
-    kind: VoicemailAudioRouteKind
-): String {
-    return when (kind) {
-        VoicemailAudioRouteKind.Earpiece ->
-            stringResource(
-                R.string.android_voicemail_audio_output_earpiece
-            )
-
-        VoicemailAudioRouteKind.Speaker ->
-            stringResource(
-                R.string.android_voicemail_audio_output_speaker
-            )
-
-        VoicemailAudioRouteKind.Bluetooth ->
-            stringResource(
-                R.string.android_voicemail_audio_output_bluetooth
-            )
-
-        VoicemailAudioRouteKind.Headphones ->
-            stringResource(
-                R.string.android_voicemail_audio_output_headphones
-            )
+private fun selectedVoicemailRoute(
+    routes: List<VoicemailAudioRouteOption>,
+    isSpeakerEnabled: Boolean
+): VoicemailAudioRouteOption? {
+    if (isSpeakerEnabled) {
+        return routes.firstOrNull {
+            it.kind == VoicemailAudioRouteKind.Speaker
+        } ?: preferredPrivateRoute(routes)
     }
+
+    return preferredPrivateRoute(routes)
 }
 
-private fun voicemailRouteIcon(
-    kind: VoicemailAudioRouteKind
-): ImageVector {
-    return when (kind) {
-        VoicemailAudioRouteKind.Earpiece ->
-            Icons.Filled.PhoneInTalk
-
-        VoicemailAudioRouteKind.Speaker ->
-            Icons.AutoMirrored.Filled.VolumeUp
-
-        VoicemailAudioRouteKind.Bluetooth ->
-            Icons.Filled.BluetoothAudio
-
-        VoicemailAudioRouteKind.Headphones ->
-            Icons.Filled.Headphones
-    }
-}
-
-private fun preferredDefaultRoute(
+private fun preferredPrivateRoute(
     routes: List<VoicemailAudioRouteOption>
 ): VoicemailAudioRouteOption? {
     return routes.firstOrNull {
