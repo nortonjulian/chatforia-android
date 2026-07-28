@@ -88,6 +88,7 @@ class AuthViewModel(
 
     private suspend fun prepareEncryptionKeys(user: UserDto): UserDto {
         accountKeyManager.ensureLocalKeysExist(
+            userId = user.id,
             serverPublicKey = user.publicKey
         ) { publicKey ->
             repository.rotateEncryptionKey(publicKey)
@@ -133,9 +134,15 @@ class AuthViewModel(
         identifier: String,
         password: String
     ) {
-        repository.login(identifier, password)
+        val user =
+            repository.login(
+                identifier,
+                password
+            )
 
-        accountKeyManager.resetAccountEncryption { publicKey ->
+        accountKeyManager.resetAccountEncryption(
+            userId = user.id
+        ) { publicKey ->
             repository.rotateEncryptionKey(publicKey)
         }
 
@@ -238,12 +245,33 @@ class AuthViewModel(
     }
 
     fun logout() {
+        val logoutToken =
+            repository.currentToken()
+
         analytics.capture("account logged out")
         analytics.reset()
 
+        // Local logout must complete immediately.
         repository.logout()
         _deviceReplacementPrompt.value = null
         _state.value = AuthState.LoggedOut
+
+        if (!logoutToken.isNullOrBlank()) {
+            viewModelScope.launch(pushDispatcher) {
+                try {
+                    pushTokenRegistrar
+                        ?.unregisterCurrentDevice(
+                            authToken = logoutToken
+                        )
+                } catch (error: Exception) {
+                    android.util.Log.w(
+                        "ChatforiaFCM",
+                        "Device notification cleanup failed during logout",
+                        error
+                    )
+                }
+            }
+        }
     }
 
     private fun needsOnboarding(user: UserDto): Boolean {

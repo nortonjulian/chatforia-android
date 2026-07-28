@@ -21,4 +21,10 @@ interface PushTokenRegisterer {
     suspend fun registerCurrentFcmToken(
         replaceDeviceId: String? = null
     ): PushRegistrationResult
+
+    suspend fun unregisterCurrentDevice(
+        authToken: String
+    ) {
+        // Optional for test doubles.
+    }
 }

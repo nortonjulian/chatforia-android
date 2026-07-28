@@ -22,5 +22,7 @@ interface AuthSessionRepository {
         token: String
     )
 
+    fun currentToken(): String? = null
+
     fun logout()
 }

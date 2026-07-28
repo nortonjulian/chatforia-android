@@ -271,4 +271,25 @@ class LinkedDevicesRepository(
             )
         )
     }
+    override fun clearPushTokensForCurrentDevice(
+        deviceId: String,
+        authToken: String
+    ) {
+        apiClient.sendRawWithToken(
+            request =
+                ApiRequest(
+                    path = "devices/logout",
+                    method = HttpMethod.POST,
+                    bodyJson =
+                        json.encodeToString(
+                            DeviceIdRequest(
+                                deviceId = deviceId
+                            )
+                        ),
+                    requiresAuth = true
+                ),
+            authToken = authToken
+        )
+    }
+
 }

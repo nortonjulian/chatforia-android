@@ -211,6 +211,10 @@ class AuthRepository(
         tokenStorage.save(token)
     }
 
+    override fun currentToken(): String? {
+        return tokenStorage.read()
+    }
+
     override fun logout() {
         tokenStorage.clear()
     }

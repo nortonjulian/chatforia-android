@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.network.ApiClient
+import com.chatforia.android.network.ApiException
 import com.chatforia.android.ui.components.ChatforiaSectionCard
 import com.chatforia.android.ui.theme.ChatforiaColors
 import kotlinx.coroutines.launch
@@ -34,11 +35,19 @@ import java.util.UUID
 @Composable
 fun WirelessHomeView(
     apiClient: ApiClient,
+    currentUserId: Int,
     onBack: () -> Unit
 ) {
     val repository = remember { WirelessRepository(apiClient) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+
+    val checkoutStore =
+        remember(context) {
+            WirelessCheckoutStore(
+                context.applicationContext
+            )
+        }
 
     var selectedScope by remember { mutableStateOf(EsimScope.LOCAL) }
     var status by remember { mutableStateOf<WirelessStatusResponse?>(null) }
@@ -48,12 +57,77 @@ fun WirelessHomeView(
     var error by remember { mutableStateOf<String?>(null) }
     var activation by remember { mutableStateOf<ReserveEsimResponse?>(null) }
 
+    var pendingCheckout by remember {
+        mutableStateOf(checkoutStore.load(currentUserId))
+    }
+
+    fun clearPendingCheckout() {
+        checkoutStore.clear()
+        pendingCheckout = null
+    }
+
+    suspend fun reconcilePendingCheckout() {
+        val pending =
+            pendingCheckout
+                ?: checkoutStore.load(currentUserId)
+                    ?.also {
+                        pendingCheckout = it
+                    }
+                ?: return
+
+        val checkoutStatus =
+            try {
+                repository.getCheckoutStatus(
+                    pending.sessionId
+                )
+            } catch (e: ApiException) {
+                if (
+                    e.statusCode == 401 ||
+                    e.statusCode == 403 ||
+                    e.statusCode == 404
+                ) {
+                    clearPendingCheckout()
+                    return
+                }
+
+                throw e
+            }
+
+        val expired =
+            checkoutStatus.status
+                ?.equals(
+                    "EXPIRED",
+                    ignoreCase = true
+                ) == true ||
+                checkoutStatus.sessionStatus
+                    ?.equals(
+                        "expired",
+                        ignoreCase = true
+                    ) == true
+
+        val complete =
+            checkoutStatus.complete &&
+                checkoutStatus.paid &&
+                checkoutStatus.provisioned
+
+        if (expired || complete) {
+            clearPendingCheckout()
+        }
+    }
+
     fun reload() {
         scope.launch {
             isLoading = true
             error = null
 
             try {
+                try {
+                    reconcilePendingCheckout()
+                } catch (_: Exception) {
+                    // Keep the saved session during temporary
+                    // network or Stripe-status failures.
+                }
+
                 status = repository.getWirelessStatus()
                 esim = repository.getCurrentEsim().subscriber
             } catch (e: Exception) {
@@ -64,7 +138,7 @@ fun WirelessHomeView(
         }
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(currentUserId) {
         reload()
     }
 
@@ -169,16 +243,99 @@ fun WirelessHomeView(
                     return@PackListSection
                 }
 
-                // Set this immediately, before launching the coroutine.
-                // Additional rapid taps will now be ignored.
                 isPurchasing = true
                 error = null
 
-                val checkoutAttemptId =
-                    UUID.randomUUID().toString()
-
                 scope.launch {
                     try {
+                        val existingPending =
+                            pendingCheckout
+                                ?: checkoutStore.load(currentUserId)
+                                    ?.also {
+                                        pendingCheckout = it
+                                    }
+
+                        if (existingPending != null) {
+                            val checkoutStatus =
+                                try {
+                                    repository.getCheckoutStatus(
+                                        existingPending.sessionId
+                                    )
+                                } catch (e: ApiException) {
+                                    if (
+                                        e.statusCode == 401 ||
+                                        e.statusCode == 403 ||
+                                        e.statusCode == 404
+                                    ) {
+                                        clearPendingCheckout()
+                                        return@launch
+                                    }
+
+                                    null
+                                } catch (_: Exception) {
+                                    /*
+                                     * Preserve this user's session during
+                                     * temporary connectivity failures.
+                                     */
+                                    null
+                                }
+
+                            val expired =
+                                checkoutStatus?.status
+                                    ?.equals(
+                                        "EXPIRED",
+                                        ignoreCase = true
+                                    ) == true ||
+                                    checkoutStatus?.sessionStatus
+                                        ?.equals(
+                                            "expired",
+                                            ignoreCase = true
+                                        ) == true
+
+                            val complete =
+                                checkoutStatus?.complete == true &&
+                                    checkoutStatus.paid &&
+                                    checkoutStatus.provisioned
+
+                            when {
+                                complete -> {
+                                    clearPendingCheckout()
+                                    reload()
+                                    return@launch
+                                }
+
+                                expired -> {
+                                    clearPendingCheckout()
+                                }
+
+                                checkoutStatus?.paid == true -> {
+                                    error =
+                                        "Payment received. Finishing your eSIM setup…"
+                                    reload()
+                                    return@launch
+                                }
+
+                                else -> {
+                                    // Reopen the same Stripe session.
+                                    // This prevents another Checkout
+                                    // Session from being created.
+                                    context.startActivity(
+                                        Intent(
+                                            Intent.ACTION_VIEW,
+                                            existingPending
+                                                .checkoutUrl
+                                                .toUri()
+                                        )
+                                    )
+
+                                    return@launch
+                                }
+                            }
+                        }
+
+                        val checkoutAttemptId =
+                            UUID.randomUUID().toString()
+
                         val response =
                             repository.startCheckout(
                                 product = pack.product,
@@ -191,6 +348,28 @@ fun WirelessHomeView(
                                 ?: throw IllegalStateException(
                                     "Stripe checkout did not return a valid URL."
                                 )
+
+                        val sessionId =
+                            response.sessionId
+                                ?.takeIf {
+                                    it.isNotBlank()
+                                }
+                                ?: throw IllegalStateException(
+                                    "Stripe checkout did not return a session ID."
+                                )
+
+                        val newPending =
+                            PendingWirelessCheckout(
+                                userId = currentUserId,
+                                product = pack.product,
+                                checkoutAttemptId =
+                                    checkoutAttemptId,
+                                sessionId = sessionId,
+                                checkoutUrl = checkoutUrl
+                            )
+
+                        checkoutStore.save(newPending)
+                        pendingCheckout = newPending
 
                         context.startActivity(
                             Intent(

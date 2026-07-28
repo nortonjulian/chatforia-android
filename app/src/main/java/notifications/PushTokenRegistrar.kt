@@ -221,4 +221,21 @@ class PushTokenRegistrar(
 
         return PushRegistrationResult.Success
     }
+    override suspend fun unregisterCurrentDevice(
+        authToken: String
+    ) {
+        val deviceId =
+            deviceIdentityStorage.getOrCreateDeviceId()
+
+        linkedDevicesRepository.clearPushTokensForCurrentDevice(
+            deviceId = deviceId,
+            authToken = authToken
+        )
+
+        Log.d(
+            "ChatforiaFCM",
+            "Cleared backend push tokens for logged-out device $deviceId"
+        )
+    }
+
 }

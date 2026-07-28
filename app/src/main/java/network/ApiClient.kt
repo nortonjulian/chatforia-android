@@ -39,9 +39,22 @@ class ApiClient(
         return sendInternal(request) { body -> body }
     }
 
+    fun sendRawWithToken(
+        request: ApiRequest,
+        authToken: String
+    ): String {
+        return sendInternal(
+            request = request,
+            explicitToken = authToken
+        ) { body ->
+            body
+        }
+    }
+
     @PublishedApi
     internal fun <T> sendInternal(
         request: ApiRequest,
+        explicitToken: String? = null,
         decode: (String) -> T
     ): T {
         val url = "${Environment.API_BASE_URL}/${request.path.trimStart('/')}"
@@ -51,10 +64,16 @@ class ApiClient(
             .addHeader("Accept", "application/json")
 
         if (request.requiresAuth) {
-            val token = tokenStorage.read()
-                ?: throw Exception("Unauthorized")
+            val token =
+                explicitToken
+                    ?.takeIf { it.isNotBlank() }
+                    ?: tokenStorage.read()
+                    ?: throw Exception("Unauthorized")
 
-            builder.addHeader("Authorization", "Bearer $token")
+            builder.addHeader(
+                "Authorization",
+                "Bearer $token"
+            )
         }
 
         val mediaType = "application/json".toMediaType()

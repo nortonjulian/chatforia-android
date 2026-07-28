@@ -81,6 +81,27 @@ data class WirelessCheckoutResponse(
     }
 }
 
+@Serializable
+data class WirelessCheckoutStatusResponse(
+    val status: String? = null,
+    val complete: Boolean = false,
+    val paid: Boolean = false,
+    val provisioned: Boolean = false,
+    val sessionId: String? = null,
+    val paymentStatus: String? = null,
+    val sessionStatus: String? = null,
+    val purchase: WirelessCheckoutPurchaseDto? = null
+)
+
+@Serializable
+data class WirelessCheckoutPurchaseDto(
+    val id: Int? = null,
+    val addonKind: String? = null,
+    val totalDataMb: Int? = null,
+    val remainingDataMb: Int? = null,
+    val expiresAt: String? = null
+)
+
 data class DataPackOption(
     val product: String,
     val scope: EsimScope,

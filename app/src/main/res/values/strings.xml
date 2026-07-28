@@ -3261,4 +3261,27 @@
     <string name="android_voicemail_audio_output_bluetooth">Bluetooth</string>
     <string name="android_voicemail_audio_output_headphones">Headphones</string>
     <string name="android_voicemail_audio_output_unavailable">That audio output is unavailable.</string>
+
+    <!-- Secure message security summary and dedicated recovery screen -->
+    <string name="android_secure_messages_back">Back</string>
+    <string name="android_secure_messages_key_title">Secure Message Key</string>
+    <string name="android_secure_messages_recovery_title">Secure Message Recovery</string>
+    <string name="android_secure_messages_recovery_description">Back up your secure message key so you can restore access to secure messages on another device.</string>
+
+    <string name="android_secure_messages_checking_status">Checking secure message protection…</string>
+    <string name="android_secure_messages_protected_backup_saved">Protected on this device • Recovery backup saved</string>
+    <string name="android_secure_messages_protected_backup_missing">Protected on this device • Recovery backup not saved</string>
+    <string name="android_secure_messages_recovery_required_backup_available">Recovery required • Recovery backup available</string>
+    <string name="android_secure_messages_recovery_required">Secure message recovery required</string>
+
+    <string name="android_secure_messages_update_backup">Update Secure Message Backup</string>
+    <string name="android_secure_messages_back_up_key">Back Up Secure Message Key</string>
+    <string name="android_secure_messages_restore">Restore Secure Messages</string>
+
+    <string name="android_secure_messages_checking_recovery">Checking recovery backup…</string>
+    <string name="android_secure_messages_replace_saved_backup">Replace the saved backup or change its Secure Messages Passcode.</string>
+    <string name="android_secure_messages_create_backup">Create a secure backup of your secure message key.</string>
+    <string name="android_secure_messages_restore_from_backup">Restore this device from the saved recovery backup.</string>
+    <string name="android_secure_messages_manage_recovery">Review secure message recovery options.</string>
+
 </resources>

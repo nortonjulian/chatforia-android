@@ -7,6 +7,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 class WirelessRepository(
     private val apiClient: ApiClient
@@ -65,6 +67,32 @@ class WirelessRepository(
                     path = "billing/checkout",
                     method = HttpMethod.POST,
                     bodyJson = json.encodeToString(requestBody),
+                    requiresAuth = true
+                )
+            )
+        }
+    }
+
+    suspend fun getCheckoutStatus(
+        sessionId: String
+    ): WirelessCheckoutStatusResponse {
+        require(sessionId.isNotBlank()) {
+            "A checkout session ID is required."
+        }
+
+        val encodedSessionId =
+            URLEncoder.encode(
+                sessionId,
+                StandardCharsets.UTF_8.toString()
+            )
+
+        return withContext(Dispatchers.IO) {
+            apiClient.send(
+                ApiRequest(
+                    path =
+                        "billing/checkout-status" +
+                            "?session_id=$encodedSessionId",
+                    method = HttpMethod.GET,
                     requiresAuth = true
                 )
             )

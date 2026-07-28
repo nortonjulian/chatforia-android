@@ -37,22 +37,26 @@ fun KeyRestoreGate(
     val scrollState = rememberScrollState()
 
     val keyStorage =
-        remember {
-            KeyStorage(context)
+        remember(user.id) {
+            KeyStorage(
+                context = context,
+                accountUserId = user.id
+            )
         }
 
     val accountKeyManager =
-        remember {
+        remember(user.id) {
             AccountKeyManager(keyStorage)
         }
 
     val viewModel =
-        remember {
+        remember(user.id) {
             KeySetupViewModel(
                 remoteKeyBackupRepository = RemoteKeyBackupRepository(apiClient),
                 keyStorage = keyStorage,
                 authRepository = authRepository,
                 accountKeyManager = accountKeyManager,
+                userId = user.id,
                 keyBackupCrypto = KeyBackupCrypto()
             )
         }
@@ -97,21 +101,11 @@ fun KeyRestoreGate(
 
         KeySetupScreen(
             viewModel = viewModel,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            onRecoveryValidated = onRecovered
         )
 
         Spacer(modifier = Modifier.height(16.dp))
-
-        TextButton(
-            onClick = onRecovered,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                stringResource(
-                    R.string.android_key_restore_gate_i_ve_restored_my_key
-                )
-            )
-        }
 
         TextButton(
             onClick = onLogout,

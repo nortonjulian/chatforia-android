@@ -38,4 +38,11 @@ interface LinkedDevicesDataSource {
         deviceId: String,
         pushToken: String
     )
+
+    fun clearPushTokensForCurrentDevice(
+        deviceId: String,
+        authToken: String
+    ) {
+        // Optional for test doubles.
+    }
 }

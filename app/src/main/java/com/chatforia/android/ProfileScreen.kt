@@ -39,7 +39,7 @@ import com.chatforia.android.auth.UserDto
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.chatforia.android.crypto.KeyBackupCrypto
-import com.chatforia.android.crypto.KeySetupScreen
+import com.chatforia.android.crypto.SecureMessageRecoveryScreen
 import com.chatforia.android.crypto.KeySetupViewModel
 import com.chatforia.android.crypto.KeyStorage
 import com.chatforia.android.crypto.RemoteKeyBackupRepository
@@ -120,12 +120,15 @@ fun ProfileScreen(
     val context = LocalContext.current
 
     val keyStorage =
-        remember {
-            KeyStorage(context)
+        remember(user.id) {
+            KeyStorage(
+                context = context,
+                accountUserId = user.id
+            )
         }
 
     val accountKeyManager =
-        remember {
+        remember(user.id) {
             AccountKeyManager(keyStorage)
         }
 
@@ -213,11 +216,19 @@ fun ProfileScreen(
         ChatforiaColors.applyTheme(user.theme ?: "dawn")
     }
 
+    var showSecureMessageRecovery by remember {
+        mutableStateOf(false)
+    }
+
     var showLinkedDevices by remember {
         mutableStateOf(false)
     }
 
     var showDevicePairing by remember {
+        mutableStateOf(false)
+    }
+
+    var linkedDevicesReturnToPairing by remember {
         mutableStateOf(false)
     }
 
@@ -240,27 +251,52 @@ fun ProfileScreen(
 
     var showPhoneNumbers by remember { mutableStateOf(false) }
 
-    LaunchedEffect(user.id) {
-        settingsViewModel.load(user)
-    }
-
     val keySetupViewModel =
-        remember {
+        remember(user.id) {
             KeySetupViewModel(
                 remoteKeyBackupRepository =
                     RemoteKeyBackupRepository(apiClient),
                 keyStorage = keyStorage,
                 authRepository = authRepository,
                 accountKeyManager = accountKeyManager,
+                userId = user.id,
                 keyBackupCrypto = KeyBackupCrypto()
             )
         }
+
+    val keySetupState by
+        keySetupViewModel.state.collectAsState()
+
+    LaunchedEffect(user.id) {
+        settingsViewModel.load(user)
+        keySetupViewModel.refreshBackupStatus()
+    }
+
+    if (showSecureMessageRecovery) {
+        SecureMessageRecoveryScreen(
+            viewModel = keySetupViewModel,
+            onBack = {
+                showSecureMessageRecovery = false
+                keySetupViewModel.refreshBackupStatus()
+            }
+        )
+
+        return
+    }
 
     if (showLinkedDevices) {
 
         LinkedDevicesScreen(
             viewModel = linkedDevicesViewModel,
-            accountPublicKey = user.publicKey
+            accountPublicKey = user.publicKey,
+            onBack = {
+                showLinkedDevices = false
+
+                if (linkedDevicesReturnToPairing) {
+                    linkedDevicesReturnToPairing = false
+                    showDevicePairing = true
+                }
+            }
         )
 
         return
@@ -271,7 +307,12 @@ fun ProfileScreen(
         DevicePairingScreen(
             onOpenLinkedDevices = {
                 showDevicePairing = false
+                linkedDevicesReturnToPairing = true
                 showLinkedDevices = true
+            },
+            onBack = {
+                showDevicePairing = false
+                linkedDevicesReturnToPairing = false
             }
         )
 
@@ -311,6 +352,7 @@ fun ProfileScreen(
     if (showWireless) {
         WirelessHomeView(
             apiClient = apiClient,
+            currentUserId = user.id,
             onBack = { showWireless = false }
         )
         return
@@ -542,12 +584,6 @@ fun ProfileScreen(
                 }
             )
 
-            KeySetupScreen(
-                viewModel = keySetupViewModel
-            )
-
-            HorizontalDivider(color = ChatforiaColors.border)
-
             SettingSwitchRow(
                 title = stringResource(R.string.android_profile_smart_reply_suggestions),
                 subtitle = stringResource(R.string.android_profile_show_ria_powered_rewrite_assistance_and_quick_re),
@@ -560,28 +596,6 @@ fun ProfileScreen(
             )
 
             HorizontalDivider(color = ChatforiaColors.border)
-
-            ProfileRow(
-                icon = Icons.Default.Security,
-                title = stringResource(R.string.android_profile_linked_devices),
-                subtitle = stringResource(R.string.android_profile_manage_trusted_devices),
-                showChevron = true,
-                onClick = {
-                    showLinkedDevices = true
-                }
-            )
-
-            HorizontalDivider(color = ChatforiaColors.border)
-
-            ProfileRow(
-                icon = Icons.Default.Phone,
-                title = stringResource(R.string.android_profile_pair_new_device),
-                subtitle = stringResource(R.string.android_profile_approve_a_new_device),
-                showChevron = true,
-                onClick = {
-                    showDevicePairing = true
-                }
-            )
 
             ProfileRow(
                 icon = Icons.Default.Settings,
@@ -630,13 +644,86 @@ fun ProfileScreen(
                 }
             )
 
-            HorizontalDivider(color = ChatforiaColors.border)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        ChatforiaSectionCard(
+            title =
+                stringResource(
+                    R.string.android_profile_security
+                )
+        ) {
+            ProfileRow(
+                icon = Icons.Default.Security,
+                title =
+                    stringResource(
+                        R.string.android_secure_messages_key_title
+                    ),
+                subtitle =
+                    secureMessageStatusText(
+                        state = keySetupState
+                    )
+            )
+
+            HorizontalDivider(
+                color = ChatforiaColors.border
+            )
 
             ProfileRow(
                 icon = Icons.Default.Security,
-                title = stringResource(R.string.android_profile_security),
-                subtitle = stringResource(R.string.android_profile_encryption_key_protected),
-                showChevron = true
+                title =
+                    secureMessageRecoveryTitle(
+                        state = keySetupState
+                    ),
+                subtitle =
+                    secureMessageRecoverySubtitle(
+                        state = keySetupState
+                    ),
+                showChevron = true,
+                onClick = {
+                    showSecureMessageRecovery = true
+                }
+            )
+
+            HorizontalDivider(
+                color = ChatforiaColors.border
+            )
+
+            ProfileRow(
+                icon = Icons.Default.Security,
+                title =
+                    stringResource(
+                        R.string.android_profile_linked_devices
+                    ),
+                subtitle =
+                    stringResource(
+                        R.string.android_profile_manage_trusted_devices
+                    ),
+                showChevron = true,
+                onClick = {
+                    showLinkedDevices = true
+                }
+            )
+
+            HorizontalDivider(
+                color = ChatforiaColors.border
+            )
+
+            ProfileRow(
+                icon = Icons.Default.Phone,
+                title =
+                    stringResource(
+                        R.string.android_profile_pair_new_device
+                    ),
+                subtitle =
+                    stringResource(
+                        R.string.android_profile_approve_a_new_device
+                    ),
+                showChevron = true,
+                onClick = {
+                    showDevicePairing = true
+                }
             )
         }
 
@@ -1141,6 +1228,100 @@ private fun ThemeOptionGroup(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun secureMessageStatusText(
+    state: com.chatforia.android.crypto.KeySetupState
+): String {
+    return when {
+        state.isCheckingBackup ->
+            stringResource(
+                R.string.android_secure_messages_checking_status
+            )
+
+        state.hasMatchingLocalKey &&
+            state.hasRemoteBackup ->
+            stringResource(
+                R.string.android_secure_messages_protected_backup_saved
+            )
+
+        state.hasMatchingLocalKey ->
+            stringResource(
+                R.string.android_secure_messages_protected_backup_missing
+            )
+
+        state.hasRemoteBackup ->
+            stringResource(
+                R.string.android_secure_messages_recovery_required_backup_available
+            )
+
+        else ->
+            stringResource(
+                R.string.android_secure_messages_recovery_required
+            )
+    }
+}
+
+@Composable
+private fun secureMessageRecoveryTitle(
+    state: com.chatforia.android.crypto.KeySetupState
+): String {
+    return when {
+        state.hasMatchingLocalKey &&
+            state.hasRemoteBackup ->
+            stringResource(
+                R.string.android_secure_messages_update_backup
+            )
+
+        state.hasMatchingLocalKey ->
+            stringResource(
+                R.string.android_secure_messages_back_up_key
+            )
+
+        state.hasRemoteBackup ->
+            stringResource(
+                R.string.android_secure_messages_restore
+            )
+
+        else ->
+            stringResource(
+                R.string.android_secure_messages_recovery_title
+            )
+    }
+}
+
+@Composable
+private fun secureMessageRecoverySubtitle(
+    state: com.chatforia.android.crypto.KeySetupState
+): String {
+    return when {
+        state.isCheckingBackup ->
+            stringResource(
+                R.string.android_secure_messages_checking_recovery
+            )
+
+        state.hasMatchingLocalKey &&
+            state.hasRemoteBackup ->
+            stringResource(
+                R.string.android_secure_messages_replace_saved_backup
+            )
+
+        state.hasMatchingLocalKey ->
+            stringResource(
+                R.string.android_secure_messages_create_backup
+            )
+
+        state.hasRemoteBackup ->
+            stringResource(
+                R.string.android_secure_messages_restore_from_backup
+            )
+
+        else ->
+            stringResource(
+                R.string.android_secure_messages_manage_recovery
+            )
     }
 }
 

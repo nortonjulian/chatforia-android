@@ -123,6 +123,7 @@ class RegisterViewModel(
                         !publicKey.isNullOrBlank()
                     ) {
                         keyStorage.saveKeyPair(
+                            userId = resolvedUser.id,
                             publicKey = publicKey,
                             privateKey = privateKey
                         )

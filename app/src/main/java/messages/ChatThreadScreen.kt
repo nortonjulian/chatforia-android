@@ -432,7 +432,6 @@ fun ChatThreadScreen(
                 .fillMaxSize()
                 .background(ChatforiaColors.screenBackground)
                 .padding(padding)
-                .imePadding()
                 .padding(12.dp)
         ) {
             if (isTemporaryRandomChat) {

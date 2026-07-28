@@ -747,8 +747,11 @@ class MainActivity : ComponentActivity() {
             }
 
         val keyStorage =
-            remember {
-                KeyStorage(context)
+            remember(user.id) {
+                KeyStorage(
+                    context = context,
+                    accountUserId = user.id
+                )
             }
 
         val chatsRepository =
@@ -757,7 +760,7 @@ class MainActivity : ComponentActivity() {
             }
 
         val chatsViewModel =
-            remember {
+            remember(user.id) {
                 ChatsViewModel(
                     repository = chatsRepository,
                     keyStorage = keyStorage
@@ -831,10 +834,10 @@ class MainActivity : ComponentActivity() {
             }
 
         val chatThreadViewModel =
-            remember {
+            remember(user.id) {
                 ChatThreadViewModel(
                     repository = messagesRepository,
-                    keyStorage = KeyStorage(context),
+                    keyStorage = keyStorage,
                     queueStorage = MessageQueueStorage(context)
                 )
             }
@@ -901,7 +904,7 @@ class MainActivity : ComponentActivity() {
             }
 
         val linkedDevicesViewModel =
-            remember {
+            remember(user.id) {
                 LinkedDevicesViewModel(
                     repository = linkedDevicesRepository,
                     keyStorage = keyStorage,

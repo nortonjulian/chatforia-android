@@ -6,6 +6,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.activity.compose.BackHandler
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -198,9 +202,12 @@ class LinkedDevicesViewModel(
 @Composable
 fun LinkedDevicesScreen(
     viewModel: LinkedDevicesViewModel,
-    accountPublicKey: String?
+    accountPublicKey: String?,
+    onBack: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+
+    BackHandler(onBack = onBack)
 
     LaunchedEffect(Unit) {
         viewModel.load()
@@ -211,11 +218,30 @@ fun LinkedDevicesScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            "Linked Devices",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector =
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription =
+                        stringResource(
+                            R.string.android_secure_messages_back
+                        )
+                )
+            }
+
+            Text(
+                text =
+                    stringResource(
+                        R.string.android_profile_linked_devices
+                    ),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 

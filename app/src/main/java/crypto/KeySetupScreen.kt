@@ -2,7 +2,6 @@ package com.chatforia.android.crypto
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -42,7 +41,8 @@ import com.chatforia.android.R
 @Composable
 fun KeySetupScreen(
     viewModel: KeySetupViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRecoveryValidated: (() -> Unit)? = null
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -70,6 +70,46 @@ fun KeySetupScreen(
         viewModel.refreshBackupStatus()
     }
 
+    /*
+     * A recovery gate may close only after the complete local key pair
+     * has been compared with the current account public key.
+     */
+    LaunchedEffect(
+        state.hasMatchingLocalKey,
+        state.isCheckingBackup
+    ) {
+        if (
+            state.hasMatchingLocalKey &&
+            !state.isCheckingBackup
+        ) {
+            onRecoveryValidated?.invoke()
+        }
+    }
+
+    /*
+     * Never retain passcodes after a successful operation.
+     */
+    LaunchedEffect(state.successMessage) {
+        if (!state.successMessage.isNullOrBlank()) {
+            backupPassword = ""
+            confirmPassword = ""
+            startFreshText = ""
+        }
+    }
+
+    /*
+     * Clear stale fields whenever the screen changes between restore,
+     * create, and update modes.
+     */
+    LaunchedEffect(
+        state.hasMatchingLocalKey,
+        state.hasRemoteBackup,
+        state.isBackupStatusKnown
+    ) {
+        backupPassword = ""
+        confirmPassword = ""
+    }
+
     Card(
         modifier =
             modifier
@@ -91,7 +131,7 @@ fun KeySetupScreen(
 
             Text(
                 text = when {
-                    state.hasLocalPrivateKey ->
+                    state.hasMatchingLocalKey ->
                         stringResource(R.string.android_key_setup_device_can_read_secure_messages)
 
                     state.isCheckingBackup ->
@@ -114,7 +154,7 @@ fun KeySetupScreen(
 
             when {
 
-                state.hasLocalPrivateKey -> {
+                state.hasMatchingLocalKey -> {
 
                     Text(
                         text = if (state.hasRemoteBackup) {
@@ -172,7 +212,8 @@ fun KeySetupScreen(
                         enabled =
                             backupPassword.length >= 8 &&
                                     backupPassword == confirmPassword &&
-                                    !state.isCreatingBackup,
+                                    !state.isCreatingBackup &&
+                                    state.isBackupStatusKnown,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         if (state.isCreatingBackup) {
@@ -245,7 +286,11 @@ fun KeySetupScreen(
             }
 
 
-            if (!state.hasRemoteBackup && !state.isCheckingBackup) {
+            if (
+                state.isBackupStatusKnown &&
+                !state.hasRemoteBackup &&
+                !state.isCheckingBackup
+            ) {
                 Text(
                     text = stringResource(R.string.android_key_setup_no_recovery_backup_found_yet_create_one_from_thi),
                     style = MaterialTheme.typography.bodySmall
@@ -264,28 +309,6 @@ fun KeySetupScreen(
                     text = state.error ?: "",
                     color = MaterialTheme.colorScheme.error
                 )
-            }
-
-            if (state.hasLocalPrivateKey) {
-
-                HorizontalDivider(color = ChatforiaColors.border)
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(
-                        onClick = {
-                            viewModel.clearLocalKeys()
-                            backupPassword = ""
-                        }
-                    ) {
-                        Text(
-                            stringResource(R.string.android_key_setup_clear_secure_message_key),
-                            color = ChatforiaColors.accent
-                        )
-                    }
-                }
             }
 
             HorizontalDivider(color = ChatforiaColors.border)
@@ -399,4 +422,3 @@ fun KeySetupScreen(
         )
     }
 }
-
