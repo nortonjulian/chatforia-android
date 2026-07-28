@@ -671,9 +671,29 @@ private fun PackListSection(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                FeatureRow("Instant eSIM activation")
-                FeatureRow("One-time pack. No contract.")
-                FeatureRow("Top up anytime")
+                FeatureRow(
+                    stringResource(
+                        R.string.android_wireless_activates_automatically_on_first_data_connection
+                    )
+                )
+
+                FeatureRow(
+                    stringResource(
+                        R.string.android_wireless_valid_for_30_days_from_first_data_connection
+                    )
+                )
+
+                FeatureRow(
+                    stringResource(
+                        R.string.android_wireless_one_time_purchase_with_no_contract
+                    )
+                )
+
+                FeatureRow(
+                    stringResource(
+                        R.string.android_wireless_top_up_anytime
+                    )
+                )
 
                 Spacer(modifier = Modifier.height(14.dp))
 

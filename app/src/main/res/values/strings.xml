@@ -3284,4 +3284,10 @@
     <string name="android_secure_messages_restore_from_backup">Restore this device from the saved recovery backup.</string>
     <string name="android_secure_messages_manage_recovery">Review secure message recovery options.</string>
 
+
+    <!-- Telna eSIM package timing and validity -->
+    <string name="android_wireless_activates_automatically_on_first_data_connection">Activates automatically on first data connection</string>
+    <string name="android_wireless_valid_for_30_days_from_first_data_connection">Valid for 30 days from first data connection</string>
+    <string name="android_wireless_one_time_purchase_with_no_contract">One-time purchase with no contract</string>
+    <string name="android_wireless_top_up_anytime">Top up anytime</string>
 </resources>
