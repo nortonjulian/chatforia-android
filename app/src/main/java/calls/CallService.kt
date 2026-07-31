@@ -97,6 +97,29 @@ class CallService(
         )
     }
 
+    override fun markCallActive(callId: Int) {
+        apiClient.sendRaw(
+            ApiRequest(
+                path = "calls/$callId/status",
+                method = HttpMethod.PATCH,
+                bodyJson = """{"status":"ACTIVE"}""",
+                requiresAuth = true
+            )
+        )
+    }
+
+    override fun fetchCallStatus(
+        callId: Int
+    ): CallStatusLookupResponse {
+        return apiClient.send(
+            ApiRequest(
+                path = "calls/$callId/status",
+                method = HttpMethod.GET,
+                requiresAuth = true
+            )
+        )
+    }
+
     override fun fetchVoiceToken(): VoiceTokenResponse {
         return apiClient.send(
             ApiRequest(
@@ -123,4 +146,19 @@ class CallService(
 
 
 }
+
+@kotlinx.serialization.Serializable
+data class CallStatusLookupResponse(
+    val call: CallStatusLookupDto
+)
+
+@kotlinx.serialization.Serializable
+data class CallStatusLookupDto(
+    val id: Int,
+    val mode: String? = null,
+    val status: String? = null,
+    val endReason: String? = null,
+    val startedAt: String? = null,
+    val endedAt: String? = null
+)
 

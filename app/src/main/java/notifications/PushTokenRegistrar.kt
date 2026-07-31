@@ -219,6 +219,12 @@ class PushTokenRegistrar(
             "Twilio Voice push registration result: $twilioRegistered"
         )
 
+        if (!twilioRegistered) {
+            return PushRegistrationResult.Failed(
+                "Could not register this device for incoming voice calls."
+            )
+        }
+
         return PushRegistrationResult.Success
     }
     override suspend fun unregisterCurrentDevice(

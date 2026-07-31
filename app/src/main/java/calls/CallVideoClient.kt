@@ -6,6 +6,9 @@ import com.twilio.video.RemoteVideoTrack
 interface CallVideoClient {
     interface Listener {
         fun onConnected() {}
+
+        fun onRemoteParticipantConnected() {}
+
         fun onFailed(message: String) {}
         fun onDisconnected() {}
 

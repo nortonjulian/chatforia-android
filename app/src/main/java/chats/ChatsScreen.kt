@@ -82,7 +82,8 @@ fun ChatsScreen(
     apiClient: ApiClient,
     pendingOpenChatRoomId: Int? = null,
     onPendingOpenChatConsumed: () -> Unit = {},
-    onMaybeShowInterstitial: () -> Unit = {}
+    onMaybeShowInterstitial: () -> Unit = {},
+    onRiaVisibilityChanged: (Boolean) -> Unit = {}
 ) {
     var searchText by remember {
         mutableStateOf("")
@@ -93,6 +94,10 @@ fun ChatsScreen(
     }
 
     var showRia by remember { mutableStateOf(false) }
+
+    LaunchedEffect(showRia) {
+        onRiaVisibilityChanged(showRia)
+    }
 
     var showRandomMatching by remember {
         mutableStateOf(false)
@@ -275,7 +280,7 @@ fun ChatsScreen(
 
         RiaChatScreen(
             viewModel = riaViewModel,
-            memoryEnabled = true,
+            memoryEnabled = currentUser.riaRemember ?: true,
             filterProfanity = false,
             onClose = {
                 showRia = false

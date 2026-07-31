@@ -152,9 +152,32 @@ class CallsViewModel(
 
         viewModelScope.launch {
             socketManager.callEnded.collect {
-                _state.value = _state.value.copy(incomingCall = null)
+                _state.value =
+                    _state.value.copy(
+                        incomingCall = null
+                    )
+
                 loadCalls()
             }
+        }
+
+        viewModelScope.launch {
+            socketManager.videoCallEnded.collect {
+                _state.value =
+                    _state.value.copy(
+                        incomingCall = null
+                    )
+
+                loadCalls()
+            }
+        }
+
+        viewModelScope.launch {
+            CallLifecyclePushEvents
+                .historyRefreshEvents
+                .collect {
+                    loadCalls()
+                }
         }
     }
 }

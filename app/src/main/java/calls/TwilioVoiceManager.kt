@@ -178,21 +178,33 @@ class TwilioVoiceManager(
         }
     }
 
-    override fun endCall() {
+    override fun disconnectActiveCall() {
         try {
             activeCall?.disconnect()
         } catch (e: Exception) {
-            Log.e("ChatforiaTwilioVoice", "Failed to disconnect active call", e)
-        }
-
-        try {
-            TwilioIncomingCallStore.clear()
-        } catch (e: Exception) {
-            Log.e("ChatforiaTwilioVoice", "Failed to clear pending invite", e)
+            Log.e(
+                "ChatforiaTwilioVoice",
+                "Failed to disconnect active call",
+                e
+            )
         }
 
         activeCall = null
         isMuted = false
+    }
+
+    override fun endCall() {
+        disconnectActiveCall()
+
+        try {
+            TwilioIncomingCallStore.clear()
+        } catch (e: Exception) {
+            Log.e(
+                "ChatforiaTwilioVoice",
+                "Failed to clear pending invite",
+                e
+            )
+        }
     }
 
     override fun setMuted(isMuted: Boolean) {

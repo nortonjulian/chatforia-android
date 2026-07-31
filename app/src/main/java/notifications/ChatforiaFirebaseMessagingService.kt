@@ -14,6 +14,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import com.chatforia.android.calls.TwilioIncomingCallStore
+import com.chatforia.android.calls.CallService
+import com.chatforia.android.calls.TwilioVoicePushRegistrar
+import com.chatforia.android.calls.CallLifecyclePushEvents
 import com.twilio.voice.CallException
 import com.twilio.voice.CallInvite
 import com.twilio.voice.CancelledCallInvite
@@ -54,11 +57,81 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                         pushToken = token
                     )
 
-                Log.d("ChatforiaFCM", "Refreshed FCM token registered for device $deviceId")
+                Log.d(
+                    "ChatforiaFCM",
+                    "Refreshed FCM token registered with backend for device $deviceId"
+                )
+
+                val twilioRegistered =
+                    TwilioVoicePushRegistrar(
+                        callService = CallService(apiClient)
+                    ).register(token)
+
+                if (twilioRegistered) {
+                    Log.d(
+                        "ChatforiaTwilioVoice",
+                        "Refreshed FCM token registered with Twilio Voice"
+                    )
+                } else {
+                    Log.w(
+                        "ChatforiaTwilioVoice",
+                        "Could not register refreshed FCM token with Twilio Voice"
+                    )
+                }
 
             } catch (e: Exception) {
                 Log.e("ChatforiaFCM", "Failed to register refreshed FCM token", e)
             }
+        }
+    }
+
+    private fun isIncomingCallStillLive(
+        pushData: Map<String, String>
+    ): Boolean {
+        val callId =
+            pushData["callId"]
+                ?.toIntOrNull()
+                ?: return true
+
+        return try {
+            val tokenStorage =
+                TokenStorage(applicationContext)
+
+            val authToken = tokenStorage.read()
+
+            if (authToken.isNullOrBlank()) {
+                return true
+            }
+
+            val response =
+                CallService(
+                    ApiClient(tokenStorage)
+                ).fetchCallStatus(callId)
+
+            when (
+                response.call.status?.uppercase()
+            ) {
+                "INITIATED",
+                "RINGING" -> true
+
+                "ACTIVE",
+                "ENDED",
+                "DECLINED",
+                "MISSED",
+                "FAILED" -> false
+
+                else -> true
+            }
+        } catch (error: Exception) {
+            // A temporary lookup failure should not block a valid call.
+            Log.w(
+                "ChatforiaFCM",
+                "Unable to validate incoming call $callId; " +
+                    "using push freshness fallback.",
+                error
+            )
+
+            true
         }
     }
 
@@ -85,7 +158,8 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
         val isRecognizedChatforiaPush =
             pushType == "message_new" ||
                 pushType == "call_incoming" ||
-                pushType == "call_missed"
+                pushType == "call_missed" ||
+                pushType == "call_ended"
 
         if (isRecognizedChatforiaPush) {
             Log.d(
@@ -254,7 +328,19 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
             }
 
         if (handledByTwilio) {
+            Log.d(
+                "ChatforiaTwilioVoice",
+                "Twilio handled incoming FCM payload"
+            )
             return
+        }
+
+        if (pushData["type"].isNullOrBlank()) {
+            Log.e(
+                "ChatforiaTwilioVoice",
+                "Twilio rejected incoming FCM payload; keys=" +
+                    message.data.keys.sorted().joinToString(",")
+            )
         }
 
         when (pushData["type"]) {
@@ -296,6 +382,26 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                     return
                 }
 
+                if (!isIncomingCallStillLive(pushData)) {
+                    Log.w(
+                        "ChatforiaFCM",
+                        "Discarding terminal or already-active " +
+                            "incoming call ${pushData["callId"]}"
+                    )
+
+                    IncomingCallDisplayStore.clear(
+                        applicationContext
+                    )
+
+                    NotificationCoordinator(this)
+                        .cancelIncomingCallNotification()
+
+                    CallLifecyclePushEvents
+                        .notifyHistoryRefresh()
+
+                    return
+                }
+
                 IncomingCallDisplayStore.save(
                     applicationContext,
                     pushData
@@ -303,6 +409,43 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
 
                 NotificationCoordinator(this)
                     .showIncomingCallNotification(pushData)
+            }
+
+            "call_ended" -> {
+                val endedCallId =
+                    pushData["callId"]
+                        ?.toIntOrNull()
+
+                val cachedCallId =
+                    IncomingCallDisplayStore
+                        .recent(applicationContext)
+                        ?.get("callId")
+                        ?.toIntOrNull()
+
+                if (
+                    endedCallId == null ||
+                    cachedCallId == null ||
+                    endedCallId == cachedCallId
+                ) {
+                    TwilioIncomingCallStore.clear()
+
+                    IncomingCallDisplayStore.clear(
+                        applicationContext
+                    )
+
+                    NotificationCoordinator(this)
+                        .cancelIncomingCallNotification()
+                }
+
+                CallLifecyclePushEvents.notifyTerminal(
+                    callId = endedCallId,
+                    status = pushData["status"],
+                    reason = pushData["reason"],
+                    mode = pushData["mode"]
+                )
+
+                CallLifecyclePushEvents
+                    .notifyHistoryRefresh()
             }
 
             "call_missed" -> {

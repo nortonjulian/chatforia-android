@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import analytics.AnalyticsManager
 import analytics.AnalyticsTracker
 data class RiaChatUiState(
@@ -77,6 +78,21 @@ class RiaChatViewModel(
                     memoryEnabled = memoryEnabled,
                     filterProfanity = filterProfanity
                 )
+
+                val wordCount =
+                    reply.trim()
+                        .split(Regex("\\s+"))
+                        .count { it.isNotBlank() }
+
+                val typingDelayMillis =
+                    if (wordCount <= 1) {
+                        250L
+                    } else {
+                        (350L + wordCount * 85L)
+                            .coerceAtMost(2_800L)
+                    }
+
+                delay(typingDelayMillis)
 
                 val assistantMessage = RiaChatMessage(
                     role = "assistant",

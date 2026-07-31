@@ -326,6 +326,20 @@ class ContactsViewModel(
         }
     }
 
+    fun selectContact(contactId: Int) {
+        _state.value =
+            _state.value.copy(
+                selectedContactId = contactId
+            )
+    }
+
+    fun clearSelectedContact() {
+        _state.value =
+            _state.value.copy(
+                selectedContactId = null
+            )
+    }
+
     fun clearOpenedConversation() {
         _state.value =
             _state.value.copy(
@@ -343,5 +357,6 @@ data class ContactsState(
     val isImportingContacts: Boolean = false,
     val importMessage: String? = null,
     val openedConversation: ConversationDto? = null,
-    val isOpeningChat: Boolean = false
+    val isOpeningChat: Boolean = false,
+    val selectedContactId: Int? = null
 )

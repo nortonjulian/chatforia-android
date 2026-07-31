@@ -19,6 +19,8 @@ interface CallAudioClient {
 
     fun rejectIncomingCall(): Boolean
 
+    fun disconnectActiveCall()
+
     fun endCall()
 
     fun setMuted(isMuted: Boolean)
