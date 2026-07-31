@@ -15,6 +15,7 @@ data class CallDto(
     val displayName: String? = null,
     val roomName: String? = null,
     val durationSec: Int? = null,
+    val endReason: String? = null,
     val startedAt: String? = null,
     val answeredAt: String? = null,
     val endedAt: String? = null,

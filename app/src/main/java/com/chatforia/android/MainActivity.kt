@@ -16,6 +16,9 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaTheme
@@ -65,6 +68,7 @@ import com.chatforia.android.calls.TwilioVideoManager
 import com.chatforia.android.random.RandomChatViewModel
 import android.content.Intent
 import android.net.Uri
+import android.provider.Settings
 import com.chatforia.android.crypto.DeviceProvisioningCrypto
 import com.chatforia.android.crypto.DeviceIdentityStorage
 import com.chatforia.android.crypto.KeyRestoreGate
@@ -925,20 +929,109 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
+        var pendingOutgoingPermissionRequest by
+            remember { mutableStateOf(false) }
+
+        var showCallPermissionSettingsDialog by
+            remember { mutableStateOf(false) }
+
         val callPermissionLauncher =
             rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.RequestMultiplePermissions()
+                contract =
+                    ActivityResultContracts
+                        .RequestMultiplePermissions()
             ) { results ->
                 val allGranted =
-                    results.values.all { granted -> granted }
+                    results.isNotEmpty() &&
+                        results.values.all { granted ->
+                            granted
+                        }
 
-                if (allGranted) {
+                if (pendingOutgoingPermissionRequest) {
+                    pendingOutgoingPermissionRequest = false
+
+                    androidCallManager
+                        .completeOutgoingPermissionRequest(
+                            granted = allGranted
+                        )
+
+                    if (!allGranted) {
+                        showCallPermissionSettingsDialog = true
+                    }
+                } else if (allGranted) {
                     NotificationCoordinator(context)
                         .cancelIncomingCallNotification()
 
                     androidCallManager.acceptIncoming(user)
                 }
             }
+
+        LaunchedEffect(androidCallManager) {
+            androidCallManager
+                .outgoingPermissionRequests
+                .collect { permissions ->
+                    pendingOutgoingPermissionRequest = true
+
+                    callPermissionLauncher.launch(
+                        permissions
+                    )
+                }
+        }
+
+        if (showCallPermissionSettingsDialog) {
+            AlertDialog(
+                onDismissRequest = {
+                    showCallPermissionSettingsDialog = false
+                },
+                title = {
+                    Text("Microphone access required")
+                },
+                text = {
+                    Text(
+                        "Enable microphone access in Settings " +
+                            "to place calls. Video calls also " +
+                            "require camera access."
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showCallPermissionSettingsDialog =
+                                false
+
+                            val settingsIntent =
+                                Intent(
+                                    Settings
+                                        .ACTION_APPLICATION_DETAILS_SETTINGS
+                                ).apply {
+                                    data =
+                                        Uri.fromParts(
+                                            "package",
+                                            context.packageName,
+                                            null
+                                        )
+                                }
+
+                            context.startActivity(
+                                settingsIntent
+                            )
+                        }
+                    ) {
+                        Text("Open Settings")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showCallPermissionSettingsDialog =
+                                false
+                        }
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
 
         LaunchedEffect(launchIntent) {
             val intent = launchIntent
@@ -1260,12 +1353,17 @@ class MainActivity : ComponentActivity() {
             else -> Unit
         }
 
+        var isRiaOpen by remember {
+            mutableStateOf(false)
+        }
+
         Scaffold(
 
             bottomBar = {
-                NavigationBar(
-                    containerColor = ChatforiaColors.cardBackground
-                ) {
+                if (!isRiaOpen) {
+                    NavigationBar(
+                        containerColor = ChatforiaColors.cardBackground
+                    ) {
 
                     NavigationBarItem(
                         selected = selectedTab == AppTab.CHATS,
@@ -1360,6 +1458,7 @@ class MainActivity : ComponentActivity() {
                             unselectedTextColor = ChatforiaColors.secondaryText
                         )
                     )
+                    }
                 }
             }
         ) { padding ->
@@ -1415,7 +1514,24 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
-            Box(modifier = Modifier.padding(padding)) {
+            val isKeyboardVisible =
+                WindowInsets.ime.getBottom(
+                    LocalDensity.current
+                ) > 0
+
+            Box(
+                modifier =
+                    if (
+                        isRiaOpen &&
+                        isKeyboardVisible
+                    ) {
+                        Modifier.padding(
+                            top = padding.calculateTopPadding()
+                        )
+                    } else {
+                        Modifier.padding(padding)
+                    }
+            ) {
                 when (selectedTab) {
 
                     AppTab.CHATS ->
@@ -1432,6 +1548,9 @@ class MainActivity : ComponentActivity() {
                             uploadRepository = uploadRepository,
                             startChatViewModel = startChatViewModel,
                             apiClient = apiClient,
+                            onRiaVisibilityChanged = {
+                                isRiaOpen = it
+                            },
                             pendingOpenChatRoomId = pendingNotificationChatRoomId,
                             onPendingOpenChatConsumed = {
                                 pendingNotificationChatRoomId = null

@@ -194,6 +194,10 @@ class TwilioVideoManager(
     private fun wireRemoteParticipant(remoteParticipant: RemoteParticipant) {
         remoteParticipant.setListener(remoteParticipantListener)
 
+        // A remote participant joining is the actual answer signal.
+        // Merely connecting this device to the room is not.
+        listener?.onRemoteParticipantConnected()
+
         val existingVideoTrack =
             remoteParticipant.remoteVideoTracks
                 .firstOrNull { publication ->

@@ -48,7 +48,8 @@
             android:exported="true"
             android:launchMode="singleTask"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Chatforia">
+            android:theme="@style/Theme.Chatforia"
+            android:windowSoftInputMode="adjustNothing">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -317,13 +317,34 @@ private fun CallHistoryRow(
 ) {
     val status = call.status ?: ""
     val isMissed = status.uppercase() == "MISSED"
-    val isOutgoing = call.direction?.uppercase() == "OUTGOING"
+    val isOutgoing =
+        call.direction?.uppercase() == "OUTGOING"
+
+    val isVideo =
+        call.mode?.uppercase() == "VIDEO"
+
+    val isCanceled =
+        call.endReason
+            ?.lowercase() in
+            setOf(
+                "caller_canceled",
+                "canceled",
+                "cancelled"
+            )
 
     val icon =
         when {
-            isMissed -> Icons.Default.PhoneMissed
-            isOutgoing -> Icons.Default.PhoneForwarded
-            else -> Icons.Default.PhoneCallback
+            isVideo ->
+                Icons.Default.Videocam
+
+            isMissed ->
+                Icons.Default.PhoneMissed
+
+            isOutgoing ->
+                Icons.Default.PhoneForwarded
+
+            else ->
+                Icons.Default.PhoneCallback
         }
 
     Row(
@@ -381,7 +402,12 @@ private fun CallHistoryRow(
                     "INITIATED" -> "Calling…"
                     "RINGING" -> "Ringing"
                     "ACTIVE" -> "Connected"
-                    "ENDED" -> "Completed"
+                    "ENDED" ->
+                        if (isCanceled) {
+                            "Canceled"
+                        } else {
+                            "Completed"
+                        }
                     "MISSED" -> "Missed"
                     "DECLINED" -> "Declined"
                     "FAILED" -> "Failed"

@@ -34,6 +34,7 @@ fun RiaChatScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(ChatforiaColors.screenBackground)
+            .imePadding()
     ) {
         RiaHeader(onClose = onClose)
 

@@ -323,7 +323,7 @@ class AndroidCallManagerTest {
         }
 
     @Test
-    fun declinedSocketPreservesOutgoingAppAudioCallForVoicemail() =
+    fun declinedSocketEndsOutgoingAppAudioCall() =
         runTest(mainDispatcherRule.testDispatcher) {
             val socket = FakeCallRealtimeEvents()
             val voice = FakeCallAudioClient()
@@ -346,6 +346,7 @@ class AndroidCallManagerTest {
             val request = voice.startCallRequests.single()
 
             request.listener.onConnected()
+            advanceUntilIdle()
 
             socket.emitCallEnded(
                 """
@@ -361,11 +362,11 @@ class AndroidCallManagerTest {
 
             assertTrue(
                 manager.state.value is
-                    AndroidCallState.Active
+                    AndroidCallState.Ended
             )
 
-            assertEquals(0, voice.endCallCount)
-            assertEquals(0, video.disconnectCount)
+            assertEquals(1, voice.endCallCount)
+            assertEquals(1, video.disconnectCount)
         }
 
     @Test
@@ -384,13 +385,24 @@ class AndroidCallManagerTest {
                     videoManager = video
                 )
 
+            manager.startAudioCall(
+                calleeId = 44,
+                displayName = "Audio Friend"
+            )
+
             advanceUntilIdle()
 
-            socket.emitCallEnded("{}")
+            val request = voice.startCallRequests.single()
+            request.listener.onConnected()
+            advanceUntilIdle()
+
+            socket.emitCallEnded(
+                """{"callId":111,"status":"ENDED","reason":"remote_ended"}"""
+            )
 
             advanceUntilIdle()
 
-            assertEquals(1, ringtone.stopCount)
+            assertEquals(2, ringtone.stopCount)
             assertEquals(1, voice.endCallCount)
             assertEquals(1, video.disconnectCount)
             assertTrue(manager.state.value is AndroidCallState.Ended)
@@ -427,6 +439,7 @@ class AndroidCallManagerTest {
             assertTrue(manager.state.value is AndroidCallState.Connecting)
 
             request.listener.onConnected()
+            advanceUntilIdle()
 
             val state = manager.state.value
 
@@ -437,11 +450,13 @@ class AndroidCallManagerTest {
     @Test
     fun startVideoCallStartsVideoFetchesTokenAndConnectsVideoClient() =
         runTest(mainDispatcherRule.testDispatcher) {
+            val callBackend = FakeCallBackendService()
             val videoBackend = FakeVideoCallBackend()
             val videoClient = FakeCallVideoClient()
 
             val manager =
                 createManager(
+                    callService = callBackend,
                     videoRepository = videoBackend,
                     videoManager = videoClient
                 )
@@ -455,15 +470,28 @@ class AndroidCallManagerTest {
 
             advanceUntilIdle()
 
-            assertEquals(listOf(88 to 99), videoBackend.startVideoRequests)
-            assertEquals(listOf("77" to "video-room"), videoBackend.videoTokenRequests)
+            assertEquals(
+                listOf(88 to true),
+                callBackend.createAppCallRequests
+            )
+            assertTrue(videoBackend.startVideoRequests.isEmpty())
+            assertEquals(
+                listOf("77" to "call_111"),
+                videoBackend.videoTokenRequests
+            )
 
             val connectRequest = videoClient.connectRequests.single()
 
             assertEquals("video-token", connectRequest.accessToken)
-            assertEquals("video-room", connectRequest.roomName)
+            assertEquals("call_111", connectRequest.roomName)
 
             connectRequest.listener.onConnected()
+
+            assertTrue(
+                manager.state.value is AndroidCallState.Connecting
+            )
+
+            connectRequest.listener.onRemoteParticipantConnected()
 
             val state = manager.state.value
 
@@ -471,7 +499,7 @@ class AndroidCallManagerTest {
 
             val session = (state as AndroidCallState.Active).session
 
-            assertEquals(222, session.callId)
+            assertEquals(111, session.callId)
             assertEquals("Video Friend", session.displayName)
             assertEquals(true, session.isVideo)
         }
@@ -492,7 +520,8 @@ class AndroidCallManagerTest {
             voiceManager = voiceManager,
             videoManager = videoManager,
             ringtonePlayer = ringtonePlayer,
-            callDispatcher = mainDispatcherRule.testDispatcher
+            callDispatcher = mainDispatcherRule.testDispatcher,
+            permissionChecker = { _, _ -> true }
         )
     }
 
@@ -679,6 +708,10 @@ class AndroidCallManagerTest {
         override fun rejectIncomingCall(): Boolean {
             eventLog?.add("voice:rejected")
             return true
+        }
+
+        override fun disconnectActiveCall() {
+            // No-op for test.
         }
 
         override fun endCall() {

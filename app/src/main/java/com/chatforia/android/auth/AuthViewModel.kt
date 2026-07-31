@@ -39,12 +39,12 @@ class AuthViewModel(
         }
     }
 
-    private fun registerPushTokenIfPossible(
+    private suspend fun registerPushTokenAndWait(
         replaceDeviceId: String? = null
     ) {
         val registrar = pushTokenRegistrar ?: return
 
-        viewModelScope.launch(pushDispatcher) {
+        kotlinx.coroutines.withContext(pushDispatcher) {
             android.util.Log.d(
                 "ChatforiaFCM",
                 "registerPushTokenIfPossible called."
@@ -71,6 +71,16 @@ class AuthViewModel(
                     )
                 }
             }
+        }
+    }
+
+    private fun registerPushTokenIfPossible(
+        replaceDeviceId: String? = null
+    ) {
+        viewModelScope.launch {
+            registerPushTokenAndWait(
+                replaceDeviceId = replaceDeviceId
+            )
         }
     }
 
@@ -125,8 +135,12 @@ class AuthViewModel(
                 return@launch
             }
 
-            _state.value = resolveLoggedInState(user)
-            registerPushTokenIfPossible()
+            val resolvedState =
+                resolveLoggedInState(user)
+
+            registerPushTokenAndWait()
+
+            _state.value = resolvedState
         }
     }
 

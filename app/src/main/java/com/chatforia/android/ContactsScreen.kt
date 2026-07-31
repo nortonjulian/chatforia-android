@@ -113,9 +113,12 @@ fun ContactsScreen(
     val searchText = state.searchText
     val contacts = state.contacts
 
-    var selectedContact by remember {
-        mutableStateOf<ContactDto?>(null)
-    }
+    val selectedContact =
+        state.selectedContactId?.let { selectedContactId ->
+            contacts.firstOrNull { contact ->
+                contact.id == selectedContactId
+            }
+        }
 
     var editingContact by remember {
         mutableStateOf<ContactDto?>(null)
@@ -156,7 +159,7 @@ fun ContactsScreen(
                 riaRepository = riaRepository,
                 onBack = {
                     viewModel.clearOpenedConversation()
-                    selectedContact = null
+                    viewModel.clearSelectedContact()
                 }
             )
 
@@ -316,16 +319,16 @@ fun ContactsScreen(
 
             onEdit = {
                 editingContact = contact
-                selectedContact = null
+                viewModel.clearSelectedContact()
             },
 
             onDelete = {
                 viewModel.deleteContact(contact)
-                selectedContact = null
+                viewModel.clearSelectedContact()
             },
 
             onBack = {
-                selectedContact = null
+                viewModel.clearSelectedContact()
             }
         )
 
@@ -468,7 +471,7 @@ fun ContactsScreen(
                             contact = contact,
                             viewModel = viewModel,
                             onClick = {
-                                selectedContact = contact
+                                viewModel.selectContact(contact.id)
                             }
                         )
                         HorizontalDivider(color = ChatforiaColors.border)

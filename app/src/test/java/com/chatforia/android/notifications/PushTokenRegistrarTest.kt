@@ -296,7 +296,9 @@ class PushTokenRegistrarTest {
                 )
 
             assertEquals(
-                PushRegistrationResult.Success,
+                PushRegistrationResult.Failed(
+                    "Could not register this device for incoming voice calls."
+                ),
                 secondResult
             )
 

@@ -8,6 +8,7 @@ data class CallSession(
     val roomName: String? = null,
     val displayName: String = "Call",
     val isVideo: Boolean = false,
+    val isOutgoing: Boolean = false,
     val continuesToVoicemailOnDecline: Boolean = false,
     val startedAtMillis: Long = System.currentTimeMillis(),
     val muted: Boolean = false,

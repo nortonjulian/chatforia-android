@@ -57,6 +57,7 @@ class AndroidCallManagerAnalyticsTest {
         advanceUntilIdle()
 
         audioClient.lastListener?.onConnected()
+        advanceUntilIdle()
 
         assertEquals(
             "call started",
@@ -97,6 +98,7 @@ class AndroidCallManagerAnalyticsTest {
         advanceUntilIdle()
 
         audioClient.lastListener?.onConnected()
+        advanceUntilIdle()
 
         manager.endCall()
 
@@ -199,8 +201,11 @@ class AndroidCallManagerAnalyticsTest {
         advanceUntilIdle()
 
         audioClient.lastListener?.onConnected()
+        advanceUntilIdle()
 
-        socketEvents.callEndedFlow.emit("{}")
+        socketEvents.callEndedFlow.emit(
+            """{"callId":777,"status":"ENDED","reason":"remote_ended"}"""
+        )
 
         advanceUntilIdle()
 
@@ -241,7 +246,8 @@ class AndroidCallManagerAnalyticsTest {
             videoManager = videoClient,
             ringtonePlayer = ringtonePlayer,
             callDispatcher = testDispatcher,
-            analytics = analytics
+            analytics = analytics,
+            permissionChecker = { _, _ -> true }
         )
     }
 }
@@ -341,6 +347,10 @@ private class FakeCallAudioClient(
 
     override fun rejectIncomingCall(): Boolean {
         return true
+    }
+
+    override fun disconnectActiveCall() {
+        // No-op for test.
     }
 
     override fun endCall() {
