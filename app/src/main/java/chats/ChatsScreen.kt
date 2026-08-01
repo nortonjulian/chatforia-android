@@ -83,7 +83,8 @@ fun ChatsScreen(
     pendingOpenChatRoomId: Int? = null,
     onPendingOpenChatConsumed: () -> Unit = {},
     onMaybeShowInterstitial: () -> Unit = {},
-    onRiaVisibilityChanged: (Boolean) -> Unit = {}
+    onRiaVisibilityChanged: (Boolean) -> Unit = {},
+    onThreadVisibilityChanged: (Boolean) -> Unit = {}
 ) {
     var searchText by remember {
         mutableStateOf("")
@@ -91,6 +92,16 @@ fun ChatsScreen(
 
     var selectedConversation by remember {
         mutableStateOf<ConversationDto?>(null)
+    }
+
+    LaunchedEffect(selectedConversation != null) {
+        onThreadVisibilityChanged(selectedConversation != null)
+    }
+
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose {
+            onThreadVisibilityChanged(false)
+        }
     }
 
     var showRia by remember { mutableStateOf(false) }
