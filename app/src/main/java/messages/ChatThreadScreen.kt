@@ -375,6 +375,8 @@ fun ChatThreadScreen(
         }
 
     Scaffold(
+        modifier = Modifier.imePadding(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             Box(
                 modifier = Modifier

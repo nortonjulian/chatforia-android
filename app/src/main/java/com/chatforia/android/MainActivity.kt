@@ -1357,6 +1357,10 @@ class MainActivity : ComponentActivity() {
             mutableStateOf(false)
         }
 
+        var isChatThreadOpen by remember {
+            mutableStateOf(false)
+        }
+
         Scaffold(
 
             bottomBar = {
@@ -1522,7 +1526,7 @@ class MainActivity : ComponentActivity() {
             Box(
                 modifier =
                     if (
-                        isRiaOpen &&
+                        (isRiaOpen || isChatThreadOpen) &&
                         isKeyboardVisible
                     ) {
                         Modifier.padding(
@@ -1550,6 +1554,9 @@ class MainActivity : ComponentActivity() {
                             apiClient = apiClient,
                             onRiaVisibilityChanged = {
                                 isRiaOpen = it
+                            },
+                            onThreadVisibilityChanged = {
+                                isChatThreadOpen = it
                             },
                             pendingOpenChatRoomId = pendingNotificationChatRoomId,
                             onPendingOpenChatConsumed = {
