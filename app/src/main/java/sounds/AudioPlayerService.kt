@@ -79,6 +79,23 @@ class AudioPlayerService(
                 .apply()
         }
 
+        fun saveMessageTone(
+            context: Context,
+            messageTone: String
+        ) {
+            context
+                .getSharedPreferences(
+                    PREFS_NAME,
+                    Context.MODE_PRIVATE
+                )
+                .edit()
+                .putString(
+                    MESSAGE_TONE_KEY,
+                    messageTone
+                )
+                .apply()
+        }
+
         fun savedMessageTone(context: Context): String {
             return context
                 .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
