@@ -33,13 +33,29 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
 
         Log.d("ChatforiaFCM", "Received refreshed FCM token")
 
+        PendingFcmTokenStorage(
+            applicationContext
+        ).save(token)
+
+        PushReconciliationScheduler.enqueue(
+            applicationContext
+        )
+
+        Log.d(
+            "ChatforiaFCM",
+            "Persisted refreshed FCM token for reconciliation"
+        )
+
         serviceScope.launch {
             try {
                 val tokenStorage = TokenStorage(applicationContext)
                 val authToken = tokenStorage.read()
 
                 if (authToken.isNullOrBlank()) {
-                    Log.d("ChatforiaFCM", "User not logged in; skipping token refresh registration")
+                    Log.d(
+                        "ChatforiaFCM",
+                        "User not logged in; refreshed token retained for next reconciliation"
+                    )
                     return@launch
                 }
 
@@ -56,6 +72,10 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                         deviceId = deviceId,
                         pushToken = token
                     )
+
+                PendingFcmTokenStorage(
+                    applicationContext
+                ).clearIfMatches(token)
 
                 Log.d(
                     "ChatforiaFCM",
