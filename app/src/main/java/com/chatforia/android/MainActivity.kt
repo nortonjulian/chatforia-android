@@ -114,7 +114,11 @@ class MainActivity : ComponentActivity() {
 
     private var latestLaunchIntent by mutableStateOf<Intent?>(null)
 
-    private var pendingNotificationChatRoomId by mutableStateOf<Int?>(null)
+    private var pendingNotificationChatRoomId by
+        mutableStateOf<Int?>(null)
+
+    private var pendingNotificationSmsThreadId by
+        mutableStateOf<Int?>(null)
 
     private var pendingOpenWireless by mutableStateOf(false)
 
@@ -180,15 +184,39 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun handleMessageNotificationIntent(intent: Intent?) {
-        if (intent?.getStringExtra("type") != "message_new") return
+    private fun handleMessageNotificationIntent(
+        intent: Intent?
+    ) {
+        when (intent?.getStringExtra("type")) {
+            "message_new" -> {
+                val chatRoomId =
+                    intent
+                        .getStringExtra("chatRoomId")
+                        ?.toIntOrNull()
 
-        val chatRoomId =
-            intent.getStringExtra("chatRoomId")
-                ?.toIntOrNull()
+                if (chatRoomId != null) {
+                    pendingNotificationChatRoomId =
+                        chatRoomId
 
-        if (chatRoomId != null) {
-            pendingNotificationChatRoomId = chatRoomId
+                    pendingNotificationSmsThreadId =
+                        null
+                }
+            }
+
+            "sms_message" -> {
+                val threadId =
+                    intent
+                        .getStringExtra("threadId")
+                        ?.toIntOrNull()
+
+                if (threadId != null) {
+                    pendingNotificationSmsThreadId =
+                        threadId
+
+                    pendingNotificationChatRoomId =
+                        null
+                }
+            }
         }
     }
 
@@ -1571,9 +1599,17 @@ class MainActivity : ComponentActivity() {
                             onThreadVisibilityChanged = {
                                 isChatThreadOpen = it
                             },
-                            pendingOpenChatRoomId = pendingNotificationChatRoomId,
+                            pendingOpenChatRoomId =
+                                pendingNotificationChatRoomId,
+                            pendingOpenSmsThreadId =
+                                pendingNotificationSmsThreadId,
                             onPendingOpenChatConsumed = {
-                                pendingNotificationChatRoomId = null
+                                pendingNotificationChatRoomId =
+                                    null
+                            },
+                            onPendingOpenSmsConsumed = {
+                                pendingNotificationSmsThreadId =
+                                    null
                             },
                             onMaybeShowInterstitial = {
                                 interstitialAdManager

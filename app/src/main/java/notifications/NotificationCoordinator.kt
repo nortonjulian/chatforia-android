@@ -507,20 +507,52 @@ class NotificationCoordinator(
             data["body"]
                 ?: "New encrypted message"
 
+        val pushType =
+            data["type"]
+                ?.takeIf { it.isNotBlank() }
+                ?: "message_new"
+
         val messageId = data["messageId"]
         val chatRoomId = data["chatRoomId"]
+        val smsThreadId = data["threadId"]
+
+        val destinationKey =
+            if (pushType == "sms_message") {
+                "sms_thread_" +
+                    (
+                        smsThreadId
+                            ?: messageId
+                            ?: System.currentTimeMillis()
+                                .toString()
+                    )
+            } else {
+                "chat_room_" +
+                    (
+                        chatRoomId
+                            ?: messageId
+                            ?: System.currentTimeMillis()
+                                .toString()
+                    )
+            }
 
         val notificationId =
-            ("chat_room_${chatRoomId ?: messageId ?: System.currentTimeMillis().toString()}").hashCode()
+            destinationKey.hashCode()
 
-        val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        val intent =
+            Intent(
+                context,
+                MainActivity::class.java
+            ).apply {
+                flags =
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP
 
-            putExtra("type", "message_new")
-            putExtra("chatRoomId", data["chatRoomId"])
-            putExtra("messageId", messageId)
-            putExtra("senderId", data["senderId"])
-        }
+                putExtra("type", pushType)
+                putExtra("chatRoomId", chatRoomId)
+                putExtra("threadId", smsThreadId)
+                putExtra("messageId", messageId)
+                putExtra("senderId", data["senderId"])
+            }
 
         val pendingIntent = PendingIntent.getActivity(
             context,

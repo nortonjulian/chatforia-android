@@ -1,5 +1,6 @@
 package com.chatforia.android.chats
 
+import android.telephony.PhoneNumberUtils
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chatforia.android.contacts.ContactDto
@@ -9,6 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 class StartChatViewModel(
     private val contactsRepository: ContactsRepository
@@ -23,9 +25,13 @@ class StartChatViewModel(
     private var searchJob: Job? = null
 
     fun updateUsername(value: String) {
+        val normalizedPhoneNumber =
+            normalizePhoneNumber(value)
+
         _state.value =
             _state.value.copy(
                 username = value,
+                normalizedPhoneNumber = normalizedPhoneNumber,
                 error = null
             )
 
@@ -74,13 +80,13 @@ class StartChatViewModel(
     }
 
     fun startChat() {
-        val username =
-            _state.value.username.trim()
+        val current = _state.value
+        val query = current.username.trim()
 
-        if (username.isBlank()) {
+        if (query.isBlank()) {
             _state.value =
-                _state.value.copy(
-                    error = "Enter a username."
+                current.copy(
+                    error = "Enter a username or phone number."
                 )
             return
         }
@@ -94,12 +100,22 @@ class StartChatViewModel(
                 )
 
             try {
+                val phone = current.normalizedPhoneNumber
+
+                if (phone != null) {
+                    openSmsThread(
+                        phone = phone,
+                        fallbackTitle = phone
+                    )
+                    return@launch
+                }
+
                 val user =
-                    contactsRepository.lookupUser(username)
+                    contactsRepository.lookupUser(query)
 
                 openDirectChat(
                     userId = user.userId,
-                    title = user.username.ifBlank { username }
+                    title = user.username.ifBlank { query }
                 )
 
             } catch (e: Exception) {
@@ -144,32 +160,11 @@ class StartChatViewModel(
                     contact.externalPhone?.trim()?.takeIf { it.isNotBlank() }
                         ?: throw Exception("This contact does not have a phone number.")
 
-                val smsThread =
-                    contactsRepository.startSmsThread(
-                        phone = phone,
-                        contactId = contact.id
-                    )
-
-                val resolvedTitle =
-                    smsThread.displayName?.trim()?.takeIf { it.isNotBlank() }
-                        ?: smsThread.contactName?.trim()?.takeIf { it.isNotBlank() }
-                        ?: title
-
-                _state.value =
-                    _state.value.copy(
-                        isLoading = false,
-                        openedConversation =
-                            ConversationDto(
-                                kind = "sms",
-                                id = smsThread.id,
-                                title = resolvedTitle,
-                                displayName = resolvedTitle,
-                                updatedAt = smsThread.updatedAt,
-                                isGroup = false,
-                                phone = smsThread.contactPhone ?: phone,
-                                unreadCount = 0
-                            )
-                    )
+                openSmsThread(
+                    phone = phone,
+                    contactId = contact.id,
+                    fallbackTitle = title
+                )
 
             } catch (e: Exception) {
                 _state.value =
@@ -206,6 +201,99 @@ class StartChatViewModel(
                     )
             }
         }
+    }
+
+    private suspend fun openSmsThread(
+        phone: String,
+        contactId: Int? = null,
+        fallbackTitle: String = phone
+    ) {
+        val smsThread =
+            contactsRepository.startSmsThread(
+                phone = phone,
+                contactId = contactId
+            )
+
+        val resolvedPhone =
+            smsThread.contactPhone
+                ?.trim()
+                ?.takeIf { it.isNotBlank() }
+                ?: phone
+
+        val resolvedTitle =
+            smsThread.displayName
+                ?.trim()
+                ?.takeIf { it.isNotBlank() }
+                ?: smsThread.contactName
+                    ?.trim()
+                    ?.takeIf { it.isNotBlank() }
+                ?: fallbackTitle
+
+        _state.value =
+            _state.value.copy(
+                isLoading = false,
+                openedConversation =
+                    ConversationDto(
+                        kind = "sms",
+                        id = smsThread.id,
+                        title = resolvedTitle,
+                        displayName = resolvedTitle,
+                        updatedAt = smsThread.updatedAt,
+                        isGroup = false,
+                        phone = resolvedPhone,
+                        unreadCount = 0
+                    )
+            )
+    }
+
+    private fun normalizePhoneNumber(value: String): String? {
+        val raw = value.trim()
+
+        if (raw.isBlank()) {
+            return null
+        }
+
+        val containsOnlyPhoneCharacters =
+            raw.all { character ->
+                character.isDigit() ||
+                    character == '+' ||
+                    character == '-' ||
+                    character == '(' ||
+                    character == ')' ||
+                    character == '.' ||
+                    character.isWhitespace()
+            }
+
+        if (!containsOnlyPhoneCharacters) {
+            return null
+        }
+
+        val normalized =
+            PhoneNumberUtils.normalizeNumber(raw)
+
+        val digitCount =
+            normalized.count { it.isDigit() }
+
+        if (digitCount !in 7..15) {
+            return null
+        }
+
+        PhoneNumberUtils.formatNumberToE164(
+            raw,
+            Locale.getDefault().country
+        )?.let {
+            return it
+        }
+
+        if (normalized.startsWith("+") && digitCount in 8..15) {
+            return normalized
+        }
+
+        if (digitCount == 10) {
+            return "+1$normalized"
+        }
+
+        return null
     }
 
     private suspend fun openDirectChat(
@@ -388,6 +476,7 @@ class StartChatViewModel(
 
 data class StartChatState(
     val username: String = "",
+    val normalizedPhoneNumber: String? = null,
     val contactResults: List<ContactDto> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
