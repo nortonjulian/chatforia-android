@@ -21,6 +21,7 @@ class MessagesRepository(
     private val json = Json {
         ignoreUnknownKeys = true
         explicitNulls = false
+        coerceInputValues = true
     }
 
     private suspend fun sendRawRequest(

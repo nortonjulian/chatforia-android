@@ -1138,6 +1138,9 @@ class ChatThreadViewModelTest {
             val realtime = FakeRealtimeEvents()
             val viewModel = createViewModel(repository)
 
+            repository.smsThreadToLoad = SmsThreadDto(id = 20)
+
+            viewModel.loadSmsThread(20)
             viewModel.connectSmsRealtime(realtime)
 
             runCurrent()
@@ -1145,15 +1148,18 @@ class ChatThreadViewModelTest {
             realtime.emitSmsMessage(
                 """
             {
-              "id": 200,
               "threadId": 20,
-              "direction": "in",
-              "fromNumber": "+15550001111",
-              "toNumber": "+15550002222",
-              "body": "hello from sms realtime",
-              "provider": "twilio",
-              "providerMessageId": "SM200",
-              "createdAt": "2026-01-01T00:05:00Z"
+              "message": {
+                "id": 200,
+                "threadId": 20,
+                "direction": "in",
+                "fromNumber": "+15550001111",
+                "toNumber": "+15550002222",
+                "body": "hello from sms realtime",
+                "provider": "twilio",
+                "providerMessageId": "SM200",
+                "createdAt": "2026-01-01T00:05:00Z"
+              }
             }
             """.trimIndent()
             )
@@ -1180,6 +1186,9 @@ class ChatThreadViewModelTest {
             val realtime = FakeRealtimeEvents()
             val viewModel = createViewModel(repository)
 
+            repository.smsThreadToLoad = SmsThreadDto(id = 20)
+
+            viewModel.loadSmsThread(20)
             viewModel.connectSmsRealtime(realtime)
 
             runCurrent()
@@ -1187,15 +1196,18 @@ class ChatThreadViewModelTest {
             realtime.emitSmsMessage(
                 """
             {
-              "id": 201,
               "threadId": 20,
-              "direction": "in",
-              "fromNumber": "+15550001111",
-              "toNumber": "+15550002222",
-              "body": "before update",
-              "provider": "twilio",
-              "providerMessageId": "SM201",
-              "createdAt": "2026-01-01T00:05:00Z"
+              "message": {
+                "id": 201,
+                "threadId": 20,
+                "direction": "in",
+                "fromNumber": "+15550001111",
+                "toNumber": "+15550002222",
+                "body": "before update",
+                "provider": "twilio",
+                "providerMessageId": "SM201",
+                "createdAt": "2026-01-01T00:05:00Z"
+              }
             }
             """.trimIndent()
             )
@@ -1205,16 +1217,19 @@ class ChatThreadViewModelTest {
             realtime.emitSmsMessage(
                 """
             {
-              "id": 201,
               "threadId": 20,
-              "direction": "in",
-              "fromNumber": "+15550001111",
-              "toNumber": "+15550002222",
-              "body": "after update",
-              "provider": "twilio",
-              "providerMessageId": "SM201",
-              "createdAt": "2026-01-01T00:05:00Z",
-              "editedAt": "2026-01-01T00:06:00Z"
+              "message": {
+                "id": 201,
+                "threadId": 20,
+                "direction": "in",
+                "fromNumber": "+15550001111",
+                "toNumber": "+15550002222",
+                "body": "after update",
+                "provider": "twilio",
+                "providerMessageId": "SM201",
+                "createdAt": "2026-01-01T00:05:00Z",
+                "editedAt": "2026-01-01T00:06:00Z"
+              }
             }
             """.trimIndent()
             )
@@ -1345,6 +1360,7 @@ class ChatThreadViewModelTest {
     private class FakeChatThreadRepository : ChatThreadRepository {
         var messagesToLoad: List<MessageDto> = emptyList()
         var deltasToLoad: List<MessageDto> = emptyList()
+        var smsThreadToLoad: SmsThreadDto? = null
 
         val sendSmsCalls = mutableListOf<SendSmsCall>()
 
@@ -1481,7 +1497,15 @@ class ChatThreadViewModelTest {
         override suspend fun loadSmsThread(
             threadId: Int
         ): SmsThreadDto {
-            throw AssertionError("loadSmsThread should not be called in this test.")
+            val thread =
+                smsThreadToLoad
+                    ?: throw AssertionError(
+                        "loadSmsThread should not be called in this test."
+                    )
+
+            assertEquals(threadId, thread.id)
+
+            return thread
         }
 
         override suspend fun sendSms(

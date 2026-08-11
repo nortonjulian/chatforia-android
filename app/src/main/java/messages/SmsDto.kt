@@ -30,5 +30,6 @@ data class SendSmsResponse(
     val threadId: Int,
     val provider: String? = null,
     val messageSid: String? = null,
-    val clientRef: String? = null
+    val clientRef: String? = null,
+    val message: SmsMessageDto? = null
 )
