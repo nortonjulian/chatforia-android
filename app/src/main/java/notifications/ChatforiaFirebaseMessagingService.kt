@@ -65,7 +65,10 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                 val twilioRegistered =
                     TwilioVoicePushRegistrar(
                         callService = CallService(apiClient)
-                    ).register(token)
+                    ).register(
+                        fcmToken = token,
+                        deviceId = deviceId
+                    )
 
                 if (twilioRegistered) {
                     Log.d(
@@ -411,7 +414,8 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                     .showIncomingCallNotification(pushData)
             }
 
-            "call_ended" -> {
+            "call_ended",
+        "call_answered_elsewhere" -> {
                 val endedCallId =
                     pushData["callId"]
                         ?.toIntOrNull()
@@ -427,8 +431,31 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                     cachedCallId == null ||
                     endedCallId == cachedCallId
                 ) {
-                    TwilioIncomingCallStore.clear()
+                    val locallyClaimed =
+                        TwilioIncomingCallStore
+                            .isLocallyClaimed(
+                                endedCallId
+                            )
 
+                    if (
+                        pushType ==
+                            "call_answered_elsewhere" &&
+                        locallyClaimed
+                    ) {
+                        Log.d(
+                            "ChatforiaFCM",
+                            "Preserving locally claimed Twilio call " +
+                                "for answered-elsewhere callId=$endedCallId"
+                        )
+                    } else {
+                        TwilioIncomingCallStore.clear()
+                    }
+
+                    /*
+                     * The winning device no longer needs the incoming
+                     * notification either. Clearing UI state is safe;
+                     * only the winning media/invite must be preserved.
+                     */
                     IncomingCallDisplayStore.clear(
                         applicationContext
                     )

@@ -247,6 +247,7 @@ class AndroidCallManagerAnalyticsTest {
             ringtonePlayer = ringtonePlayer,
             callDispatcher = testDispatcher,
             analytics = analytics,
+            deviceIdProvider = { "test-device-id" },
             permissionChecker = { _, _ -> true }
         )
     }
@@ -283,12 +284,15 @@ private class FakeCallBackendService : CallBackendService {
     override fun endCall(
         callId: Int,
         reason: String?,
-        durationSec: Int?
+        durationSec: Int?,
+        deviceId: String?
     ) {
         endCallReason = reason
     }
 
-    override fun fetchVoiceToken(): VoiceTokenResponse {
+    override fun fetchVoiceToken(
+        deviceId: String
+    ): VoiceTokenResponse {
         return VoiceTokenResponse(
             token = "fake-voice-token"
         )

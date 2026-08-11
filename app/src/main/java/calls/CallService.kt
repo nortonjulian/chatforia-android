@@ -79,7 +79,8 @@ class CallService(
     override fun endCall(
         callId: Int,
         reason: String?,
-        durationSec: Int?
+        durationSec: Int?,
+        deviceId: String?
     ) {
         apiClient.sendRaw(
             ApiRequest(
@@ -89,7 +90,8 @@ class CallService(
                     EndCallRequest(
                         callId = callId,
                         reason = reason,
-                        durationSec = durationSec
+                        durationSec = durationSec,
+                        deviceId = deviceId
                     )
                 ),
                 requiresAuth = true
@@ -97,18 +99,48 @@ class CallService(
         )
     }
 
-    override fun markCallActive(callId: Int) {
-        apiClient.sendRaw(
-            ApiRequest(
-                path = "calls/$callId/status",
-                method = HttpMethod.PATCH,
-                bodyJson = """{"status":"ACTIVE"}""",
-                requiresAuth = true
-            )
-        )
-    }
+    override fun markCallActive(
+        callId: Int,
+        deviceId: String?
+    ): CallAnswerClaimResult {
+        return try {
+            val bodyJson =
+                json.encodeToString(
+                    CallStatusUpdateRequest(
+                        status = "ACTIVE",
+                        deviceId = deviceId
+                    )
+                )
 
-    override fun fetchCallStatus(
+            apiClient.sendRaw(
+                ApiRequest(
+                    path = "calls/$callId/status",
+                    method = HttpMethod.PATCH,
+                    bodyJson = bodyJson,
+                    requiresAuth = true
+                )
+            )
+
+        CallAnswerClaimResult.CLAIMED
+    } catch (
+        error:
+            com.chatforia.android.network.ApiException
+    ) {
+        if (
+            error.statusCode == 409 &&
+            error.responseBody.contains(
+                "CALL_ANSWERED_ELSEWHERE"
+            )
+        ) {
+            CallAnswerClaimResult
+                .ANSWERED_ELSEWHERE
+        } else {
+            throw error
+        }
+    }
+}
+
+override fun fetchCallStatus(
         callId: Int
     ): CallStatusLookupResponse {
         return apiClient.send(
@@ -120,16 +152,53 @@ class CallService(
         )
     }
 
-    override fun fetchVoiceToken(): VoiceTokenResponse {
+    override fun fetchVoiceToken(
+        deviceId: String
+    ): VoiceTokenResponse {
         return apiClient.send(
             ApiRequest(
                 path = "voice/client/token",
                 method = HttpMethod.POST,
-                bodyJson = """{"platform":"android"}""",
+                bodyJson =
+                    json.encodeToString(
+                        VoiceTokenRequest(
+                            platform = "android",
+                            deviceId = deviceId
+                        )
+                    ),
                 requiresAuth = true
             )
         )
     }
+
+    override fun confirmVoiceRegistration(
+        deviceId: String
+    ) {
+        apiClient.sendRaw(
+            ApiRequest(
+                path = "voice/client/registration",
+                method = HttpMethod.POST,
+                bodyJson =
+                    json.encodeToString(
+                        VoiceRegistrationConfirmationRequest(
+                            deviceId = deviceId
+                        )
+                    ),
+                requiresAuth = true
+            )
+        )
+    }
+
+    @kotlinx.serialization.Serializable
+    data class VoiceTokenRequest(
+        val platform: String,
+        val deviceId: String
+    )
+
+    @kotlinx.serialization.Serializable
+    data class VoiceRegistrationConfirmationRequest(
+        val deviceId: String
+    )
 
     @kotlinx.serialization.Serializable
     data class AddParticipantRequest(
