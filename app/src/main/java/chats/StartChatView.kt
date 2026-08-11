@@ -251,6 +251,24 @@ fun StartChatView(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
+        val typedPhoneNumber =
+            state.normalizedPhoneNumber
+
+        if (
+            !state.isGroupMode &&
+            typedPhoneNumber != null
+        ) {
+            StartChatPhoneNumberRow(
+                phoneNumber = typedPhoneNumber,
+                enabled = !state.isLoading,
+                onClick = {
+                    viewModel.startChat()
+                }
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
         if (state.contactResults.isNotEmpty()) {
             Text(
                 text = stringResource(R.string.android_start_chat_results),
@@ -286,6 +304,48 @@ fun StartChatView(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun StartChatPhoneNumberRow(
+    phoneNumber: String,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                enabled = enabled,
+                onClick = onClick
+            )
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = phoneNumber,
+                color = ChatforiaColors.primaryText,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Text(
+                text = stringResource(R.string.ios_text_this_number),
+                color = ChatforiaColors.secondaryText,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        Icon(
+            Icons.Default.KeyboardArrowRight,
+            contentDescription = stringResource(
+                R.string.ios_tap_to_open_sms_thread
+            ),
+            tint = ChatforiaColors.secondaryText
+        )
     }
 }
 

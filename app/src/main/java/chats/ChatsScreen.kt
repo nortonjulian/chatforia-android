@@ -81,7 +81,9 @@ fun ChatsScreen(
     uploadRepository: UploadRepository,
     apiClient: ApiClient,
     pendingOpenChatRoomId: Int? = null,
+    pendingOpenSmsThreadId: Int? = null,
     onPendingOpenChatConsumed: () -> Unit = {},
+    onPendingOpenSmsConsumed: () -> Unit = {},
     onMaybeShowInterstitial: () -> Unit = {},
     onRiaVisibilityChanged: (Boolean) -> Unit = {},
     onThreadVisibilityChanged: (Boolean) -> Unit = {}
@@ -187,11 +189,19 @@ fun ChatsScreen(
         }
     }
 
-    LaunchedEffect(pendingOpenChatRoomId, conversations) {
-        val chatRoomId = pendingOpenChatRoomId ?: return@LaunchedEffect
+    LaunchedEffect(
+        pendingOpenChatRoomId,
+        conversations
+    ) {
+        val chatRoomId =
+            pendingOpenChatRoomId
+                ?: return@LaunchedEffect
 
         val conversation =
-            conversations.firstOrNull { it.id == chatRoomId }
+            conversations.firstOrNull {
+                it.id == chatRoomId &&
+                    it.kind != "sms"
+            }
 
         if (conversation != null) {
             showStartChat = false
@@ -199,6 +209,29 @@ fun ChatsScreen(
             showRandomMatching = false
             selectedConversation = conversation
             onPendingOpenChatConsumed()
+        }
+    }
+
+    LaunchedEffect(
+        pendingOpenSmsThreadId,
+        conversations
+    ) {
+        val threadId =
+            pendingOpenSmsThreadId
+                ?: return@LaunchedEffect
+
+        val conversation =
+            conversations.firstOrNull {
+                it.id == threadId &&
+                    it.kind == "sms"
+            }
+
+        if (conversation != null) {
+            showStartChat = false
+            showRia = false
+            showRandomMatching = false
+            selectedConversation = conversation
+            onPendingOpenSmsConsumed()
         }
     }
 

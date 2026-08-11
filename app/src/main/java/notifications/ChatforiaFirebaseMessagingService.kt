@@ -180,6 +180,7 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
 
         val isRecognizedChatforiaPush =
             pushType == "message_new" ||
+                pushType == "sms_message" ||
                 pushType == "call_incoming" ||
                 pushType == "call_missed" ||
                 pushType == "call_ended"
@@ -367,7 +368,8 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
         }
 
         when (pushData["type"]) {
-            "message_new" -> {
+            "message_new",
+            "sms_message" -> {
                 if (ChatforiaAppState.isInForeground) {
                     Log.d(
                         "ChatforiaFCM",
