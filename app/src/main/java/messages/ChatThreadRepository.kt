@@ -27,6 +27,22 @@ interface ChatThreadRepository : MessageQueueRepository {
         mediaUrls: List<String> = emptyList()
     ): SendSmsResponse
 
+    suspend fun deleteSmsMessage(
+        messageId: Int
+    )
+
+    suspend fun reportSmsMessage(
+        messageId: Int,
+        reason: String,
+        details: String?,
+        contextCount: Int,
+        blockAfterReport: Boolean
+    ): ReportMessageResponse
+
+    suspend fun blockSmsNumber(
+        phone: String
+    )
+
     suspend fun deleteMessage(
         messageId: Int,
         deleteForEveryone: Boolean

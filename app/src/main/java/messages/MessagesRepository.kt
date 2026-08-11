@@ -211,6 +211,63 @@ class MessagesRepository(
         )
     }
 
+    override suspend fun deleteSmsMessage(
+        messageId: Int
+    ) {
+        sendRawRequest(
+            ApiRequest(
+                path = "sms/messages/$messageId",
+                method = HttpMethod.DELETE,
+                requiresAuth = true
+            )
+        )
+    }
+
+    override suspend fun reportSmsMessage(
+        messageId: Int,
+        reason: String,
+        details: String?,
+        contextCount: Int,
+        blockAfterReport: Boolean
+    ): ReportMessageResponse {
+        val bodyJson =
+            json.encodeToString(
+                ReportSmsMessageRequest(
+                    reason = reason,
+                    details = details?.trim()?.takeIf { it.isNotBlank() },
+                    contextCount = contextCount,
+                    blockAfterReport = blockAfterReport
+                )
+            )
+
+        return sendJson(
+            ApiRequest(
+                path = "sms/messages/$messageId/report",
+                method = HttpMethod.POST,
+                bodyJson = bodyJson,
+                requiresAuth = true
+            )
+        )
+    }
+
+    override suspend fun blockSmsNumber(
+        phone: String
+    ) {
+        val bodyJson =
+            json.encodeToString(
+                BlockSmsNumberRequest(phone = phone)
+            )
+
+        sendRawRequest(
+            ApiRequest(
+                path = "sms/blocked-numbers",
+                method = HttpMethod.POST,
+                bodyJson = bodyJson,
+                requiresAuth = true
+            )
+        )
+    }
+
     override suspend fun markReadBulk(
         ids: List<Int>
     ) {
@@ -343,6 +400,19 @@ data class EditMessageRequest(
     val encryptedKeys: Map<String, String>? = null,
     val encryptedPayloads: Map<String, EncryptedMessagePayloadForUser>? = null,
     val attachments: List<AttachmentDto> = emptyList()
+)
+
+@Serializable
+data class ReportSmsMessageRequest(
+    val reason: String,
+    val details: String? = null,
+    val contextCount: Int = 10,
+    val blockAfterReport: Boolean = false
+)
+
+@Serializable
+data class BlockSmsNumberRequest(
+    val phone: String
 )
 
 @Serializable
