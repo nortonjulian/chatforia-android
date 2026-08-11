@@ -4,6 +4,12 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+data class SmsMessageEvent(
+    val threadId: Int,
+    val message: SmsMessageDto
+)
+
+@Serializable
 data class SmsMessageDto(
     val id: Int,
     val threadId: Int? = null,

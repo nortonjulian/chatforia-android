@@ -3,6 +3,7 @@ package com.chatforia.android.messages
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chatforia.android.chats.ConversationDto
+import com.chatforia.android.network.ApiException
 import com.chatforia.android.crypto.MessageDecryptor
 import com.chatforia.android.socket.ChatRealtimeEvents
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +24,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import analytics.AnalyticsManager
 import analytics.AnalyticsTracker
+
+@Serializable
+private data class SmsApiErrorResponse(
+    val code: String? = null,
+    val message: String? = null
+)
+
 class ChatThreadViewModel(
     private val repository: ChatThreadRepository,
     private val keyStorage: PrivateKeyReader,
@@ -70,9 +78,40 @@ class ChatThreadViewModel(
     private val json = Json {
         ignoreUnknownKeys = true
         explicitNulls = false
+        coerceInputValues = true
+    }
+
+    private fun smsSendErrorMessage(
+        error: Exception,
+        fallback: String
+    ): String {
+        if (error !is ApiException) {
+            return error.message
+                ?.takeIf { it.isNotBlank() }
+                ?: fallback
+        }
+
+        val response =
+            runCatching {
+                json.decodeFromString<SmsApiErrorResponse>(
+                    error.responseBody
+                )
+            }.getOrNull()
+
+        return when (response?.code) {
+            "SMS_OPTED_OUT" ->
+                "This number has opted out of SMS. " +
+                    "They must reply START before you can message them again."
+
+            else ->
+                response?.message
+                    ?.takeIf { it.isNotBlank() }
+                    ?: fallback
+        }
     }
 
     private var activeRealtimeRoomId: Int? = null
+    private var activeSmsThreadId: Int? = null
     private var smsRealtimeConnected = false
     private var realtimeCollectorsStarted = false
 
@@ -195,8 +234,14 @@ class ChatThreadViewModel(
         viewModelScope.launch {
             socketManager.smsMessages.collect { smsJson ->
                 try {
-                    val incoming = json.decodeFromString<SmsMessageDto>(smsJson)
-                    mergeIncomingSms(incoming)
+                    val event =
+                        json.decodeFromString<SmsMessageEvent>(smsJson)
+
+                    if (event.threadId != activeSmsThreadId) {
+                        return@collect
+                    }
+
+                    mergeIncomingSms(event.message)
                 } catch (e: Exception) {
                     println("❌ Failed to decode sms:message:new ${e.message}")
                 }
@@ -319,6 +364,8 @@ class ChatThreadViewModel(
     }
 
     fun loadSmsThread(threadId: Int) {
+        activeSmsThreadId = threadId
+
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
@@ -663,6 +710,8 @@ class ChatThreadViewModel(
         conversation: ConversationDto,
         text: String
     ) {
+        var optimisticMessageId: Int? = null
+
         try {
             val to = conversation.phone
                 ?.trim()
@@ -675,13 +724,15 @@ class ChatThreadViewModel(
                 body = text
             )
 
+            optimisticMessageId = optimisticSms.id
             mergeIncomingSms(optimisticSms)
 
-            repository.sendSms(
-                to = to,
-                body = text,
-                mediaUrls = emptyList()
-            )
+            val response =
+                repository.sendSms(
+                    to = to,
+                    body = text,
+                    mediaUrls = emptyList()
+                )
 
             analytics.capture(
                 "sms_sent",
@@ -690,15 +741,16 @@ class ChatThreadViewModel(
                 )
             )
 
-            mergeIncomingSms(
-                optimisticSms.copy(
-                    optimistic = false,
-                    failed = false
-                )
+            reconcileSentSms(
+                optimisticMessageId = optimisticSms.id,
+                response = response
             )
         } catch (e: Exception) {
             _smsMessages.value = _smsMessages.value.map { message ->
-                if (message.optimistic) {
+                if (
+                    optimisticMessageId != null &&
+                    message.id == optimisticMessageId
+                ) {
                     message.copy(
                         optimistic = false,
                         failed = true
@@ -708,7 +760,11 @@ class ChatThreadViewModel(
                 }
             }
 
-            _error.value = e.message ?: "Failed to send SMS."
+            _error.value =
+                smsSendErrorMessage(
+                    error = e,
+                    fallback = "Failed to send SMS."
+                )
         } finally {
             _isSending.value = false
         }
@@ -718,6 +774,8 @@ class ChatThreadViewModel(
         conversation: ConversationDto,
         mediaUrls: List<String>
     ) {
+        var optimisticMessageId: Int? = null
+
         try {
             val to =
                 conversation.phone
@@ -733,13 +791,15 @@ class ChatThreadViewModel(
                     mediaUrls = mediaUrls
                 )
 
+            optimisticMessageId = optimistic.id
             mergeIncomingSms(optimistic)
 
-            repository.sendSms(
-                to = to,
-                body = null,
-                mediaUrls = mediaUrls
-            )
+            val response =
+                repository.sendSms(
+                    to = to,
+                    body = null,
+                    mediaUrls = mediaUrls
+                )
 
             analytics.capture(
                 "sms_sent",
@@ -749,15 +809,16 @@ class ChatThreadViewModel(
                 )
             )
 
-            mergeIncomingSms(
-                optimistic.copy(
-                    optimistic = false,
-                    failed = false
-                )
+            reconcileSentSms(
+                optimisticMessageId = optimistic.id,
+                response = response
             )
         } catch (e: Exception) {
             _smsMessages.value = _smsMessages.value.map { message ->
-                if (message.optimistic) {
+                if (
+                    optimisticMessageId != null &&
+                    message.id == optimisticMessageId
+                ) {
                     message.copy(
                         optimistic = false,
                         failed = true
@@ -768,7 +829,10 @@ class ChatThreadViewModel(
             }
 
             _error.value =
-                e.message ?: "Failed to send media."
+                smsSendErrorMessage(
+                    error = e,
+                    fallback = "Failed to send media."
+                )
         } finally {
             _isSending.value = false
         }
@@ -1041,19 +1105,81 @@ class ChatThreadViewModel(
         }
     }
 
+    private fun reconcileSentSms(
+        optimisticMessageId: Int,
+        response: SendSmsResponse
+    ) {
+        val canonical = response.message
+
+        if (canonical != null) {
+            _smsMessages.value =
+                _smsMessages.value.filterNot { message ->
+                    message.id == optimisticMessageId
+                }
+
+            mergeIncomingSms(canonical)
+            return
+        }
+
+        /*
+         * Compatibility fallback for a server that has not yet begun
+         * returning the canonical database message.
+         */
+        val messageSid =
+            response.messageSid
+                ?.takeIf { it.isNotBlank() }
+
+        val canonicalAlreadyPresent =
+            messageSid != null &&
+                _smsMessages.value.any { message ->
+                    message.id != optimisticMessageId &&
+                        message.providerMessageId == messageSid
+                }
+
+        if (canonicalAlreadyPresent) {
+            _smsMessages.value =
+                _smsMessages.value.filterNot { message ->
+                    message.id == optimisticMessageId
+                }
+            return
+        }
+
+        _smsMessages.value =
+            _smsMessages.value.map { message ->
+                if (message.id == optimisticMessageId) {
+                    message.copy(
+                        threadId = response.threadId,
+                        provider =
+                            response.provider
+                                ?: message.provider,
+                        providerMessageId =
+                            messageSid
+                                ?: message.providerMessageId,
+                        optimistic = false,
+                        failed = false
+                    )
+                } else {
+                    message
+                }
+            }
+    }
+
     private fun mergeIncomingSms(incoming: SmsMessageDto) {
         val incomingId = incoming.id
 
         val current = _smsMessages.value.toMutableList()
 
+        val incomingProviderMessageId =
+            incoming.providerMessageId
+                ?.takeIf { it.isNotBlank() }
+
         val index = current.indexOfFirst { existing ->
-            when {
-                incomingId > 0 -> existing.id == incomingId
-                incomingId < 0 -> existing.id == incomingId
-                !incoming.providerMessageId.isNullOrBlank() ->
-                    existing.providerMessageId == incoming.providerMessageId
-                else -> false
-            }
+            existing.id == incomingId ||
+                (
+                    incomingProviderMessageId != null &&
+                        existing.providerMessageId ==
+                            incomingProviderMessageId
+                )
         }
 
         if (index >= 0) {
