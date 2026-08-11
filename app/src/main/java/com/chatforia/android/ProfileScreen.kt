@@ -97,6 +97,9 @@ import androidx.compose.material.icons.filled.Accessibility
 import com.chatforia.android.forwarding.ForwardingSettingsRepository
 import com.chatforia.android.forwarding.ForwardingSettingsView
 import com.chatforia.android.forwarding.ForwardingSettingsViewModel
+import com.chatforia.android.blocking.BlockedNumbersRepository
+import com.chatforia.android.blocking.BlockedNumbersView
+import com.chatforia.android.blocking.BlockedNumbersViewModel
 import com.chatforia.android.auth.AppLocaleManager
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
@@ -251,6 +254,14 @@ fun ProfileScreen(
 
     var showPhoneNumbers by remember { mutableStateOf(false) }
 
+    var showBlockedNumbers by remember { mutableStateOf(false) }
+
+    val blockedNumbersViewModel = remember {
+        BlockedNumbersViewModel(
+            BlockedNumbersRepository(apiClient)
+        )
+    }
+
     val keySetupViewModel =
         remember(user.id) {
             KeySetupViewModel(
@@ -384,6 +395,16 @@ fun ProfileScreen(
             onUpgradeRequired = {
                 showPhoneNumbers = false
                 showUpgrade = true
+            }
+        )
+        return
+    }
+
+    if (showBlockedNumbers) {
+        BlockedNumbersView(
+            viewModel = blockedNumbersViewModel,
+            onBack = {
+                showBlockedNumbers = false
             }
         )
         return
@@ -730,6 +751,26 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         ChatforiaSectionCard(title = stringResource(R.string.android_profile_privacy)) {
+            ProfileRow(
+                icon = Icons.Default.Security,
+                title =
+                    stringResource(
+                        R.string.android_blocked_numbers_title
+                    ),
+                subtitle =
+                    stringResource(
+                        R.string.android_blocked_numbers_profile_description
+                    ),
+                showChevron = true,
+                onClick = {
+                    showBlockedNumbers = true
+                }
+            )
+
+            HorizontalDivider(
+                color = ChatforiaColors.border
+            )
+
             Text(
                 text = "Who can find me",
                 style = MaterialTheme.typography.bodyLarge,

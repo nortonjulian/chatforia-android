@@ -5,7 +5,9 @@ import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -55,6 +57,7 @@ import com.chatforia.android.calls.AndroidCallManager
 import com.chatforia.android.ui.components.ChatforiaAction
 import com.chatforia.android.ui.components.ChatforiaActionPill
 import kotlinx.coroutines.CoroutineScope
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Stop
@@ -66,6 +69,7 @@ import com.chatforia.android.ria.RiaRewriteSheet
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
@@ -74,7 +78,10 @@ import android.content.Context
 import android.content.ContextWrapper
 import com.chatforia.android.ads.InterstitialAdManager
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalFoundationApi::class
+)
 @Composable
 fun ChatThreadScreen(
     conversation: ConversationDto,
@@ -114,6 +121,8 @@ fun ChatThreadScreen(
     var editingMessage by remember { mutableStateOf<MessageDto?>(null) }
 
     var reportingMessage by remember { mutableStateOf<MessageDto?>(null) }
+    var reportingSmsMessage by remember { mutableStateOf<SmsMessageDto?>(null) }
+    var blockingSmsMessage by remember { mutableStateOf<SmsMessageDto?>(null) }
     var receiptMessage by remember { mutableStateOf<MessageDto?>(null) }
 
     var showEditSheet by remember { mutableStateOf(false) }
@@ -496,7 +505,16 @@ fun ChatThreadScreen(
                                 ) { message ->
                                     SmsMessageBubble(
                                         message = message,
-                                        isMine = message.isOutgoing
+                                        isMine = message.isOutgoing,
+                                        onDeleteForMe = {
+                                            viewModel.deleteSmsMessage(message)
+                                        },
+                                        onReport = {
+                                            reportingSmsMessage = message
+                                        },
+                                        onBlockNumber = {
+                                            blockingSmsMessage = message
+                                        }
                                     )
                                 }
                             } else {
@@ -991,6 +1009,92 @@ fun ChatThreadScreen(
                 )
             }
 
+            if (reportingSmsMessage != null) {
+                ReportSmsMessageSheet(
+                    message = reportingSmsMessage!!,
+                    onCancel = {
+                        reportingSmsMessage = null
+                    },
+                    onSubmit = {
+                        reason,
+                        details,
+                        contextCount,
+                        blockAfterReport ->
+
+                        reportingSmsMessage?.let { message ->
+                            viewModel.reportSmsMessage(
+                                message = message,
+                                reason = reason,
+                                details = details,
+                                contextCount = contextCount,
+                                blockAfterReport = blockAfterReport
+                            )
+                        }
+
+                        reportingSmsMessage = null
+                    }
+                )
+            }
+
+            blockingSmsMessage?.let { message ->
+                val phone =
+                    message.fromNumber
+                        ?.trim()
+                        ?.takeIf { it.isNotBlank() }
+                        ?: "Unknown number"
+
+                AlertDialog(
+                    onDismissRequest = {
+                        blockingSmsMessage = null
+                    },
+                    title = {
+                        Text(
+                            stringResource(
+                                R.string.android_sms_block_number_title
+                            )
+                        )
+                    },
+                    text = {
+                        Text(
+                            stringResource(
+                                R.string.android_sms_block_number_confirmation,
+                                phone
+                            )
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                viewModel.blockSmsNumber(
+                                    message.fromNumber
+                                )
+                                blockingSmsMessage = null
+                            }
+                        ) {
+                            Text(
+                                stringResource(
+                                    R.string.android_sms_block_number_confirm
+                                ),
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = {
+                                blockingSmsMessage = null
+                            }
+                        ) {
+                            Text(
+                                stringResource(
+                                    R.string.android_chats_cancel
+                                )
+                            )
+                        }
+                    }
+                )
+            }
+
             if (receiptMessage != null) {
                 MessageReceiptSheet(
                     message = receiptMessage!!,
@@ -1183,74 +1287,177 @@ private fun CompactRandomChatControls(
 @Composable
 private fun SmsMessageBubble(
     message: SmsMessageDto,
-    isMine: Boolean
+    isMine: Boolean,
+    onDeleteForMe: () -> Unit,
+    onReport: () -> Unit,
+    onBlockNumber: () -> Unit
 ) {
-    val displayText = message.displayFallbackText
+    var showMenu by remember { mutableStateOf(false) }
+
+    val clipboard =
+        LocalClipboardManager.current
+
+    val displayText =
+        message.displayFallbackText
 
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement =
             if (isMine) Arrangement.End else Arrangement.Start
     ) {
-        Surface(
-            shape = RoundedCornerShape(
-                topStart = 18.dp,
-                topEnd = 18.dp,
-                bottomStart = if (isMine) 18.dp else 4.dp,
-                bottomEnd = if (isMine) 4.dp else 18.dp
-            ),
-            color =
-                if (isMine) {
-                    ChatforiaColors.accent
-                } else {
-                    ChatforiaColors.cardBackground
-                },
-            modifier = Modifier.widthIn(max = 300.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(12.dp)
-            ) {
-                Text(
-                    text = displayText,
-                    color =
-                        if (isMine) {
-                            MaterialTheme.colorScheme.onPrimary
-                        } else {
-                            ChatforiaColors.primaryText
+        Box {
+            Surface(
+                shape = RoundedCornerShape(
+                    topStart = 18.dp,
+                    topEnd = 18.dp,
+                    bottomStart = if (isMine) 18.dp else 4.dp,
+                    bottomEnd = if (isMine) 4.dp else 18.dp
+                ),
+                color =
+                    if (isMine) {
+                        ChatforiaColors.accent
+                    } else {
+                        ChatforiaColors.cardBackground
+                    },
+                modifier = Modifier
+                    .widthIn(max = 300.dp)
+                    .combinedClickable(
+                        onClick = {},
+                        onLongClick = {
+                            showMenu = true
                         }
-                )
-
-                if (message.optimistic) {
+                    )
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp)
+                ) {
                     Text(
-                        text = stringResource(R.string.android_chat_thread_sending),
-                        style = MaterialTheme.typography.labelSmall,
+                        text = displayText,
                         color =
                             if (isMine) {
-                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.75f)
+                                MaterialTheme.colorScheme.onPrimary
                             } else {
-                                ChatforiaColors.secondaryText
+                                ChatforiaColors.primaryText
                             }
+                    )
+
+                    if (message.optimistic) {
+                        Text(
+                            text = stringResource(
+                                R.string.android_chat_thread_sending
+                            ),
+                            style = MaterialTheme.typography.labelSmall,
+                            color =
+                                if (isMine) {
+                                    MaterialTheme.colorScheme.onPrimary.copy(
+                                        alpha = 0.75f
+                                    )
+                                } else {
+                                    ChatforiaColors.secondaryText
+                                }
+                        )
+                    }
+
+                    if (message.failed) {
+                        Text(
+                            text = stringResource(
+                                R.string.android_chat_thread_failed_to_send
+                            ),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+
+                    if (message.editedAt != null) {
+                        Text(
+                            text = stringResource(
+                                R.string.android_chat_thread_edited
+                            ),
+                            style = MaterialTheme.typography.labelSmall,
+                            color =
+                                if (isMine) {
+                                    MaterialTheme.colorScheme.onPrimary.copy(
+                                        alpha = 0.75f
+                                    )
+                                } else {
+                                    ChatforiaColors.secondaryText
+                                }
+                        )
+                    }
+                }
+            }
+
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = {
+                    showMenu = false
+                }
+            ) {
+                if (displayText.isNotBlank()) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                stringResource(
+                                    R.string.android_chat_message_row_copy
+                                )
+                            )
+                        },
+                        onClick = {
+                            clipboard.setText(
+                                AnnotatedString(displayText)
+                            )
+                            showMenu = false
+                        }
                     )
                 }
 
-                if (message.failed) {
-                    Text(
-                        text = stringResource(R.string.android_chat_thread_failed_to_send),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.error
+                if (!message.optimistic && message.id > 0) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                stringResource(
+                                    R.string.android_chat_thread_delete_for_me
+                                )
+                            )
+                        },
+                        onClick = {
+                            showMenu = false
+                            onDeleteForMe()
+                        }
                     )
                 }
 
-                if (message.editedAt != null) {
-                    Text(
-                        text = stringResource(R.string.android_chat_thread_edited),
-                        style = MaterialTheme.typography.labelSmall,
-                        color =
-                            if (isMine) {
-                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.75f)
-                            } else {
-                                ChatforiaColors.secondaryText
-                            }
+                if (
+                    !isMine &&
+                    !message.optimistic &&
+                    message.id > 0
+                ) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                stringResource(
+                                    R.string.android_sms_message_report
+                                )
+                            )
+                        },
+                        onClick = {
+                            showMenu = false
+                            onReport()
+                        }
+                    )
+
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                stringResource(
+                                    R.string.android_sms_message_block_number
+                                )
+                            )
+                        },
+                        onClick = {
+                            showMenu = false
+                            onBlockNumber()
+                        }
                     )
                 }
             }

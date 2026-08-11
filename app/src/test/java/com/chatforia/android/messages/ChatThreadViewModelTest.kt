@@ -1388,6 +1388,34 @@ class ChatThreadViewModelTest {
             return deltasToLoad
         }
 
+        override suspend fun deleteSmsMessage(
+            messageId: Int
+        ) {
+            throw AssertionError(
+                "deleteSmsMessage should not be called in this test."
+            )
+        }
+
+        override suspend fun reportSmsMessage(
+            messageId: Int,
+            reason: String,
+            details: String?,
+            contextCount: Int,
+            blockAfterReport: Boolean
+        ): ReportMessageResponse {
+            throw AssertionError(
+                "reportSmsMessage should not be called in this test."
+            )
+        }
+
+        override suspend fun blockSmsNumber(
+            phone: String
+        ) {
+            throw AssertionError(
+                "blockSmsNumber should not be called in this test."
+            )
+        }
+
         override suspend fun deleteMessage(
             messageId: Int,
             deleteForEveryone: Boolean

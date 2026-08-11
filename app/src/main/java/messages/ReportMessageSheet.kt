@@ -22,17 +22,86 @@ fun ReportMessageSheet(
         blockAfterReport: Boolean
     ) -> Unit
 ) {
-    var reason by remember { mutableStateOf("harassment") }
-    var details by remember { mutableStateOf("") }
-    var contextCount by remember { mutableStateOf(10) }
-    var blockAfterReport by remember { mutableStateOf(true) }
-
     val previewText =
         message.decryptedContent
             ?: message.translatedForMe
             ?: message.rawContent
             ?: message.content
             ?: "[No visible text]"
+
+    ReportMessageSheetContent(
+        previewText = previewText,
+        reportingLabel =
+            "Reporting message from ${message.sender.username ?: "Unknown user"}",
+        blockLabel =
+            stringResource(
+                R.string.android_report_message_block_this_user_after_reporting
+            ),
+        initialBlockAfterReport = true,
+        onCancel = onCancel,
+        onSubmit = onSubmit
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ReportSmsMessageSheet(
+    message: SmsMessageDto,
+    onCancel: () -> Unit,
+    onSubmit: (
+        reason: String,
+        details: String,
+        contextCount: Int,
+        blockAfterReport: Boolean
+    ) -> Unit
+) {
+    val sender =
+        message.fromNumber
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+            ?: "Unknown number"
+
+    ReportMessageSheetContent(
+        previewText =
+            message.displayFallbackText.ifBlank {
+                "[No visible text]"
+            },
+        reportingLabel =
+            stringResource(
+                R.string.android_sms_report_reporting_from,
+                sender
+            ),
+        blockLabel =
+            stringResource(
+                R.string.android_sms_report_block_number_after_reporting
+            ),
+        initialBlockAfterReport = false,
+        onCancel = onCancel,
+        onSubmit = onSubmit
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReportMessageSheetContent(
+    previewText: String,
+    reportingLabel: String,
+    blockLabel: String,
+    initialBlockAfterReport: Boolean,
+    onCancel: () -> Unit,
+    onSubmit: (
+        reason: String,
+        details: String,
+        contextCount: Int,
+        blockAfterReport: Boolean
+    ) -> Unit
+) {
+    var reason by remember { mutableStateOf("harassment") }
+    var details by remember { mutableStateOf("") }
+    var contextCount by remember { mutableStateOf(10) }
+    var blockAfterReport by remember(initialBlockAfterReport) {
+        mutableStateOf(initialBlockAfterReport)
+    }
 
     ModalBottomSheet(
         onDismissRequest = onCancel
@@ -44,18 +113,28 @@ fun ReportMessageSheet(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = stringResource(R.string.android_report_message_report_message),
+                text = stringResource(
+                    R.string.android_report_message_report_message
+                ),
                 style = MaterialTheme.typography.titleLarge
             )
 
-            Text(stringResource(R.string.android_report_message_reason))
+            Text(
+                stringResource(
+                    R.string.android_report_message_reason
+                )
+            )
 
             ReasonDropdown(
                 selected = reason,
                 onSelected = { reason = it }
             )
 
-            Text(stringResource(R.string.android_report_message_include_previous_messages))
+            Text(
+                stringResource(
+                    R.string.android_report_message_include_previous_messages
+                )
+            )
 
             ContextDropdown(
                 selected = contextCount,
@@ -66,8 +145,20 @@ fun ReportMessageSheet(
                 value = details,
                 onValueChange = { details = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text(stringResource(R.string.android_report_message_additional_details)) },
-                placeholder = { Text(stringResource(R.string.android_report_message_anything_else_moderators_should_know)) },
+                label = {
+                    Text(
+                        stringResource(
+                            R.string.android_report_message_additional_details
+                        )
+                    )
+                },
+                placeholder = {
+                    Text(
+                        stringResource(
+                            R.string.android_report_message_anything_else_moderators_should_know
+                        )
+                    )
+                },
                 minLines = 3,
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Sentences
@@ -78,11 +169,13 @@ fun ReportMessageSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(stringResource(R.string.android_report_message_block_this_user_after_reporting))
+                Text(blockLabel)
 
                 Switch(
                     checked = blockAfterReport,
-                    onCheckedChange = { blockAfterReport = it }
+                    onCheckedChange = {
+                        blockAfterReport = it
+                    }
                 )
             }
 
@@ -92,7 +185,7 @@ fun ReportMessageSheet(
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        text = "Reporting message from ${message.sender.username ?: "Unknown user"}",
+                        text = reportingLabel,
                         style = MaterialTheme.typography.labelMedium
                     )
 
@@ -108,7 +201,11 @@ fun ReportMessageSheet(
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(onClick = onCancel) {
-                    Text(stringResource(R.string.android_chats_cancel))
+                    Text(
+                        stringResource(
+                            R.string.android_chats_cancel
+                        )
+                    )
                 }
 
                 Button(
@@ -121,10 +218,15 @@ fun ReportMessageSheet(
                         )
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
+                        containerColor =
+                            MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text(stringResource(R.string.android_report_message_submit_report))
+                    Text(
+                        stringResource(
+                            R.string.android_report_message_submit_report
+                        )
+                    )
                 }
             }
         }

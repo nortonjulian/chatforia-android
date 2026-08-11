@@ -397,6 +397,36 @@ class ChatThreadViewModel(
         }
     }
 
+    fun deleteSmsMessage(
+        message: SmsMessageDto
+    ) {
+        if (message.id <= 0) {
+            _smsMessages.value =
+                _smsMessages.value.filterNot { it.id == message.id }
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                repository.deleteSmsMessage(message.id)
+
+                _smsMessages.value =
+                    _smsMessages.value.filterNot { it.id == message.id }
+
+                analytics.capture(
+                    "sms_message_deleted_for_me",
+                    mapOf(
+                        "messageId" to message.id,
+                        "direction" to message.direction
+                    )
+                )
+            } catch (e: Exception) {
+                _error.value =
+                    e.message ?: "Failed to delete SMS message."
+            }
+        }
+    }
+
     fun deleteMessage(
         message: MessageDto,
         deleteForEveryone: Boolean
@@ -539,6 +569,61 @@ class ChatThreadViewModel(
                 messageStore.upsert(displayUpdated)
             } catch (e: Exception) {
                 _error.value = e.message ?: "Failed to edit message."
+            }
+        }
+    }
+
+    fun reportSmsMessage(
+        message: SmsMessageDto,
+        reason: String,
+        details: String,
+        contextCount: Int,
+        blockAfterReport: Boolean
+    ) {
+        if (message.id <= 0 || message.isOutgoing) return
+
+        viewModelScope.launch {
+            try {
+                repository.reportSmsMessage(
+                    messageId = message.id,
+                    reason = reason,
+                    details = details,
+                    contextCount = contextCount,
+                    blockAfterReport = blockAfterReport
+                )
+
+                analytics.capture(
+                    "sms_message_reported",
+                    mapOf(
+                        "messageId" to message.id,
+                        "reason" to reason,
+                        "blockAfterReport" to blockAfterReport
+                    )
+                )
+            } catch (e: Exception) {
+                _error.value =
+                    e.message ?: "Failed to report SMS message."
+            }
+        }
+    }
+
+    fun blockSmsNumber(
+        phone: String?
+    ) {
+        val normalizedPhone =
+            phone?.trim()?.takeIf { it.isNotBlank() } ?: return
+
+        viewModelScope.launch {
+            try {
+                repository.blockSmsNumber(normalizedPhone)
+
+                analytics.capture(
+                    "sms_number_blocked",
+                    mapOf("phone" to normalizedPhone)
+                )
+            } catch (e: Exception) {
+                _error.value =
+                    e.message ?: "Failed to block phone number."
             }
         }
     }
