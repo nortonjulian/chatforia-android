@@ -43,6 +43,8 @@ class PushTokenRegistrar(
     private val linkedDevicesRepository: LinkedDevicesDataSource,
     private val fcmTokenProvider: FcmTokenProvider =
         FirebaseFcmTokenProvider(),
+    private val pendingFcmTokenStore:
+        PendingFcmTokenStore? = null,
     private val twilioVoicePushRegistrar:
         TwilioVoicePushRegistrar? = null
 ) : PushTokenRegisterer {
@@ -155,25 +157,42 @@ class PushTokenRegistrar(
             )
         }
 
+        val pendingToken =
+            pendingFcmTokenStore
+                ?.read()
+                ?.trim()
+                ?.takeIf {
+                    it.isNotBlank()
+                }
+
         val token =
-            try {
-                fcmTokenProvider.currentToken()
-            } catch (error: Exception) {
-                Log.e(
+            if (pendingToken != null) {
+                Log.d(
                     "ChatforiaFCM",
-                    "Could not get FCM token",
-                    error
+                    "Using persisted FCM token for reconciliation"
                 )
 
-                return PushRegistrationResult.Failed(
-                    error.message
-                        ?: "Could not obtain the notification token."
-                )
+                pendingToken
+            } else {
+                try {
+                    fcmTokenProvider.currentToken()
+                } catch (error: Exception) {
+                    Log.e(
+                        "ChatforiaFCM",
+                        "Could not get FCM token",
+                        error
+                    )
+
+                    return PushRegistrationResult.Failed(
+                        error.message
+                            ?: "Could not obtain the notification token."
+                    )
+                }
             }
 
         Log.d(
             "ChatforiaFCM",
-            "FCM token acquired: ${token.take(24)}..."
+            "FCM token ready for reconciliation; length=${token.length}"
         )
 
         try {
@@ -181,6 +200,9 @@ class PushTokenRegistrar(
                 deviceId = deviceId,
                 pushToken = token
             )
+
+            pendingFcmTokenStore
+                ?.clearIfMatches(token)
 
             Log.d(
                 "ChatforiaFCM",
@@ -223,12 +245,16 @@ class PushTokenRegistrar(
         )
 
         if (!twilioRegistered) {
-            return PushRegistrationResult.Failed(
-                "Could not register this device for incoming voice calls."
+            Log.w(
+                "ChatforiaTwilioVoice",
+                "Backend FCM registration succeeded, but Twilio Voice registration is pending"
             )
         }
 
-        return PushRegistrationResult.Success
+        return PushRegistrationResult.Success(
+            twilioVoiceRegistered =
+                twilioRegistered
+        )
     }
     override suspend fun unregisterCurrentDevice(
         authToken: String

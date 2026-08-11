@@ -53,6 +53,134 @@ class PushTokenRegistrarTest {
         }
 
     @Test
+    fun registerCurrentFcmToken_prefersPendingTokenAndClearsItAfterBackendBind() =
+        runTest {
+            val identityStore =
+                FakeDeviceIdentityStore()
+
+            val linkedDevices =
+                FakeLinkedDevicesDataSource()
+
+            val fcmTokenProvider =
+                FakeFcmTokenProvider(
+                    token = "firebase-current-token"
+                )
+
+            val pendingStore =
+                FakePendingFcmTokenStore(
+                    token = "persisted-refresh-token"
+                )
+
+            val registrar =
+                PushTokenRegistrar(
+                    deviceIdentityStorage =
+                        identityStore,
+                    linkedDevicesRepository =
+                        linkedDevices,
+                    fcmTokenProvider =
+                        fcmTokenProvider,
+                    pendingFcmTokenStore =
+                        pendingStore
+                )
+
+            val result =
+                registrar.registerCurrentFcmToken()
+
+            assertEquals(
+                PushRegistrationResult.Success(
+                    twilioVoiceRegistered = false
+                ),
+                result
+            )
+
+            assertEquals(
+                0,
+                fcmTokenProvider.currentTokenCallCount
+            )
+
+            assertEquals(
+                listOf(
+                    "device-123" to
+                        "persisted-refresh-token"
+                ),
+                linkedDevices.pushTokenRequests
+            )
+
+            assertEquals(
+                listOf("persisted-refresh-token"),
+                pendingStore.clearedTokens
+            )
+
+            assertEquals(
+                null,
+                pendingStore.read()
+            )
+        }
+
+    @Test
+    fun registerCurrentFcmToken_keepsPendingTokenWhenBackendBindFails() =
+        runTest {
+            val identityStore =
+                FakeDeviceIdentityStore()
+
+            val linkedDevices =
+                FakeLinkedDevicesDataSource().apply {
+                    throwOnRegisterPushToken = true
+                }
+
+            val fcmTokenProvider =
+                FakeFcmTokenProvider(
+                    token = "firebase-current-token"
+                )
+
+            val pendingStore =
+                FakePendingFcmTokenStore(
+                    token = "persisted-refresh-token"
+                )
+
+            val registrar =
+                PushTokenRegistrar(
+                    deviceIdentityStorage =
+                        identityStore,
+                    linkedDevicesRepository =
+                        linkedDevices,
+                    fcmTokenProvider =
+                        fcmTokenProvider,
+                    pendingFcmTokenStore =
+                        pendingStore
+                )
+
+            val result =
+                registrar.registerCurrentFcmToken()
+
+            assertTrue(
+                result is PushRegistrationResult.Failed
+            )
+
+            assertEquals(
+                0,
+                fcmTokenProvider.currentTokenCallCount
+            )
+
+            assertEquals(
+                listOf(
+                    "device-123" to
+                        "persisted-refresh-token"
+                ),
+                linkedDevices.pushTokenRequests
+            )
+
+            assertTrue(
+                pendingStore.clearedTokens.isEmpty()
+            )
+
+            assertEquals(
+                "persisted-refresh-token",
+                pendingStore.read()
+            )
+        }
+
+    @Test
     fun registerCurrentFcmToken_usesSameDeviceIdForDeviceAndPushToken() =
         runTest {
             val identityStore =
@@ -296,8 +424,8 @@ class PushTokenRegistrarTest {
                 )
 
             assertEquals(
-                PushRegistrationResult.Failed(
-                    "Could not register this device for incoming voice calls."
+                PushRegistrationResult.Success(
+                    twilioVoiceRegistered = false
                 ),
                 secondResult
             )
@@ -330,6 +458,35 @@ class PushTokenRegistrarTest {
                 linkedDevices.pushTokenRequests
             )
         }
+
+    private class FakePendingFcmTokenStore(
+        token: String? = null
+    ) : PendingFcmTokenStore {
+
+        private var storedToken: String? =
+            token
+
+        val clearedTokens =
+            mutableListOf<String>()
+
+        override fun save(token: String) {
+            storedToken =
+                token
+        }
+
+        override fun read(): String? {
+            return storedToken
+        }
+
+        override fun clearIfMatches(
+            token: String
+        ) {
+            if (storedToken == token) {
+                clearedTokens.add(token)
+                storedToken = null
+            }
+        }
+    }
 
     private class FakeDeviceIdentityStore(
         private val deviceId: String = "device-123",

@@ -73,6 +73,8 @@ import com.chatforia.android.crypto.DeviceProvisioningCrypto
 import com.chatforia.android.crypto.DeviceIdentityStorage
 import com.chatforia.android.crypto.KeyRestoreGate
 import com.chatforia.android.notifications.PushTokenRegistrar
+import com.chatforia.android.notifications.PendingFcmTokenStorage
+import com.chatforia.android.notifications.PushReconciliationScheduler
 import com.chatforia.android.notifications.NotificationCoordinator
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -227,6 +229,14 @@ class MainActivity : ComponentActivity() {
         return AppLocaleManager.wrapContext(baseContext).resources
     }
 
+    override fun onStart() {
+        super.onStart()
+
+        PushReconciliationScheduler.enqueue(
+            applicationContext
+        )
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -327,6 +337,9 @@ class MainActivity : ComponentActivity() {
                             PushTokenRegistrar(
                                 deviceIdentityStorage = DeviceIdentityStorage(applicationContext),
                                 linkedDevicesRepository = LinkedDevicesRepository(apiClient),
+                                pendingFcmTokenStore = PendingFcmTokenStorage(
+                                    applicationContext
+                                ),
                                 twilioVoicePushRegistrar = TwilioVoicePushRegistrar(
                                     callService = CallService(apiClient)
                                 )

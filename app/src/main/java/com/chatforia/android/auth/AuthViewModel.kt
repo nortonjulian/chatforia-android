@@ -56,8 +56,15 @@ class AuthViewModel(
                         replaceDeviceId = replaceDeviceId
                     )
             ) {
-                PushRegistrationResult.Success -> {
+                is PushRegistrationResult.Success -> {
                     _deviceReplacementPrompt.value = null
+
+                    if (!result.twilioVoiceRegistered) {
+                        android.util.Log.w(
+                            "ChatforiaTwilioVoice",
+                            "FCM is registered with Chatforia; Twilio Voice registration remains pending"
+                        )
+                    }
                 }
 
                 is PushRegistrationResult.ReplacementRequired -> {

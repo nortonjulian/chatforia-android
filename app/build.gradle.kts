@@ -120,6 +120,9 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
+    // Durable background reconciliation
+    implementation("androidx.work:work-runtime-ktx:2.11.2")
+
     // Google Play Billing
     implementation("com.android.billingclient:billing-ktx:9.1.0")
 

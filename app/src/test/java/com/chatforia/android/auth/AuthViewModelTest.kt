@@ -494,7 +494,9 @@ class AuthViewModelTest {
             )
 
             pushRegisterer.result =
-                PushRegistrationResult.Success
+                PushRegistrationResult.Success(
+                    twilioVoiceRegistered = true
+                )
 
             viewModel.confirmDeviceReplacement(
                 replaceDeviceId = "device-old"
@@ -552,7 +554,9 @@ class AuthViewModelTest {
         val replaceDeviceIds = mutableListOf<String?>()
 
         var result: PushRegistrationResult =
-            PushRegistrationResult.Success
+            PushRegistrationResult.Success(
+                twilioVoiceRegistered = true
+            )
 
         override suspend fun registerCurrentFcmToken(
             replaceDeviceId: String?

@@ -4,7 +4,9 @@ import com.chatforia.android.crypto.LinkedDeviceDto
 
 sealed interface PushRegistrationResult {
 
-    data object Success : PushRegistrationResult
+    data class Success(
+        val twilioVoiceRegistered: Boolean
+    ) : PushRegistrationResult
 
     data class ReplacementRequired(
         val existingDevices: List<LinkedDeviceDto>,
