@@ -81,6 +81,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
+import com.chatforia.android.sounds.AudioPlayerService
+import com.chatforia.android.sounds.resolvedMessageToneForPlan
 import com.chatforia.android.ui.theme.ThemePreferenceStorage
 import com.chatforia.android.crypto.KeyStorage
 import com.chatforia.android.ria.RiaRepository
@@ -746,6 +748,36 @@ class MainActivity : ComponentActivity() {
     ) {
         var selectedTab by remember {
             mutableStateOf(AppTab.CHATS)
+        }
+
+        /*
+         * NotificationCoordinator runs outside Compose when a
+         * background FCM message arrives, so persist the resolved
+         * account tone as soon as the authenticated app shell loads.
+         * This avoids requiring the user to visit Profile first.
+         */
+        LaunchedEffect(
+            user.id,
+            user.messageTone,
+            user.messageSound,
+            user.tone,
+            user.plan
+        ) {
+            val accountMessageTone =
+                user.messageTone
+                    ?: user.messageSound
+                    ?: user.tone
+
+            val resolvedMessageTone =
+                resolvedMessageToneForPlan(
+                    filename = accountMessageTone,
+                    plan = user.plan
+                )
+
+            AudioPlayerService.saveMessageTone(
+                context = this@MainActivity,
+                messageTone = resolvedMessageTone
+            )
         }
 
         LaunchedEffect(
