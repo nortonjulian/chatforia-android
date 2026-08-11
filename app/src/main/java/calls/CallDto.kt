@@ -60,7 +60,14 @@ data class StartExternalCallRequest(
 data class EndCallRequest(
     val callId: Int,
     val reason: String? = null,
-    val durationSec: Int? = null
+    val durationSec: Int? = null,
+    val deviceId: String? = null
+)
+
+@Serializable
+data class CallStatusUpdateRequest(
+    val status: String,
+    val deviceId: String? = null
 )
 
 @Serializable

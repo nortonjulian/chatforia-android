@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewModelScope
 import com.chatforia.android.auth.UserDto
+import com.chatforia.android.crypto.DeviceIdentityStorage
 import com.chatforia.android.notifications.NotificationCoordinator
 import com.chatforia.android.notifications.IncomingCallActionEvents
 import com.chatforia.android.network.ApiException
@@ -37,6 +38,10 @@ class AndroidCallManager(
     private val ringtonePlayer: CallRingtonePlayer = AudioCallRingtonePlayer(context),
     private val callDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val analytics: AnalyticsTracker = AnalyticsManager,
+    private val deviceIdProvider: () -> String = {
+        DeviceIdentityStorage(context.applicationContext)
+            .getOrCreateDeviceId()
+    },
     private val permissionChecker: (Context, String) -> Boolean =
         { permissionContext, permission ->
             ContextCompat.checkSelfPermission(
@@ -323,7 +328,13 @@ class AndroidCallManager(
 
                 outgoingAudioIntentPending = false
 
-                val token = callService.fetchVoiceToken()
+                val deviceId =
+                deviceIdProvider()
+
+            val token =
+                callService.fetchVoiceToken(
+                    deviceId
+                )
 
                 voiceManager.startCall(
                     accessToken = token.token,
@@ -387,7 +398,8 @@ class AndroidCallManager(
                                     runCatching {
                                         callService.endCall(
                                             callId = callId,
-                                            reason = "failed"
+                                            reason = "failed",
+                                            deviceId = deviceIdProvider()
                                         )
                                     }
                                 }
@@ -484,7 +496,8 @@ class AndroidCallManager(
                     runCatching {
                         callService.endCall(
                             callId = callId,
-                            reason = "failed"
+                            reason = "failed",
+                            deviceId = deviceIdProvider()
                         )
                     }
                 }
@@ -544,7 +557,13 @@ class AndroidCallManager(
                 _state.value =
                     AndroidCallState.Connecting(session)
 
-                val token = callService.fetchVoiceToken()
+                val deviceId =
+                deviceIdProvider()
+
+            val token =
+                callService.fetchVoiceToken(
+                    deviceId
+                )
 
                 voiceManager.startCall(
                     accessToken = token.token,
@@ -584,7 +603,8 @@ class AndroidCallManager(
                                     runCatching {
                                         callService.endCall(
                                             callId = callId,
-                                            reason = "failed"
+                                            reason = "failed",
+                                            deviceId = deviceIdProvider()
                                         )
                                     }
                                 }
@@ -636,7 +656,8 @@ class AndroidCallManager(
                     runCatching {
                         callService.endCall(
                             callId = callId,
-                            reason = "failed"
+                            reason = "failed",
+                            deviceId = deviceIdProvider()
                         )
                     }
                 }
@@ -796,7 +817,8 @@ class AndroidCallManager(
                                         callService.endCall(
                                             callId =
                                                 callId,
-                                            reason = "failed"
+                                            reason = "failed",
+                                            deviceId = deviceIdProvider()
                                         )
                                     }
                                 }
@@ -845,7 +867,8 @@ class AndroidCallManager(
                     runCatching {
                         callService.endCall(
                             callId = callId,
-                            reason = "failed"
+                            reason = "failed",
+                            deviceId = deviceIdProvider()
                         )
                     }
                 }
@@ -905,7 +928,8 @@ class AndroidCallManager(
                 runCatching {
                     callService.endCall(
                         callId = outgoingCallId,
-                        reason = "caller_canceled"
+                        reason = "caller_canceled",
+                        deviceId = deviceIdProvider()
                     )
                 }.onSuccess {
                     CallLifecyclePushEvents
@@ -1035,7 +1059,49 @@ class AndroidCallManager(
         }
     }
 
-    private fun acceptIncomingAudio(payload: IncomingCallPayload) {
+    private fun dismissAnsweredElsewhere(
+        callId: Int?
+    ) {
+        val currentCallId =
+            when (val current = _state.value) {
+                is AndroidCallState.Ringing ->
+                    current.payload.callId
+
+                is AndroidCallState.Connecting ->
+                    current.session.callId
+
+                is AndroidCallState.Active ->
+                    current.session.callId
+
+                else -> null
+            }
+
+        if (
+            callId != null &&
+            currentCallId != null &&
+            callId != currentCallId
+        ) {
+            return
+        }
+
+        cancelIncomingRingTimeout()
+        ringtonePlayer.stop()
+
+        NotificationCoordinator(appContext)
+            .cancelIncomingCallNotification()
+
+        voiceManager.endCall()
+        videoManager.disconnect()
+
+        _state.value =
+            AndroidCallState.Ended(
+                reason = "answered_elsewhere"
+            )
+    }
+
+    private fun acceptIncomingAudio(
+        payload: IncomingCallPayload
+    ) {
         val session =
             CallSession(
                 callId = payload.callId,
@@ -1046,31 +1112,16 @@ class AndroidCallManager(
                 isVideo = false
             )
 
-        _state.value = AndroidCallState.Connecting(session)
+        _state.value =
+            AndroidCallState.Connecting(session)
 
         val listener =
             object : CallAudioClient.Listener {
                 override fun onConnected() {
                     _state.value =
-                        AndroidCallState.Active(session)
-
-                    payload.callId?.let { callId ->
-                        viewModelScope.launch(
-                            callDispatcher
-                        ) {
-                            runCatching {
-                                callService.markCallActive(
-                                    callId
-                                )
-                            }.onFailure { error ->
-                                Log.w(
-                                    "AndroidCallManager",
-                                    "Failed to mark accepted audio call active",
-                                    error
-                                )
-                            }
-                        }
-                    }
+                        AndroidCallState.Active(
+                            session
+                        )
 
                     trackCallStarted(
                         session = session,
@@ -1079,50 +1130,111 @@ class AndroidCallManager(
                     )
                 }
 
-                override fun onFailed(message: String) {
-                    _state.value = AndroidCallState.Failed(message)
+                override fun onFailed(
+                    message: String
+                ) {
+                    _state.value =
+                        AndroidCallState.Failed(
+                            message
+                        )
                 }
 
                 override fun onDisconnected() {
-                    trackCallEnded("disconnected")
-                    _state.value = AndroidCallState.Ended()
+                    trackCallEnded(
+                        "disconnected"
+                    )
+
+                    _state.value =
+                        AndroidCallState.Ended()
                 }
             }
 
         viewModelScope.launch {
+            val claimResult =
+                runCatching {
+                    kotlinx.coroutines.withContext(
+                        callDispatcher
+                    ) {
+                        payload.callId?.let {
+                            callService
+                                .markCallActive(
+                                    callId = it,
+                                    deviceId = deviceIdProvider()
+                                )
+                        } ?: CallAnswerClaimResult
+                            .CLAIMED
+                    }
+                }.getOrElse { error ->
+                    Log.e(
+                        "AndroidCallManager",
+                        "Failed to claim incoming audio call",
+                        error
+                    )
+
+                    cancelIncomingRingTimeout()
+                    ringtonePlayer.stop()
+
+                    _state.value =
+                        AndroidCallState.Failed(
+                            error.message
+                                ?: "Could not answer this call."
+                        )
+
+                    return@launch
+                }
+
+            if (
+                claimResult ==
+                CallAnswerClaimResult
+                    .ANSWERED_ELSEWHERE
+            ) {
+                dismissAnsweredElsewhere(
+                    payload.callId
+                )
+
+                return@launch
+            }
+
+            /*
+             * This installation won the canonical backend answer race.
+             * Preserve its Twilio invite if the user-wide
+             * answered_elsewhere fan-out comes back to this device.
+             */
+            TwilioIncomingCallStore
+                .markLocallyClaimed(
+                    payload.callId
+                )
+
+            Log.d(
+                "AndroidCallManager",
+                "Locally claimed incoming audio callId=${payload.callId}"
+            )
+
             repeat(60) { attempt ->
-                val currentState = _state.value
+                val currentState =
+                    _state.value
 
                 if (
-                    currentState !is AndroidCallState.Connecting ||
-                    currentState.session.callId != session.callId
+                    currentState
+                        !is AndroidCallState
+                            .Connecting ||
+                    currentState
+                        .session
+                        .callId != session.callId
                 ) {
                     return@launch
                 }
 
-                if (voiceManager.acceptCall(listener)) {
+                if (
+                    voiceManager.acceptCall(
+                        listener
+                    )
+                ) {
                     Log.d(
                         "AndroidCallManager",
-                        "Twilio invite accepted after ${attempt * 100}ms"
+                        "Twilio invite accepted after " +
+                            "${attempt * 100}ms"
                     )
-
-                    payload.callId?.let { callId ->
-                        viewModelScope.launch(
-                            callDispatcher
-                        ) {
-                            runCatching {
-                                callService.markCallActive(
-                                    callId
-                                )
-                            }.onFailure { error ->
-                                Log.w(
-                                    "AndroidCallManager",
-                                    "Failed to mark accepted audio call active",
-                                    error
-                                )
-                            }
-                        }
-                    }
 
                     return@launch
                 }
@@ -1130,7 +1242,8 @@ class AndroidCallManager(
                 if (attempt == 0) {
                     Log.d(
                         "AndroidCallManager",
-                        "Waiting for Twilio invite for callId=${payload.callId}"
+                        "Waiting for Twilio invite " +
+                            "for callId=${payload.callId}"
                     )
                 }
 
@@ -1138,13 +1251,23 @@ class AndroidCallManager(
             }
 
             val currentState = _state.value
+
             if (
-                currentState is AndroidCallState.Connecting &&
-                currentState.session.callId == session.callId
+                currentState
+                    is AndroidCallState.Connecting &&
+                currentState
+                    .session
+                    .callId == session.callId
             ) {
+                TwilioIncomingCallStore
+                    .clearLocalClaim(
+                        session.callId
+                    )
+
                 _state.value =
                     AndroidCallState.Failed(
-                        "The incoming voice invitation did not arrive."
+                        "The incoming voice " +
+                            "invitation did not arrive."
                     )
             }
         }
@@ -1154,109 +1277,192 @@ class AndroidCallManager(
         currentUser: UserDto,
         payload: IncomingCallPayload
     ) {
-        viewModelScope.launch(callDispatcher) {
+        viewModelScope.launch(
+            callDispatcher
+        ) {
             try {
                 val roomName =
                     payload.roomName
-                        ?: throw Exception("Missing video room.")
-
-                val token =
-                    videoRepository.fetchVideoToken(
-                        identity = currentUser.id.toString(),
-                        roomName = roomName
-                    )
+                        ?: throw Exception(
+                            "Missing video room."
+                        )
 
                 val session =
                     CallSession(
                         callId = payload.callId,
                         roomName = roomName,
-                        displayName = payload.callerName ?: "Video Call",
+                        displayName =
+                            payload.callerName
+                                ?: "Video Call",
                         isVideo = true,
                         speakerEnabled = true
                     )
 
-                _state.value = AndroidCallState.Connecting(session)
+                _state.value =
+                    AndroidCallState.Connecting(
+                        session
+                    )
+
+                val claimResult =
+                    payload.callId?.let {
+                        callService
+                            .markCallActive(
+                                callId = it,
+                                deviceId = deviceIdProvider()
+                            )
+                    } ?: CallAnswerClaimResult
+                        .CLAIMED
+
+                if (
+                    claimResult ==
+                    CallAnswerClaimResult
+                        .ANSWERED_ELSEWHERE
+                ) {
+                    kotlinx.coroutines.withContext(
+                        kotlinx.coroutines
+                            .Dispatchers
+                            .Main
+                            .immediate
+                    ) {
+                        dismissAnsweredElsewhere(
+                            payload.callId
+                        )
+                    }
+
+                    return@launch
+                }
+
+                val token =
+                    videoRepository
+                        .fetchVideoToken(
+                            identity =
+                                currentUser
+                                    .id
+                                    .toString(),
+                            roomName = roomName
+                        )
 
                 videoManager.connect(
                     accessToken = token.token,
                     roomName = roomName,
-                    listener = object : CallVideoClient.Listener {
-                        override fun onConnected() {
-                            val connectedSession =
-                                when (val current = _state.value) {
-                                    is AndroidCallState.Connecting -> current.session
-                                    is AndroidCallState.Active -> current.session
-                                    else -> session
-                                }
+                    listener =
+                        object :
+                            CallVideoClient.Listener {
+                            override fun onConnected() {
+                                val connectedSession =
+                                    when (
+                                        val current =
+                                            _state.value
+                                    ) {
+                                        is AndroidCallState
+                                            .Connecting ->
+                                            current.session
 
-                            _state.value = AndroidCallState.Active(connectedSession)
+                                        is AndroidCallState
+                                            .Active ->
+                                            current.session
 
-                            payload.callId?.let { callId ->
-                                viewModelScope.launch(callDispatcher) {
-                                    runCatching {
-                                        callService.markCallActive(callId)
-                                    }.onFailure { error ->
-                                        Log.w(
-                                            "AndroidCallManager",
-                                            "Failed to mark accepted video call active",
-                                            error
-                                        )
+                                        else -> session
                                     }
-                                }
-                            }
 
-                            trackCallStarted(
-                                session = connectedSession,
-                                callType = "video",
-                                direction = "inbound"
-                            )
-                        }
-
-                        override fun onLocalVideoTrack(track: com.twilio.video.LocalVideoTrack?) {
-                            updateVideoSession {
-                                it.copy(localVideoTrack = track)
-                            }
-                        }
-
-                        override fun onRemoteVideoTrack(track: com.twilio.video.RemoteVideoTrack?) {
-                            updateVideoSession {
-                                it.copy(remoteVideoTrack = track)
-                            }
-                        }
-
-                        override fun onFailed(message: String) {
-                            videoManager.disconnect()
-
-                            payload.callId?.let { callId ->
-                                viewModelScope.launch(callDispatcher) {
-                                    runCatching {
-                                        callService.endCall(
-                                            callId = callId,
-                                            reason = "failed"
+                                _state.value =
+                                    AndroidCallState
+                                        .Active(
+                                            connectedSession
                                         )
-                                    }
+
+                                trackCallStarted(
+                                    session =
+                                        connectedSession,
+                                    callType = "video",
+                                    direction = "inbound"
+                                )
+                            }
+
+                            override fun onLocalVideoTrack(
+                                track:
+                                    com.twilio.video
+                                        .LocalVideoTrack?
+                            ) {
+                                updateVideoSession {
+                                    it.copy(
+                                        localVideoTrack =
+                                            track
+                                    )
                                 }
                             }
 
-                            _state.value = AndroidCallState.Failed(message)
-                        }
+                            override fun onRemoteVideoTrack(
+                                track:
+                                    com.twilio.video
+                                        .RemoteVideoTrack?
+                            ) {
+                                updateVideoSession {
+                                    it.copy(
+                                        remoteVideoTrack =
+                                            track
+                                    )
+                                }
+                            }
 
-                        override fun onDisconnected() {
-                            trackCallEnded("disconnected")
-                            _state.value = AndroidCallState.Ended()
+                            override fun onFailed(
+                                message: String
+                            ) {
+                                videoManager
+                                    .disconnect()
+
+                                payload.callId
+                                    ?.let { callId ->
+                                        viewModelScope
+                                            .launch(
+                                                callDispatcher
+                                            ) {
+                                                runCatching {
+                                                    callService
+                                                        .endCall(
+                                                            callId =
+                                                                callId,
+                                                            reason =
+                                                                "failed"
+                                                        )
+                                                }
+                                            }
+                                    }
+
+                                _state.value =
+                                    AndroidCallState
+                                        .Failed(message)
+                            }
+
+                            override fun onDisconnected() {
+                                trackCallEnded(
+                                    "disconnected"
+                                )
+
+                                _state.value =
+                                    AndroidCallState
+                                        .Ended()
+                            }
                         }
-                    }
                 )
-
-            } catch (e: Exception) {
+            } catch (error: Exception) {
                 videoManager.disconnect()
 
+                /*
+                 * A 409 loser was handled above and returned.
+                 * Any error reaching this block belongs to the
+                 * winning claim or its media setup and may safely
+                 * finalize that call as failed.
+                 */
                 payload.callId?.let { callId ->
-                    viewModelScope.launch(callDispatcher) {
+                    viewModelScope.launch(
+                        callDispatcher
+                    ) {
                         runCatching {
                             callService.endCall(
                                 callId = callId,
-                                reason = "failed"
+                                reason = "failed",
+                                deviceId = deviceIdProvider()
                             )
                         }
                     }
@@ -1264,7 +1470,8 @@ class AndroidCallManager(
 
                 _state.value =
                     AndroidCallState.Failed(
-                        e.message ?: "Failed to accept video call."
+                        error.message
+                            ?: "Failed to accept video call."
                     )
             }
         }
@@ -1294,7 +1501,8 @@ class AndroidCallManager(
                 runCatching {
                     callService.endCall(
                         callId = callId,
-                        reason = "declined"
+                        reason = "declined",
+                        deviceId = deviceIdProvider()
                     )
                 }
             }
@@ -1420,7 +1628,8 @@ class AndroidCallManager(
                 runCatching {
                     callService.endCall(
 callId = callId,
-                        reason = endReason
+                        reason = endReason,
+                        deviceId = deviceIdProvider()
                     )
                 }.onSuccess {
                     CallLifecyclePushEvents
@@ -1588,7 +1797,25 @@ callId = callId,
                         return@collect
                     }
 
-                    cancelIncomingRingTimeout()
+                    if (
+                    event.status
+                        ?.uppercase() ==
+                    "ANSWERED_ELSEWHERE"
+                ) {
+                    if (
+                        currentState
+                            is AndroidCallState
+                                .Ringing
+                    ) {
+                        dismissAnsweredElsewhere(
+                            event.callId
+                        )
+                    }
+
+                    return@collect
+                }
+
+                cancelIncomingRingTimeout()
                     ringtonePlayer.stop()
                     voiceManager.endCall()
                     videoManager.disconnect()
@@ -1645,7 +1872,25 @@ callId = callId,
                     return@collect
                 }
 
-                cancelIncomingRingTimeout()
+                if (
+                payload
+                    ?.status
+                    ?.uppercase() ==
+                "ANSWERED_ELSEWHERE"
+            ) {
+                if (
+                    _state.value
+                        is AndroidCallState.Ringing
+                ) {
+                    dismissAnsweredElsewhere(
+                        endedCallId
+                    )
+                }
+
+                return@collect
+            }
+
+            cancelIncomingRingTimeout()
                 ringtonePlayer.stop()
                 voiceManager.endCall()
                 videoManager.disconnect()
@@ -1655,8 +1900,63 @@ callId = callId,
         }
 
         viewModelScope.launch {
-            socketManager.videoCallEnded.collect {
-                cancelIncomingRingTimeout()
+            socketManager.videoCallEnded.collect { raw ->
+                val payload =
+                    runCatching {
+                        json.decodeFromString<CallEndedPayload>(
+                            raw
+                        )
+                    }.getOrNull()
+
+                val currentCallId =
+                    when (val current = _state.value) {
+                        is AndroidCallState.Connecting ->
+                            current.session.callId
+
+                        is AndroidCallState.Active ->
+                            current.session.callId
+
+                        is AndroidCallState.Ringing ->
+                            current.payload.callId
+
+                        else -> null
+                    }
+
+                val endedCallId = payload?.callId
+
+                if (
+                    endedCallId == null ||
+                    currentCallId == null ||
+                    endedCallId != currentCallId
+                ) {
+                    Log.d(
+                        "AndroidCallManager",
+                        "Ignoring video:ended for non-current call: " +
+                            "endedCallId=$endedCallId " +
+                            "currentCallId=$currentCallId"
+                    )
+                    return@collect
+                }
+
+                if (
+                payload
+                    ?.status
+                    ?.uppercase() ==
+                "ANSWERED_ELSEWHERE"
+            ) {
+                if (
+                    _state.value
+                        is AndroidCallState.Ringing
+                ) {
+                    dismissAnsweredElsewhere(
+                        endedCallId
+                    )
+                }
+
+                return@collect
+            }
+
+            cancelIncomingRingTimeout()
                 ringtonePlayer.stop()
                 videoManager.disconnect()
                 trackCallEnded("remote_ended")

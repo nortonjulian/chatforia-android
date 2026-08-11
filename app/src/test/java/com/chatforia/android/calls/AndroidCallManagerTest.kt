@@ -61,11 +61,13 @@ class AndroidCallManagerTest {
         runTest(mainDispatcherRule.testDispatcher) {
             val ringtone = FakeCallRingtonePlayer()
             val voice = FakeCallAudioClient()
+            val callBackend = FakeCallBackendService()
             voice.acceptCallResult = true
 
             val manager =
                 createManager(
                     ringtonePlayer = ringtone,
+                    callService = callBackend,
                     voiceManager = voice
                 )
 
@@ -84,6 +86,10 @@ class AndroidCallManagerTest {
 
             assertEquals(1, ringtone.stopCount)
             assertEquals(1, voice.acceptCallCount)
+            assertEquals(
+                listOf(11 to "test-device-id"),
+                callBackend.markCallActiveRecords
+            )
             assertTrue(state is AndroidCallState.Active)
 
             val session = (state as AndroidCallState.Active).session
@@ -207,7 +213,8 @@ class AndroidCallManagerTest {
                     EndCallRecord(
                         callId = 14,
                         reason = "declined",
-                        durationSec = null
+                        durationSec = null,
+                        deviceId = "test-device-id"
                     )
                 ),
                 callBackend.endCallRecords
@@ -429,6 +436,10 @@ class AndroidCallManagerTest {
 
             assertEquals(listOf(44 to false), callBackend.createAppCallRequests)
             assertEquals(1, callBackend.fetchVoiceTokenCount)
+            assertEquals(
+                listOf("test-device-id"),
+                callBackend.fetchedVoiceTokenDeviceIds
+            )
 
             val request = voice.startCallRequests.single()
 
@@ -521,6 +532,7 @@ class AndroidCallManagerTest {
             videoManager = videoManager,
             ringtonePlayer = ringtonePlayer,
             callDispatcher = mainDispatcherRule.testDispatcher,
+            deviceIdProvider = { "test-device-id" },
             permissionChecker = { _, _ -> true }
         )
     }
@@ -582,7 +594,8 @@ class AndroidCallManagerTest {
     private data class EndCallRecord(
         val callId: Int,
         val reason: String?,
-        val durationSec: Int?
+        val durationSec: Int?,
+        val deviceId: String?
     )
 
     private class FakeCallBackendService(
@@ -591,10 +604,14 @@ class AndroidCallManagerTest {
         val createAppCallRequests = mutableListOf<Pair<Int, Boolean>>()
         val externalCallRequests = mutableListOf<String>()
         val endCallRecords = mutableListOf<EndCallRecord>()
+        val markCallActiveRecords =
+            mutableListOf<Pair<Int, String?>>()
 
         var createAppCallResult = 111
         var startExternalCallResult = 112
         var fetchVoiceTokenCount = 0
+        val fetchedVoiceTokenDeviceIds =
+            mutableListOf<String>()
 
         override fun createAppCall(
             calleeId: Int,
@@ -614,7 +631,8 @@ class AndroidCallManagerTest {
         override fun endCall(
             callId: Int,
             reason: String?,
-            durationSec: Int?
+            durationSec: Int?,
+            deviceId: String?
         ) {
             eventLog?.add("backend:${reason ?: "none"}")
 
@@ -622,14 +640,31 @@ class AndroidCallManagerTest {
                 EndCallRecord(
                     callId = callId,
                     reason = reason,
-                    durationSec = durationSec
+                    durationSec = durationSec,
+                    deviceId = deviceId
                 )
             )
         }
+        override fun markCallActive(
+            callId: Int,
+            deviceId: String?
+        ): CallAnswerClaimResult {
+            markCallActiveRecords.add(
+                callId to deviceId
+            )
 
-        override fun fetchVoiceToken(): VoiceTokenResponse {
+            return CallAnswerClaimResult.CLAIMED
+        }
+
+        override fun fetchVoiceToken(
+            deviceId: String
+        ): VoiceTokenResponse {
             fetchVoiceTokenCount++
-            return VoiceTokenResponse(token = "voice-token")
+            fetchedVoiceTokenDeviceIds.add(deviceId)
+
+            return VoiceTokenResponse(
+                token = "voice-token"
+            )
         }
     }
 

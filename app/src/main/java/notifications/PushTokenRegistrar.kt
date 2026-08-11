@@ -202,7 +202,10 @@ class PushTokenRegistrar(
         val twilioRegistered =
             try {
                 twilioVoicePushRegistrar
-                    ?.register(token)
+                    ?.register(
+                        fcmToken = token,
+                        deviceId = deviceId
+                    )
                     ?: false
             } catch (error: Exception) {
                 Log.e(

@@ -5,15 +5,26 @@ import com.twilio.voice.RegistrationException
 import com.twilio.voice.RegistrationListener
 import com.twilio.voice.Voice
 import kotlin.coroutines.resume
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 class TwilioVoicePushRegistrar(
     private val callService: CallBackendService
 ) {
-    suspend fun register(fcmToken: String): Boolean =
+    suspend fun register(
+        fcmToken: String,
+        deviceId: String
+    ): Boolean =
         suspendCancellableCoroutine { continuation ->
             try {
-                val voiceToken = callService.fetchVoiceToken().token
+                val voiceToken =
+                    callService
+                        .fetchVoiceToken(
+                            deviceId
+                        )
+                        .token
 
                 Voice.register(
                     voiceToken,
@@ -26,11 +37,37 @@ class TwilioVoicePushRegistrar(
                         ) {
                             Log.d(
                                 "ChatforiaTwilioVoice",
-                                "Twilio Voice FCM registration succeeded: ${fcmToken.take(24)}..."
+                                "Twilio Voice FCM registration succeeded"
                             )
 
-                            if (continuation.isActive) {
-                                continuation.resume(true)
+                            CoroutineScope(
+                                Dispatchers.IO
+                            ).launch {
+                                try {
+                                    callService
+                                        .confirmVoiceRegistration(
+                                            deviceId
+                                        )
+
+                                    Log.d(
+                                        "ChatforiaTwilioVoice",
+                                        "Backend Voice registration confirmation succeeded"
+                                    )
+
+                                    if (continuation.isActive) {
+                                        continuation.resume(true)
+                                    }
+                                } catch (error: Exception) {
+                                    Log.e(
+                                        "ChatforiaTwilioVoice",
+                                        "Backend Voice registration confirmation failed",
+                                        error
+                                    )
+
+                                    if (continuation.isActive) {
+                                        continuation.resume(false)
+                                    }
+                                }
                             }
                         }
 

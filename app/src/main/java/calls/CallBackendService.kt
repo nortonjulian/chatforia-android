@@ -1,5 +1,10 @@
 package com.chatforia.android.calls
 
+enum class CallAnswerClaimResult {
+    CLAIMED,
+    ANSWERED_ELSEWHERE,
+}
+
 interface CallBackendService {
     fun createAppCall(
         calleeId: Int,
@@ -13,7 +18,8 @@ interface CallBackendService {
     fun endCall(
         callId: Int,
         reason: String? = null,
-        durationSec: Int? = null
+        durationSec: Int? = null,
+        deviceId: String? = null
     )
 
     /**
@@ -21,9 +27,13 @@ interface CallBackendService {
      *
      * The default implementation preserves existing test fakes.
      */
-    fun markCallActive(callId: Int) {}
+    fun markCallActive(
+        callId: Int,
+        deviceId: String? = null
+    ): CallAnswerClaimResult =
+        CallAnswerClaimResult.CLAIMED
 
-    /**
+/**
      * Returns the authoritative backend lifecycle state.
      *
      * ACTIVE is the default so existing test fakes preserve their
@@ -40,5 +50,18 @@ interface CallBackendService {
                 )
         )
 
-    fun fetchVoiceToken(): VoiceTokenResponse
+    fun fetchVoiceToken(
+        deviceId: String
+    ): VoiceTokenResponse
+
+    /**
+     * Confirms that this device successfully registered its
+     * device-specific identity with Twilio Voice.
+     *
+     * Default no-op preserves existing test fakes while production
+     * CallService persists the authoritative registration server-side.
+     */
+    fun confirmVoiceRegistration(
+        deviceId: String
+    ) = Unit
 }
