@@ -22,6 +22,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -80,7 +81,8 @@ import com.chatforia.android.ads.InterstitialAdManager
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalFoundationApi::class
+    ExperimentalFoundationApi::class,
+    ExperimentalLayoutApi::class
 )
 @Composable
 fun ChatThreadScreen(
@@ -116,6 +118,41 @@ fun ChatThreadScreen(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val listState = rememberLazyListState()
+
+    val messageItemCount =
+        if (conversation.kind == "sms") {
+            smsMessages.size
+        } else {
+            chatMessages.size
+        }
+
+    val isNearMessageBottom by remember(
+        listState,
+        messageItemCount
+    ) {
+        derivedStateOf {
+            val lastVisibleIndex =
+                listState.layoutInfo
+                    .visibleItemsInfo
+                    .lastOrNull()
+                    ?.index
+
+            lastVisibleIndex == null ||
+                lastVisibleIndex >=
+                    (messageItemCount - 2)
+                        .coerceAtLeast(0)
+        }
+    }
+
+    val isImeVisible =
+        WindowInsets.isImeVisible
+
+    var hasCompletedInitialBottomScroll by remember(
+        conversation.id,
+        conversation.kind
+    ) {
+        mutableStateOf(false)
+    }
 
     var deletingMessage by remember { mutableStateOf<MessageDto?>(null) }
     var editingMessage by remember { mutableStateOf<MessageDto?>(null) }
@@ -280,29 +317,75 @@ fun ChatThreadScreen(
             chatMessages.lastOrNull()?.id
         }
 
+    val latestMessageIsMine =
+        if (conversation.kind == "sms") {
+            smsMessages.lastOrNull()
+                ?.isOutgoing == true
+        } else {
+            chatMessages.lastOrNull()
+                ?.sender
+                ?.id == currentUserId
+        }
+
     LaunchedEffect(
         conversation.id,
         conversation.kind,
         isLoading,
         latestMessageKey
     ) {
-        if (isLoading) return@LaunchedEffect
+        if (
+            isLoading ||
+            messageItemCount <= 0
+        ) {
+            return@LaunchedEffect
+        }
 
-        val itemCount =
-            if (conversation.kind == "sms") {
-                smsMessages.size
-            } else {
-                chatMessages.size
-            }
+        val shouldScroll =
+            !hasCompletedInitialBottomScroll ||
+                isNearMessageBottom ||
+                latestMessageIsMine
 
-        if (itemCount <= 0) return@LaunchedEffect
+        if (!shouldScroll) {
+            return@LaunchedEffect
+        }
 
-        // First jump immediately.
-        listState.scrollToItem(itemCount - 1)
+        listState.scrollToItem(
+            messageItemCount - 1
+        )
 
-        // Then jump again after layout settles.
         kotlinx.coroutines.delay(150)
-        listState.scrollToItem(itemCount - 1)
+
+        listState.scrollToItem(
+            messageItemCount - 1
+        )
+
+        hasCompletedInitialBottomScroll = true
+    }
+
+    /*
+     * IME padding resizes the viewport but does not move LazyColumn's
+     * existing scroll position. Preserve the bottom only when the user
+     * was already reading the newest messages.
+     */
+    LaunchedEffect(isImeVisible) {
+        if (
+            !isNearMessageBottom ||
+            messageItemCount <= 0
+        ) {
+            return@LaunchedEffect
+        }
+
+        kotlinx.coroutines.delay(60)
+
+        listState.scrollToItem(
+            messageItemCount - 1
+        )
+
+        kotlinx.coroutines.delay(180)
+
+        listState.scrollToItem(
+            messageItemCount - 1
+        )
     }
 
     val topActions = buildList {
