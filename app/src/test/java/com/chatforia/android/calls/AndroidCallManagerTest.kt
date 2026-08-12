@@ -15,7 +15,9 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -30,6 +32,11 @@ class AndroidCallManagerTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    @After
+    fun clearIncomingCallAuthority() {
+        TwilioIncomingCallStore.clear()
+    }
 
     @Test
     fun restoreIncomingCallPlaysRingtoneAndSetsRingingState() =
@@ -97,6 +104,86 @@ class AndroidCallManagerTest {
             assertEquals(11, session.callId)
             assertEquals("Audio Caller", session.displayName)
             assertEquals(false, session.isVideo)
+        }
+
+    @Test
+    fun acceptIncomingAudioMarksAuthorityBeforeBackendClaim() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val callBackend = FakeCallBackendService()
+
+            callBackend.onMarkCallActive = { callId ->
+                callBackend.localAuthorityObserved =
+                    TwilioIncomingCallStore
+                        .isLocallyClaimed(callId)
+            }
+
+            val manager =
+                createManager(
+                    callService = callBackend
+                )
+
+            manager.restoreIncomingCall(
+                IncomingCallPayload(
+                    callId = 701,
+                    callerName = "Cold Audio Caller",
+                    mode = "AUDIO"
+                )
+            )
+
+            manager.acceptIncoming(currentUser())
+
+            assertTrue(
+                TwilioIncomingCallStore
+                    .isLocallyClaimed(701)
+            )
+
+            runCurrent()
+
+            assertTrue(
+                callBackend.localAuthorityObserved
+            )
+        }
+
+    @Test
+    fun rejectedIncomingAudioClaimClearsProvisionalAuthority() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val callBackend = FakeCallBackendService()
+
+            callBackend.markCallActiveResult =
+                CallAnswerClaimResult
+                    .ANSWERED_ELSEWHERE
+
+            val manager =
+                createManager(
+                    callService = callBackend
+                )
+
+            manager.restoreIncomingCall(
+                IncomingCallPayload(
+                    callId = 702,
+                    callerName = "Losing Audio Caller",
+                    mode = "AUDIO"
+                )
+            )
+
+            manager.acceptIncoming(currentUser())
+
+            assertTrue(
+                TwilioIncomingCallStore
+                    .isLocallyClaimed(702)
+            )
+
+            runCurrent()
+
+            assertFalse(
+                TwilioIncomingCallStore
+                    .isLocallyClaimed(702)
+            )
+
+            assertTrue(
+                manager.state.value
+                    is AndroidCallState.Ended
+            )
         }
 
     @Test
@@ -610,6 +697,12 @@ class AndroidCallManagerTest {
         var createAppCallResult = 111
         var startExternalCallResult = 112
         var fetchVoiceTokenCount = 0
+        var markCallActiveResult =
+            CallAnswerClaimResult.CLAIMED
+        var onMarkCallActive:
+            ((Int) -> Unit)? = null
+        var localAuthorityObserved = false
+
         val fetchedVoiceTokenDeviceIds =
             mutableListOf<String>()
 
@@ -653,7 +746,9 @@ class AndroidCallManagerTest {
                 callId to deviceId
             )
 
-            return CallAnswerClaimResult.CLAIMED
+            onMarkCallActive?.invoke(callId)
+
+            return markCallActiveResult
         }
 
         override fun fetchVoiceToken(

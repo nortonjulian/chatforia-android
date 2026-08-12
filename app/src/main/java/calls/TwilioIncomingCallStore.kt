@@ -12,11 +12,14 @@ object TwilioIncomingCallStore {
 
     fun save(callInvite: CallInvite) {
         /*
-         * A newly delivered invite belongs to a new answer attempt.
-         * Never carry answer authority forward from an older call.
+         * Do not clear local answer authority here. The Twilio invite
+         * can arrive while the backend ACTIVE claim is in flight.
+         *
+         * Authority is call-ID scoped and is explicitly cleared when
+         * a claim loses, fails, or the matching call terminates, so an
+         * older call ID cannot protect a different invitation.
          */
         pendingInvite = callInvite
-        locallyClaimedCallId = null
     }
 
     fun take(): CallInvite? {
