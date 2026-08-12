@@ -1019,10 +1019,40 @@ class AndroidCallManager(
                 NotificationCoordinator(appContext)
                     .cancelIncomingCallNotification()
 
-                if (
+                val isVideo =
                     payload.mode?.uppercase() == "VIDEO" ||
-                    !payload.roomName.isNullOrBlank()
+                        !payload.roomName.isNullOrBlank()
+
+                /*
+                 * Video calls have no Twilio Voice completion webhook
+                 * to classify an unanswered invitation. Persist MISSED
+                 * before clearing local video media.
+                 *
+                 * Audio remains authoritative through its existing
+                 * Twilio no-answer and voicemail completion flow.
+                 */
+                if (
+                    isVideo &&
+                    payload.callId != null
                 ) {
+                    withContext(callDispatcher) {
+                        runCatching {
+                            callService.endCall(
+                                callId = payload.callId,
+                                reason = "missed",
+                                deviceId = deviceIdProvider()
+                            )
+                        }.onFailure { error ->
+                            Log.e(
+                                "AndroidCallManager",
+                                "Failed to persist missed video call",
+                                error
+                            )
+                        }
+                    }
+                }
+
+                if (isVideo) {
                     videoManager.disconnect()
                 } else {
                     voiceManager.rejectIncomingCall()

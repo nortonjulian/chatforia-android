@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
@@ -61,6 +62,51 @@ class AndroidCallManagerTest {
 
             assertTrue(state is AndroidCallState.Ringing)
             assertEquals(payload, (state as AndroidCallState.Ringing).payload)
+        }
+
+    @Test
+    fun unansweredIncomingVideoTimesOutAsMissed() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val ringtone = FakeCallRingtonePlayer()
+            val callBackend = FakeCallBackendService()
+            val video = FakeCallVideoClient()
+
+            val manager =
+                createManager(
+                    callService = callBackend,
+                    videoManager = video,
+                    ringtonePlayer = ringtone
+                )
+
+            manager.restoreIncomingCall(
+                IncomingCallPayload(
+                    callId = 703,
+                    callerName = "Missed Video Caller",
+                    mode = "VIDEO",
+                    roomName = "call_703"
+                )
+            )
+
+            advanceTimeBy(40_000L)
+            runCurrent()
+
+            assertEquals(
+                listOf(
+                    EndCallRecord(
+                        callId = 703,
+                        reason = "missed",
+                        durationSec = null,
+                        deviceId = "test-device-id"
+                    )
+                ),
+                callBackend.endCallRecords
+            )
+
+            assertEquals(1, ringtone.stopCount)
+            assertTrue(
+                manager.state.value is
+                    AndroidCallState.Ended
+            )
         }
 
     @Test
