@@ -1722,6 +1722,27 @@ callId = callId,
     }
     private fun observeSockets() {
         viewModelScope.launch {
+            IncomingCallPushEvents
+                .pendingIncomingCall
+                .collect { payload ->
+                    if (payload == null) {
+                        return@collect
+                    }
+
+                    Log.d(
+                        "AndroidCallManager",
+                        "Consuming process-level incoming call " +
+                            "callId=${payload.callId}"
+                    )
+
+                    beginIncomingRinging(payload)
+
+                    IncomingCallPushEvents
+                        .consume(payload)
+                }
+        }
+
+        viewModelScope.launch {
             socketManager.incomingCalls.collect { raw ->
                 val payload =
                     runCatching {

@@ -17,6 +17,8 @@ import com.chatforia.android.calls.TwilioIncomingCallStore
 import com.chatforia.android.calls.CallService
 import com.chatforia.android.calls.TwilioVoicePushRegistrar
 import com.chatforia.android.calls.CallLifecyclePushEvents
+import com.chatforia.android.calls.IncomingCallPayload
+import com.chatforia.android.calls.IncomingCallPushEvents
 import com.twilio.voice.CallException
 import com.twilio.voice.CallInvite
 import com.twilio.voice.CancelledCallInvite
@@ -414,6 +416,11 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                             "incoming call ${pushData["callId"]}"
                     )
 
+                    IncomingCallPushEvents.clear(
+                        pushData["callId"]
+                            ?.toIntOrNull()
+                    )
+
                     IncomingCallDisplayStore.clear(
                         applicationContext
                     )
@@ -430,6 +437,31 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                 IncomingCallDisplayStore.save(
                     applicationContext,
                     pushData
+                )
+
+                val incomingPayload =
+                    IncomingCallPayload(
+                        callId =
+                            pushData["callId"]
+                                ?.toIntOrNull(),
+                        fromNumber =
+                            pushData["fromNumber"],
+                        callerName =
+                            pushData["callerName"]
+                                ?: pushData["fromNumber"],
+                        mode =
+                            pushData["mode"],
+                        roomName =
+                            pushData["roomName"]
+                    )
+
+                IncomingCallPushEvents
+                    .notifyIncoming(incomingPayload)
+
+                Log.d(
+                    "ChatforiaFCM",
+                    "Published incoming call to process bridge " +
+                        "callId=${incomingPayload.callId}"
                 )
 
                 NotificationCoordinator(this)
@@ -485,6 +517,10 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                     NotificationCoordinator(this)
                         .cancelIncomingCallNotification()
                 }
+
+                IncomingCallPushEvents.clear(
+                    endedCallId
+                )
 
                 CallLifecyclePushEvents.notifyTerminal(
                     callId = endedCallId,
