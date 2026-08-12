@@ -102,10 +102,19 @@ class SocketManager : ChatRealtimeEvents, CallRealtimeEvents {
 
         val options = IO.Options().apply {
             path = "/socket.io"
-            transports = arrayOf("websocket", "polling")
+
+            /*
+             * Use Socket.IO's default polling-first negotiation.
+             * Polling provides a reliable reconnection path after
+             * Android suspends or replaces a WebSocket. The client
+             * upgrades to WebSocket when the network supports it.
+             */
             reconnection = true
             reconnectionAttempts = Int.MAX_VALUE
-            reconnectionDelay = 500
+            reconnectionDelay = 1_000
+            reconnectionDelayMax = 10_000
+            randomizationFactor = 0.5
+            timeout = 20_000
             auth = mapOf("token" to token)
         }
 
@@ -131,7 +140,22 @@ class SocketManager : ChatRealtimeEvents, CallRealtimeEvents {
         }
 
         socket?.on(Socket.EVENT_CONNECT_ERROR) { args ->
-            Log.e("ChatforiaSocket", "❌ connect error: ${args.joinToString()}")
+            val error =
+                args.firstOrNull()
+
+            if (error is Throwable) {
+                Log.e(
+                    "ChatforiaSocket",
+                    "❌ Socket.IO connection failed",
+                    error
+                )
+            } else {
+                Log.e(
+                    "ChatforiaSocket",
+                    "❌ Socket.IO connection failed: " +
+                        args.joinToString()
+                )
+            }
         }
 
         socket?.on("message:upsert") { args ->
