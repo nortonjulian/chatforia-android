@@ -1115,6 +1115,18 @@ class AndroidCallManager(
         _state.value =
             AndroidCallState.Connecting(session)
 
+        /*
+         * Establish provisional local authority before the backend
+         * ACTIVE request. The server can broadcast answered_elsewhere
+         * immediately after accepting this device's claim. Without
+         * this marker, that broadcast can clear the Twilio invite
+         * before this coroutine resumes.
+         */
+        TwilioIncomingCallStore
+            .markLocallyClaimed(
+                payload.callId
+            )
+
         val listener =
             object : CallAudioClient.Listener {
                 override fun onConnected() {
@@ -1165,6 +1177,11 @@ class AndroidCallManager(
                             .CLAIMED
                     }
                 }.getOrElse { error ->
+                    TwilioIncomingCallStore
+                        .clearLocalClaim(
+                            payload.callId
+                        )
+
                     Log.e(
                         "AndroidCallManager",
                         "Failed to claim incoming audio call",
@@ -1188,6 +1205,11 @@ class AndroidCallManager(
                 CallAnswerClaimResult
                     .ANSWERED_ELSEWHERE
             ) {
+                TwilioIncomingCallStore
+                    .clearLocalClaim(
+                        payload.callId
+                    )
+
                 dismissAnsweredElsewhere(
                     payload.callId
                 )
@@ -1196,15 +1218,9 @@ class AndroidCallManager(
             }
 
             /*
-             * This installation won the canonical backend answer race.
-             * Preserve its Twilio invite if the user-wide
-             * answered_elsewhere fan-out comes back to this device.
+             * The provisional marker is now authoritative because
+             * this installation won the backend answer race.
              */
-            TwilioIncomingCallStore
-                .markLocallyClaimed(
-                    payload.callId
-                )
-
             Log.d(
                 "AndroidCallManager",
                 "Locally claimed incoming audio callId=${payload.callId}"
