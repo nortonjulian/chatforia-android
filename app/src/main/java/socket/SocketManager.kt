@@ -1,20 +1,76 @@
 package com.chatforia.android.socket
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import com.chatforia.android.network.Environment
 import io.socket.client.IO
 import io.socket.client.Socket
 import kotlinx.coroutines.flow.MutableSharedFlow
+import okhttp3.OkHttpClient
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URI
+import java.util.concurrent.TimeUnit
 import com.chatforia.android.calls.CallRealtimeEvents
 
-class SocketManager : ChatRealtimeEvents, CallRealtimeEvents {
+class SocketManager(
+    context: Context
+) : ChatRealtimeEvents, CallRealtimeEvents {
+    private val connectivityManager =
+        context.applicationContext.getSystemService(
+            Context.CONNECTIVITY_SERVICE
+        ) as ConnectivityManager
+
+    private val mainHandler =
+        Handler(Looper.getMainLooper())
+
+    private val recoveryPolicy =
+        SocketRecoveryPolicy()
+
     private var socket: Socket? = null
+    private var transportClient: OkHttpClient? = null
+    private var currentToken: String? = null
+    private var networkCallbackRegistered = false
+    private var recoveryRunnable: Runnable? = null
+
     private val joinedRoomIds = mutableSetOf<Int>()
+
+    private val networkCallback =
+        object : ConnectivityManager.NetworkCallback() {
+            override fun onLost(network: Network) {
+                recoveryPolicy.markNetworkLost()
+                cancelScheduledRecovery()
+
+                Log.d(
+                    "ChatforiaSocket",
+                    "Network lost; socket recovery armed"
+                )
+            }
+
+            override fun onAvailable(network: Network) {
+                recoverForValidatedNetwork(network)
+            }
+
+            override fun onCapabilitiesChanged(
+                network: Network,
+                capabilities: NetworkCapabilities
+            ) {
+                if (
+                    capabilities.hasCapability(
+                        NetworkCapabilities.NET_CAPABILITY_VALIDATED
+                    )
+                ) {
+                    recoverForValidatedNetwork(network)
+                }
+            }
+        }
 
     private val _messageUpserts = MutableSharedFlow<String>(extraBufferCapacity = 64)
     override val messageUpserts: SharedFlow<String> = _messageUpserts.asSharedFlow()
@@ -100,6 +156,35 @@ class SocketManager : ChatRealtimeEvents, CallRealtimeEvents {
     fun connect(token: String) {
         if (token.isBlank()) return
 
+        currentToken = token
+        registerNetworkCallback()
+
+        if (!hasValidatedNetwork()) {
+            recoveryPolicy.markNetworkLost()
+        }
+
+        connectSocket(token)
+    }
+
+    private fun connectSocket(token: String) {
+        if (token.isBlank()) return
+
+        val previousSocket = socket
+        socket = null
+
+        previousSocket?.off()
+        previousSocket?.disconnect()
+
+        closeTransportClient()
+
+        val freshTransportClient =
+            OkHttpClient.Builder()
+                .retryOnConnectionFailure(true)
+                .readTimeout(1, TimeUnit.MINUTES)
+                .build()
+
+        transportClient = freshTransportClient
+
         val options = IO.Options().apply {
             path = "/socket.io"
 
@@ -116,15 +201,25 @@ class SocketManager : ChatRealtimeEvents, CallRealtimeEvents {
             randomizationFactor = 0.5
             timeout = 20_000
             auth = mapOf("token" to token)
+
+            callFactory = freshTransportClient
+            webSocketFactory = freshTransportClient
         }
 
-        socket?.off()
-        socket?.disconnect()
-
-        socket = IO.socket(URI.create(Environment.API_BASE_URL), options)
+        socket = IO.socket(
+            URI.create(Environment.API_BASE_URL),
+            options
+        )
 
         socket?.on(Socket.EVENT_CONNECT) {
-            Log.d("ChatforiaSocket", "✅ Android socket connected ${socket?.id()}")
+            recoveryPolicy.markConnected()
+            cancelScheduledRecovery()
+
+            Log.d(
+                "ChatforiaSocket",
+                "✅ Android socket connected ${socket?.id()}"
+            )
+
             emitJoinRooms()
             _socketConnected.tryEmit(Unit)
         }
@@ -140,20 +235,40 @@ class SocketManager : ChatRealtimeEvents, CallRealtimeEvents {
         }
 
         socket?.on(Socket.EVENT_CONNECT_ERROR) { args ->
-            val error =
-                args.firstOrNull()
+            val error = args.firstOrNull()
+
+            val details =
+                args.joinToString {
+                    val type =
+                        it?.javaClass?.name
+                            ?: "null"
+
+                    "$type: $it"
+                }
 
             if (error is Throwable) {
                 Log.e(
                     "ChatforiaSocket",
-                    "❌ Socket.IO connection failed",
+                    "❌ Socket.IO connection failed: $details",
                     error
                 )
             } else {
                 Log.e(
                     "ChatforiaSocket",
-                    "❌ Socket.IO connection failed: " +
-                        args.joinToString()
+                    "❌ Socket.IO connection failed: $details"
+                )
+            }
+
+            if (
+                recoveryPolicy.shouldRecoverAfterFailure(
+                    networkValidated =
+                        hasValidatedNetwork()
+                )
+            ) {
+                scheduleSocketRecovery(
+                    reason =
+                        "repeated failures on validated network",
+                    delayMs = 500
                 )
             }
         }
@@ -275,10 +390,168 @@ class SocketManager : ChatRealtimeEvents, CallRealtimeEvents {
     }
 
     fun disconnect() {
+        currentToken = null
+        cancelScheduledRecovery()
+        unregisterNetworkCallback()
+        recoveryPolicy.reset()
+
         socket?.off()
         socket?.disconnect()
         socket = null
+
+        closeTransportClient()
         joinedRoomIds.clear()
+    }
+
+    private fun closeTransportClient() {
+        val client = transportClient
+        transportClient = null
+
+        if (client == null) return
+
+        client.dispatcher.cancelAll()
+        client.connectionPool.evictAll()
+
+        try {
+            client.dispatcher.executorService.shutdown()
+        } catch (error: RuntimeException) {
+            Log.w(
+                "ChatforiaSocket",
+                "Could not shut down socket transport",
+                error
+            )
+        }
+    }
+
+    private fun recoverForValidatedNetwork(
+        network: Network
+    ) {
+        if (!isValidated(network)) return
+
+        if (
+            recoveryPolicy
+                .shouldRecoverForValidatedNetwork()
+        ) {
+            scheduleSocketRecovery(
+                reason = "validated network restored",
+                delayMs = 1_500
+            )
+        }
+    }
+
+    private fun scheduleSocketRecovery(
+        reason: String,
+        delayMs: Long
+    ) {
+        if (recoveryRunnable != null) return
+
+        val runnable =
+            Runnable {
+                recoveryRunnable = null
+
+                val token = currentToken
+                val networkValidated =
+                    hasValidatedNetwork()
+                val socketConnected =
+                    socket?.connected() == true
+
+                if (
+                    !shouldRunScheduledSocketRecovery(
+                        hasToken =
+                            !token.isNullOrBlank(),
+                        networkValidated =
+                            networkValidated,
+                        socketConnected =
+                            socketConnected
+                    )
+                ) {
+                    if (socketConnected) {
+                        Log.d(
+                            "ChatforiaSocket",
+                            "Skipping scheduled socket rebuild; socket already connected"
+                        )
+                    }
+
+                    return@Runnable
+                }
+
+                Log.d(
+                    "ChatforiaSocket",
+                    "Rebuilding socket after $reason"
+                )
+
+                connectSocket(
+                    checkNotNull(token)
+                )
+            }
+
+        recoveryRunnable = runnable
+        mainHandler.postDelayed(runnable, delayMs)
+    }
+
+    private fun cancelScheduledRecovery() {
+        recoveryRunnable?.let {
+            mainHandler.removeCallbacks(it)
+        }
+
+        recoveryRunnable = null
+    }
+
+    private fun registerNetworkCallback() {
+        if (networkCallbackRegistered) return
+
+        try {
+            connectivityManager.registerDefaultNetworkCallback(
+                networkCallback
+            )
+
+            networkCallbackRegistered = true
+        } catch (error: RuntimeException) {
+            Log.e(
+                "ChatforiaSocket",
+                "Could not register network callback",
+                error
+            )
+        }
+    }
+
+    private fun unregisterNetworkCallback() {
+        if (!networkCallbackRegistered) return
+
+        try {
+            connectivityManager.unregisterNetworkCallback(
+                networkCallback
+            )
+        } catch (error: RuntimeException) {
+            Log.w(
+                "ChatforiaSocket",
+                "Could not unregister network callback",
+                error
+            )
+        } finally {
+            networkCallbackRegistered = false
+        }
+    }
+
+    private fun hasValidatedNetwork(): Boolean {
+        val network =
+            connectivityManager.activeNetwork
+                ?: return false
+
+        return isValidated(network)
+    }
+
+    private fun isValidated(
+        network: Network
+    ): Boolean {
+        val capabilities =
+            connectivityManager
+                .getNetworkCapabilities(network)
+                ?: return false
+
+        return capabilities.hasCapability(
+            NetworkCapabilities.NET_CAPABILITY_VALIDATED
+        )
     }
 
     override fun joinRoom(roomId: Int) {

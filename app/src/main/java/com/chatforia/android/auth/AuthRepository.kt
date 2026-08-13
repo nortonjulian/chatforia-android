@@ -1,5 +1,6 @@
 package com.chatforia.android.auth
 
+import com.chatforia.android.network.ApiException
 import com.chatforia.android.network.ApiRequest
 import com.chatforia.android.network.ApiTransport
 import com.chatforia.android.network.HttpMethod
@@ -131,9 +132,13 @@ class AuthRepository(
 
         return try {
             fetchMe()
-        } catch (error: Exception) {
-            tokenStorage.clear()
-            null
+        } catch (error: ApiException) {
+            if (error.statusCode == 401) {
+                tokenStorage.clear()
+                null
+            } else {
+                throw error
+            }
         }
     }
 
