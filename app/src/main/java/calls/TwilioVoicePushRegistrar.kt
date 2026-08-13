@@ -1,5 +1,6 @@
 package com.chatforia.android.calls
 
+import android.content.Context
 import android.util.Log
 import com.twilio.voice.RegistrationException
 import com.twilio.voice.RegistrationListener
@@ -11,25 +12,50 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 class TwilioVoicePushRegistrar(
-    private val callService: CallBackendService
+    private val callService: CallBackendService,
+    context: Context? = null
 ) {
+    private val registrationStore =
+        context?.let {
+            TwilioVoiceRegistrationStore(
+                it.applicationContext
+            )
+        }
+
     suspend fun register(
         fcmToken: String,
         deviceId: String
-    ): Boolean =
-        suspendCancellableCoroutine { continuation ->
+    ): Boolean {
+        val normalizedToken = fcmToken.trim()
+        val normalizedDeviceId = deviceId.trim()
+
+        if (
+            registrationStore?.matches(
+                deviceId = normalizedDeviceId,
+                fcmToken = normalizedToken
+            ) == true
+        ) {
+            Log.d(
+                "ChatforiaTwilioVoice",
+                "Reusing confirmed Twilio Voice registration"
+            )
+
+            return true
+        }
+
+        return suspendCancellableCoroutine { continuation ->
             try {
                 val voiceToken =
                     callService
                         .fetchVoiceToken(
-                            deviceId
+                            normalizedDeviceId
                         )
                         .token
 
                 Voice.register(
                     voiceToken,
                     Voice.RegistrationChannel.FCM,
-                    fcmToken,
+                    normalizedToken,
                     object : RegistrationListener {
                         override fun onRegistered(
                             accessToken: String,
@@ -46,8 +72,15 @@ class TwilioVoicePushRegistrar(
                                 try {
                                     callService
                                         .confirmVoiceRegistration(
-                                            deviceId
+                                            normalizedDeviceId
                                         )
+
+                                    registrationStore?.save(
+                                        deviceId =
+                                            normalizedDeviceId,
+                                        fcmToken =
+                                            normalizedToken
+                                    )
 
                                     Log.d(
                                         "ChatforiaTwilioVoice",
@@ -88,11 +121,11 @@ class TwilioVoicePushRegistrar(
                         }
                     }
                 )
-            } catch (e: Exception) {
+            } catch (error: Exception) {
                 Log.e(
                     "ChatforiaTwilioVoice",
                     "Failed before Twilio Voice FCM registration",
-                    e
+                    error
                 )
 
                 if (continuation.isActive) {
@@ -100,4 +133,11 @@ class TwilioVoicePushRegistrar(
                 }
             }
         }
+    }
+
+    fun clearRegistration(
+        deviceId: String? = null
+    ) {
+        registrationStore?.clear(deviceId)
+    }
 }

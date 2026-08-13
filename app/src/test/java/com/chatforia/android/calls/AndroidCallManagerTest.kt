@@ -110,6 +110,93 @@ class AndroidCallManagerTest {
         }
 
     @Test
+    fun incomingAudioWaitsForInviteBeforeClaimingBackend() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val voice = FakeCallAudioClient()
+            val callBackend = FakeCallBackendService()
+
+            voice.pendingIncomingCall = false
+
+            val manager =
+                createManager(
+                    callService = callBackend,
+                    voiceManager = voice
+                )
+
+            manager.restoreIncomingCall(
+                IncomingCallPayload(
+                    callId = 704,
+                    callerName = "Delayed Audio Caller",
+                    mode = "AUDIO"
+                )
+            )
+
+            manager.acceptIncoming(currentUser())
+            runCurrent()
+
+            assertTrue(
+                callBackend.markCallActiveRecords.isEmpty()
+            )
+            assertEquals(0, voice.acceptCallCount)
+
+            voice.pendingIncomingCall = true
+
+            advanceTimeBy(100L)
+            runCurrent()
+
+            assertEquals(
+                listOf(704 to "test-device-id"),
+                callBackend.markCallActiveRecords
+            )
+            assertEquals(1, voice.acceptCallCount)
+            assertTrue(
+                manager.state.value is
+                    AndroidCallState.Active
+            )
+        }
+
+    @Test
+    fun missingAudioInviteDoesNotClaimBackendActive() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val voice = FakeCallAudioClient()
+            val callBackend = FakeCallBackendService()
+
+            voice.pendingIncomingCall = false
+
+            val manager =
+                createManager(
+                    callService = callBackend,
+                    voiceManager = voice
+                )
+
+            manager.restoreIncomingCall(
+                IncomingCallPayload(
+                    callId = 705,
+                    callerName = "Missing Audio Caller",
+                    mode = "AUDIO"
+                )
+            )
+
+            manager.acceptIncoming(currentUser())
+
+            advanceTimeBy(6_100L)
+            runCurrent()
+
+            assertTrue(
+                callBackend.markCallActiveRecords.isEmpty()
+            )
+            assertEquals(0, voice.acceptCallCount)
+
+            val state = manager.state.value
+
+            assertTrue(state is AndroidCallState.Failed)
+            assertEquals(
+                "The incoming voice invitation did not arrive.",
+                (state as AndroidCallState.Failed).message
+            )
+        }
+
+    @Test
     fun acceptIncomingAudioStopsRingtoneAndSetsActiveState() =
         runTest(mainDispatcherRule.testDispatcher) {
             val ringtone = FakeCallRingtonePlayer()
@@ -153,7 +240,7 @@ class AndroidCallManagerTest {
         }
 
     @Test
-    fun acceptIncomingAudioMarksAuthorityBeforeBackendClaim() =
+    fun acceptIncomingAudioMarksAuthorityDuringBackendClaim() =
         runTest(mainDispatcherRule.testDispatcher) {
             val callBackend = FakeCallBackendService()
 
@@ -177,11 +264,6 @@ class AndroidCallManagerTest {
             )
 
             manager.acceptIncoming(currentUser())
-
-            assertTrue(
-                TwilioIncomingCallStore
-                    .isLocallyClaimed(701)
-            )
 
             runCurrent()
 
@@ -213,11 +295,6 @@ class AndroidCallManagerTest {
             )
 
             manager.acceptIncoming(currentUser())
-
-            assertTrue(
-                TwilioIncomingCallStore
-                    .isLocallyClaimed(702)
-            )
 
             runCurrent()
 
@@ -255,7 +332,7 @@ class AndroidCallManagerTest {
 
             assertTrue(state is AndroidCallState.Failed)
             assertEquals(
-                "The incoming voice invitation did not arrive.",
+                "The incoming voice invitation could not be accepted.",
                 (state as AndroidCallState.Failed).message
             )
         }
@@ -847,6 +924,7 @@ class AndroidCallManagerTest {
     ) : CallAudioClient {
         val startCallRequests = mutableListOf<VoiceStartCallRequest>()
 
+        var pendingIncomingCall = true
         var acceptCallResult = true
         var acceptCallCount = 0
         var endCallCount = 0
@@ -867,6 +945,10 @@ class AndroidCallManagerTest {
                     listener = listener
                 )
             )
+        }
+
+        override fun hasPendingIncomingCall(): Boolean {
+            return pendingIncomingCall
         }
 
         override fun acceptCall(

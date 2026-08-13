@@ -87,6 +87,13 @@ class TwilioVoiceManager(
             )
     }
 
+    override fun hasPendingIncomingCall(): Boolean {
+        return (
+            activeCall != null ||
+                TwilioIncomingCallStore.peek() != null
+        )
+    }
+
     override fun acceptCall(
         listener: CallAudioClient.Listener
     ): Boolean {

@@ -371,6 +371,7 @@ class MainActivity : ComponentActivity() {
                                     applicationContext
                                 ),
                                 twilioVoicePushRegistrar = TwilioVoicePushRegistrar(
+                                    context = applicationContext,
                                     callService = CallService(apiClient)
                                 )
                             )

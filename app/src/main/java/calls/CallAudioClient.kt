@@ -15,6 +15,10 @@ interface CallAudioClient {
         listener: Listener
     )
 
+    fun hasPendingIncomingCall(): Boolean {
+        return false
+    }
+
     fun acceptCall(listener: Listener): Boolean
 
     fun rejectIncomingCall(): Boolean
