@@ -1,5 +1,6 @@
 package com.chatforia.android.auth
 
+import com.chatforia.android.network.ApiException
 import com.chatforia.android.network.ApiRequest
 import com.chatforia.android.network.ApiTransport
 import com.chatforia.android.network.HttpMethod
@@ -192,13 +193,17 @@ class AuthRepositoryTest {
         }
 
     @Test
-    fun bootstrap_clearsTokenWhenFetchMeFails() =
+    fun bootstrap_clearsTokenWhenFetchMeReturnsUnauthorized() =
         runTest {
             val api = FakeApiTransport()
             val tokenStorage = FakeAuthTokenStorage()
             tokenStorage.save("bad-token")
 
-            api.shouldThrow = true
+            api.errorToThrow =
+                ApiException(
+                    statusCode = 401,
+                    responseBody = "{\"error\":\"Unauthorized\"}"
+                )
 
             val repository =
                 AuthRepository(
@@ -212,6 +217,44 @@ class AuthRepositoryTest {
             assertEquals(null, result)
             assertEquals(null, tokenStorage.token)
             assertTrue(tokenStorage.clearCalled)
+        }
+
+    @Test
+    fun bootstrap_preservesTokenAndPropagatesTemporaryNetworkFailure() =
+        runTest {
+            val api = FakeApiTransport()
+            val tokenStorage = FakeAuthTokenStorage()
+            tokenStorage.save("existing-token")
+
+            api.errorToThrow =
+                java.io.IOException(
+                    "Temporary network failure"
+                )
+
+            val repository =
+                AuthRepository(
+                    apiClient = api,
+                    tokenStorage = tokenStorage,
+                    ioDispatcher = UnconfinedTestDispatcher(testScheduler)
+                )
+
+            val thrown =
+                try {
+                    repository.bootstrap()
+                    null
+                } catch (error: java.io.IOException) {
+                    error
+                }
+
+            assertEquals(
+                "Temporary network failure",
+                thrown?.message
+            )
+            assertEquals(
+                "existing-token",
+                tokenStorage.token
+            )
+            assertFalse(tokenStorage.clearCalled)
         }
 
     @Test
@@ -466,7 +509,7 @@ class AuthRepositoryTest {
 
         private val responses = ArrayDeque<String>()
 
-        var shouldThrow = false
+        var errorToThrow: Exception? = null
 
         fun enqueueResponse(response: String) {
             responses.addLast(response)
@@ -477,8 +520,8 @@ class AuthRepositoryTest {
         ): String {
             requests.add(request)
 
-            if (shouldThrow) {
-                throw Exception("API boom")
+            errorToThrow?.let { error ->
+                throw error
             }
 
             return if (responses.isNotEmpty()) {

@@ -5,6 +5,9 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -377,14 +380,28 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                    val authViewModel =
-                        remember {
-                            AuthViewModel(
-                                repository = repository,
-                                accountKeyManager = accountKeyManager,
-                                pushTokenRegistrar = pushTokenRegistrar
-                            )
-                        }
+                    val authViewModel: AuthViewModel =
+                        viewModel(
+                            factory =
+                                object : ViewModelProvider.Factory {
+                                    @Suppress("UNCHECKED_CAST")
+                                    override fun <T : ViewModel> create(
+                                        modelClass: Class<T>
+                                    ): T {
+                                        require(
+                                            modelClass.isAssignableFrom(
+                                                AuthViewModel::class.java
+                                            )
+                                        )
+
+                                        return AuthViewModel(
+                                            repository = repository,
+                                            accountKeyManager = accountKeyManager,
+                                            pushTokenRegistrar = pushTokenRegistrar
+                                        ) as T
+                                    }
+                                }
+                        )
 
                     LaunchedEffect(latestLaunchIntent) {
                         consumeAppleOAuthToken(latestLaunchIntent) { token ->
@@ -922,7 +939,9 @@ class MainActivity : ComponentActivity() {
 
         val socketManager =
             remember {
-                SocketManager()
+                SocketManager(
+                    context.applicationContext
+                )
             }
 
         LaunchedEffect(chatsViewModel, user.id) {
