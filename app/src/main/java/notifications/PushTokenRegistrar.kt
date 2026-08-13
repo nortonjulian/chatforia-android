@@ -267,6 +267,9 @@ class PushTokenRegistrar(
             authToken = authToken
         )
 
+        twilioVoicePushRegistrar
+            ?.clearRegistration(deviceId)
+
         Log.d(
             "ChatforiaFCM",
             "Cleared backend push tokens for logged-out device $deviceId"

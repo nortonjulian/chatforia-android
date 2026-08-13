@@ -86,6 +86,7 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
 
                 val twilioRegistered =
                     TwilioVoicePushRegistrar(
+                                    context = applicationContext,
                         callService = CallService(apiClient)
                     ).register(
                         fcmToken = token,

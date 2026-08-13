@@ -337,6 +337,10 @@ private class FakeCallAudioClient(
         lastListener = listener
     }
 
+    override fun hasPendingIncomingCall(): Boolean {
+        return acceptCallResult
+    }
+
     override fun acceptCall(
         listener: CallAudioClient.Listener
     ): Boolean {

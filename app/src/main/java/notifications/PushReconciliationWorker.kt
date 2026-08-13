@@ -61,6 +61,7 @@ class PushReconciliationWorker(
                     ),
                 twilioVoicePushRegistrar =
                     TwilioVoicePushRegistrar(
+                                    context = applicationContext,
                         callService =
                             CallService(apiClient)
                     )

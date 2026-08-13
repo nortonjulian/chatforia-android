@@ -1129,6 +1129,44 @@ class AndroidCallManager(
             )
     }
 
+    private fun failClaimedIncomingAudio(
+        session: CallSession,
+        message: String
+    ) {
+        val currentState = _state.value
+
+        if (
+            currentState !is AndroidCallState.Connecting ||
+            currentState.session.callId != session.callId
+        ) {
+            return
+        }
+
+        TwilioIncomingCallStore
+            .clearLocalClaim(session.callId)
+
+        _state.value =
+            AndroidCallState.Failed(message)
+
+        val callId = session.callId ?: return
+
+        viewModelScope.launch(callDispatcher) {
+            runCatching {
+                callService.endCall(
+                    callId = callId,
+                    reason = "failed",
+                    deviceId = deviceIdProvider()
+                )
+            }.onFailure { error ->
+                Log.e(
+                    "AndroidCallManager",
+                    "Failed to reconcile claimed audio media failure",
+                    error
+                )
+            }
+        }
+    }
+
     private fun acceptIncomingAudio(
         payload: IncomingCallPayload
     ) {
@@ -1145,25 +1183,15 @@ class AndroidCallManager(
         _state.value =
             AndroidCallState.Connecting(session)
 
-        /*
-         * Establish provisional local authority before the backend
-         * ACTIVE request. The server can broadcast answered_elsewhere
-         * immediately after accepting this device's claim. Without
-         * this marker, that broadcast can clear the Twilio invite
-         * before this coroutine resumes.
-         */
-        TwilioIncomingCallStore
-            .markLocallyClaimed(
-                payload.callId
-            )
+        var mediaConnected = false
 
         val listener =
             object : CallAudioClient.Listener {
                 override fun onConnected() {
+                    mediaConnected = true
+
                     _state.value =
-                        AndroidCallState.Active(
-                            session
-                        )
+                        AndroidCallState.Active(session)
 
                     trackCallStarted(
                         session = session,
@@ -1175,51 +1203,103 @@ class AndroidCallManager(
                 override fun onFailed(
                     message: String
                 ) {
-                    _state.value =
-                        AndroidCallState.Failed(
-                            message
-                        )
+                    failClaimedIncomingAudio(
+                        session = session,
+                        message = message
+                    )
                 }
 
                 override fun onDisconnected() {
-                    trackCallEnded(
-                        "disconnected"
-                    )
+                    if (!mediaConnected) {
+                        failClaimedIncomingAudio(
+                            session = session,
+                            message =
+                                "The incoming voice call disconnected before connecting."
+                        )
+                        return
+                    }
 
-                    _state.value =
-                        AndroidCallState.Ended()
+                    trackCallEnded("disconnected")
+                    _state.value = AndroidCallState.Ended()
                 }
             }
 
         viewModelScope.launch {
+            var invitationReady = false
+
+            for (attempt in 0 until 60) {
+                val currentState = _state.value
+
+                if (
+                    currentState !is AndroidCallState.Connecting ||
+                    currentState.session.callId != session.callId
+                ) {
+                    return@launch
+                }
+
+                if (
+                    voiceManager
+                        .hasPendingIncomingCall()
+                ) {
+                    invitationReady = true
+                    break
+                }
+
+                if (attempt == 0) {
+                    Log.d(
+                        "AndroidCallManager",
+                        "Waiting for Twilio invite before claiming " +
+                            "callId=${payload.callId}"
+                    )
+                }
+
+                delay(100)
+            }
+
+            if (!invitationReady) {
+                TwilioIncomingCallStore
+                    .clearLocalClaim(payload.callId)
+
+                _state.value =
+                    AndroidCallState.Failed(
+                        "The incoming voice invitation did not arrive."
+                    )
+
+                return@launch
+            }
+
+            /*
+             * The invitation exists locally. Establish provisional
+             * authority before requesting the canonical backend claim
+             * so this winner's answered_elsewhere broadcast cannot
+             * clear its own invitation.
+             */
+            TwilioIncomingCallStore
+                .markLocallyClaimed(payload.callId)
+
             val claimResult =
                 runCatching {
                     kotlinx.coroutines.withContext(
                         callDispatcher
                     ) {
                         payload.callId?.let {
-                            callService
-                                .markCallActive(
-                                    callId = it,
-                                    deviceId = deviceIdProvider()
-                                )
-                        } ?: CallAnswerClaimResult
-                            .CLAIMED
+                            callService.markCallActive(
+                                callId = it,
+                                deviceId = deviceIdProvider()
+                            )
+                        } ?: CallAnswerClaimResult.CLAIMED
                     }
                 }.getOrElse { error ->
                     TwilioIncomingCallStore
-                        .clearLocalClaim(
-                            payload.callId
-                        )
+                        .clearLocalClaim(payload.callId)
+
+                    voiceManager.endCall()
 
                     Log.e(
                         "AndroidCallManager",
                         "Failed to claim incoming audio call",
                         error
                     )
-
-                    cancelIncomingRingTimeout()
-                    ringtonePlayer.stop()
 
                     _state.value =
                         AndroidCallState.Failed(
@@ -1232,90 +1312,33 @@ class AndroidCallManager(
 
             if (
                 claimResult ==
-                CallAnswerClaimResult
-                    .ANSWERED_ELSEWHERE
+                CallAnswerClaimResult.ANSWERED_ELSEWHERE
             ) {
                 TwilioIncomingCallStore
-                    .clearLocalClaim(
-                        payload.callId
-                    )
+                    .clearLocalClaim(payload.callId)
 
-                dismissAnsweredElsewhere(
-                    payload.callId
-                )
-
+                dismissAnsweredElsewhere(payload.callId)
                 return@launch
             }
 
-            /*
-             * The provisional marker is now authoritative because
-             * this installation won the backend answer race.
-             */
             Log.d(
                 "AndroidCallManager",
                 "Locally claimed incoming audio callId=${payload.callId}"
             )
 
-            repeat(60) { attempt ->
-                val currentState =
-                    _state.value
-
-                if (
-                    currentState
-                        !is AndroidCallState
-                            .Connecting ||
-                    currentState
-                        .session
-                        .callId != session.callId
-                ) {
-                    return@launch
-                }
-
-                if (
-                    voiceManager.acceptCall(
-                        listener
-                    )
-                ) {
-                    Log.d(
-                        "AndroidCallManager",
-                        "Twilio invite accepted after " +
-                            "${attempt * 100}ms"
-                    )
-
-                    return@launch
-                }
-
-                if (attempt == 0) {
-                    Log.d(
-                        "AndroidCallManager",
-                        "Waiting for Twilio invite " +
-                            "for callId=${payload.callId}"
-                    )
-                }
-
-                delay(100)
+            if (!voiceManager.acceptCall(listener)) {
+                failClaimedIncomingAudio(
+                    session = session,
+                    message =
+                        "The incoming voice invitation could not be accepted."
+                )
+                return@launch
             }
 
-            val currentState = _state.value
-
-            if (
-                currentState
-                    is AndroidCallState.Connecting &&
-                currentState
-                    .session
-                    .callId == session.callId
-            ) {
-                TwilioIncomingCallStore
-                    .clearLocalClaim(
-                        session.callId
-                    )
-
-                _state.value =
-                    AndroidCallState.Failed(
-                        "The incoming voice " +
-                            "invitation did not arrive."
-                    )
-            }
+            Log.d(
+                "AndroidCallManager",
+                "Twilio invitation accepted after backend claim"
+            )
         }
     }
 
