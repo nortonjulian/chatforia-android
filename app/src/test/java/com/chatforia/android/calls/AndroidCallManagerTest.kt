@@ -725,13 +725,156 @@ class AndroidCallManagerTest {
             assertEquals(true, session.isVideo)
         }
 
+    @Test
+    fun unexpectedOutgoingVideoDisconnectSchedulesDurableCallEnd() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val video = FakeCallVideoClient()
+            val scheduler =
+                FakeCallEndReconciliationScheduler()
+
+            val manager =
+                createManager(
+                    videoManager = video,
+                    callEndScheduler = scheduler
+                )
+
+            manager.startVideoCall(
+                currentUser = currentUser(id = 77),
+                calleeId = 88,
+                displayName = "Video Friend",
+                chatRoomId = 99
+            )
+
+            advanceUntilIdle()
+
+            val listener =
+                video.connectRequests
+                    .single()
+                    .listener
+
+            listener.onDisconnected()
+
+            assertEquals(
+                listOf(
+                    ScheduledCallEnd(
+                        callId = 111,
+                        reason =
+                            "media_disconnected",
+                        deviceId =
+                            "test-device-id"
+                    )
+                ),
+                scheduler.requests
+            )
+
+            assertTrue(
+                manager.state.value
+                    is AndroidCallState.Ended
+            )
+        }
+
+    @Test
+    fun unexpectedIncomingVideoFailureSchedulesDurableCallEnd() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val video = FakeCallVideoClient()
+            val scheduler =
+                FakeCallEndReconciliationScheduler()
+
+            val manager =
+                createManager(
+                    videoManager = video,
+                    callEndScheduler = scheduler
+                )
+
+            manager.restoreIncomingCall(
+                IncomingCallPayload(
+                    callId = 838,
+                    callerName = "Video Caller",
+                    mode = "VIDEO",
+                    roomName = "call_838"
+                )
+            )
+
+            manager.acceptIncoming(
+                currentUser(id = 24)
+            )
+
+            advanceUntilIdle()
+
+            video.connectRequests
+                .single()
+                .listener
+                .onFailed(
+                    "Network connection lost"
+                )
+
+            assertEquals(
+                listOf(
+                    ScheduledCallEnd(
+                        callId = 838,
+                        reason =
+                            "media_disconnected",
+                        deviceId =
+                            "test-device-id"
+                    )
+                ),
+                scheduler.requests
+            )
+
+            assertTrue(
+                manager.state.value
+                    is AndroidCallState.Failed
+            )
+        }
+
+    @Test
+    fun staleVideoCallbackAfterManualHangupDoesNotScheduleCallEnd() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val video = FakeCallVideoClient()
+            val scheduler =
+                FakeCallEndReconciliationScheduler()
+
+            val manager =
+                createManager(
+                    videoManager = video,
+                    callEndScheduler = scheduler
+                )
+
+            manager.startVideoCall(
+                currentUser = currentUser(id = 77),
+                calleeId = 88,
+                displayName = "Video Friend",
+                chatRoomId = 99
+            )
+
+            advanceUntilIdle()
+
+            val listener =
+                video.connectRequests
+                    .single()
+                    .listener
+
+            listener.onRemoteParticipantConnected()
+            manager.endCall()
+            listener.onDisconnected()
+
+            advanceUntilIdle()
+
+            assertTrue(
+                scheduler.requests.isEmpty()
+            )
+        }
+
     private fun createManager(
         socketManager: FakeCallRealtimeEvents = FakeCallRealtimeEvents(),
         callService: FakeCallBackendService = FakeCallBackendService(),
         videoRepository: FakeVideoCallBackend = FakeVideoCallBackend(),
         voiceManager: FakeCallAudioClient = FakeCallAudioClient(),
         videoManager: FakeCallVideoClient = FakeCallVideoClient(),
-        ringtonePlayer: FakeCallRingtonePlayer = FakeCallRingtonePlayer()
+        ringtonePlayer: FakeCallRingtonePlayer = FakeCallRingtonePlayer(),
+        callEndScheduler:
+            FakeCallEndReconciliationScheduler =
+                FakeCallEndReconciliationScheduler()
     ): AndroidCallManager {
         return AndroidCallManager(
             context = ApplicationProvider.getApplicationContext<Context>(),
@@ -743,7 +886,9 @@ class AndroidCallManagerTest {
             ringtonePlayer = ringtonePlayer,
             callDispatcher = mainDispatcherRule.testDispatcher,
             deviceIdProvider = { "test-device-id" },
-            permissionChecker = { _, _ -> true }
+            permissionChecker = { _, _ -> true },
+            callEndReconciliationScheduler =
+                callEndScheduler
         )
     }
 
@@ -992,6 +1137,33 @@ class AndroidCallManagerTest {
             digits: String
         ) {
             // No-op for test.
+        }
+    }
+
+    private data class ScheduledCallEnd(
+        val callId: Int,
+        val reason: String,
+        val deviceId: String?
+    )
+
+    private class FakeCallEndReconciliationScheduler :
+        CallEndReconciliationScheduler {
+
+        val requests =
+            mutableListOf<ScheduledCallEnd>()
+
+        override fun enqueue(
+            callId: Int,
+            reason: String,
+            deviceId: String?
+        ) {
+            requests.add(
+                ScheduledCallEnd(
+                    callId = callId,
+                    reason = reason,
+                    deviceId = deviceId
+                )
+            )
         }
     }
 
