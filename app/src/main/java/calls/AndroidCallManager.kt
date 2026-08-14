@@ -48,7 +48,12 @@ class AndroidCallManager(
                 permissionContext,
                 permission
             ) == PackageManager.PERMISSION_GRANTED
-        }
+        },
+    private val callEndReconciliationScheduler:
+        CallEndReconciliationScheduler =
+            WorkManagerCallEndReconciliationScheduler(
+                context.applicationContext
+            )
 ) : ViewModel() {
 
     private val json = Json {
@@ -66,6 +71,7 @@ class AndroidCallManager(
     private val appContext = context.applicationContext
     private var incomingRingTimeoutJob: Job? = null
     private var outgoingAudioAnswerWatchJob: Job? = null
+    private var intentionalVideoDisconnect = false
 
     private sealed class PendingOutgoingCall {
         data class Audio(
@@ -808,39 +814,39 @@ class AndroidCallManager(
                             override fun onFailed(
                                 message: String
                             ) {
-                                videoManager.disconnect()
+                                reconcileUnexpectedVideoEnd(
+                                    callId = callId,
+                                    reason = "media_disconnected"
+                                )
 
-                                viewModelScope.launch(
-                                    callDispatcher
-                                ) {
-                                    runCatching {
-                                        callService.endCall(
-                                            callId =
-                                                callId,
-                                            reason = "failed",
-                                            deviceId = deviceIdProvider()
-                                        )
-                                    }
-                                }
+                                disconnectVideoIntentionally()
 
                                 _state.value =
-                                    AndroidCallState.Failed(
-                                        message
-                                    )
+                                    AndroidCallState
+                                        .Failed(message)
                             }
 
                             override fun onDisconnected() {
+                                reconcileUnexpectedVideoEnd(
+                                    callId = callId,
+                                    reason = "media_disconnected"
+                                )
+
                                 trackCallEnded(
                                     "disconnected"
                                 )
 
                                 _state.value =
-                                    AndroidCallState.Ended()
+                                    AndroidCallState
+                                        .Ended(
+                                            reason =
+                                                "media_disconnected"
+                                        )
                             }
                         }
                 )
             } catch (e: Exception) {
-                videoManager.disconnect()
+                disconnectVideoIntentionally()
 
                 if (
                     e is ApiException &&
@@ -1053,7 +1059,7 @@ class AndroidCallManager(
                 }
 
                 if (isVideo) {
-                    videoManager.disconnect()
+                    disconnectVideoIntentionally()
                 } else {
                     voiceManager.rejectIncomingCall()
                 }
@@ -1121,7 +1127,7 @@ class AndroidCallManager(
             .cancelIncomingCallNotification()
 
         voiceManager.endCall()
-        videoManager.disconnect()
+        disconnectVideoIntentionally()
 
         _state.value =
             AndroidCallState.Ended(
@@ -1200,28 +1206,38 @@ class AndroidCallManager(
                     )
                 }
 
-                override fun onFailed(
-                    message: String
-                ) {
-                    failClaimedIncomingAudio(
-                        session = session,
-                        message = message
-                    )
-                }
+                            override fun onFailed(
+                                message: String
+                            ) {
+                                reconcileUnexpectedVideoEnd(
+                                    callId = payload.callId,
+                                    reason = "media_disconnected"
+                                )
 
-                override fun onDisconnected() {
-                    if (!mediaConnected) {
-                        failClaimedIncomingAudio(
-                            session = session,
-                            message =
-                                "The incoming voice call disconnected before connecting."
-                        )
-                        return
-                    }
+                                disconnectVideoIntentionally()
 
-                    trackCallEnded("disconnected")
-                    _state.value = AndroidCallState.Ended()
-                }
+                                _state.value =
+                                    AndroidCallState
+                                        .Failed(message)
+                            }
+
+                            override fun onDisconnected() {
+                                reconcileUnexpectedVideoEnd(
+                                    callId = payload.callId,
+                                    reason = "media_disconnected"
+                                )
+
+                                trackCallEnded(
+                                    "disconnected"
+                                )
+
+                                _state.value =
+                                    AndroidCallState
+                                        .Ended(
+                                            reason =
+                                                "media_disconnected"
+                                        )
+                            }
             }
 
         viewModelScope.launch {
@@ -1477,26 +1493,12 @@ class AndroidCallManager(
                             override fun onFailed(
                                 message: String
                             ) {
-                                videoManager
-                                    .disconnect()
+                                reconcileUnexpectedVideoEnd(
+                                    callId = payload.callId,
+                                    reason = "media_disconnected"
+                                )
 
-                                payload.callId
-                                    ?.let { callId ->
-                                        viewModelScope
-                                            .launch(
-                                                callDispatcher
-                                            ) {
-                                                runCatching {
-                                                    callService
-                                                        .endCall(
-                                                            callId =
-                                                                callId,
-                                                            reason =
-                                                                "failed"
-                                                        )
-                                                }
-                                            }
-                                    }
+                                disconnectVideoIntentionally()
 
                                 _state.value =
                                     AndroidCallState
@@ -1504,18 +1506,26 @@ class AndroidCallManager(
                             }
 
                             override fun onDisconnected() {
+                                reconcileUnexpectedVideoEnd(
+                                    callId = payload.callId,
+                                    reason = "media_disconnected"
+                                )
+
                                 trackCallEnded(
                                     "disconnected"
                                 )
 
                                 _state.value =
                                     AndroidCallState
-                                        .Ended()
+                                        .Ended(
+                                            reason =
+                                                "media_disconnected"
+                                        )
                             }
                         }
                 )
             } catch (error: Exception) {
-                videoManager.disconnect()
+                disconnectVideoIntentionally()
 
                 /*
                  * A 409 loser was handled above and returned.
@@ -1578,7 +1588,7 @@ class AndroidCallManager(
 
             withContext(Dispatchers.Main.immediate) {
                 if (isVideo) {
-                    videoManager.disconnect()
+                    disconnectVideoIntentionally()
                 } else {
                     voiceManager.rejectIncomingCall()
                 }
@@ -1630,6 +1640,58 @@ class AndroidCallManager(
         voiceManager.setSpeaker(updated.speakerEnabled)
 
         _state.value = AndroidCallState.Active(updated)
+    }
+
+    private fun disconnectVideoIntentionally() {
+        intentionalVideoDisconnect = true
+
+        try {
+            videoManager.disconnect()
+        } finally {
+            intentionalVideoDisconnect = false
+        }
+    }
+
+    private fun reconcileUnexpectedVideoEnd(
+        callId: Int?,
+        reason: String
+    ) {
+        if (
+            intentionalVideoDisconnect ||
+            callId == null
+        ) {
+            return
+        }
+
+        val currentSession =
+            when (val current = _state.value) {
+                is AndroidCallState.Connecting ->
+                    current.session
+
+                is AndroidCallState.Active ->
+                    current.session
+
+                else -> null
+            }
+
+        if (
+            currentSession?.isVideo != true ||
+            currentSession.callId != callId
+        ) {
+            return
+        }
+
+        Log.d(
+            "AndroidCallManager",
+            "Scheduling durable video call end " +
+                "callId=$callId reason=$reason"
+        )
+
+        callEndReconciliationScheduler.enqueue(
+            callId = callId,
+            reason = reason,
+            deviceId = deviceIdProvider()
+        )
     }
 
     fun toggleCamera() {
@@ -1687,7 +1749,7 @@ class AndroidCallManager(
             )
 
         if (isVideo) {
-            videoManager.disconnect()
+            disconnectVideoIntentionally()
         } else {
             voiceManager.endCall()
         }
@@ -1829,7 +1891,7 @@ callId = callId,
                 cancelIncomingRingTimeout()
                 ringtonePlayer.stop()
                 voiceManager.endCall()
-                videoManager.disconnect()
+                disconnectVideoIntentionally()
                 trackCallEnded("remote_ended")
                 _state.value = AndroidCallState.Ended()
             }
@@ -1908,7 +1970,7 @@ callId = callId,
                 cancelIncomingRingTimeout()
                     ringtonePlayer.stop()
                     voiceManager.endCall()
-                    videoManager.disconnect()
+                    disconnectVideoIntentionally()
 
                     trackCallEnded(
                         event.reason ?: "remote_ended"
@@ -1983,7 +2045,7 @@ callId = callId,
             cancelIncomingRingTimeout()
                 ringtonePlayer.stop()
                 voiceManager.endCall()
-                videoManager.disconnect()
+                disconnectVideoIntentionally()
                 trackCallEnded("remote_ended")
                 _state.value = AndroidCallState.Ended()
             }
@@ -2048,7 +2110,7 @@ callId = callId,
 
             cancelIncomingRingTimeout()
                 ringtonePlayer.stop()
-                videoManager.disconnect()
+                disconnectVideoIntentionally()
                 trackCallEnded("remote_ended")
                 _state.value = AndroidCallState.Ended()
             }
