@@ -69,3 +69,38 @@ data class LeaseNumberResponse(
     val policy: NumberPolicyDto? = null,
     val error: String? = null
 )
+
+@Serializable
+data class NumberRegulatoryLeaseResponse(
+    val error: String? = null,
+    val message: String? = null,
+    val decision: String? = null,
+    val requiresVerification: Boolean? = null
+)
+
+data class NumberRegulatoryVerificationState(
+    val e164: String,
+    val purchaseIntent: Boolean,
+    val decision: String,
+    val requiresVerification: Boolean
+)
+
+class NumberRegulatoryLeaseException(
+    val response: NumberRegulatoryLeaseResponse
+) : Exception(
+    response.message
+        ?: response.error
+        ?: response.decision
+        ?: "Regulatory verification is required."
+)
+
+fun NumberRegulatoryVerificationState.withLeaseResponse(
+    response: NumberRegulatoryLeaseResponse
+): NumberRegulatoryVerificationState =
+    copy(
+        decision =
+            response.decision
+                ?: "BLOCKED_UNKNOWN_STATUS",
+        requiresVerification =
+            response.requiresVerification == true
+    )

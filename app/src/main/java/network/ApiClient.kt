@@ -10,10 +10,11 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 import okhttp3.MultipartBody
 import com.chatforia.android.upload.UploadImageResponse
+import com.chatforia.android.numbers.RegulatoryDocumentTransport
 
 class ApiClient(
     private val tokenStorage: TokenStorage
-) : ApiTransport {
+) : ApiTransport, RegulatoryDocumentTransport {
     @PublishedApi
     internal val json = Json {
         ignoreUnknownKeys = true
@@ -242,4 +243,104 @@ class ApiClient(
             if (responseBody.isBlank()) "{}" else responseBody
         ) as T
     }
+
+
+    override fun uploadRegulatoryDocumentRaw(
+        e164: String,
+        requirementName: String,
+        documentType: String,
+        attributesJson: String,
+        filename: String,
+        mimeType: String,
+        bytes: ByteArray
+    ): String {
+        val allowedMimeTypes =
+            setOf(
+                "image/jpeg",
+                "image/png",
+                "application/pdf"
+            )
+
+        require(mimeType in allowedMimeTypes) {
+            "Unsupported regulatory document MIME type."
+        }
+
+        require(bytes.size <= 5 * 1024 * 1024) {
+            "Regulatory document exceeds the 5 MB limit."
+        }
+
+        val token =
+            tokenStorage.read()
+                ?: throw Exception("Unauthorized")
+
+        val url =
+            "${Environment.API_BASE_URL}/numbers/regulatory/documents"
+
+        val textMediaType =
+            "text/plain; charset=utf-8".toMediaType()
+
+        val fileBody =
+            bytes.toRequestBody(mimeType.toMediaType())
+
+        val multipartBody =
+            MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart(
+                    "e164",
+                    null,
+                    e164.toRequestBody(textMediaType)
+                )
+                .addFormDataPart(
+                    "requirementName",
+                    null,
+                    requirementName.toRequestBody(textMediaType)
+                )
+                .addFormDataPart(
+                    "documentType",
+                    null,
+                    documentType.toRequestBody(textMediaType)
+                )
+                .addFormDataPart(
+                    "attributes",
+                    null,
+                    attributesJson.toRequestBody(textMediaType)
+                )
+                .addFormDataPart(
+                    "file",
+                    filename,
+                    fileBody
+                )
+                .build()
+
+        val request =
+            Request.Builder()
+                .url(url)
+                .addHeader("Accept", "application/json")
+                .addHeader(
+                    "Authorization",
+                    "Bearer $token"
+                )
+                .post(multipartBody)
+                .build()
+
+        val response =
+            client.newCall(request).execute()
+
+        val responseBody =
+            response.body?.string().orEmpty()
+
+        if (!response.isSuccessful) {
+            throw ApiException(
+                statusCode = response.code,
+                responseBody = responseBody
+            )
+        }
+
+        return if (responseBody.isBlank()) {
+            "{}"
+        } else {
+            responseBody
+        }
+    }
+
 }
