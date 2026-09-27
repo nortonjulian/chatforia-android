@@ -382,6 +382,7 @@
     <string name="android_profile_encryption_key_protected">Encryption key protected</string>
     <string name="android_profile_esim_and_wireless_settings">eSIM and wireless settings</string>
     <string name="android_profile_forward_incoming_calls_and_texts">Forward incoming calls and texts</string>
+    <string name="android_profile_enable_voicemail">Enable voicemail</string>
     <string name="android_profile_forward_voicemail_to_email">Forward voicemail to email</string>
     <string name="android_profile_free">Free</string>
     <string name="android_profile_hold_to_reveal_messages">Hold to reveal messages</string>
