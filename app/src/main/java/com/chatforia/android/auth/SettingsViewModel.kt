@@ -49,7 +49,6 @@ data class SettingsUiState(
     val wantsAgeFilter: Boolean = true,
     val randomChatAllowedBands: List<String> = emptyList(),
 
-    val voicemailEnabled: Boolean = true,
     val voicemailAutoDeleteDays: Int? = null,
     val voicemailForwardEmail: String = "",
     val voicemailGreetingText: String = "",
@@ -105,7 +104,6 @@ class SettingsViewModel(
             wantsAgeFilter = user.wantsAgeFilter ?: true,
             randomChatAllowedBands = user.randomChatAllowedBands ?: emptyList(),
 
-            voicemailEnabled = user.voicemailEnabled ?: true,
             voicemailAutoDeleteDays = user.voicemailAutoDeleteDays,
             voicemailForwardEmail = user.voicemailForwardEmail ?: "",
             voicemailGreetingText =
@@ -192,7 +190,6 @@ class SettingsViewModel(
                         randomChatAllowedBands =
                             current.randomChatAllowedBands,
 
-                        voicemailEnabled = current.voicemailEnabled,
                         voicemailAutoDeleteDays =
                             current.voicemailAutoDeleteDays,
                         voicemailForwardEmail =
