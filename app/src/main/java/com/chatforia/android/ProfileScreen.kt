@@ -908,7 +908,7 @@ fun ProfileScreen(
 
         ChatforiaSectionCard(title = stringResource(R.string.android_calls_voicemail)) {
             SettingSwitchRow(
-                title = stringResource(R.string.android_profile_forward_voicemail_to_email),
+                title = stringResource(R.string.android_profile_enable_voicemail),
                 subtitle = "",
                 checked = settingsState.voicemailEnabled,
                 onCheckedChange = { enabled ->
