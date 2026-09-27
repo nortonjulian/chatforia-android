@@ -107,8 +107,7 @@ class SettingsViewModel(
 
             voicemailEnabled = user.voicemailEnabled ?: true,
             voicemailAutoDeleteDays = user.voicemailAutoDeleteDays,
-            voicemailForwardEmail =
-                user.voicemailForwardEmail ?: user.email ?: "",
+            voicemailForwardEmail = user.voicemailForwardEmail ?: "",
             voicemailGreetingText =
                 user.voicemailGreetingText ?: user.voicemailGreeting ?: "",
 
