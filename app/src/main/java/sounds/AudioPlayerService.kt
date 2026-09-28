@@ -106,8 +106,8 @@ class AudioPlayerService(
         fun savedRingtone(context: Context): String {
             return context
                 .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                .getString(RINGTONE_KEY, "Classic.mp3")
-                ?: "Classic.mp3"
+                .getString(RINGTONE_KEY, "classic.mp3")
+                ?: "classic.mp3"
         }
 
         fun savedSoundVolume(context: Context): Int {

@@ -38,7 +38,7 @@ data class SettingsUiState(
     val maskAIProfanity: Boolean = false,
 
     val messageTone: String = "Default.mp3",
-    val ringtone: String = "Classic.mp3",
+    val ringtone: String = "classic.mp3",
     val soundVolume: Int = 70,
 
     val isSaving: Boolean = false,
