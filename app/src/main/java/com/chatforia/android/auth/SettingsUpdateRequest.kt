@@ -31,7 +31,7 @@ data class SettingsUpdateRequest(
     val uiLanguage: String? = null,
 
     val messageTone: String? = "Default.mp3",
-    val ringtone: String? = "Classic.mp3",
+    val ringtone: String? = "classic.mp3",
 
     val enableSmartReplies: Boolean = true,
     val maskAIProfanity: Boolean? = false,

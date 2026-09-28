@@ -240,7 +240,7 @@ fun OnboardingScreen(
                                                         ?: currentUser.tone
                                                         ?: "Default.mp3",
 
-                                                ringtone = currentUser.ringtone ?: "Classic.mp3",
+                                                ringtone = currentUser.ringtone ?: "classic.mp3",
                                                 soundVolume = currentUser.soundVolume?.toInt() ?: 70
                                             )
                                         )

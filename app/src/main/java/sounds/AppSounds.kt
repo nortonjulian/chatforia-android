@@ -16,30 +16,30 @@ data class SoundOption(
 object AppMessageTones {
     val all = listOf(
         SoundOption(R.string.android_sound_default, "Default.mp3", RequiredPlan.Free),
-        SoundOption(R.string.android_sound_dreamer, "Dreamer.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_dreamer, "dreamer.mp3", RequiredPlan.Premium),
         SoundOption(R.string.android_sound_happy_message, "Happy Message.mp3", RequiredPlan.Premium),
-        SoundOption(R.string.android_sound_notify, "Notify.mp3", RequiredPlan.Premium),
-        SoundOption(R.string.android_sound_pop, "Pop.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_notify, "notify.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_pop, "pop.mp3", RequiredPlan.Premium),
         SoundOption(R.string.android_sound_pulsating_sound, "Pulsating Sound.mp3", RequiredPlan.Premium),
-        SoundOption(R.string.android_sound_sparkle, "Sparkle.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_sparkle, "sparkle.mp3", RequiredPlan.Premium),
         SoundOption(R.string.android_sound_text_message, "Text Message.mp3", RequiredPlan.Premium),
-        SoundOption(R.string.android_sound_vibrate, "Vibrate.mp3", RequiredPlan.Free),
-        SoundOption(R.string.android_sound_xylophone, "Xylophone.mp3", RequiredPlan.Premium)
+        SoundOption(R.string.android_sound_vibrate, "vibrate.mp3", RequiredPlan.Free),
+        SoundOption(R.string.android_sound_xylophone, "xylophone.mp3", RequiredPlan.Premium)
     )
 }
 
 object AppRingtones {
     val all = listOf(
-        SoundOption(R.string.android_sound_bells, "Bells.mp3", RequiredPlan.Premium),
-        SoundOption(R.string.android_sound_chimes, "Chimes.mp3", RequiredPlan.Premium),
-        SoundOption(R.string.android_sound_classic, "Classic.mp3", RequiredPlan.Free),
+        SoundOption(R.string.android_sound_bells, "bells.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_chimes, "chimes.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_classic, "classic.mp3", RequiredPlan.Free),
         SoundOption(R.string.android_sound_digital_phone, "Digital Phone.mp3", RequiredPlan.Premium),
-        SoundOption(R.string.android_sound_melodic, "Melodic.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_melodic, "melodic.mp3", RequiredPlan.Premium),
         SoundOption(R.string.android_sound_organ_notes, "Organ Notes.mp3", RequiredPlan.Premium),
         SoundOption(R.string.android_sound_sound_reality, "Sound Reality.mp3", RequiredPlan.Premium),
-        SoundOption(R.string.android_sound_street, "Street.mp3", RequiredPlan.Premium),
-        SoundOption(R.string.android_sound_universfield, "Universfield.mp3", RequiredPlan.Premium),
-        SoundOption(R.string.android_sound_urgency, "Urgency.mp3", RequiredPlan.Free)
+        SoundOption(R.string.android_sound_street, "street.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_universfield, "universfield.mp3", RequiredPlan.Premium),
+        SoundOption(R.string.android_sound_urgency, "urgency.mp3", RequiredPlan.Free)
     )
 }
 
@@ -72,7 +72,7 @@ fun resolvedRingtoneForPlan(
     filename: String?,
     plan: String?
 ): String {
-    val fallback = "Classic.mp3"
+    val fallback = "classic.mp3"
 
     val option =
         AppRingtones.all.firstOrNull {
