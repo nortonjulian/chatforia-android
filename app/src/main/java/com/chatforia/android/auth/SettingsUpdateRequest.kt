@@ -23,7 +23,6 @@ data class SettingsUpdateRequest(
     val randomChatAllowedBands: List<String> = emptyList(),
     val riaRemember: Boolean = true,
 
-    val voicemailEnabled: Boolean = true,
     val voicemailAutoDeleteDays: Int? = null,
     val voicemailForwardEmail: String = "",
     val voicemailGreetingText: String = "",

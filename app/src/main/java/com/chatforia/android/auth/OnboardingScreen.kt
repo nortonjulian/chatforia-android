@@ -214,11 +214,9 @@ fun OnboardingScreen(
 
                                                 riaRemember = currentUser.riaRemember ?: true,
 
-                                                voicemailEnabled = currentUser.voicemailEnabled ?: true,
                                                 voicemailAutoDeleteDays = currentUser.voicemailAutoDeleteDays,
                                                 voicemailForwardEmail =
-                                                    currentUser.voicemailForwardEmail
-                                                        ?: currentUser.email.orEmpty(),
+                                                    currentUser.voicemailForwardEmail.orEmpty(),
                                                 voicemailGreetingText =
                                                     currentUser.voicemailGreetingText
                                                         ?: currentUser.voicemailGreeting
