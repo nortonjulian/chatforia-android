@@ -80,14 +80,14 @@ class SettingsViewModelTest {
         assertTrue(state.maskAIProfanity)
 
         assertEquals("Default.mp3", state.messageTone)
-        assertEquals("Classic.mp3", state.ringtone)
+        assertEquals("classic.mp3", state.ringtone)
         assertEquals(42, state.soundVolume)
 
         assertEquals("ADULT_25_34", state.ageBand)
         assertFalse(state.wantsAgeFilter)
         assertEquals(listOf("ADULT_18_24", "ADULT_25_34"), state.randomChatAllowedBands)
 
-        assertFalse(state.voicemailEnabled)
+        assertFalse(state.voicemailEmailForwardingEnabled)
         assertEquals(14, state.voicemailAutoDeleteDays)
         assertEquals("voice@example.com", state.voicemailForwardEmail)
         assertEquals("Leave a message.", state.voicemailGreetingText)
@@ -135,16 +135,16 @@ class SettingsViewModelTest {
         assertFalse(state.maskAIProfanity)
 
         assertEquals("Default.mp3", state.messageTone)
-        assertEquals("Classic.mp3", state.ringtone)
+        assertEquals("classic.mp3", state.ringtone)
         assertEquals(70, state.soundVolume)
 
         assertNull(state.ageBand)
         assertTrue(state.wantsAgeFilter)
         assertEquals(emptyList<String>(), state.randomChatAllowedBands)
 
-        assertTrue(state.voicemailEnabled)
+        assertFalse(state.voicemailEmailForwardingEnabled)
         assertNull(state.voicemailAutoDeleteDays)
-        assertEquals("fallback@example.com", state.voicemailForwardEmail)
+        assertEquals("", state.voicemailForwardEmail)
         assertEquals("", state.voicemailGreetingText)
 
         assertEquals("md", state.a11yUiFont)
@@ -216,7 +216,8 @@ class SettingsViewModelTest {
                     ageBand = "ADULT_35_49",
                     wantsAgeFilter = false,
                     randomChatAllowedBands = listOf("ADULT_25_34", "ADULT_35_49"),
-                    voicemailEnabled = false,
+                    voicemailEmailForwardingEnabled = false,
+                    canForwardVoicemailEmail = true,
                     voicemailAutoDeleteDays = 30,
                     voicemailForwardEmail = "voice@example.com",
                     voicemailGreetingText = "Custom greeting"
@@ -256,7 +257,7 @@ class SettingsViewModelTest {
             assertFalse(request.wantsAgeFilter)
             assertEquals(listOf("ADULT_25_34", "ADULT_35_49"), request.randomChatAllowedBands)
 
-            assertFalse(request.voicemailEnabled)
+            assertEquals(false, request.voicemailEmailForwardingEnabled)
             assertEquals(30, request.voicemailAutoDeleteDays)
             assertEquals("voice@example.com", request.voicemailForwardEmail)
             assertEquals("Custom greeting", request.voicemailGreetingText)
@@ -392,6 +393,40 @@ class SettingsViewModelTest {
             assertNull(state.success)
             assertFalse(callbackCalled)
         }
+
+    @Test
+    fun emailForwardingOffPreservesSavedAddress() = runTest(mainDispatcherRule.testDispatcher) {
+        val repository = FakeUserSettingsRepository()
+        val viewModel = SettingsViewModel(repository)
+        viewModel.load(user(id = 65).copy(
+            canForwardVoicemailEmail = true,
+            voicemailEmailForwardingEnabled = true,
+            voicemailForwardEmail = "saved@example.com"
+        ))
+        viewModel.update { it.copy(voicemailEmailForwardingEnabled = false) }
+        viewModel.save { }
+        advanceUntilIdle()
+        val request = repository.updateSettingsRequests.single()
+        assertEquals(false, request.voicemailEmailForwardingEnabled)
+        assertEquals("saved@example.com", request.voicemailForwardEmail)
+    }
+
+    @Test
+    fun freeSaveOmitsPaidPreferencesAndPreservesSavedAddress() = runTest(mainDispatcherRule.testDispatcher) {
+        val repository = FakeUserSettingsRepository()
+        val viewModel = SettingsViewModel(repository)
+        viewModel.load(user(id = 65).copy(
+            canForwardVoicemailEmail = false,
+            voicemailEmailForwardingEnabled = true,
+            voicemailForwardEmail = "saved@example.com"
+        ))
+        viewModel.save { }
+        advanceUntilIdle()
+        val request = repository.updateSettingsRequests.single()
+        assertNull(request.voicemailEmailForwardingEnabled)
+        assertNull(request.voicemailForwardEmail)
+        assertEquals("saved@example.com", viewModel.state.value.voicemailForwardEmail)
+    }
 
     private fun user(
         id: Int,
