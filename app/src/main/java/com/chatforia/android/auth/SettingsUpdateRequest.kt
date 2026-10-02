@@ -24,7 +24,8 @@ data class SettingsUpdateRequest(
     val riaRemember: Boolean = true,
 
     val voicemailAutoDeleteDays: Int? = null,
-    val voicemailForwardEmail: String = "",
+    val voicemailForwardEmail: String? = null,
+    val voicemailEmailForwardingEnabled: Boolean? = null,
     val voicemailGreetingText: String = "",
 
     val uiLanguage: String? = null,

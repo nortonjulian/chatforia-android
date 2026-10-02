@@ -3306,4 +3306,5 @@
     <string name="android_wireless_valid_for_30_days_from_first_data_connection">Valid for 30 days from first data connection</string>
     <string name="android_wireless_one_time_purchase_with_no_contract">One-time purchase with no contract</string>
     <string name="android_wireless_top_up_anytime">Top up anytime</string>
+    <string name="voicemail_email_requires_plus">Voicemail email forwarding requires Plus or Premium.</string>
 </resources>

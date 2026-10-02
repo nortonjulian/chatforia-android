@@ -51,6 +51,8 @@ data class SettingsUiState(
 
     val voicemailAutoDeleteDays: Int? = null,
     val voicemailForwardEmail: String = "",
+    val voicemailEmailForwardingEnabled: Boolean = false,
+    val canForwardVoicemailEmail: Boolean = false,
     val voicemailGreetingText: String = "",
 )
 
@@ -106,6 +108,8 @@ class SettingsViewModel(
 
             voicemailAutoDeleteDays = user.voicemailAutoDeleteDays,
             voicemailForwardEmail = user.voicemailForwardEmail ?: "",
+            voicemailEmailForwardingEnabled = user.voicemailEmailForwardingEnabled ?: false,
+            canForwardVoicemailEmail = user.canForwardVoicemailEmail ?: false,
             voicemailGreetingText =
                 user.voicemailGreetingText ?: user.voicemailGreeting ?: "",
 
@@ -193,7 +197,9 @@ class SettingsViewModel(
                         voicemailAutoDeleteDays =
                             current.voicemailAutoDeleteDays,
                         voicemailForwardEmail =
-                            current.voicemailForwardEmail,
+                            current.voicemailForwardEmail.takeIf { current.canForwardVoicemailEmail },
+                        voicemailEmailForwardingEnabled =
+                            current.voicemailEmailForwardingEnabled.takeIf { current.canForwardVoicemailEmail },
                         voicemailGreetingText =
                             current.voicemailGreetingText,
 

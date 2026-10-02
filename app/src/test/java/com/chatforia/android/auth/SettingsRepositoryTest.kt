@@ -97,7 +97,7 @@ class SettingsRepositoryTest {
                         wantsAgeFilter = false,
                         randomChatAllowedBands = listOf("ADULT_18_24", "ADULT_25_34"),
                         riaRemember = false,
-                        voicemailEnabled = false,
+                        voicemailEmailForwardingEnabled = false,
                         voicemailAutoDeleteDays = 14,
                         voicemailForwardEmail = "voice@example.com",
                         voicemailGreetingText = "Leave a message.",
@@ -145,7 +145,8 @@ class SettingsRepositoryTest {
             assertEquals(2, body["randomChatAllowedBands"]?.jsonArray?.size)
             assertEquals(false, body["riaRemember"]?.jsonPrimitive?.boolean)
 
-            assertEquals(false, body["voicemailEnabled"]?.jsonPrimitive?.boolean)
+            assertFalse(body.containsKey("voicemailEnabled"))
+            assertEquals(false, body["voicemailEmailForwardingEnabled"]?.jsonPrimitive?.boolean)
             assertEquals(14, body["voicemailAutoDeleteDays"]?.jsonPrimitive?.int)
             assertEquals("voice@example.com", body["voicemailForwardEmail"]?.jsonPrimitive?.content)
             assertEquals("Leave a message.", body["voicemailGreetingText"]?.jsonPrimitive?.content)
