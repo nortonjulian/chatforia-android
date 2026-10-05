@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import com.chatforia.android.crypto.AccountKeyService
 import com.chatforia.android.notifications.PushRegistrationResult
@@ -22,6 +24,41 @@ class AuthViewModel(
     private val autoBootstrap: Boolean = true,
     private val analytics: AnalyticsTracker = AnalyticsManager
 ) : ViewModel() {
+
+    private var mfaCompletion: CompletableDeferred<UserDto>? = null
+    private var mfaToken: String? = null
+    private val _mfaPending = MutableStateFlow(false)
+    val mfaPending: StateFlow<Boolean> = _mfaPending
+
+    private suspend fun authenticate(action: suspend () -> UserDto): UserDto {
+        return try {
+            action()
+        } catch (challenge: MfaRequiredException) {
+            check(mfaCompletion == null) { "A sign-in is already in progress" }
+            val completion = CompletableDeferred<UserDto>()
+            mfaCompletion = completion
+            mfaToken = challenge.challengeToken
+            _mfaPending.value = true
+            try {
+                completion.await()
+            } finally {
+                mfaCompletion = null
+                mfaToken = null
+                _mfaPending.value = false
+            }
+        }
+    }
+
+    suspend fun completeMfa(code: String) {
+        val completion = mfaCompletion ?: return
+        val token = mfaToken ?: return
+        val user = repository.completeMfa(token, code)
+        completion.complete(user)
+    }
+
+    fun cancelMfa() {
+        mfaCompletion?.completeExceptionally(CancellationException("Sign-in cancelled"))
+    }
 
     private val _state = MutableStateFlow<AuthState>(AuthState.Loading)
     val state: StateFlow<AuthState> = _state
@@ -156,10 +193,7 @@ class AuthViewModel(
         password: String
     ) {
         val user =
-            repository.login(
-                identifier,
-                password
-            )
+            authenticate { repository.login(identifier, password) }
 
         accountKeyManager.resetAccountEncryption(
             userId = user.id
@@ -183,7 +217,7 @@ class AuthViewModel(
         identifier: String,
         password: String
     ) {
-        val user = repository.login(identifier, password)
+        val user = authenticate { repository.login(identifier, password) }
         _state.value = resolveLoggedInState(user)
 
         analytics.identify(
@@ -208,7 +242,7 @@ class AuthViewModel(
     suspend fun loginWithGoogle(
         idToken: String
     ) {
-        val user = repository.loginWithGoogle(idToken)
+        val user = authenticate { repository.loginWithGoogle(idToken) }
         _state.value = resolveLoggedInState(user)
 
         analytics.identify(
@@ -219,10 +253,8 @@ class AuthViewModel(
             )
         )
 
-        analytics.capture(
-            "account logged in",
-            mapOf("method" to "google")
-        )
+        val properties = mutableMapOf<String, Any>("method" to "google")
+        analytics.capture("account logged in", properties)
 
         registerPushTokenIfPossible()
     }
@@ -266,6 +298,7 @@ class AuthViewModel(
     }
 
     fun logout() {
+        cancelMfa()
         val logoutToken =
             repository.currentToken()
 

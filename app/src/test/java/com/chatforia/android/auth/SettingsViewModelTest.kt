@@ -87,7 +87,6 @@ class SettingsViewModelTest {
         assertFalse(state.wantsAgeFilter)
         assertEquals(listOf("ADULT_18_24", "ADULT_25_34"), state.randomChatAllowedBands)
 
-        assertFalse(state.voicemailEnabled)
         assertEquals(14, state.voicemailAutoDeleteDays)
         assertEquals("voice@example.com", state.voicemailForwardEmail)
         assertEquals("Leave a message.", state.voicemailGreetingText)
@@ -142,7 +141,6 @@ class SettingsViewModelTest {
         assertTrue(state.wantsAgeFilter)
         assertEquals(emptyList<String>(), state.randomChatAllowedBands)
 
-        assertTrue(state.voicemailEnabled)
         assertNull(state.voicemailAutoDeleteDays)
         assertEquals("fallback@example.com", state.voicemailForwardEmail)
         assertEquals("", state.voicemailGreetingText)
@@ -216,7 +214,6 @@ class SettingsViewModelTest {
                     ageBand = "ADULT_35_49",
                     wantsAgeFilter = false,
                     randomChatAllowedBands = listOf("ADULT_25_34", "ADULT_35_49"),
-                    voicemailEnabled = false,
                     voicemailAutoDeleteDays = 30,
                     voicemailForwardEmail = "voice@example.com",
                     voicemailGreetingText = "Custom greeting"
@@ -256,7 +253,6 @@ class SettingsViewModelTest {
             assertFalse(request.wantsAgeFilter)
             assertEquals(listOf("ADULT_25_34", "ADULT_35_49"), request.randomChatAllowedBands)
 
-            assertFalse(request.voicemailEnabled)
             assertEquals(30, request.voicemailAutoDeleteDays)
             assertEquals("voice@example.com", request.voicemailForwardEmail)
             assertEquals("Custom greeting", request.voicemailGreetingText)

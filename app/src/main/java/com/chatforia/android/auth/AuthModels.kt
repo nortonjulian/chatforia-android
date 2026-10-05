@@ -24,3 +24,8 @@ data class MeResponse(
 data class GoogleLoginRequest(
     val idToken: String
 )
+
+@Serializable
+data class MfaLoginRequest(val mfaToken: String, val code: String)
+
+class MfaRequiredException(val challengeToken: String) : Exception("Two-factor verification required")
