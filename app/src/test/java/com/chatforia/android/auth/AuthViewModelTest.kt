@@ -5,6 +5,8 @@ import com.chatforia.android.crypto.LinkedDeviceDto
 import com.chatforia.android.notifications.PushRegistrationResult
 import com.chatforia.android.notifications.PushTokenRegisterer
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
@@ -312,6 +314,46 @@ class AuthViewModelTest {
         assertEquals(AuthState.LoggedOut, viewModel.state.value)
     }
 
+    @Test
+    fun encryptionResetWaitsForTwoFactorCompletion() = runTest(mainDispatcherRule.testDispatcher) {
+        val repository = FakeAuthSessionRepository()
+        repository.challengeRequired = true
+        repository.loginUser = user(77, "mfa_user", "en", "public-key")
+        repository.fetchMeUser = repository.loginUser
+        val keys = FakeAccountKeyService()
+        val viewModel = createViewModel(repository, keys)
+        val login = async { viewModel.resetEncryptionAndLogin("user@example.com", "password123") }
+        advanceUntilIdle()
+        assertTrue(viewModel.mfaPending.value)
+        assertTrue(!keys.resetCalled)
+        assertTrue(repository.rotatedKeys.isEmpty())
+        viewModel.completeMfa("123456")
+        advanceUntilIdle()
+        login.await()
+        assertTrue(!viewModel.mfaPending.value)
+        assertTrue(keys.resetCalled)
+        assertTrue(viewModel.state.value is AuthState.LoggedIn)
+    }
+
+    @Test
+    fun cancelledChallengeDoesNotPrepareKeys() = runTest(mainDispatcherRule.testDispatcher) {
+        val repository = FakeAuthSessionRepository()
+        repository.challengeRequired = true
+        val keys = FakeAccountKeyService()
+        val viewModel = createViewModel(repository, keys)
+        val login = async {
+            try { viewModel.login("user@example.com", "password123"); false }
+            catch (cancelled: CancellationException) { true }
+        }
+        advanceUntilIdle()
+        viewModel.cancelMfa()
+        advanceUntilIdle()
+        assertTrue(login.await())
+        assertTrue(!viewModel.mfaPending.value)
+        assertTrue(keys.ensuredServerKeys.isEmpty())
+        assertTrue(!keys.resetCalled)
+    }
+
     private fun createViewModel(
         repository: FakeAuthSessionRepository,
         accountKeyService: FakeAccountKeyService = FakeAccountKeyService(),
@@ -344,6 +386,11 @@ class AuthViewModelTest {
     }
 
     private class FakeAuthSessionRepository : AuthSessionRepository {
+        var challengeRequired = false
+        override suspend fun completeMfa(mfaToken: String, code: String): UserDto {
+            check(mfaToken == "challenge" && code == "123456")
+            return loginUser ?: error("No login user")
+        }
         var bootstrapUser: UserDto? = null
         var loginUser: UserDto? = null
         var googleLoginUser: UserDto? = null
@@ -361,6 +408,7 @@ class AuthViewModelTest {
             password: String
         ): UserDto {
             loginCalls.add(identifier to password)
+            if (challengeRequired) throw MfaRequiredException("challenge")
             return loginUser ?: error("No login user configured.")
         }
 

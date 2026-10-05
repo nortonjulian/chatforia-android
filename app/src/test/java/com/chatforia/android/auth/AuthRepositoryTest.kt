@@ -339,7 +339,7 @@ class AuthRepositoryTest {
         }
 
     @Test
-    fun register_trimsFieldsAndIncludesSmsConsentWhenPhoneExists() =
+    fun register_trimsFieldsWithoutPhoneOrSmsConsent() =
         runTest {
             val api = FakeApiTransport()
             val tokenStorage = FakeAuthTokenStorage()
@@ -365,9 +365,7 @@ class AuthRepositoryTest {
                 repository.register(
                     username = "  new_user  ",
                     email = "  new@example.com  ",
-                    password = "password123",
-                    phone = "  +15551234567  ",
-                    smsConsent = true
+                    password = "password123"
                 )
 
             assertEquals("register-token", response.token)
@@ -384,12 +382,12 @@ class AuthRepositoryTest {
             assertEquals("new_user", body["username"]?.jsonPrimitive?.content)
             assertEquals("new@example.com", body["email"]?.jsonPrimitive?.content)
             assertEquals("password123", body["password"]?.jsonPrimitive?.content)
-            assertEquals("+15551234567", body["phone"]?.jsonPrimitive?.content)
-            assertEquals(true, body["smsConsent"]?.jsonPrimitive?.content.toBoolean())
+            assertFalse(body.containsKey("phone"))
+            assertFalse(body.containsKey("smsConsent"))
         }
 
     @Test
-    fun register_omitsPhoneAndSmsConsentWhenPhoneBlank() =
+    fun register_decodesLegacyResponseWithoutPhoneFields() =
         runTest {
             val api = FakeApiTransport()
             val tokenStorage = FakeAuthTokenStorage()
@@ -416,9 +414,7 @@ class AuthRepositoryTest {
                 repository.register(
                     username = "no_phone",
                     email = "no_phone@example.com",
-                    password = "password123",
-                    phone = "   ",
-                    smsConsent = true
+                    password = "password123"
                 )
 
             assertEquals(6, response.resolvedUser?.id)
@@ -462,6 +458,57 @@ class AuthRepositoryTest {
 
         assertEquals(null, tokenStorage.token)
         assertTrue(tokenStorage.clearCalled)
+    }
+
+    @Test
+    fun challengeDoesNotSaveSessionAndCompletionPostsCode() = runTest {
+        val api = FakeApiTransport()
+        val storage = FakeAuthTokenStorage()
+        api.enqueueResponse("""{"mfaRequired":true,"mfaToken":"challenge","user":{"id":7}}""")
+        api.enqueueResponse("""{"message":"ok","token":"session","user":${userJson(7, "mfa_user")}}""")
+        val repository = AuthRepository(api, storage, UnconfinedTestDispatcher(testScheduler))
+        val challenge = try {
+            repository.login("user@example.com", "password123")
+            throw AssertionError("Expected a challenge")
+        } catch (required: MfaRequiredException) { required }
+        assertEquals(null, storage.token)
+        val user = repository.completeMfa(challenge.challengeToken, " 123456 ")
+        assertEquals(7, user.id)
+        assertEquals("session", storage.token)
+        val request = api.requests.last()
+        assertEquals("auth/2fa/login", request.path)
+        assertFalse(request.requiresAuth)
+        assertEquals("challenge", parseBody(request)["mfaToken"]?.jsonPrimitive?.content)
+        assertEquals("123456", parseBody(request)["code"]?.jsonPrimitive?.content)
+    }
+
+    @Test
+    fun googleChallengeDoesNotSaveSession() = runTest {
+        val api = FakeApiTransport()
+        val storage = FakeAuthTokenStorage()
+        api.enqueueResponse("""{"mfaRequired":true,"mfaToken":"google-challenge","user":{"id":8}}""")
+        val repository = AuthRepository(api, storage, UnconfinedTestDispatcher(testScheduler))
+        try {
+            repository.loginWithGoogle("id-token")
+            throw AssertionError("Expected a challenge")
+        } catch (required: MfaRequiredException) {
+            assertEquals("google-challenge", required.challengeToken)
+        }
+        assertEquals(null, storage.token)
+    }
+
+    @Test
+    fun registrationReturnsKeysWithoutIssuingSession() = runTest {
+        val api = FakeApiTransport()
+        val storage = FakeAuthTokenStorage()
+        api.enqueueResponse("""{"message":"user registered","requiresEmailVerification":true,"privateKey":"private-key","user":${userJson(79, "new_user")}}""")
+        val repository = AuthRepository(api, storage, UnconfinedTestDispatcher(testScheduler))
+        val response = repository.register("new_user", "new@example.com", "password123")
+        assertTrue(response.requiresEmailVerification)
+        assertEquals("private-key", response.privateKey)
+        assertEquals("public-key-79", response.resolvedUser?.publicKey)
+        assertEquals(null, response.token)
+        assertEquals(null, storage.token)
     }
 
     private fun parseBody(

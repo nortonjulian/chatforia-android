@@ -10,6 +10,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 
 class AuthRepository(
     private val apiClient: ApiTransport,
@@ -39,6 +42,31 @@ class AuthRepository(
         )
     }
 
+    private suspend fun sendLogin(request: ApiRequest): LoginResponse {
+        val text = sendRawRequest(request)
+        val fields = json.parseToJsonElement(text).jsonObject
+        if (fields["mfaRequired"]?.jsonPrimitive?.booleanOrNull == true) {
+            val challenge = fields["mfaToken"]?.jsonPrimitive?.content
+                ?.takeIf { it.isNotBlank() }
+                ?: throw IllegalStateException("Missing two-factor challenge")
+            throw MfaRequiredException(challenge)
+        }
+        val response = json.decodeFromString<LoginResponse>(text)
+        require(response.token.isNotBlank() && response.user.id > 0) { "Invalid login response" }
+        return response
+    }
+
+    override suspend fun completeMfa(mfaToken: String, code: String): UserDto {
+        val response = sendLogin(ApiRequest(
+            path = "auth/2fa/login",
+            method = HttpMethod.POST,
+            bodyJson = json.encodeToString(MfaLoginRequest(mfaToken, code.trim())),
+            requiresAuth = false
+        ))
+        tokenStorage.save(response.token)
+        return response.user
+    }
+
     override suspend fun login(
         identifier: String,
         password: String
@@ -51,8 +79,8 @@ class AuthRepository(
                 )
             )
 
-        val response: LoginResponse =
-            sendJson(
+        val response =
+            sendLogin(
                 ApiRequest(
                     path = "auth/login",
                     method = HttpMethod.POST,
@@ -76,8 +104,8 @@ class AuthRepository(
                 )
             )
 
-        val response: LoginResponse =
-            sendJson(
+        val response =
+            sendLogin(
                 ApiRequest(
                     path = "auth/oauth/google/android",
                     method = HttpMethod.POST,
@@ -181,24 +209,14 @@ class AuthRepository(
     suspend fun register(
         username: String,
         email: String,
-        password: String,
-        phone: String? = null,
-        smsConsent: Boolean? = null
+        password: String
     ): RegistrationResponse {
-        val trimmedPhone =
-            phone
-                ?.trim()
-                ?.takeIf { it.isNotBlank() }
-
         val bodyJson =
             json.encodeToString(
                 RegistrationRequest(
                     username = username.trim(),
                     email = email.trim(),
-                    password = password,
-                    phone = trimmedPhone,
-                    smsConsent =
-                        if (trimmedPhone == null) null else smsConsent
+                    password = password
                 )
             )
 

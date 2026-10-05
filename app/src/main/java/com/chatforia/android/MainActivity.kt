@@ -412,6 +412,14 @@ class MainActivity : ComponentActivity() {
                     val authState by
                     authViewModel.state.collectAsState()
 
+                    val mfaPending by authViewModel.mfaPending.collectAsState()
+                    if (mfaPending) {
+                        MfaLoginDialog(
+                            onConfirm = authViewModel::completeMfa,
+                            onCancel = authViewModel::cancelMfa
+                        )
+                    }
+
                     val deviceReplacementPrompt by
                     authViewModel.deviceReplacementPrompt.collectAsState()
 
