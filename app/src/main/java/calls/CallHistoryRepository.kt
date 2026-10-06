@@ -29,4 +29,14 @@ class CallHistoryRepository(
             )
         )
     }
+
+    fun acknowledgeMissedCalls() {
+        apiClient.sendRaw(
+            ApiRequest(
+                path = "calls/missed/acknowledge",
+                method = HttpMethod.PATCH,
+                requiresAuth = true
+            )
+        )
+    }
 }

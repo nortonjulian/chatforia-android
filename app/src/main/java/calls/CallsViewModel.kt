@@ -56,6 +56,14 @@ class CallsViewModel(
         }
     }
 
+    fun acknowledgeMissedCalls() {
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                callHistoryRepository.acknowledgeMissedCalls()
+            }
+        }
+    }
+
     fun startAudioCall(calleeId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             try {

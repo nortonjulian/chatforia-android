@@ -186,7 +186,9 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                 pushType == "sms_message" ||
                 pushType == "call_incoming" ||
                 pushType == "call_missed" ||
-                pushType == "call_ended"
+                pushType == "call_ended" ||
+                pushType == "voicemail_new" ||
+                pushType == "badge_state_changed"
 
         if (isRecognizedChatforiaPush) {
             Log.d(
@@ -373,19 +375,28 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
         when (pushData["type"]) {
             "message_new",
             "sms_message" -> {
-                if (ChatforiaAppState.isInForeground) {
-                    Log.d(
-                        "ChatforiaFCM",
-                        "App is foreground; playing selected Chatforia message tone"
+                serviceScope.launch {
+                    BadgeStateReconciler.refresh(
+                        applicationContext
                     )
 
-                    AudioPlayerService
-                        .playSavedMessageToneShared(
-                            applicationContext
+                    if (ChatforiaAppState.isInForeground) {
+                        Log.d(
+                            "ChatforiaFCM",
+                            "App is foreground; playing selected Chatforia message tone"
                         )
-                } else {
-                    NotificationCoordinator(this)
-                        .showMessageNotification(pushData)
+
+                        AudioPlayerService
+                            .playSavedMessageToneShared(
+                                applicationContext
+                            )
+                    } else {
+                        NotificationCoordinator(
+                            applicationContext
+                        ).showMessageNotification(
+                            pushData
+                        )
+                    }
                 }
             }
 
@@ -535,8 +546,39 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
             }
 
             "call_missed" -> {
-                NotificationCoordinator(this)
-                    .showMissedCallNotification(message.data)
+                serviceScope.launch {
+                    BadgeStateReconciler.refresh(
+                        applicationContext
+                    )
+
+                    NotificationCoordinator(
+                        applicationContext
+                    ).showMissedCallNotification(
+                        pushData
+                    )
+                }
+            }
+
+            "voicemail_new" -> {
+                serviceScope.launch {
+                    BadgeStateReconciler.refresh(
+                        applicationContext
+                    )
+
+                    NotificationCoordinator(
+                        applicationContext
+                    ).showVoicemailNotification(
+                        pushData
+                    )
+                }
+            }
+
+            "badge_state_changed" -> {
+                serviceScope.launch {
+                    BadgeStateReconciler.refresh(
+                        applicationContext
+                    )
+                }
             }
 
             else -> {

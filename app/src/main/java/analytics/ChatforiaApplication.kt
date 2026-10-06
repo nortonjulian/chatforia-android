@@ -5,6 +5,11 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import com.chatforia.android.notifications.NotificationCoordinator
+import com.chatforia.android.notifications.BadgeStateReconciler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 object ChatforiaAppState {
 
@@ -21,6 +26,9 @@ class ChatforiaApplication :
     Application(),
     Application.ActivityLifecycleCallbacks {
 
+    private val applicationScope =
+        CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     override fun onCreate() {
         super.onCreate()
 
@@ -33,6 +41,12 @@ class ChatforiaApplication :
 
     override fun onActivityResumed(activity: Activity) {
         ChatforiaAppState.setForeground(true)
+
+        applicationScope.launch {
+            BadgeStateReconciler.refresh(
+                applicationContext
+            )
+        }
     }
 
     override fun onActivityPaused(activity: Activity) {
