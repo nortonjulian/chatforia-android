@@ -933,7 +933,8 @@ class MainActivity : ComponentActivity() {
                 ChatThreadViewModel(
                     repository = messagesRepository,
                     keyStorage = keyStorage,
-                    queueStorage = MessageQueueStorage(context)
+                    queueStorage = MessageQueueStorage(context),
+                    appContext = context.applicationContext
                 )
             }
 

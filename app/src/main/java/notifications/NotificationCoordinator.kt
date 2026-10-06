@@ -28,6 +28,7 @@ class NotificationCoordinator(
     companion object {
         const val CALLS_CHANNEL_ID = "chatforia_calls_v3_custom_ringtone"
         const val MISSED_CALLS_CHANNEL_ID = "chatforia_missed_calls"
+        const val VOICEMAIL_CHANNEL_ID = "chatforia_voicemail"
         const val MESSAGES_CHANNEL_ID = "chatforia_messages_v4_default_tone"
 
         private const val INCOMING_CALL_NOTIFICATION_ID = 1001
@@ -136,6 +137,16 @@ class NotificationCoordinator(
             enableVibration(true)
         }
 
+        val voicemailChannel = NotificationChannel(
+            VOICEMAIL_CHANNEL_ID,
+            "Voicemail",
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = "New Chatforia voicemail alerts"
+            enableVibration(true)
+            setShowBadge(true)
+        }
+
         val messagesChannel =
             createMessageChannel(
                 channelId = MESSAGES_CHANNEL_ID,
@@ -143,9 +154,9 @@ class NotificationCoordinator(
                 channelName = "Messages"
             )
 
-
         manager.createNotificationChannel(callsChannel)
         manager.createNotificationChannel(missedCallsChannel)
+        manager.createNotificationChannel(voicemailChannel)
         manager.createNotificationChannel(messagesChannel)
 
         ensureSelectedMessageChannel(manager)
@@ -488,11 +499,91 @@ class NotificationCoordinator(
                 .setContentTitle("Missed call")
                 .setContentText("Missed call from $fromNumber")
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setNumber(
+                    BadgeStateStore(context).total()
+                )
                 .setAutoCancel(true)
                 .build()
 
         NotificationManagerCompat.from(context)
             .notify(1002, notification)
+    }
+
+    fun showVoicemailNotification(data: Map<String, String>) {
+        if (!canPostNotifications()) return
+
+        val title =
+            data["title"]
+                ?: "New voicemail"
+
+        val body =
+            data["body"]
+                ?: "You have a new voicemail"
+
+        val voicemailId =
+            data["voicemailId"]
+                ?.takeIf { it.isNotBlank() }
+
+        val destinationKey =
+            "voicemail_" +
+                (
+                    voicemailId
+                        ?: System.currentTimeMillis()
+                            .toString()
+                )
+
+        val notificationId =
+            destinationKey.hashCode()
+
+        val intent =
+            Intent(
+                context,
+                MainActivity::class.java
+            ).apply {
+                flags =
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP
+
+                putExtra("type", "voicemail_new")
+                putExtra("voicemailId", voicemailId)
+            }
+
+        val pendingIntent =
+            PendingIntent.getActivity(
+                context,
+                notificationId,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or
+                    PendingIntent.FLAG_IMMUTABLE
+            )
+
+        val notification =
+            NotificationCompat.Builder(
+                context,
+                VOICEMAIL_CHANNEL_ID
+            )
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(title)
+                .setContentText(body)
+                .setStyle(
+                    NotificationCompat.BigTextStyle()
+                        .bigText(body)
+                )
+                .setPriority(
+                    NotificationCompat.PRIORITY_DEFAULT
+                )
+                .setCategory(
+                    NotificationCompat.CATEGORY_MESSAGE
+                )
+                .setContentIntent(pendingIntent)
+                .setNumber(
+                    BadgeStateStore(context).total()
+                )
+                .setAutoCancel(true)
+                .build()
+
+        NotificationManagerCompat.from(context)
+            .notify(notificationId, notification)
     }
 
     fun showMessageNotification(data: Map<String, String>) {
@@ -577,6 +668,9 @@ class NotificationCoordinator(
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE)
                 .setOnlyAlertOnce(false)
                 .setContentIntent(pendingIntent)
+                .setNumber(
+                    BadgeStateStore(context).total()
+                )
                 .setAutoCancel(true)
                 .build()
 
@@ -587,6 +681,14 @@ class NotificationCoordinator(
         // already has an existing notification.
         notificationManager.cancel(notificationId)
         notificationManager.notify(notificationId, notification)
+    }
+
+    fun cancelChatRoomNotification(roomId: Int) {
+        val notificationId =
+            "chat_room_$roomId".hashCode()
+
+        NotificationManagerCompat.from(context)
+            .cancel(notificationId)
     }
 
     fun cancelIncomingCallNotification() {

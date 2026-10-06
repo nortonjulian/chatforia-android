@@ -76,6 +76,12 @@ fun CallsScreen(
         callsViewModel.loadCalls()
     }
 
+    LaunchedEffect(selectedSegment) {
+        if (selectedSegment == CallsSegment.Recents) {
+            callsViewModel.acknowledgeMissedCalls()
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
