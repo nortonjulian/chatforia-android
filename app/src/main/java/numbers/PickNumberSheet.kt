@@ -59,9 +59,58 @@ fun PickNumberSheet(
     var isLeasing by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var numbers by remember { mutableStateOf<List<AvailableNumberDto>>(emptyList()) }
+    var regulatoryVerification by remember {
+        mutableStateOf<NumberRegulatoryVerificationState?>(null)
+    }
 
     val isPremium =
         user.plan?.equals("PREMIUM", ignoreCase = true) == true
+
+    regulatoryVerification?.let { verification ->
+        NumberRegulatoryVerification(
+            apiClient = apiClient,
+            user = user,
+            verification = verification,
+            onBack = {
+                regulatoryVerification = null
+                error = null
+            },
+            onApproved = {
+                scope.launch {
+                    isLeasing = true
+                    error = null
+
+                    try {
+                        repository.leaseNumber(
+                            e164 = verification.e164,
+                            premium = verification.purchaseIntent
+                        )
+
+                        regulatoryVerification = null
+                        onDismiss()
+                    } catch (e: NumberRegulatoryLeaseException) {
+                        val response = e.response
+
+                        regulatoryVerification =
+                            verification.withLeaseResponse(
+                                response
+                            )
+                    } catch (e: Exception) {
+                        error =
+                            e.message
+                                ?: "Could not lease number."
+                    } finally {
+                        isLeasing = false
+                    }
+                }
+            },
+            onVerificationStateChanged = {
+                regulatoryVerification = it
+            }
+        )
+
+        return
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -258,13 +307,33 @@ fun PickNumberSheet(
                                         isLeasing = true
                                         error = null
 
+                                        val purchaseIntent =
+                                            mode == NumberPickMode.PREMIUM
+
                                         try {
                                             repository.leaseNumber(
                                                 e164 = e164,
-                                                premium = mode == NumberPickMode.PREMIUM
+                                                premium = purchaseIntent
                                             )
 
+                                            regulatoryVerification = null
                                             onDismiss()
+                                        } catch (e: NumberRegulatoryLeaseException) {
+                                            val response = e.response
+                                            val decision =
+                                                response.decision
+                                                    ?: "BLOCKED_UNKNOWN_STATUS"
+
+                                            regulatoryVerification =
+                                                NumberRegulatoryVerificationState(
+                                                    e164 = e164,
+                                                    purchaseIntent = purchaseIntent,
+                                                    decision = decision,
+                                                    requiresVerification =
+                                                        response.requiresVerification == true
+                                                )
+
+                                            error = null
                                         } catch (e: Exception) {
                                             val message = e.message ?: "Could not lease number."
                                             error = message

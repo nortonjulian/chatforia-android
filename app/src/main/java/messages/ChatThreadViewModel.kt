@@ -24,6 +24,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import analytics.AnalyticsManager
 import analytics.AnalyticsTracker
+import com.chatforia.android.notifications.BadgeStateReconciler
+import com.chatforia.android.notifications.NotificationCoordinator
 
 @Serializable
 private data class SmsApiErrorResponse(
@@ -35,6 +37,7 @@ class ChatThreadViewModel(
     private val repository: ChatThreadRepository,
     private val keyStorage: PrivateKeyReader,
     private val queueStorage: MessageQueueStorage,
+    private val appContext: android.content.Context,
     private val messageDecryptorFactory: () -> DisplayMessageDecryptor = { MessageDecryptor() },
     private val messageEncryptorFactory: () -> MessageEncryptor = { MessageEncryptor() },
     private val queueDispatcher: CoroutineDispatcher = Dispatchers.IO,
@@ -79,6 +82,20 @@ class ChatThreadViewModel(
         ignoreUnknownKeys = true
         explicitNulls = false
         coerceInputValues = true
+    }
+
+    private suspend fun markChatMessagesRead(
+        roomId: Int,
+        ids: List<Int>
+    ) {
+        if (ids.isEmpty()) return
+
+        repository.markReadBulk(ids)
+
+        NotificationCoordinator(appContext)
+            .cancelChatRoomNotification(roomId)
+
+        BadgeStateReconciler.refresh(appContext)
     }
 
     private fun smsSendErrorMessage(
@@ -306,7 +323,8 @@ class ChatThreadViewModel(
                 // Mark read in the background AFTER the thread is visible
                 launch {
                     try {
-                        repository.markReadBulk(
+                        markChatMessagesRead(
+                            roomId = roomId,
                             ids = loaded
                                 .filter { it.id > 0 }
                                 .filter { it.sender.id != currentUserId }
@@ -344,7 +362,8 @@ class ChatThreadViewModel(
                             }
 
                             if (deltas.isNotEmpty()) {
-                                repository.markReadBulk(
+                                markChatMessagesRead(
+                                    roomId = roomId,
                                     ids = deltas
                                         .filter { it.id > 0 }
                                         .filter { it.sender.id != currentUserId }
@@ -1270,7 +1289,8 @@ class ChatThreadViewModel(
         }
 
         if (deltas.isNotEmpty()) {
-            repository.markReadBulk(
+            markChatMessagesRead(
+                roomId = roomId,
                 ids = deltas
                     .filter { it.id > 0 }
                     .filter { it.sender.id != currentUserId }
