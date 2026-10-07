@@ -187,6 +187,7 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                 pushType == "call_incoming" ||
                 pushType == "call_missed" ||
                 pushType == "call_ended" ||
+                pushType == "call_answered_elsewhere" ||
                 pushType == "voicemail_new" ||
                 pushType == "badge_state_changed"
 

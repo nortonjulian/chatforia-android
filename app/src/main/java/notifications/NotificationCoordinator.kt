@@ -78,6 +78,8 @@ class NotificationCoordinator(
 
                         AudioPlayerService.stopSavedRingtoneShared()
 
+                        IncomingCallDisplayStore.clear(appContext)
+
                         NotificationManagerCompat
                             .from(appContext)
                             .cancel(INCOMING_CALL_NOTIFICATION_ID)
@@ -293,7 +295,7 @@ class NotificationCoordinator(
         }
     }
 
-    private fun incomingCallIntent(
+    internal fun incomingCallIntent(
         data: Map<String, String>,
         callAction: String? = null
     ): Intent {
@@ -341,12 +343,17 @@ class NotificationCoordinator(
         )
 
         val contentIntent =
-            incomingCallIntent(data)
+            Intent(context, IncomingCallActivity::class.java).apply {
+                flags =
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_SINGLE_TOP
+                putExtra("callId", data["callId"])
+            }
 
         if (ChatforiaAppState.isInForeground) {
             Log.d(
                 "ChatforiaNotifications",
-                "App is foreground; opening incoming-call interface directly"
+                "App is foreground; opening incoming-call screen"
             )
 
             context.startActivity(contentIntent)

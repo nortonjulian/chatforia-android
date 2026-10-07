@@ -10,6 +10,10 @@ interface AuthSessionRepository {
         idToken: String
     ): UserDto
 
+    suspend fun completeMfa(mfaToken: String, code: String): UserDto {
+        throw UnsupportedOperationException("Two-factor login is unavailable")
+    }
+
     suspend fun fetchMe(): UserDto
 
     suspend fun rotateEncryptionKey(

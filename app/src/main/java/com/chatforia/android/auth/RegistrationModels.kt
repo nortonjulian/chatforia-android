@@ -7,12 +7,12 @@ data class RegistrationRequest(
     val username: String,
     val email: String,
     val password: String,
-    val phone: String? = null,
-    val smsConsent: Boolean? = null
+    val referralCode: String? = null
 )
 
 @Serializable
 data class RegistrationResponse(
+    val requiresEmailVerification: Boolean = false,
     val message: String? = null,
     val token: String? = null,
     val user: UserDto? = null,
