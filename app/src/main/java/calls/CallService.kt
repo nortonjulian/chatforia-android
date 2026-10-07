@@ -138,9 +138,9 @@ class CallService(
             throw error
         }
     }
-}
+    }
 
-override fun fetchCallStatus(
+    override fun fetchCallStatus(
         callId: Int
     ): CallStatusLookupResponse {
         return apiClient.send(
@@ -230,4 +230,3 @@ data class CallStatusLookupDto(
     val startedAt: String? = null,
     val endedAt: String? = null
 )
-

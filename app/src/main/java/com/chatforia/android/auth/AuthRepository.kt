@@ -17,7 +17,8 @@ import kotlinx.serialization.json.booleanOrNull
 class AuthRepository(
     private val apiClient: ApiTransport,
     private val tokenStorage: AuthTokenStorage,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val referralStore: CreatorReferralStore? = null
 ) : AuthSessionRepository {
     private val json = Json {
         ignoreUnknownKeys = true
@@ -97,10 +98,12 @@ class AuthRepository(
     override suspend fun loginWithGoogle(
         idToken: String
     ): UserDto {
+        val referralCode = referralStore?.currentCode()
         val bodyJson =
             json.encodeToString(
                 GoogleLoginRequest(
-                    idToken = idToken
+                    idToken = idToken,
+                    referralCode = referralCode
                 )
             )
 
@@ -115,6 +118,7 @@ class AuthRepository(
             )
 
         tokenStorage.save(response.token)
+        referralStore?.clear()
 
         return response.user
     }
@@ -209,14 +213,16 @@ class AuthRepository(
     suspend fun register(
         username: String,
         email: String,
-        password: String
+        password: String,
+        referralCode: String? = null
     ): RegistrationResponse {
         val bodyJson =
             json.encodeToString(
                 RegistrationRequest(
                     username = username.trim(),
                     email = email.trim(),
-                    password = password
+                    password = password,
+                    referralCode = referralCode
                 )
             )
 

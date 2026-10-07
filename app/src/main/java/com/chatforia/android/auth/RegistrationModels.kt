@@ -6,7 +6,8 @@ import kotlinx.serialization.Serializable
 data class RegistrationRequest(
     val username: String,
     val email: String,
-    val password: String
+    val password: String,
+    val referralCode: String? = null
 )
 
 @Serializable

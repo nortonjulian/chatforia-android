@@ -38,6 +38,8 @@ import com.chatforia.android.auth.LoginScreen
 import com.chatforia.android.auth.*
 import com.chatforia.android.network.ApiClient
 import com.chatforia.android.auth.GoogleAuthClient
+import com.chatforia.android.auth.CreatorReferralStore
+import analytics.AnalyticsManager
 import com.chatforia.android.chats.ChatsScreen
 import com.chatforia.android.chats.ChatsRepository
 import com.chatforia.android.chats.ChatsViewModel
@@ -60,6 +62,7 @@ import com.chatforia.android.calls.CallService
 import com.chatforia.android.calls.VideoCallRepository
 import com.chatforia.android.calls.CallHistoryRepository
 import com.chatforia.android.calls.CallsViewModel
+import com.chatforia.android.calls.CallsSegment
 import com.chatforia.android.voicemail.VoicemailRepository
 import com.chatforia.android.voicemail.VoicemailViewModel
 import com.chatforia.android.crypto.LinkedDevicesRepository
@@ -118,12 +121,32 @@ enum class AppTab {
 class MainActivity : ComponentActivity() {
 
     private var latestLaunchIntent by mutableStateOf<Intent?>(null)
+    private val creatorReferralStore by lazy { CreatorReferralStore(applicationContext) }
+    private var pendingReferralRegistration by mutableStateOf(false)
+
+    private fun handleCreatorReferralIntent(intent: Intent?) {
+        val link = intent?.dataString ?: return
+        val incomingCode = CreatorReferralStore.codeFromLink(link) ?: return
+        val attributedCode = creatorReferralStore.capture(link) ?: return
+        pendingReferralRegistration = true
+        AnalyticsManager.capture(
+            "referral_link_visited",
+            mapOf(
+                "referral_code" to incomingCode,
+                "attributed_referral_code" to attributedCode,
+                "source" to "app_link"
+            )
+        )
+    }
 
     private var pendingNotificationChatRoomId by
         mutableStateOf<Int?>(null)
 
     private var pendingNotificationSmsThreadId by
         mutableStateOf<Int?>(null)
+
+    private var pendingOpenVoicemail by
+        mutableStateOf(false)
 
     private var pendingOpenWireless by mutableStateOf(false)
 
@@ -222,6 +245,12 @@ class MainActivity : ComponentActivity() {
                         null
                 }
             }
+
+            "voicemail_new" -> {
+                pendingOpenVoicemail = true
+                pendingNotificationChatRoomId = null
+                pendingNotificationSmsThreadId = null
+            }
         }
     }
 
@@ -276,6 +305,7 @@ class MainActivity : ComponentActivity() {
         latestLaunchIntent = intent
         handleMessageNotificationIntent(intent)
         handleEsimCheckoutIntent(intent)
+        handleCreatorReferralIntent(intent)
 
         val launchedForIncomingCall =
             intent
@@ -351,7 +381,8 @@ class MainActivity : ComponentActivity() {
                         remember {
                             AuthRepository(
                                 apiClient,
-                                tokenStorage
+                                tokenStorage,
+                                referralStore = creatorReferralStore
                             )
                         }
 
@@ -397,7 +428,8 @@ class MainActivity : ComponentActivity() {
                                         return AuthViewModel(
                                             repository = repository,
                                             accountKeyManager = accountKeyManager,
-                                            pushTokenRegistrar = pushTokenRegistrar
+                                            pushTokenRegistrar = pushTokenRegistrar,
+                                            referralStore = creatorReferralStore
                                         ) as T
                                     }
                                 }
@@ -411,6 +443,19 @@ class MainActivity : ComponentActivity() {
 
                     val authState by
                     authViewModel.state.collectAsState()
+
+                    LaunchedEffect(authState, pendingReferralRegistration) {
+                        if (pendingReferralRegistration) {
+                            when (authState) {
+                                AuthState.LoggedOut -> {
+                                    pendingReferralRegistration = false
+                                    authViewModel.showRegistration()
+                                }
+                                is AuthState.LoggedIn -> pendingReferralRegistration = false
+                                else -> Unit
+                            }
+                        }
+                    }
 
                     val mfaPending by authViewModel.mfaPending.collectAsState()
                     if (mfaPending) {
@@ -618,7 +663,8 @@ class MainActivity : ComponentActivity() {
                                         keyStorage = keyStorage,
                                         onRegistered = {
                                             authViewModel.bootstrap()
-                                        }
+                                        },
+                                        referralStore = creatorReferralStore
                                     )
                                 }
 
@@ -748,6 +794,7 @@ class MainActivity : ComponentActivity() {
         latestLaunchIntent = intent
         handleMessageNotificationIntent(intent)
         handleEsimCheckoutIntent(intent)
+        handleCreatorReferralIntent(intent)
 
         val incomingCall =
             intent.getStringExtra("type") ==
@@ -774,6 +821,12 @@ class MainActivity : ComponentActivity() {
     ) {
         var selectedTab by remember {
             mutableStateOf(AppTab.CHATS)
+        }
+
+        LaunchedEffect(pendingOpenVoicemail) {
+            if (pendingOpenVoicemail) {
+                selectedTab = AppTab.CALLS
+            }
         }
 
         /*
@@ -1682,6 +1735,15 @@ class MainActivity : ComponentActivity() {
                         CallsScreen(
                             callsViewModel = callsViewModel,
                             voicemailViewModel = voicemailViewModel,
+                            initialSegment =
+                                if (pendingOpenVoicemail) {
+                                    CallsSegment.Voicemail
+                                } else {
+                                    CallsSegment.Recents
+                                },
+                            onInitialSegmentConsumed = {
+                                pendingOpenVoicemail = false
+                            },
 
                             onCallBackVoicemail = { voicemail ->
                                 val displayName =

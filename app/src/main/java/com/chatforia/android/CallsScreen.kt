@@ -52,6 +52,8 @@ import androidx.compose.material.icons.filled.Message
 fun CallsScreen(
     callsViewModel: CallsViewModel,
     voicemailViewModel: VoicemailViewModel,
+    initialSegment: CallsSegment = CallsSegment.Recents,
+    onInitialSegmentConsumed: () -> Unit = {},
     onStartAudioCall: (CallDto) -> Unit = {},
     onStartVideoCall: (CallDto) -> Unit = {},
     onDialNumber: (String) -> Unit = {},
@@ -59,11 +61,18 @@ fun CallsScreen(
     onCallBackVoicemail: (VoicemailDto) -> Unit = {}
 ) {
     var selectedSegment by remember {
-        mutableStateOf(CallsSegment.Recents)
+        mutableStateOf(initialSegment)
     }
 
     var showDialer by remember {
         mutableStateOf(false)
+    }
+
+    LaunchedEffect(initialSegment) {
+        if (initialSegment == CallsSegment.Voicemail) {
+            selectedSegment = CallsSegment.Voicemail
+            onInitialSegmentConsumed()
+        }
     }
 
     val callsState by callsViewModel.state.collectAsState()

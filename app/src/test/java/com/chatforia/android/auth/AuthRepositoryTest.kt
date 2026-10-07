@@ -111,6 +111,29 @@ class AuthRepositoryTest {
         }
 
     @Test
+    fun register_sendsReferralCodeToBackend() = runTest {
+        val api = FakeApiTransport()
+        api.enqueueResponse("""{"message":"Check your email"}""")
+        val repository = AuthRepository(
+            apiClient = api,
+            tokenStorage = FakeAuthTokenStorage(),
+            ioDispatcher = UnconfinedTestDispatcher(testScheduler)
+        )
+
+        repository.register(
+            username = "creator_signup",
+            email = "creator_signup@example.com",
+            password = "password123",
+            referralCode = "CREATOR_7"
+        )
+
+        assertEquals(
+            "CREATOR_7",
+            parseBody(api.requests.single())["referralCode"]?.jsonPrimitive?.content
+        )
+    }
+
+    @Test
     fun fetchMe_getsCurrentUser() =
         runTest {
             val api = FakeApiTransport()

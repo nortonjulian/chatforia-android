@@ -16,14 +16,14 @@ val chatforiaUploadKeyPassword =
 
 android {
     namespace = "com.chatforia.android"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.chatforia.android"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
 
-        versionCode = 48
+        versionCode = 50
         versionName = "1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

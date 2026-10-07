@@ -22,7 +22,8 @@ class AuthViewModel(
     private val pushTokenRegistrar: PushTokenRegisterer? = null,
     private val pushDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val autoBootstrap: Boolean = true,
-    private val analytics: AnalyticsTracker = AnalyticsManager
+    private val analytics: AnalyticsTracker = AnalyticsManager,
+    private val referralStore: CreatorReferralStore? = null
 ) : ViewModel() {
 
     private var mfaCompletion: CompletableDeferred<UserDto>? = null
@@ -53,6 +54,7 @@ class AuthViewModel(
         val completion = mfaCompletion ?: return
         val token = mfaToken ?: return
         val user = repository.completeMfa(token, code)
+        referralStore?.clear()
         completion.complete(user)
     }
 
@@ -242,6 +244,7 @@ class AuthViewModel(
     suspend fun loginWithGoogle(
         idToken: String
     ) {
+        val referralCode = referralStore?.currentCode()
         val user = authenticate { repository.loginWithGoogle(idToken) }
         _state.value = resolveLoggedInState(user)
 
@@ -254,6 +257,7 @@ class AuthViewModel(
         )
 
         val properties = mutableMapOf<String, Any>("method" to "google")
+        referralCode?.let { properties["referral_code"] = it }
         analytics.capture("account logged in", properties)
 
         registerPushTokenIfPossible()

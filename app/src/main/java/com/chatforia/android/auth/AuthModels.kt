@@ -22,7 +22,8 @@ data class MeResponse(
 
 @Serializable
 data class GoogleLoginRequest(
-    val idToken: String
+    val idToken: String,
+    val referralCode: String? = null
 )
 
 @Serializable

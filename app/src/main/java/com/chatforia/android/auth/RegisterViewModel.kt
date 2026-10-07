@@ -24,7 +24,8 @@ class RegisterViewModel(
     private val tokenStorage: TokenStorage,
     private val keyStorage: KeyStorage,
     private val onRegistered: () -> Unit,
-    private val analytics: AnalyticsTracker = AnalyticsManager
+    private val analytics: AnalyticsTracker = AnalyticsManager,
+    private val referralStore: CreatorReferralStore? = null
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RegisterUiState())
@@ -86,12 +87,15 @@ class RegisterViewModel(
 
         viewModelScope.launch {
             try {
+                val referralCode = referralStore?.currentCode()
                 val response =
                     authRepository.register(
                         username = username,
                         email = email,
-                        password = current.password
+                        password = current.password,
+                        referralCode = referralCode
                     )
+                referralStore?.clear()
 
                 val token = response.token
                 val resolvedUser = response.resolvedUser
@@ -123,6 +127,7 @@ class RegisterViewModel(
                         "method" to "email",
                         "plan" to "FREE"
                     )
+                    referralCode?.let { properties["referral_code"] = it }
                     analytics.capture(
                         "user_registered",
                         properties
