@@ -101,6 +101,7 @@ import android.view.WindowManager
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import com.google.android.gms.ads.MobileAds
+import com.chatforia.android.billing.PlanEntitlementsStore
 import com.chatforia.android.ads.InterstitialAdManager
 import com.chatforia.android.ads.shouldShowAds
 import com.chatforia.android.calls.TwilioVoicePushRegistrar
@@ -887,6 +888,27 @@ class MainActivity : ComponentActivity() {
             interstitialAdManager.setAdsEnabled(
                 user.shouldShowAds()
             )
+        }
+
+
+        /*
+         * Keep the backend's authoritative app-plan allowances available
+         * to Android features. The user record still drives legacy plan
+         * UI while /premium/entitlements supplies caps and monthly usage.
+         */
+        LaunchedEffect(
+            user.id,
+            user.plan
+        ) {
+            runCatching {
+                PlanEntitlementsStore.refresh(apiClient)
+            }.onFailure { error ->
+                Log.w(
+                    "ChatforiaEntitlements",
+                    "Failed to refresh plan entitlements",
+                    error
+                )
+            }
         }
 
         DisposableEffect(interstitialAdManager) {
