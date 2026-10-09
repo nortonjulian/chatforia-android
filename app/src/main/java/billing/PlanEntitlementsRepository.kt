@@ -41,6 +41,34 @@ data class PlanEntitlementsResponse(
     val usage: Map<String, PlanUsageSnapshot>
 )
 
+fun resolveAiRewriteLevel(
+    backendLevel: String?,
+    fallbackPlan: String?
+): String {
+    val normalizedBackend =
+        backendLevel
+            ?.trim()
+            ?.uppercase()
+
+    if (
+        normalizedBackend == "NONE" ||
+        normalizedBackend == "STANDARD" ||
+        normalizedBackend == "FULL"
+    ) {
+        return normalizedBackend
+    }
+
+    return when (
+        fallbackPlan
+            ?.trim()
+            ?.uppercase()
+    ) {
+        "PLUS" -> "STANDARD"
+        "PREMIUM" -> "FULL"
+        else -> "NONE"
+    }
+}
+
 class PlanEntitlementsRepository(
     private val apiClient: ApiClient
 ) {
