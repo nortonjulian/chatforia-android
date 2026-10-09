@@ -47,7 +47,7 @@ fun SoundOption.isAvailableForPlan(plan: String?): Boolean {
     val normalizedPlan = plan?.uppercase() ?: "FREE"
 
     return requiredPlan == RequiredPlan.Free ||
-            normalizedPlan in listOf("PLUS", "PREMIUM", "WIRELESS")
+            normalizedPlan == "PREMIUM"
 }
 
 fun resolvedMessageToneForPlan(
