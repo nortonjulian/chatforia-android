@@ -25,3 +25,24 @@ fun UserDto.shouldShowAds(): Boolean {
 
     return normalizedPlan !in paidPlans
 }
+
+fun resolveAdsEnabled(
+    isAdmin: Boolean?,
+    backendAdsEnabled: Boolean?,
+    fallbackPlanAdsEnabled: Boolean
+): Boolean {
+    if (isAdmin == true) {
+        return false
+    }
+
+    return backendAdsEnabled ?: fallbackPlanAdsEnabled
+}
+
+fun UserDto.resolveAdsEnabled(
+    backendAdsEnabled: Boolean?
+): Boolean =
+    resolveAdsEnabled(
+        isAdmin = isAdmin,
+        backendAdsEnabled = backendAdsEnabled,
+        fallbackPlanAdsEnabled = shouldShowAds()
+    )
