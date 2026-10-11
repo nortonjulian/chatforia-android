@@ -104,6 +104,7 @@ import com.google.android.gms.ads.MobileAds
 import com.chatforia.android.billing.PlanEntitlementsStore
 import com.chatforia.android.ads.InterstitialAdManager
 import com.chatforia.android.ads.shouldShowAds
+import com.chatforia.android.ads.resolveAdsEnabled
 import com.chatforia.android.calls.TwilioVoicePushRegistrar
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -902,6 +903,12 @@ class MainActivity : ComponentActivity() {
         ) {
             runCatching {
                 PlanEntitlementsStore.refresh(apiClient)
+            }.onSuccess { response ->
+                interstitialAdManager.setAdsEnabled(
+                    user.resolveAdsEnabled(
+                        response.entitlements.adsEnabled
+                    )
+                )
             }.onFailure { error ->
                 Log.w(
                     "ChatforiaEntitlements",

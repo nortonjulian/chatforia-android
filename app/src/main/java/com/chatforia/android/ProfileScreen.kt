@@ -379,6 +379,11 @@ fun ProfileScreen(
             onSave = {
                 settingsViewModel.saveAccessibility(onUserUpdated)
             },
+            isPremium =
+                user.plan?.equals(
+                    "PREMIUM",
+                    ignoreCase = true
+                ) == true,
             onUpgradeRequired = {
                 showAccessibility = false
                 showUpgrade = true

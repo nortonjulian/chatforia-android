@@ -26,6 +26,7 @@ fun AccessibilitySettingsScreen(
     onBack: () -> Unit,
     onUpdate: (SettingsUiState) -> Unit,
     onSave: () -> Unit,
+    isPremium: Boolean,
     onUpgradeRequired: () -> Unit
 ) {
     Column(
@@ -126,10 +127,14 @@ fun AccessibilitySettingsScreen(
                     subtitle = stringResource(R.string.android_accessibility_settings_show_real_time_captions_during_calls_premium_req),
                     checked = state.a11yLiveCaptions,
                     onCheckedChange = { enabled ->
-                        if (enabled) {
+                        if (enabled && !isPremium) {
                             onUpgradeRequired()
                         } else {
-                            onUpdate(state.copy(a11yLiveCaptions = false))
+                            onUpdate(
+                                state.copy(
+                                    a11yLiveCaptions = enabled
+                                )
+                            )
                         }
                     }
                 )
