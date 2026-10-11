@@ -18,7 +18,7 @@ class PlanEntitlementsRepositoryTest {
               "entitlements": {
                 "riaActions": 500,
                 "translationChars": 1000000,
-                "hostedParticipantMinutes": 600,
+                "hostedParticipantMinutes": 1000,
                 "smsMessages": 1500,
                 "pstnMinutes": 300,
                 "forwardingMinutes": 300,
