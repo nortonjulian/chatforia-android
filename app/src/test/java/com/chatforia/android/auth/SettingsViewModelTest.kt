@@ -80,7 +80,7 @@ class SettingsViewModelTest {
         assertTrue(state.maskAIProfanity)
 
         assertEquals("Default.mp3", state.messageTone)
-        assertEquals("Classic.mp3", state.ringtone)
+        assertEquals("classic.mp3", state.ringtone)
         assertEquals(42, state.soundVolume)
 
         assertEquals("ADULT_25_34", state.ageBand)
@@ -134,7 +134,7 @@ class SettingsViewModelTest {
         assertFalse(state.maskAIProfanity)
 
         assertEquals("Default.mp3", state.messageTone)
-        assertEquals("Classic.mp3", state.ringtone)
+        assertEquals("classic.mp3", state.ringtone)
         assertEquals(70, state.soundVolume)
 
         assertNull(state.ageBand)
@@ -142,7 +142,7 @@ class SettingsViewModelTest {
         assertEquals(emptyList<String>(), state.randomChatAllowedBands)
 
         assertNull(state.voicemailAutoDeleteDays)
-        assertEquals("fallback@example.com", state.voicemailForwardEmail)
+        assertEquals("", state.voicemailForwardEmail)
         assertEquals("", state.voicemailGreetingText)
 
         assertEquals("md", state.a11yUiFont)
