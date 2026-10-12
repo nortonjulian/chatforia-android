@@ -1,5 +1,7 @@
 package com.chatforia.android
 
+import com.chatforia.android.auth.hasPremiumAccess
+import com.chatforia.android.auth.accessPlan
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -379,11 +381,7 @@ fun ProfileScreen(
             onSave = {
                 settingsViewModel.saveAccessibility(onUserUpdated)
             },
-            isPremium =
-                user.plan?.equals(
-                    "PREMIUM",
-                    ignoreCase = true
-                ) == true,
+            isPremium = user.hasPremiumAccess(),
             onUpgradeRequired = {
                 showAccessibility = false
                 showUpgrade = true
@@ -648,7 +646,7 @@ fun ProfileScreen(
             )
 
             SoundSettingsView(
-                currentPlan = user.plan,
+                currentPlan = user.accessPlan(),
                 state = settingsState,
                 onMessageToneChange = { tone ->
                     settingsViewModel.update {
@@ -1091,7 +1089,7 @@ fun ProfileScreen(
     if (showThemePicker) {
         ThemePickerDialog(
             currentTheme = settingsState.theme,
-            currentPlan = user.plan,
+            currentPlan = user.accessPlan(),
             onDismiss = { showThemePicker = false },
             onThemeSelected = { code ->
                 settingsViewModel.update {

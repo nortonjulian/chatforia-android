@@ -1,5 +1,6 @@
 package com.chatforia.android.numbers
 
+import com.chatforia.android.auth.hasPremiumAccess
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -63,8 +64,7 @@ fun PickNumberSheet(
         mutableStateOf<NumberRegulatoryVerificationState?>(null)
     }
 
-    val isPremium =
-        user.plan?.equals("PREMIUM", ignoreCase = true) == true
+    val isPremium = user.hasPremiumAccess()
 
     regulatoryVerification?.let { verification ->
         NumberRegulatoryVerification(

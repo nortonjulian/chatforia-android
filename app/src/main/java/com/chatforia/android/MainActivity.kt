@@ -1,5 +1,6 @@
 package com.chatforia.android
 
+import com.chatforia.android.auth.accessPlan
 import android.Manifest
 import android.os.Build
 import android.os.Bundle
@@ -842,7 +843,7 @@ class MainActivity : ComponentActivity() {
             user.messageTone,
             user.messageSound,
             user.tone,
-            user.plan
+            user.accessPlan()
         ) {
             val accountMessageTone =
                 user.messageTone
@@ -852,7 +853,7 @@ class MainActivity : ComponentActivity() {
             val resolvedMessageTone =
                 resolvedMessageToneForPlan(
                     filename = accountMessageTone,
-                    plan = user.plan
+                    plan = user.accessPlan()
                 )
 
             AudioPlayerService.saveMessageTone(
