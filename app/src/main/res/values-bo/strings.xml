@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">ཁ་པར་དང་འཕྲིན་ཡིག་རྣམས་རང་གི་ཁ་པར་ཨང་གྲངས་ངོ་མར་བརྒྱུད་སྐུར་བྱེད་པ།</string>
     <string name="upgrade_plans_plus_features_history">བརྡ་འཕྲིན་གྱི་ལོ་རྒྱུས་རིང་བ་(ཟླ་བ་དྲུག་བར)</string>
     <string name="upgrade_plans_plus_features_support">བྱ་བ་ཞིག་ནོར་འཁྲུལ་བྱུང་སྐབས་རྒྱབ་སྐྱོར་མགྱོགས་པོ་བྱེད་པ།</string>
-    <string name="upgrade_plans_plus_price">ཨ་སྒོར་༦.༩༩</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">ལྷག་པ།</string>
     <string name="upgrade_plans_premiumAnnual_aria">ལོ་རེའི་རིན་གོང་མཐོ་རུ་གཏོང་བ།</string>
     <string name="upgrade_plans_premiumAnnual_badge">30%གསོག་འཇོག་བྱེད་པ།</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">གློག་སྤྱོད་མཁན་དང་ཐག་རིང་གི་ལས་བྱེད་པ། འགྲུལ་བཞུད་པ་ལྗིད་པོ་བཅས་ལ་ཡག་ཤོས་རེད།</string>
     <string name="upgrade_plans_premiumAnnual_features_number">ཁྱེད་རང་གི་འཆར་གཞི་དེ་ཤུགས་ལྡན་ཡིན་པའི་སྐབས་ཁྱེད་རང་གི་Chatforiaཨང་གྲངས་དེ་སྲུང་སྐྱོབ་བྱེད་དགོས།</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">ཟླ་རེའི་དངུལ་སྤྲོད་པ་དང་བསྡུར་ན་30%ཡས་མས་གསོག་ཐུབ།</string>
-    <string name="upgrade_plans_premiumAnnual_price">ཨ་སྒོར་༩༩།</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">ཁ་གསབ་(ལོ་རེར་)</string>
     <string name="upgrade_plans_premiumMonthly_aria">ཟླ་རེའི་རིན་གོང་མཐོ་རུ་གཏོང་བ།</string>
     <string name="upgrade_plans_premiumMonthly_badge">འོས་སྦྱོར་བྱས་པའི</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">ཡོད་ཚད་པ་ལཱས་ནང་ཡོད།</string>
     <string name="upgrade_plans_premiumMonthly_features_support">རོགས་རམ་ཆེས་དགོས་དུས་གཙོ་གནད་ཐོག་རྒྱབ་སྐྱོར་བྱེད་དགོས།</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">ཆེས་མཐོའི་ཚོན་མདོག་གི་བརྗོད་གཞི་དང་མཉེན་ཆས་སྒྲིག་བཀོད་ཚང་མ་ཕྱེ་དགོས།</string>
-    <string name="upgrade_plans_premiumMonthly_price">ཨ་སྒོར་༡༡.༩༩།</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">ཁ་གསབ་(ཟླ་རེར་)</string>
     <string name="upgrade_plusBadge">ཁ་སྣོན།</string>
     <string name="upgrade_plusSubtitle">དཀའ་ངལ་སེལ་བ་དང་དངོས་དོན་གྱི་བརྡ་སྤྲོད་ཀྱི་ལག་ཆ་ཕྱེ་དགོས།</string>

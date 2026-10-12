@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Bideratu deiak eta testu-mezuak zure benetako telefono-zenbakira</string>
     <string name="upgrade_plans_plus_features_history">Mezu-historia luzeagoa (6 hilabetera arte)</string>
     <string name="upgrade_plans_plus_features_support">Zerbait gaizki doanean laguntza azkarragoa</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Urteko Premium harpidera igaro</string>
     <string name="upgrade_plans_premiumAnnual_badge">%30 aurrez</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Ahalmen handiko erabiltzaileentzat, urruneko langileentzat eta bidaiatzaile astunentzat onena</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Zure Chatforia zenbakia babestuta mantendu zure plana aktibo dagoen bitartean</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Hilero ordaintzearekin alderatuta %30 inguru aurreztu</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (urteroko)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Hileroko Premium harpidetzara igaro</string>
     <string name="upgrade_plans_premiumMonthly_badge">Gomendatua</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Dena Plusen barruan</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Lehentasunezko laguntza behar duzunean gehien</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Desblokeatu kolore-tema premium guztiak eta aplikazioaren pertsonalizazio guztiak</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (Hileko)</string>
     <string name="upgrade_plusBadge">Gainera</string>
     <string name="upgrade_plusSubtitle">Ken ezazu distrakzioak eta desblokeatu komunikazio tresna praktikoak.</string>

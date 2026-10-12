@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Envia trucades i missatges de text al teu número de telèfon real</string>
     <string name="upgrade_plans_plus_features_history">Historial de missatges més llarg (fins a 6 mesos)</string>
     <string name="upgrade_plans_plus_features_support">Suport més ràpid quan alguna cosa surt malament</string>
-    <string name="upgrade_plans_plus_price">0 $</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Millora a Anual Premium</string>
     <string name="upgrade_plans_premiumAnnual_badge">Estalvia un 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">El millor per a usuaris avançats, teletreballadors i grans viatgers</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Mantingueu protegit el vostre número de Chatforia mentre el vostre pla estigui actiu.</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Estalvia al voltant d\'un 30% en comparació amb el pagament mensual.</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (Anual)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Millora a mensual Premium</string>
     <string name="upgrade_plans_premiumMonthly_badge">Recomanat</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Tot en Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Suport prioritari quan més ajuda necessites</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Desbloqueja tots els temes de color premium i les personalitzacions de l\'aplicació</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (Mensual)</string>
     <string name="upgrade_plusBadge">A més</string>
     <string name="upgrade_plusSubtitle">Elimina les distraccions i desbloqueja eines de comunicació pràctiques.</string>

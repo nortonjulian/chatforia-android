@@ -2749,7 +2749,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Presmerovanie hovorov a textových správ na vaše skutočné telefónne číslo</string>
     <string name="upgrade_plans_plus_features_history">Dlhšia história správ (až 6 mesiacov)</string>
     <string name="upgrade_plans_plus_features_support">Rýchlejšia podpora, keď sa niečo pokazí</string>
-    <string name="upgrade_plans_plus_price">6,99 $</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Prechod na ročnú prémiu</string>
     <string name="upgrade_plans_premiumAnnual_badge">Ušetrite 30 %</string>
@@ -2762,7 +2762,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Najlepšie pre výkonných používateľov, vzdialených pracovníkov a náročných cestovateľov</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Chráňte svoje číslo Chatforia, kým je váš plán aktívny</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Ušetrite približne 30 % v porovnaní s mesačnou platbou</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 $</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Poistné (ročné)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Aktualizácia na mesačné Premium</string>
     <string name="upgrade_plans_premiumMonthly_badge">Odporúčané stránky</string>
@@ -2774,7 +2774,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Všetko v službe Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Prioritná podpora, keď najviac potrebujete pomoc</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Odomknutie všetkých prémiových farebných tém a prispôsobení aplikácií</string>
-    <string name="upgrade_plans_premiumMonthly_price">11,99 $</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Poistné (mesačné)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Odstráňte rušivé vplyvy a odomknite praktické komunikačné nástroje.</string>

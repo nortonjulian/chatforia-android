@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Thumela iifowuni nemiyalezo kwinombolo yakho yefowuni yokwenyani</string>
     <string name="upgrade_plans_plus_features_history">Imbali yemiyalezo ehlala ixesha elide (ukuya kutsho kwiinyanga ezi-6)</string>
     <string name="upgrade_plans_plus_features_support">Inkxaso ekhawulezayo xa kukho ingxaki</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Yenyukele kwiPremium yoNyaka</string>
     <string name="upgrade_plans_premiumAnnual_badge">Yonga i-30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Ilungele kakhulu abasebenzisi abaziingcali, abasebenzi abakude, kunye nabahambi rhoqo</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Gcina inombolo yakho yeChatforia ikhuselekile ngelixa isicwangciso sakho sisebenza</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Wonga malunga ne-30% xa kuthelekiswa nokuhlawula ngenyanga</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title"> Premium (yonyaka)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Yuphucule uye kwiPremium yeNyanga</string>
     <string name="upgrade_plans_premiumMonthly_badge">Yonga i-30%</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Yonke into eku-Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Inkxaso ephambili xa ufuna uncedo kakhulu</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Vula zonke iithimu zemibala ezikumgangatho ophezulu kunye nokwenza ngokwezifiso i-app</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (yanyanga nenyanga)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Susa iziphazamiso kwaye uvule izixhobo zonxibelelwano ezisebenzisekayo.</string>

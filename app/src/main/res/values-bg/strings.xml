@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Пренасочване на обаждания и съобщения към истинския ти телефонен номер</string>
     <string name="upgrade_plans_plus_features_history">По-дълъг архив на съобщенията (до 6 месеца)</string>
     <string name="upgrade_plans_plus_features_support">По-бърза поддръжка, когато нещо се обърка</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Направете ъпгрейд към Premium Annual</string>
     <string name="upgrade_plans_premiumAnnual_badge">Спестете 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Най-подходящо за напреднали потребители, дистанционни работници и хора, които пътуват често</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Запазете номера си в Chatforia защитен, докато планът ви е активен</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Спестете около 30% в сравнение с месечното плащане</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (Годишен)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Направете ъпгрейд към Premium Monthly</string>
     <string name="upgrade_plans_premiumMonthly_badge">Препоръчано</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Всичко в Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Приоритетна поддръжка, когато най-много се нуждаеш от помощ</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Отключи всички премиум цветови теми и персонализации на приложението</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Премиум (месечен)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Премахнете разсейващите фактори и открийте практични инструменти за комуникация.</string>

@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">आवाहनम् च पाठसन्देशान् च तव वास्तविकं दूरवाणीसंख्यां प्रेषय।</string>
     <string name="upgrade_plans_plus_features_history">दीर्घतरं सन्देशइतिहासः (षट् मासानां पर्यन्तम्)</string>
     <string name="upgrade_plans_plus_features_support">यदा किञ्चित् दोषः जायते तदा शीघ्रतरं समर्थनम्।</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">वार्षिक-प्रिमियम्-उन्नयनम्</string>
     <string name="upgrade_plans_premiumAnnual_badge">त्रिंशत् प्रतिशतं रक्षतु</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">शक्तिप्रयोगकर्तृभ्यः, दूरस्थकर्मचारिभ्यश्च, बहुयात्रीभ्यश्च उत्तमम्।</string>
     <string name="upgrade_plans_premiumAnnual_features_number">यावत् तव योजना सक्रियम् अस्ति, तावत् तव चैट्फोरिया-संख्यां रक्षस्व।</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">मासिकभुगतानस्य अपेक्षया प्रायः त्रिंशत् प्रतिशतं रक्षतु।</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">उत्तमवार्षिकशुल्कम्</string>
     <string name="upgrade_plans_premiumMonthly_aria">मासिक-प्रिमियम्-उन्नयनम्</string>
     <string name="upgrade_plans_premiumMonthly_badge">अनुशंसितम्</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">प्लसमध्ये सर्वं</string>
     <string name="upgrade_plans_premiumMonthly_features_support">यदा भवतः साहाय्यस्य सर्वाधिकः आवश्यकता भवति तदा प्राथमिकसमर्थनम्।</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">सर्वाणि प्रीमियम् वर्णरूपानि अनुप्रयोगानुकूलनानि च उद्घाटयतु।</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">उत्तमः (मासिकः)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">विक्षेपान् अपसारय च व्यवहारिकसंचारसाधनानि उद्घाटय।</string>

@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Զանգերն ու հաղորդագրությունները փոխանցեք ձեր իրական հեռախոսահամարին</string>
     <string name="upgrade_plans_plus_features_history">Հաղորդագրությունների պատմություն ավելի երկար ժամանակով (մինչև 6 ամիս)</string>
     <string name="upgrade_plans_plus_features_support">Ավելի արագ աջակցություն, երբ ինչ-որ բան սխալ է գնում</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Թարմացրեք Premium տարեկան բաժանորդագրության</string>
     <string name="upgrade_plans_premiumAnnual_badge">Խնայեք 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Լավագույնը առաջադեմ օգտվողների, հեռավար աշխատողների և հաճախ ճանապարհորդողների համար</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Պաշտպանեք ձեր Chatforia համարը, երբ ձեր պլանը ակտիվ է</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Խնայեք մոտ 30% ամսական վճարման համեմատ</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title"> Պրեմիում (Տարեկան)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Թարմացնել Premium ամսական</string>
     <string name="upgrade_plans_premiumMonthly_badge">Խորհուրդ տրված</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Ամեն ինչ Plus-ում</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Առաջնահերթ աջակցություն, երբ ձեզ առավել շատ է անհրաժեշտ</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Բացեք բոլոր պրեմիում գունային թեմաները և հավելվածի հարմարեցումները</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Պրեմիում (ամսական)</string>
     <string name="upgrade_plusBadge">Պլյուս</string>
     <string name="upgrade_plusSubtitle">Հեռացրեք շեղումները և բացեք գործնական հաղորդակցման գործիքները։</string>

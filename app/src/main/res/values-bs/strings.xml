@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Prosljeđujte pozive i poruke na svoj stvarni broj telefona.</string>
     <string name="upgrade_plans_plus_features_history">Duža historija poruka (do 6 mjeseci)</string>
     <string name="upgrade_plans_plus_features_support">Brža podrška kada nešto pođe po zlu</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Nadogradnja na premium godišnju pretplatu</string>
     <string name="upgrade_plans_premiumAnnual_badge">Uštedite 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Najbolje za napredne korisnike, radnike na daljinu i česte putnike</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Zaštitite svoj Chatforia broj dok je vaš plan aktivan</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Uštedite oko 30% u odnosu na mjesečno plaćanje.</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (Godišnja)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Nadogradnja na mjesečnu premium pretplatu</string>
     <string name="upgrade_plans_premiumMonthly_badge">Preporučeno</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Sve u Plusu</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Prioritetna podrška kada vam je pomoć najpotrebnija</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Otključajte sve premium teme boja i prilagodbe aplikacije</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (mjesečno)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Uklonite ometanja i otključajte praktične komunikacijske alate.</string>

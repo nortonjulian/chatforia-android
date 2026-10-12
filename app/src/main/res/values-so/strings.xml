@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Wicitaanada iyo qoraallada u gudbi lambarkaaga taleefanka dhabta ah</string>
     <string name="upgrade_plans_plus_features_history">Taariikhda farriimaha oo dheer (ilaa 6 bilood)</string>
     <string name="upgrade_plans_plus_features_support">Taageero degdeg ah marka wax qaldamaan</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Intaa waxaa dheer</string>
     <string name="upgrade_plans_premiumAnnual_aria">U cusbooneysii Sannad-sannadeedka Premium-ga</string>
     <string name="upgrade_plans_premiumAnnual_badge">Keydi 30%</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Ugu fiican dadka isticmaala korontada, shaqaalaha fog fog, iyo dadka safarka culus</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Lambarkaaga Chatforia ilaali inta qorshahaagu shaqeynayo</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Keydso qiyaastii 30% marka loo eego bixinta bil kasta</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Lacagta ugu Sarreysa (Sannadle)</string>
     <string name="upgrade_plans_premiumMonthly_aria">U cusbooneysii Premium bishiiba</string>
     <string name="upgrade_plans_premiumMonthly_badge">Lagu taliyay</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Wax walba oo ku jira Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Taageerada mudnaanta leh marka aad u baahan tahay caawimaad badan</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Fur dhammaan mawduucyada midabka sare iyo habaynta abka</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Lacagta ugu sarreysa (Bil kasta)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Ka saar waxyaabaha mashquuliya oo fur aaladaha isgaarsiinta ee wax ku oolka ah.</string>

@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">قم بتحويل المكالمات والرسائل النصية إلى رقم هاتفك الحقيقي</string>
     <string name="upgrade_plans_plus_features_history">سجل رسائل أطول (حتى 6 أشهر)</string>
     <string name="upgrade_plans_plus_features_support">دعم أسرع عند حدوث مشكلة</string>
-    <string name="upgrade_plans_plus_price">6.99 دولار</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">زائد</string>
     <string name="upgrade_plans_premiumAnnual_aria">قم بالترقية إلى باقة سنوية مميزة</string>
     <string name="upgrade_plans_premiumAnnual_badge">وفر 30%</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">الأفضل للمستخدمين المتقدمين، والعاملين عن بعد، والمسافرين بكثرة</string>
     <string name="upgrade_plans_premiumAnnual_features_number">حافظ على رقم Chatforia الخاص بك محميًا طوال فترة تفعيل خطتك.</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">وفر حوالي 30% مقارنة بالدفع الشهري</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 دولارًا</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">اشتراك سنوي مميز</string>
     <string name="upgrade_plans_premiumMonthly_aria">قم بالترقية إلى الاشتراك الشهري المميز</string>
     <string name="upgrade_plans_premiumMonthly_badge">مُستَحسَن</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">كل شيء في بلس</string>
     <string name="upgrade_plans_premiumMonthly_features_support">دعم ذو أولوية عندما تكون في أمس الحاجة للمساعدة</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">افتح جميع سمات الألوان المميزة وتخصيصات التطبيق</string>
-    <string name="upgrade_plans_premiumMonthly_price">11.99 دولارًا</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">اشتراك مميز (شهري)</string>
     <string name="upgrade_plusBadge">زائد</string>
     <string name="upgrade_plusSubtitle">تخلص من المشتتات واستخدم أدوات التواصل العملية.</string>

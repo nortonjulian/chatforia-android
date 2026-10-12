@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Qo\'ng\'iroqlar va xabarlarni haqiqiy telefon raqamingizga yo\'naltiring</string>
     <string name="upgrade_plans_plus_features_history">Uzoq xabar tarixi (6 oygacha)</string>
     <string name="upgrade_plans_plus_features_support">Muammo yuzaga kelganda tezroq yordam</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Premium yillikka yangilang</string>
     <string name="upgrade_plans_premiumAnnual_badge">30% tejang</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Kuchli foydalanuvchilar, masofadan ishlovchilar va ko\'p sayohat qiluvchilar uchun eng yaxshisi</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Reja faol bo\'lgan paytda Chatforia raqamingizni himoyalangan holda saqlang</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Taxminan 30% tejang oyma-oy to\'lash bilan solishtirganda</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (Yillik)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Oylik Premiumga yangilang</string>
     <string name="upgrade_plans_premiumMonthly_badge">Tavsiya etiladi</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Plusdagi barcha imkoniyatlar</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Muammo yuzaga kelganda tezroq yordam</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Barcha premium rangli mavzular va ilova sozlamalarini oching</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (Oylik)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Diqqatni chalg\'ituvchi omillarni yo\'q qiling va amaliy kommunikatsiya vositalariga kirish huquqini oching.</string>

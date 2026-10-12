@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">ඔබගේ සැබෑ දුරකථන අංකයට ඇමතුම් සහ කෙටි පණිවිඩ යොමු කරන්න</string>
     <string name="upgrade_plans_plus_features_history">දිගු පණිවිඩ ඉතිහාසය (මාස 6 දක්වා)</string>
     <string name="upgrade_plans_plus_features_support">යමක් වැරදුන විට වේගවත් සහාය</string>
-    <string name="upgrade_plans_plus_price">ඩොලර් 6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">ප්ලස්</string>
     <string name="upgrade_plans_premiumAnnual_aria">වාර්ෂික වාරිකයට උත්ශ්‍රේණි කරන්න</string>
     <string name="upgrade_plans_premiumAnnual_badge">30% ඉතිරි කරන්න</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">විදුලිබල භාවිතා කරන්නන්, දුරස්ථ සේවකයින් සහ බර සංචාරකයින් සඳහා හොඳම</string>
     <string name="upgrade_plans_premiumAnnual_features_number">ඔබේ සැලැස්ම ක්‍රියාත්මක වන අතරතුර ඔබේ Chatforia අංකය ආරක්ෂිතව තබා ගන්න</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">මාසිකව ගෙවීමට සාපේක්ෂව 30% ක් පමණ ඉතිරි කරන්න</string>
-    <string name="upgrade_plans_premiumAnnual_price">ඩොලර් 99 යි</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">වාරිකය (වාර්ෂික)</string>
     <string name="upgrade_plans_premiumMonthly_aria">මාසිකව වාරිකයට උත්ශ්‍රේණි කරන්න</string>
     <string name="upgrade_plans_premiumMonthly_badge">නිර්දේශිත</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">ප්ලස් හි ඇති සියල්ල</string>
     <string name="upgrade_plans_premiumMonthly_features_support">ඔබට වඩාත්ම උදව් අවශ්‍ය වූ විට ප්‍රමුඛතා සහාය</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">සියලුම වාරික වර්ණ තේමා සහ යෙදුම් අභිරුචිකරණයන් අගුළු හරින්න</string>
-    <string name="upgrade_plans_premiumMonthly_price">ඩොලර් 11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">වාරිකය (මාසික)</string>
     <string name="upgrade_plusBadge">ප්ලස්</string>
     <string name="upgrade_plusSubtitle">අවධානය වෙනතකට යොමු කරන දේවල් ඉවත් කර ප්‍රායෝගික සන්නිවේදන මෙවලම් විවෘත කරන්න.</string>

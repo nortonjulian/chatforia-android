@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Aistrigh glaonna agus téacsanna chuig d\'fhíor-uimhir theileafóin.</string>
     <string name="upgrade_plans_plus_features_history">Stair teachtaireachtaí</string>
     <string name="upgrade_plans_plus_features_support">Tacaíocht níos tapúla nuair a théann rud éigin mícheart</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Uasghrádaigh go Bliantúil Préimhe</string>
     <string name="upgrade_plans_premiumAnnual_badge">Sábháil 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Is fearr d\'úsáideoirí cumhachta, d\'oibrithe cianda, agus do thaistealaithe mór.</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Coinnigh d\'uimhir Chatforia cosanta agus do phlean gníomhach</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Sábháil thart ar 30% i gcomparáid le híoc go míosúil</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Préimh (Bliantúil)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Uasghrádú go Préimh Míosúil</string>
     <string name="upgrade_plans_premiumMonthly_badge">Molta</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Gach rud in Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Tacaíocht thosaíochta nuair is mó cabhair a theastaíonn uait</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Fuascaigh na téamaí datha préimhe agus na saincheapthaí feidhmchláir go léir</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (Míosúil)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Bain na seachráin agus fáil rochtana ar uirlisí cumarsáide praiticiúla.</string>

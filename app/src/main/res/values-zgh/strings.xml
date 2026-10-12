@@ -2749,7 +2749,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Azen isiwlen d tuzna n tiliɣri ɣer uḍḍun-ik amiran</string>
     <string name="upgrade_plans_plus_features_history">Tamsenɣurt n izen ɣer 6 n wagguren</string>
     <string name="upgrade_plans_plus_features_support">Tallelt tamellalt mi ara yekkes wenneɣ</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Sali-d ɣer Premium s aseggas</string>
     <string name="upgrade_plans_premiumAnnual_badge">Ḥrez 30%</string>
@@ -2762,7 +2762,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Yellan d amellal i yimdanen n tɣuri, imdanen n tɣawsa n yeɣer, d imdanen n tiliɣri</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Keep your Chatforia number protected while your plan is active</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Ḥrez azal n 30% ɣef tɣuri s ayyur</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (s aseggas)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Sali-d ɣer Premium s ayyur</string>
     <string name="upgrade_plans_premiumMonthly_badge">Yellan d amellal</string>
@@ -2774,7 +2774,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Akk wayen yellan deg Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Tallelt tamellalt mi ara tebɣiḍ tallelt</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Ldi akk tawlafin n yinit n Premium d yifecka n usenfar</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (s ayyur)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Remove distractions and unlock practical communication tools.</string>

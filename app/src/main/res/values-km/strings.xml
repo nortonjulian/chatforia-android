@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">បញ្ជូនបន្តការហៅទូរសព្ទ និងសារទៅកាន់លេខទូរស័ព្ទពិតរបស់អ្នក</string>
     <string name="upgrade_plans_plus_features_history">ប្រវត្តិសារវែងជាង (រហូតដល់ 6 ខែ)</string>
     <string name="upgrade_plans_plus_features_support">ការគាំទ្រលឿនជាងមុននៅពេលដែលមានអ្វីមួយខុសប្រក្រតី</string>
-    <string name="upgrade_plans_plus_price">៦,៩៩ ដុល្លារ</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">បូក</string>
     <string name="upgrade_plans_premiumAnnual_aria">ធ្វើឱ្យប្រសើរឡើងទៅបុព្វលាភប្រចាំឆ្នាំ</string>
     <string name="upgrade_plans_premiumAnnual_badge">សន្សំបាន 30%</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">ល្អបំផុតសម្រាប់អ្នកប្រើប្រាស់ថាមពល អ្នកធ្វើការពីចម្ងាយ និងអ្នកធ្វើដំណើរច្រើន</string>
     <string name="upgrade_plans_premiumAnnual_features_number">រក្សាលេខ Chatforia របស់អ្នកឱ្យមានសុវត្ថិភាព ខណៈពេលដែលផែនការរបស់អ្នកកំពុងដំណើរការ</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">សន្សំបានប្រហែល 30% បើប្រៀបធៀបទៅនឹងការបង់ប្រាក់ប្រចាំខែ</string>
-    <string name="upgrade_plans_premiumAnnual_price">៩៩ ដុល្លារ</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">បុព្វលាភ (ប្រចាំឆ្នាំ)</string>
     <string name="upgrade_plans_premiumMonthly_aria">ធ្វើឱ្យប្រសើរឡើងទៅ Premium ប្រចាំខែ</string>
     <string name="upgrade_plans_premiumMonthly_badge">បានណែនាំ</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">អ្វីៗគ្រប់យ៉ាងនៅក្នុង Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">ការគាំទ្រជាអាទិភាពនៅពេលដែលអ្នកត្រូវការជំនួយបំផុត</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">ដោះសោស្បែកពណ៌លំដាប់ខ្ពស់ និងការប្ដូរតាមបំណងកម្មវិធីទាំងអស់</string>
-    <string name="upgrade_plans_premiumMonthly_price">១១,៩៩ ដុល្លារ</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">បុព្វលាភ (ប្រចាំខែ)</string>
     <string name="upgrade_plusBadge">បូក</string>
     <string name="upgrade_plusSubtitle">លុបបំបាត់ការរំខាន និងដោះសោឧបករណ៍ទំនាក់ទំនងជាក់ស្តែង។</string>

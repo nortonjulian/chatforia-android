@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">ارسال تماس‌ها و پیام‌ها به شماره تلفن واقعی شما</string>
     <string name="upgrade_plans_plus_features_history">تاریخچه پیام طولانی‌تر (تا ۶ ماه)</string>
     <string name="upgrade_plans_plus_features_support">پشتیبانی سریع‌تر در صورت بروز مشکل</string>
-    <string name="upgrade_plans_plus_price">۶٫۹۹ دلار</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">پلاس</string>
     <string name="upgrade_plans_premiumAnnual_aria">ارتقا به پریمیوم سالانه</string>
     <string name="upgrade_plans_premiumAnnual_badge">۳۰٪ صرفه‌جویی کنید</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">بهترین گزینه برای کاربران حرفه‌ای, دورکارها و مسافران پر سفر</string>
     <string name="upgrade_plans_premiumAnnual_features_number">شماره Chatforia خود را در حالی که طرح شما فعال است محافظت‌شده نگه دارید</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">در مقایسه با پرداخت ماهانه حدود ۳۰٪ صرفه‌جویی کنید</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">پریمیم (سالانه)</string>
     <string name="upgrade_plans_premiumMonthly_aria">ارتقا به پریمیم ماهانه</string>
     <string name="upgrade_plans_premiumMonthly_badge">توصیه شده</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">تمام امکانات پلن پلاس</string>
     <string name="upgrade_plans_premiumMonthly_features_support">پشتیبانی اولویت‌دار زمانی که بیشترین نیاز به کمک دارید</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">باز کردن تمام تم‌های رنگی پریمیوم و سفارشی‌سازی‌های اپلیکیشن</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">پریمیم (ماهانه)</string>
     <string name="upgrade_plusBadge">پلاس</string>
     <string name="upgrade_plusSubtitle">حواس‌پرتی‌ها را از بین ببرید و ابزارهای ارتباطی کاربردی را آزاد کنید.</string>

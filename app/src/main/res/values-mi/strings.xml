@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Whakamua waea me ngā karere ki tō nama waea tūturu</string>
     <string name="upgrade_plans_plus_features_history">Hītori karere roa (kia tae ki te ono marama)</string>
     <string name="upgrade_plans_plus_features_support">Tautoko tere ake mēnā ka puta he hapa</string>
-    <string name="upgrade_plans_plus_price">$29.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Whakahōutia ki te ohaurunga ā-tau Premium</string>
     <string name="upgrade_plans_premiumAnnual_badge">Penapena 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">He pai rawa atu mō ngā kaiwhakamahi matatau, ngā kaimahi mamao, me ngā kaihaerere taumaha</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Tiakina tō nama Chatforia i te wā e kaha ana tō mahere</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Penapena tata ki te 30% hei whakatairite ki te utu ā-marama</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Taumata teitei (ā-tau)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Whakahōutia ki te utu ā-marama Premium</string>
     <string name="upgrade_plans_premiumMonthly_badge">Penapena 30%</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Ngā mea katoa i roto i te Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Tautoko matua i te wā e tino hiahia ana koe i te āwhina</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Whakatuwherahia ngā kaupapa tae utu-nui katoa me ngā whakaritenga taupānga</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Taumata teitei (ia marama)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Tangohia ngā whakararuraru, ā, whakatuwherahia ngā taputapu whakawhitiwhiti kōrero whaihua.</string>

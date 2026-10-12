@@ -287,7 +287,7 @@ fun UpgradeView(
                             quote = quotes[PricingProduct.Plus],
                             fallbackProduct = PricingProduct.Plus
                         )
-                        ?: "$6.99",
+                        ?: "$7.99",
                 period = "/ month",
                 features = listOf(
                     "Ad-free experience",
@@ -359,7 +359,7 @@ fun UpgradeView(
                             quote = quotes[PricingProduct.PremiumAnnual],
                             fallbackProduct = PricingProduct.PremiumAnnual
                         )
-                        ?: "$99.99",
+                        ?: "$119.99",
                 period = "/ year",
                 features = listOf(
                     "Full Premium access",

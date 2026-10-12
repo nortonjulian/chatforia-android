@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Doorschakelen van oproepen en sms\'jes naar je echte telefoonnummer</string>
     <string name="upgrade_plans_plus_features_history">Langere berichtengeschiedenis (tot 6 maanden)</string>
     <string name="upgrade_plans_plus_features_support">Snellere ondersteuning als er iets misgaat</string>
-    <string name="upgrade_plans_plus_price">$6,99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Upgrade naar Premium Jaarabonnement</string>
     <string name="upgrade_plans_premiumAnnual_badge">Bespaar 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Het meest geschikt voor intensieve gebruikers, telewerkers en frequente reizigers</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Houd uw Chatforia-nummer beschermd zolang uw abonnement actief is</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Bespaar ongeveer 30% in vergelijking met maandelijkse betaling</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title"> Premium (Jaarlijks)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Upgrade naar Premium Maandelijks</string>
     <string name="upgrade_plans_premiumMonthly_badge">Aanbevolen</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Alles in Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Prioritaire ondersteuning wanneer u hulp het hardst nodig hebt</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Ontgrendel alle premium kleurenthema\'s en app-aanpassingen</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11,99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (maandelijks)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Verwijder afleidingen en maak gebruik van praktische communicatiemiddelen.</string>

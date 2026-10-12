@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">通話やテキストメッセージを実際の電話番号に転送</string>
     <string name="upgrade_plans_plus_features_history">メッセージ履歴の保存期間が長い（最大6ヶ月）</string>
     <string name="upgrade_plans_plus_features_support">トラブル時のサポートが迅速</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">プレミアム年間プランにアップグレード</string>
     <string name="upgrade_plans_premiumAnnual_badge">30%お得</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">パワーユーザー、リモートワーカー、頻繁に旅行する方に最適</string>
     <string name="upgrade_plans_premiumAnnual_features_number">プランが有効な間、チャットフォリア番号は保護されます。</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">月額払いと比較して約30%お得</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">プレミアム（年額）</string>
     <string name="upgrade_plans_premiumMonthly_aria">プレミアム（月額）にアップグレード</string>
     <string name="upgrade_plans_premiumMonthly_badge">おすすめ</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Plusの全機能</string>
     <string name="upgrade_plans_premiumMonthly_features_support">最もサポートが必要な時の優先サポート</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">すべてのプレミアムカラーテーマとアプリのカスタマイズを解放</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">プレミアム（月額）</string>
     <string name="upgrade_plusBadge">プラス</string>
     <string name="upgrade_plusSubtitle">気を散らすものを取り除き、実用的なコミュニケーション・ツールを開放する。</string>

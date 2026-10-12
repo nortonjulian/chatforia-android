@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Weereza amasimu n’obubaka ku nnamba yo ey’essimu entuufu</string>
     <string name="upgrade_plans_plus_features_history">Ebyafaayo by\'obubaka ebiwanvu (okutuuka ku myezi 6)</string>
     <string name="upgrade_plans_plus_features_support">Obuwagizi obw’amangu nga waliwo ekikyamu</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Okulongoosa ku Premium Annual</string>
     <string name="upgrade_plans_premiumAnnual_badge">Kekkereza ebitundu 30%</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Ekisinga obulungi eri abakozesa amasannyalaze, abakozi abali ewala, n’abatambuze abazito</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Kuuma ennamba yo eya Chatforia nga ekuumibwa nga pulaani yo ekola</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Kekkereza ebitundu nga 30% bw’ogeraageranya n’okusasula buli mwezi</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (Omwaka) .</string>
     <string name="upgrade_plans_premiumMonthly_aria">Upgrade okutuuka ku Premium Monthly</string>
     <string name="upgrade_plans_premiumMonthly_badge">Okulagirira</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Buli kimu mu Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Okukulembeza obuwagizi ng’osinga okwetaaga obuyambi</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Sumulula emiramwa gyonna egya langi eza premium n\'okulongoosa app</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (Buli mwezi) .</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Ggyawo ebintu ebikuwugula era osumulule ebikozesebwa mu mpuliziganya eby’omugaso.</string>

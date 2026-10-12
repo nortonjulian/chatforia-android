@@ -2749,7 +2749,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Preusmerjanje klicev in besedilnih sporočil na svojo pravo telefonsko številko</string>
     <string name="upgrade_plans_plus_features_history">daljša zgodovina sporočil (do 6 mesecev)</string>
     <string name="upgrade_plans_plus_features_support">Hitrejša podpora, ko gre kaj narobe</string>
-    <string name="upgrade_plans_plus_price">6,99 $</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Nadgradnja na Premium Annual</string>
     <string name="upgrade_plans_premiumAnnual_badge">Prihranite 30 %.</string>
@@ -2762,7 +2762,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Najprimernejši za zahtevne uporabnike, delavce na daljavo in potnike, ki veliko potujejo</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Ohranite svojo številko Chatforia zaščiteno, dokler je vaš načrt aktiven</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Prihranite približno 30 % v primerjavi z mesečnim plačevanjem</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 $</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premija (letna)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Nadgradnja v mesečno storitev Premium</string>
     <string name="upgrade_plans_premiumMonthly_badge">Priporočeno</string>
@@ -2774,7 +2774,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Vse v paketu Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Prednostna podpora, ko najbolj potrebujete pomoč</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Odklepanje vseh premium barvnih tem in prilagoditev aplikacij</string>
-    <string name="upgrade_plans_premiumMonthly_price">11,99 $</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premija (mesečno)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Odpravite moteče dejavnike in odkrijte praktična komunikacijska orodja.</string>

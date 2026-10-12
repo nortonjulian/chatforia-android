@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">將通話和簡訊轉接至您的真實電話號碼</string>
     <string name="upgrade_plans_plus_features_history">更長的訊息記錄（最長 6 個月）</string>
     <string name="upgrade_plans_plus_features_support">遇到問題時享有更快速的支援服務</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">升级至高级年费</string>
     <string name="upgrade_plans_premiumAnnual_badge">節省 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">最適合進階使用者、遠距工作者及頻繁出差者</string>
     <string name="upgrade_plans_premiumAnnual_features_number">在您的计划激活时，保护您的 Chatforia 号码</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">與按月支付相比，可節省約 30% 的費用</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">尊享方案 (年費)</string>
     <string name="upgrade_plans_premiumMonthly_aria">升級至尊月費方案</string>
     <string name="upgrade_plans_premiumMonthly_badge">推薦</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">一切尽在 Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">在您最需要幫助時提供優先支援</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">解鎖所有高級色彩主題與應用程式自訂功能</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">保险费（每月）</string>
     <string name="upgrade_plusBadge">加</string>
     <string name="upgrade_plusSubtitle">排除干扰，开启实用的沟通工具。</string>

@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">কল এবং টেক্সট আপনার প্রকৃত ফোন নম্বরে ফরওয়ার্ড করুন।</string>
     <string name="upgrade_plans_plus_features_history">দীর্ঘ বার্তা ইতিহাস (৬ মাস পর্যন্ত)</string>
     <string name="upgrade_plans_plus_features_support">কিছু ভুল হলে দ্রুত সহায়তা</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">প্রিমিয়াম বাৎসরিক-এ আপগ্রেড করুন</string>
     <string name="upgrade_plans_premiumAnnual_badge">৩০% সাশ্রয় করুন</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">পাওয়ার ব্যবহারকারী, দূরবর্তী কর্মী এবং ঘন ঘন ভ্রমণকারীদের জন্য সেরা</string>
     <string name="upgrade_plans_premiumAnnual_features_number">আপনার প্ল্যান সক্রিয় থাকা পর্যন্ত আপনার Chatforia নম্বর সুরক্ষিত রাখুন।</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">মাসিক পেমেন্টের তুলনায় প্রায় ৩০% সাশ্রয় করুন।</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">প্রিমিয়াম (বার্ষিক)</string>
     <string name="upgrade_plans_premiumMonthly_aria">প্রিমিয়াম মাসিক-এ আপগ্রেড করুন</string>
     <string name="upgrade_plans_premiumMonthly_badge">সুপারিশকৃত</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">প্লাসে সবকিছু</string>
     <string name="upgrade_plans_premiumMonthly_features_support">যখন আপনার সবচেয়ে বেশি সাহায্যের প্রয়োজন, তখন অগ্রাধিকার ভিত্তিতে সহায়তা।</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">সমস্ত প্রিমিয়াম রঙের থিম এবং অ্যাপ কাস্টমাইজেশন আনলক করুন</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">প্রিমিয়াম (মাসিক)</string>
     <string name="upgrade_plusBadge">প্লাস</string>
     <string name="upgrade_plusSubtitle">বিঘ্নতা দূর করুন এবং ব্যবহারিক যোগাযোগের সরঞ্জামগুলো আনলক করুন।</string>

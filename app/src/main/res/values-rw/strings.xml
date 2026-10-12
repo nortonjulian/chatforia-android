@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Kohereza amahamagara no kohereza ubutumwa bugufi kuri nimero yawe ya terefone nyayo</string>
     <string name="upgrade_plans_plus_features_history">Amateka maremare y\'ubutumwa (kugeza ku mezi 6)</string>
     <string name="upgrade_plans_plus_features_support">Ubufasha bwihuse iyo hari ikintu kitagenda neza</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Byongeye kandi</string>
     <string name="upgrade_plans_premiumAnnual_aria">Kuzamura ugere kuri Premium Annual</string>
     <string name="upgrade_plans_premiumAnnual_badge">Zigama 30%</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Ni byiza ku bakoresha amashanyarazi, abakozi bakora kure, n\'abagenzi baremereye</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Komeza urinde nimero yawe ya Chatforia mu gihe gahunda yawe ikora</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Zigama hafi 30% ugereranije no kwishyura buri kwezi</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Ikiguzi cy\'ubwiza (Buri mwaka)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Kuzamura ukoresheje Premium Monthly</string>
     <string name="upgrade_plans_premiumMonthly_badge">Bisabwe</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Byose muri Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Shyiraho ubufasha bw\'ibanze igihe ukeneye ubufasha cyane</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Fungura insanganyamatsiko zose z\'amabara meza n\'uburyo bwo guhindura porogaramu</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Ikiguzi cy\'ubwiza (Buri kwezi)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Kuraho ibintu bikurangaza kandi ufungure ibikoresho by\'ingirakamaro byo gutumanaho.</string>

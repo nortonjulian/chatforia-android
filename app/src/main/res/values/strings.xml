@@ -2981,7 +2981,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Forward calls and texts to your real phone number</string>
     <string name="upgrade_plans_plus_features_history">Longer message history (up to 6 months)</string>
     <string name="upgrade_plans_plus_features_support">Faster support when something goes wrong</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Upgrade to Premium Annual</string>
     <string name="upgrade_plans_premiumAnnual_badge">Save 30%</string>
@@ -2994,7 +2994,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Best for power users, remote workers, and heavy travelers</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Keep your Chatforia number protected while your plan is active</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Save around 30% compared to paying monthly</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (Annual)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Upgrade to Premium Monthly</string>
     <string name="upgrade_plans_premiumMonthly_badge">Recommended</string>
@@ -3006,7 +3006,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Everything in Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Priority support when you need help most</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Unlock all premium color themes and app customizations</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (Monthly)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Remove distractions and unlock practical communication tools.</string>

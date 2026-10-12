@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Yeeytu noddaango e binndanɗe e tonngoode telefoŋ maa tigi-rigi</string>
     <string name="upgrade_plans_plus_features_history">Daartol mesaas ɓurngol juutde (haa lebbi 6)</string>
     <string name="upgrade_plans_plus_features_support">Ballal ɓurngal yaawde so huunde ina ŋakki</string>
-    <string name="upgrade_plans_plus_price">6,99 dolaar</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Ɓeydude</string>
     <string name="upgrade_plans_premiumAnnual_aria">Ɓeydude e Premium hitaande kala</string>
     <string name="upgrade_plans_premiumAnnual_badge">Hisnu 30%</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Ɓuri moƴƴude ko e huutortooɓe doole, gollotooɓe to woɗɗi, e yahooɓe teeŋtuɓe</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Waɗde limoore Chatforia maa ina reenee nde peeje maa ina ngolloo</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Hisnude ko ina tolnoo e 30% so yerondiraama e yoɓde lewru kala</string>
-    <string name="upgrade_plans_premiumAnnual_price">Dolaruuji 99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Njoɓdi (Hitaande)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Ɓeydu e Lewru Premium</string>
     <string name="upgrade_plans_premiumMonthly_badge">Feelama</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Kala ko woni e Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Ballal ɓurngal teeŋtude nde aɗa ɓuri haajde ballal</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Uddit denndaangal tiitooɗe colour premium e kuutorɗe app</string>
-    <string name="upgrade_plans_premiumMonthly_price">11,99 dolaar</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Njoɓdi (Lewru kala)</string>
     <string name="upgrade_plusBadge">ƁURI</string>
     <string name="upgrade_plusSubtitle">Ittude distractions e udditde kuutorɗe jokkondirɗe kuutorteeɗe.</string>

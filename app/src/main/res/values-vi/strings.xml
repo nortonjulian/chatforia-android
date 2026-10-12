@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Chuyển tiếp cuộc gọi và tin nhắn đến số điện thoại thực của bạn</string>
     <string name="upgrade_plans_plus_features_history">Lịch sử tin nhắn dài hơn (lên đến 6 tháng)</string>
     <string name="upgrade_plans_plus_features_support">Hỗ trợ nhanh chóng hơn khi có sự cố xảy ra</string>
-    <string name="upgrade_plans_plus_price">$6,99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Nâng cấp lên gói Premium hàng năm</string>
     <string name="upgrade_plans_premiumAnnual_badge">Tiết kiệm 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Phù hợp nhất cho người dùng chuyên nghiệp, nhân viên làm việc từ xa và những người thường xuyên đi công tác</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Hãy bảo vệ số Chatforia của bạn trong suốt thời gian gói cước còn hiệu lực</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Tiết kiệm khoảng 30% so với việc thanh toán hàng tháng</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Gói cao cấp (Hàng năm)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Nâng cấp lên gói Premium hàng tháng</string>
     <string name="upgrade_plans_premiumMonthly_badge">Được đề xuất</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Tất cả các tính năng trong Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Hỗ trợ ưu tiên khi bạn cần giúp đỡ nhất</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Mở khóa tất cả các chủ đề màu cao cấp và tùy chỉnh ứng dụng</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Gói cao cấp (hàng tháng)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Loại bỏ những yếu tố gây xao nhãng và khai thác các công cụ giao tiếp hữu ích.</string>

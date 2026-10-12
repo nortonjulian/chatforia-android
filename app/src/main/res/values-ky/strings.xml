@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Чыныгы телефон номериңизге чалууларды жана тексттик билдирүүлөрдү жөнөтүңүз</string>
     <string name="upgrade_plans_plus_features_history">Узакка созулган билдирүү тарыхы (6 айга чейин)</string>
     <string name="upgrade_plans_plus_features_support">Кыйынчылыктар болгондо ылдамыраак колдоо</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Жылдык премиумга жаңыртуу</string>
     <string name="upgrade_plans_premiumAnnual_badge">30% үнөмдөңүз</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Күчтүү колдонуучуларга, алыстан иштегендерге жана көп саякаттагандарга эң ылайыктуу</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Планыңыз активдүү болуп турганда Chatforia номериңизди коргоп туруңуз</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Ай сайын төлөөгө салыштырмалуу болжол менен 30% үнөмдөңүз</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Премиум (Жылдык)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Ай сайынкы премиумга жаңыртуу</string>
     <string name="upgrade_plans_premiumMonthly_badge">Сунушталат</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Плюсте баары</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Эң көп жардамга муктаж болгондо артыкчылыктуу колдоо</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Бардык премиум түс темаларын жана тиркеменин ыңгайлаштырууларын ачыңыз</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Премиум (айлык)</string>
     <string name="upgrade_plusBadge">ПЛЮС</string>
     <string name="upgrade_plusSubtitle">Булталааны жок кылып, практикалык байланыш куралдарына мүмкүнчүлүк ачыңыз.</string>

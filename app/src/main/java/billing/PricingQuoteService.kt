@@ -183,8 +183,8 @@ class PricingQuoteService(
     )
 
     private val fallbackAmounts = mapOf(
-        PricingProduct.Plus to FallbackAmount("USD", 699),
+        PricingProduct.Plus to FallbackAmount("USD", 799),
         PricingProduct.PremiumMonthly to FallbackAmount("USD", 1299),
-        PricingProduct.PremiumAnnual to FallbackAmount("USD", 9999)
+        PricingProduct.PremiumAnnual to FallbackAmount("USD", 11999)
     )
 }
