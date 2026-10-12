@@ -71,3 +71,69 @@ data class UserDto(
     val createdAt: String? = null,
     val updatedAt: String? = null
 )
+
+private fun UserDto.normalizedPlanName(): String =
+    plan
+        ?.trim()
+        ?.uppercase()
+        ?.replace("-", "_")
+        ?.replace(" ", "_")
+        ?: "FREE"
+
+fun UserDto.hasPremiumAccess(): Boolean {
+    if (isAdmin == true || role?.equals("ADMIN", ignoreCase = true) == true) {
+        return true
+    }
+
+    if (isPremium == true) {
+        return true
+    }
+
+    val premiumPlan =
+        normalizedPlanName() in
+            setOf(
+                "PREMIUM",
+                "PREMIUM_MONTHLY",
+                "PREMIUM_ANNUAL",
+                "PREMIUMMONTHLY",
+                "PREMIUMANNUAL"
+            )
+
+    if (!premiumPlan) {
+        return false
+    }
+
+    // Backend isPremium is authoritative when supplied.
+    // Older payloads without it retain the legacy Premium fallback.
+    return isPremium ?: true
+}
+
+fun UserDto.isPaidPlan(): Boolean {
+    if (isAdmin == true || role?.equals("ADMIN", ignoreCase = true) == true) {
+        return true
+    }
+
+    val normalizedPlan = normalizedPlanName()
+
+    if (
+        normalizedPlan == "PLUS" ||
+        normalizedPlan == "PLUS_MONTHLY" ||
+        normalizedPlan == "PLUSMONTHLY"
+    ) {
+        return true
+    }
+
+    return hasPremiumAccess()
+}
+
+fun UserDto.accessPlan(): String =
+    when {
+        hasPremiumAccess() -> "PREMIUM"
+        normalizedPlanName() in
+            setOf(
+                "PLUS",
+                "PLUS_MONTHLY",
+                "PLUSMONTHLY"
+            ) -> "PLUS"
+        else -> "FREE"
+    }
