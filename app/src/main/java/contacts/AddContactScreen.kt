@@ -27,12 +27,19 @@ private enum class AddContactMode {
 @Composable
 fun AddContactScreen(
     editingContact: ContactDto? = null,
+    peopleSearchResults: List<PeopleSearchItem> = emptyList(),
+    selectedPeopleResult: PeopleSearchItem? = null,
+    isSearchingPeople: Boolean = false,
+    peopleSearchError: String? = null,
+    onSearchPeople: (String) -> Unit = {},
+    onSelectPeople: (PeopleSearchItem) -> Unit = {},
+    onClearSelectedPeople: () -> Unit = {},
+    onSaveUserId: (userId: Int, alias: String?, favorite: Boolean) -> Unit = { _, _, _ -> },
     onSaveUsername: (username: String, alias: String?, favorite: Boolean) -> Unit,
     onSaveExternal: (phone: String, name: String?, alias: String?, favorite: Boolean) -> Unit,
     onBack: () -> Unit
 ) {
     var mode by remember { mutableStateOf(AddContactMode.USERNAME) }
-
     var usernameText by remember { mutableStateOf("") }
     var phoneText by remember { mutableStateOf("") }
     var nameText by remember { mutableStateOf("") }
@@ -41,18 +48,10 @@ fun AddContactScreen(
 
     LaunchedEffect(editingContact?.id) {
         val contact = editingContact ?: return@LaunchedEffect
+        val isPhoneContact = !contact.externalPhone.isNullOrBlank() &&
+                (contact.user?.id == null && contact.userId == null)
 
-        val isPhoneContact =
-            !contact.externalPhone.isNullOrBlank() &&
-                    (contact.user?.id == null && contact.userId == null)
-
-        mode =
-            if (isPhoneContact) {
-                AddContactMode.PHONE
-            } else {
-                AddContactMode.USERNAME
-            }
-
+        mode = if (isPhoneContact) AddContactMode.PHONE else AddContactMode.USERNAME
         usernameText = contact.user?.username ?: ""
         phoneText = contact.externalPhone ?: ""
         nameText = contact.externalName ?: ""
@@ -64,30 +63,24 @@ fun AddContactScreen(
     val phone = phoneText.trim()
     val name = nameText.trim().ifBlank { null }
     val alias = aliasText.trim().ifBlank { null }
-
     val isEditing = editingContact != null
 
-    val isEditingLinkedUser =
-        editingContact?.let {
-            it.user?.id != null || it.userId != null
-        } == true
+    val isEditingLinkedUser = editingContact?.let {
+        it.user?.id != null || it.userId != null
+    } == true
 
-    val isEditingExternalPhone =
-        editingContact?.let {
-            !it.externalPhone.isNullOrBlank() &&
-                    it.user?.id == null &&
-                    it.userId == null
-        } == true
+    val isEditingExternalPhone = editingContact?.let {
+        !it.externalPhone.isNullOrBlank() && it.user?.id == null && it.userId == null
+    } == true
 
-    val canSave =
-        if (isEditing) {
-            true
-        } else {
-            when (mode) {
-                AddContactMode.USERNAME -> username.isNotBlank()
-                AddContactMode.PHONE -> phone.isNotBlank()
-            }
+    val canSave = if (isEditing) {
+        true
+    } else {
+        when (mode) {
+            AddContactMode.USERNAME -> selectedPeopleResult?.userId != null || username.isNotBlank()
+            AddContactMode.PHONE -> phone.isNotBlank()
         }
+    }
 
     Column(
         modifier = Modifier
@@ -104,12 +97,11 @@ fun AddContactScreen(
             }
 
             Text(
-                text =
-                    if (editingContact == null) {
-                        stringResource(R.string.android_add_contact_add_contact)
-                    } else {
-                        stringResource(R.string.android_add_contact_edit_contact)
-                    },
+                text = if (editingContact == null) {
+                    stringResource(R.string.android_add_contact_add_contact)
+                } else {
+                    stringResource(R.string.android_add_contact_edit_contact)
+                },
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = ChatforiaColors.primaryText
@@ -130,6 +122,7 @@ fun AddContactScreen(
                 enabled = !isEditing,
                 onClick = {
                     mode = AddContactMode.USERNAME
+                    onClearSelectedPeople()
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -140,6 +133,7 @@ fun AddContactScreen(
                 enabled = !isEditing,
                 onClick = {
                     mode = AddContactMode.PHONE
+                    onClearSelectedPeople()
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -157,25 +151,105 @@ fun AddContactScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 if (mode == AddContactMode.USERNAME) {
-                    OutlinedTextField(
-                        value = usernameText,
-                        onValueChange = {
-                            if (!isEditingLinkedUser) {
-                                usernameText = it
+                    if (!isEditingLinkedUser && selectedPeopleResult != null) {
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = ChatforiaColors.screenBackground,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = selectedPeopleResult.resolvedDisplayName,
+                                        fontWeight = FontWeight.Bold,
+                                        color = ChatforiaColors.primaryText
+                                    )
+                                    selectedPeopleResult.username?.let {
+                                        Text(
+                                            text = "@$it",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = ChatforiaColors.secondaryText
+                                        )
+                                    }
+                                }
+                                TextButton(onClick = {
+                                    usernameText = ""
+                                    onClearSelectedPeople()
+                                }) {
+                                    Text("Change")
+                                }
                             }
-                        },
-                        enabled = !isEditingLinkedUser,
-                        label = { Text(stringResource(R.string.android_profile_username)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
+                        }
+                    } else {
+                        OutlinedTextField(
+                            value = usernameText,
+                            onValueChange = {
+                                if (!isEditingLinkedUser) {
+                                    usernameText = it
+                                    onSearchPeople(it)
+                                }
+                            },
+                            enabled = !isEditingLinkedUser,
+                            label = { Text(if (isEditingLinkedUser) "Username" else "Name or username") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+
+                        if (!isEditingLinkedUser && username.isNotEmpty() && username.length < 3) {
+                            Text(
+                                text = "Enter at least 3 characters to search people.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = ChatforiaColors.secondaryText
+                            )
+                        }
+
+                        if (isSearchingPeople) {
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        }
+
+                        if (!isEditingLinkedUser) {
+                            peopleSearchResults.forEach { person ->
+                                Surface(
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = ChatforiaColors.screenBackground,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onSelectPeople(person) }
+                                ) {
+                                    Column(modifier = Modifier.padding(14.dp)) {
+                                        Text(
+                                            text = person.resolvedDisplayName,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = ChatforiaColors.primaryText
+                                        )
+                                        person.username?.let {
+                                            Text(
+                                                text = "@$it",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = ChatforiaColors.secondaryText
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            peopleSearchError?.let {
+                                Text(
+                                    text = it,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                    }
                 } else {
                     OutlinedTextField(
                         value = phoneText,
                         onValueChange = {
-                            if (!isEditingExternalPhone) {
-                                phoneText = it
-                            }
+                            if (!isEditingExternalPhone) phoneText = it
                         },
                         enabled = !isEditingExternalPhone,
                         label = { Text(stringResource(R.string.android_profile_phone_number)) },
@@ -210,49 +284,36 @@ fun AddContactScreen(
                             style = MaterialTheme.typography.titleMedium,
                             color = ChatforiaColors.primaryText
                         )
-
                         Text(
                             text = stringResource(R.string.android_add_contact_pin_this_person_as_a_favorite_contact),
                             style = MaterialTheme.typography.bodySmall,
                             color = ChatforiaColors.secondaryText
                         )
                     }
-
-                    Switch(
-                        checked = favorite,
-                        onCheckedChange = { favorite = it }
-                    )
+                    Switch(checked = favorite, onCheckedChange = { favorite = it })
                 }
-
-                Text(
-                    text =
-                        if (mode == AddContactMode.USERNAME) {
-                            stringResource(R.string.android_add_contact_existing_users_only)
-                        } else {
-                            stringResource(R.string.android_add_contact_phone_help)
-                        },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = ChatforiaColors.secondaryText
-                )
             }
         }
 
         Spacer(modifier = Modifier.height(28.dp))
 
         ChatforiaGradientButton(
-            text =
-                if (editingContact == null) {
-                    stringResource(R.string.android_add_contact_save_contact)
-                } else {
-                    stringResource(R.string.android_add_contact_save_changes)
-                },
+            text = if (editingContact == null) {
+                stringResource(R.string.android_add_contact_save_contact)
+            } else {
+                stringResource(R.string.android_add_contact_save_changes)
+            },
             onClick = {
                 when (mode) {
-                    AddContactMode.USERNAME ->
-                        onSaveUsername(username, alias, favorite)
-
-                    AddContactMode.PHONE ->
-                        onSaveExternal(phone, name, alias, favorite)
+                    AddContactMode.USERNAME -> {
+                        val selectedId = selectedPeopleResult?.userId
+                        if (!isEditing && selectedId != null) {
+                            onSaveUserId(selectedId, alias, favorite)
+                        } else {
+                            onSaveUsername(username, alias, favorite)
+                        }
+                    }
+                    AddContactMode.PHONE -> onSaveExternal(phone, name, alias, favorite)
                 }
             },
             enabled = canSave,
@@ -290,27 +351,16 @@ private fun ContactModeButton(
                 } else {
                     Modifier
                         .background(ChatforiaColors.cardBackground)
-                        .border(
-                            width = 1.dp,
-                            color = ChatforiaColors.border,
-                            shape = shape
-                        )
+                        .border(1.dp, ChatforiaColors.border, shape)
                 }
             )
             .alpha(if (enabled) 1f else 0.70f)
-            .clickable(enabled = enabled) {
-                onClick()
-            },
+            .clickable(enabled = enabled) { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            color =
-                if (selected) {
-                    ChatforiaColors.buttonForeground
-                } else {
-                    ChatforiaColors.primaryText
-                },
+            color = if (selected) ChatforiaColors.buttonForeground else ChatforiaColors.primaryText,
             fontWeight = FontWeight.SemiBold
         )
     }
