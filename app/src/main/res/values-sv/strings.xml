@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Vidarebefordra samtal och sms till ditt riktiga telefonnummer</string>
     <string name="upgrade_plans_plus_features_history">Längre meddelandehistorik (upp till 6 månader)</string>
     <string name="upgrade_plans_plus_features_support">Snabbare support när något går fel</string>
-    <string name="upgrade_plans_plus_price">$6,99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Uppgradera till Premium årligt</string>
     <string name="upgrade_plans_premiumAnnual_badge">Spara 30 %</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Bäst för avancerade användare, distansarbetare och frekventa resenärer</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Håll ditt Chatforia-nummer skyddat medan ditt abonnemang är aktivt</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Spara cirka 30 % jämfört med att betala månadsvis</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 $</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (årligt)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Uppgradera till Premium månadsvis</string>
     <string name="upgrade_plans_premiumMonthly_badge">Rekommenderat</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Allt i Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Prioriterad support när du behöver hjälp som mest</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Lås upp alla premiumfärgteman och appanpassningar</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11,99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (månadsvis)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Ta bort distraktioner och lås upp praktiska kommunikationsverktyg.</string>

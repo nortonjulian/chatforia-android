@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Прослеђујте позиве и поруке на свој стварни број телефона</string>
     <string name="upgrade_plans_plus_features_history">Дужа историја порука (до 6 месеци)</string>
     <string name="upgrade_plans_plus_features_support">Бржа подршка када нешто пође по злу</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Ажурирајте на премијум годишњу претплату</string>
     <string name="upgrade_plans_premiumAnnual_badge">Уштедите 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Најбоље за напредне кориснике, радника на даљину и честе путнике</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Заштитите свој Chatforia број док је ваш план активан</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Уштедите око 30% у поређењу са месечном уплатом</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Премиум (Годишњи)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Ажурирајте на премијум месечну претплату</string>
     <string name="upgrade_plans_premiumMonthly_badge">Препоручено</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Све у плусу</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Приоритетна подршка када вам је помоћ најпотребнија</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Откључајте све премиум теме боја и прилагођавања апликације</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Премијум (месечно)</string>
     <string name="upgrade_plusBadge">ПЛУС</string>
     <string name="upgrade_plusSubtitle">Уклоните сметње и откључајте практичне алате за комуникацију.</string>

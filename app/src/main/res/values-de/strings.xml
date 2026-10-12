@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Anrufe und SMS an deine echte Telefonnummer weiterleiten</string>
     <string name="upgrade_plans_plus_features_history">Längerer Nachrichtenverlauf (bis zu 6 Monate)</string>
     <string name="upgrade_plans_plus_features_support">Schnellerer Support, wenn etwas schiefgeht</string>
-    <string name="upgrade_plans_plus_price">6,99 $</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Auf Premium-Jahresabo upgraden</string>
     <string name="upgrade_plans_premiumAnnual_badge">Sparen Sie 30 %</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Ideal für Power-User, Remote-Mitarbeiter und Vielreisende</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Halten Sie Ihre Chatforia Nummer geschützt, während Ihr Plan aktiv ist</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Sparen Sie rund 30 % im Vergleich zur monatlichen Zahlung</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 $</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (jährlich)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Auf Premium Monthly upgraden</string>
     <string name="upgrade_plans_premiumMonthly_badge">Empfohlen</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Alles in Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Prioritäts-Support, wenn du Hilfe am dringendsten brauchst</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Schalte alle Premium-Farbschemata und App-Anpassungen frei</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11,99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (monatlich)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Beseitigen Sie Ablenkungen und schalten Sie praktische Kommunikationsmittel frei.</string>

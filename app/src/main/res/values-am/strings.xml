@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">ጥሪዎችን እና ጽሑፎችን ወደ እውነተኛው የስልክ ቁጥርዎ ያስተላልፉ</string>
     <string name="upgrade_plans_plus_features_history">ረጅም የመልእክት ታሪክ (እስከ 6 ወራት)</string>
     <string name="upgrade_plans_plus_features_support">የሆነ ችግር ሲፈጠር ፈጣን ድጋፍ</string>
-    <string name="upgrade_plans_plus_price">6.99 ዶላር</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">ፕላስ</string>
     <string name="upgrade_plans_premiumAnnual_aria">ወደ ፕሪሚየም አመታዊ ያሻሽሉ</string>
     <string name="upgrade_plans_premiumAnnual_badge">30% ይቆጥቡ</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">ለኤሌክትሪክ ተጠቃሚዎች፣ ለርቀት ሠራተኞች እና ለከባድ ተጓዦች ምርጥ</string>
     <string name="upgrade_plans_premiumAnnual_features_number">ዕቅድዎ ንቁ በሚሆንበት ጊዜ የቻትፎሪያ ቁጥርዎን ይጠብቁ</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">ከወርሃዊ ክፍያ ጋር ሲነጻጸር 30% ያህል ይቆጥቡ</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 ዶላር</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">ፕሪሚየም (ዓመታዊ)</string>
     <string name="upgrade_plans_premiumMonthly_aria">ወደ ፕሪሚየም ወርሃዊ ያሻሽሉ</string>
     <string name="upgrade_plans_premiumMonthly_badge">የሚመከር</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">ሁሉም ነገር በፕላስ ውስጥ</string>
     <string name="upgrade_plans_premiumMonthly_features_support">እርዳታ በጣም በሚያስፈልግበት ጊዜ ቅድሚያ የሚሰጠው ድጋፍ</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">ሁሉንም ፕሪሚየም የቀለም ገጽታዎች እና የመተግበሪያ ማበጀቶችን ይክፈቱ</string>
-    <string name="upgrade_plans_premiumMonthly_price">11.99 ዶላር</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">ፕሪሚየም (ወርሃዊ)</string>
     <string name="upgrade_plusBadge">ፕላስ</string>
     <string name="upgrade_plusSubtitle">ትኩረትን የሚከፋፍሉ ነገሮችን ያስወግዱ እና ተግባራዊ የመገናኛ መሳሪያዎችን ይክፈቱ።</string>

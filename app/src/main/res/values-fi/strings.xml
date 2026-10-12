@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Välitä puhelut ja tekstiviestit oikeaan puhelinnumeroosi</string>
     <string name="upgrade_plans_plus_features_history">Pidempi viestihistoria (jopa 6 kuukautta)</string>
     <string name="upgrade_plans_plus_features_support">Nopeampi tuki, kun jokin menee pieleen</string>
-    <string name="upgrade_plans_plus_price">6,99 $</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Päivitä Premium Annualiin</string>
     <string name="upgrade_plans_premiumAnnual_badge">Säästä 30 %</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Paras tehokäyttäjille, etätyöntekijöille ja paljon matkustaville käyttäjille.</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Pidä Chatforia-numerosi suojattuna suunnitelmasi voimassaoloaikana.</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Säästä noin 30 % verrattuna kuukausimaksuun</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 $</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Vakuutusmaksu (vuosittain)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Päivitä Premium Kuukausittaiseksi</string>
     <string name="upgrade_plans_premiumMonthly_badge">Suositeltu</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Kaikki Plus-ominaisuudet</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Ensisijainen tuki silloin, kun tarvitset apua eniten</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Avaa kaikki premium-väriteemat ja sovelluksen mukautukset</string>
-    <string name="upgrade_plans_premiumMonthly_price">11,99 $</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Vakuutusmaksu (kuukausittain)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Poista häiriötekijät ja ota käyttöön käytännöllisiä viestintävälineitä.</string>

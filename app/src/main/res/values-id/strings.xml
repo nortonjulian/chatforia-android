@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Teruskan panggilan dan pesan teks ke nomor telepon asli Anda</string>
     <string name="upgrade_plans_plus_features_history">Riwayat pesan lebih lama (hingga 6 bulan)</string>
     <string name="upgrade_plans_plus_features_support">Dukungan lebih cepat saat terjadi masalah</string>
-    <string name="upgrade_plans_plus_price">$6,99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Tingkatkan ke Premium Tahunan</string>
     <string name="upgrade_plans_premiumAnnual_badge">Hemat 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Cocok untuk pengguna aktif, pekerja jarak jauh, dan pelancong berat</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Jaga nomor Chatforia Anda tetap terlindungi selama paket Anda aktif</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Hemat sekitar 30% dibandingkan dengan pembayaran bulanan</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title"> Premium (Tahunan)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Tingkatkan ke Premium Bulanan</string>
     <string name="upgrade_plans_premiumMonthly_badge">Direkomendasikan</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Semua yang ada di Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Dukungan prioritas saat Anda paling membutuhkan bantuan</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Buka kunci semua tema warna premium dan penyesuaian aplikasi</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11,99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (Bulanan)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Singkirkan gangguan dan buka alat komunikasi yang praktis.</string>

@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Заنگҳо ва паёмҳоро ба рақами воқеии телефони худ ирсол кунед</string>
     <string name="upgrade_plans_plus_features_history">Таърихи паёмҳои дарозмуддат (то 6 моҳ)</string>
     <string name="upgrade_plans_plus_features_support">Дастгирии зудтар ҳангоми ба амал омадани мушкилот</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Ба обунаи солонаи Premium навсозӣ кунед</string>
     <string name="upgrade_plans_premiumAnnual_badge">30%-ро сарфа кунед</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Беҳтарин барои корбарони пешрафта, кормандони дурдаст ва саёҳон</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Ҳангоми фаъол будани нақшаи шумо рақами Chatforia-ро ҳифз кунед</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Дар муқоиса бо пардохти моҳона тақрибан 30% сарфа кунед</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Прeмиум (солона)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Ба обунаи моҳонаи Premium навсозӣ кунед</string>
     <string name="upgrade_plans_premiumMonthly_badge">Тавсияшуда</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Ҳама чиз дар Плюс</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Дастгирии афзалиятӣ, вақте ки ба шумо бештар ёрӣ лозим аст</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Ҳамаи мавзӯъҳои пурраи ранги премиум ва танзимоти барномаро кушоед</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Прeмиум (моҳона)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Саргармиҳоро бартараф кунед ва асбобҳои амалӣ барои муоширатро кушоед.</string>

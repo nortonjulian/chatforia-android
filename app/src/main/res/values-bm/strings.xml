@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Weelekanw ni sms ci i ka telefɔni nimɔrɔ lakika ma</string>
     <string name="upgrade_plans_plus_features_history">Cikan tariku janya (fo kalo 6) .</string>
     <string name="upgrade_plans_plus_features_support">Dɛmɛ teliya la ni fɛn dɔ ma ɲɛ</string>
-    <string name="upgrade_plans_plus_price">$6.99 ye</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Ka fara o kan</string>
     <string name="upgrade_plans_premiumAnnual_aria">Yɛlɛma donna ka kɛ Premium Annual ye</string>
     <string name="upgrade_plans_premiumAnnual_badge">Aw ye 30% mara .</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">A ka fisa fanga baarakɛlaw ma, yɔrɔjan baarakɛlaw, ani taamakɛla girinmanw</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Aw ye aw ka Chatforia nimɔrɔ lakana ka a sɔrɔ aw ka labɛn bɛ baara la</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Aw bɛ 30% ɲɔgɔn mara ni aw ye a suma ni kalo o kalo sarali ye</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99 ye</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (San o san) .</string>
     <string name="upgrade_plans_premiumMonthly_aria">Yɛlɛma donna ka kɛ Premium Monthly ye</string>
     <string name="upgrade_plans_premiumMonthly_badge">Lakofɔlen</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Fɛn bɛɛ bɛ Plus kɔnɔ</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Dɛmɛ min ka kan ka bila jɔyɔrɔ fɔlɔ la, waati min na aw mago bɛ dɛmɛ na kosɛbɛ</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Kulɛri premium barokunw bɛɛ da wuli ani app customizations</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99 ye</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (Kalo o kalo) .</string>
     <string name="upgrade_plusBadge">PLUS ƝƐFƆLI</string>
     <string name="upgrade_plusSubtitle">Fɛn minnu bɛ mɔgɔ hakili ɲagami, olu bɔ yen ani ka kumaɲɔgɔnya baarakɛminɛn nafamaw da wuli.</string>

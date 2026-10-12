@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Переадресація дзвінків та SMS на ваш реальний номер телефону</string>
     <string name="upgrade_plans_plus_features_history">Довший архів повідомлень (до 6 місяців)</string>
     <string name="upgrade_plans_plus_features_support">Швидша підтримка, коли щось йде не так</string>
-    <string name="upgrade_plans_plus_price">$6,99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Оновлення до Преміум-річного плану</string>
     <string name="upgrade_plans_premiumAnnual_badge">Заощаджуйте 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Найкраще підходить для досвідчених користувачів, віддалених працівників та тих, хто багато подорожує</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Захистіть свій номер Chatforia, поки ваш план активний</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Економте близько 30% порівняно з щомісячною оплатою</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Преміум (річний)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Оновити до Преміум щомісяця</string>
     <string name="upgrade_plans_premiumMonthly_badge">Рекомендовано</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Все, що є в Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Пріоритетна підтримка, коли вам найбільше потрібна допомога</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Розблокуйте всі преміум-кольорові теми та налаштування додатка</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11,99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Преміум (щомісячно)</string>
     <string name="upgrade_plusBadge">ПЛЮС</string>
     <string name="upgrade_plusSubtitle">Приберіть відволікаючі фактори та відкрийте практичні інструменти комунікації.</string>

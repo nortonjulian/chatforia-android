@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Alefaso any amin\'ny laharan-telefaonanao tena izy ny antso sy ny hafatra.</string>
     <string name="upgrade_plans_plus_features_history">Tantara hafatra maharitra kokoa (hatramin\'ny 6 volana)</string>
     <string name="upgrade_plans_plus_features_support">Fanohanana haingana kokoa rehefa misy zavatra tsy mety</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Havaozy ho Premium isan-taona</string>
     <string name="upgrade_plans_premiumAnnual_badge">Mitsitsia 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Tsara indrindra ho an\'ny mpampiasa matanjaka, ny mpiasa lavitra, ary ny mpandeha be entana.</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Arovy ny laharan\'ny Chatforia-nao raha mbola mandeha ny famandrihanao</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Mitsitsia eo amin\'ny 30% eo ho eo raha oharina amin\'ny fandoavana isam-bolana.</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (Isan-taona)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Havaozina ho Premium isam-bolana</string>
     <string name="upgrade_plans_premiumMonthly_badge">Soso-kevitra</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Ny zava-drehetra ao amin\'ny Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Fanohanana laharam-pahamehana rehefa tena mila fanampiana ianao</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Misokatra avokoa ny lohahevitra loko premium rehetra sy ny fanamboarana fampiharana</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (Isam-bolana)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Esory ny fanelingelenana ary sokafy ireo fitaovana fifandraisana azo ampiharina.</string>

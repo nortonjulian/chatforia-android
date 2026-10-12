@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Dlulisela lucingo kanye nemilayeto kunombolo yakho yelucingo mbamba</string>
     <string name="upgrade_plans_plus_features_history">Umlandvo wemlayeto lomudze (kuze kube tinyanga letingu-6)</string>
     <string name="upgrade_plans_plus_features_support">Kusekelwa lokusheshako uma kukhona lokungahambi kahle</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Futsi</string>
     <string name="upgrade_plans_premiumAnnual_aria">Tfutfukisa ube yi-Premium yaminyaka yonkhe</string>
     <string name="upgrade_plans_premiumAnnual_badge">Yonga 30%</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Kuhle kakhulu kubasebentisi bemandla, tisebenti letikhashane, kanye nebahambi labasindzako</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Gcina inombolo yakho ye Chatforia ivikelekile ngesikhatsi luhlelo lwakho lusebenta .</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Yonga cishe 30% uma kucatsaniswa nekukhokha njalo ngenyanga</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Iphrimiyamu (Njalo ngemnyaka)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Tfutfukisa ube yi-Premium Njalo Ngenyanga</string>
     <string name="upgrade_plans_premiumMonthly_badge">Tusile</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Konkhe lokuse Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Kusekelwa lokubalulekile uma udzinga lusito kakhulu</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Vula tonkhe tingcikitsi temibala ye-premium kanye nekwentiwa kwe-app ngekwemvelo</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Imali lekhokhelwako (Njalo ngenyanga)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Susa tiphatamiso bese uvula emathulusi ekuchumana lasebentako.</string>

@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Fetišetša pele megala le melaetša go nomoro ya gago ya kgonthe ya mogala</string>
     <string name="upgrade_plans_plus_features_history">Histori ya molaetša ye telele (go fihla go dikgwedi tše 6) .</string>
     <string name="upgrade_plans_plus_features_support">Thekgo ya ka pela ge selo se sengwe se sa sepele gabotse</string>
-    <string name="upgrade_plans_plus_price">$ 6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Ntlafatsa go Premium Annual</string>
     <string name="upgrade_plans_premiumAnnual_badge">Boloka 30% .</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">E kaone bakeng sa badiriši ba mohlagase, bašomi ba kgole le basepedi ba boima</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Boloka nomoro ya gago ya Chatforia e šireleditšwe ge leano la gago le šoma</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Boloka go dikologa 30% ge go bapetšwa le go lefa kgwedi le kgwedi</string>
-    <string name="upgrade_plans_premiumAnnual_price">$ 99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (Ngwaga le ngwaga) .</string>
     <string name="upgrade_plans_premiumMonthly_aria">Ntlafatsa go Premium Kgwedi le Kgwedi</string>
     <string name="upgrade_plans_premiumMonthly_badge">Šišintšwego</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Se sengwe le se sengwe ka Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Thekgo ya pele ge o nyaka thušo kudu</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Notlolla dihlooho tsohle Premium mmala le di-customizations tiriso ye</string>
-    <string name="upgrade_plans_premiumMonthly_price">$ 11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (Kgwedi le kgwedi) .</string>
     <string name="upgrade_plusBadge">PLUS GO TLHOMAMISA</string>
     <string name="upgrade_plusSubtitle">Tloša ditšhitišo gomme o notlolle didirišwa tše di šomago tša poledišano.</string>

@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Redirecționează apelurile și mesajele text către numărul tău de telefon real</string>
     <string name="upgrade_plans_plus_features_history">Istoric mai lung al mesajelor (până la 6 luni)</string>
     <string name="upgrade_plans_plus_features_support">Asistență mai rapidă când ceva nu merge bine</string>
-    <string name="upgrade_plans_plus_price">6,99 $</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Treceți la Premium Anual</string>
     <string name="upgrade_plans_premiumAnnual_badge">Economisiți 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Ideal pentru utilizatori avansați, lucrători la distanță și călători frecvenți</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Păstrați numărul Chatforia protejat în timp ce planul dvs. este activ</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Economisiți aproximativ 30% comparativ cu plata lunară</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 $</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (anual)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Treceți la Premium lunar</string>
     <string name="upgrade_plans_premiumMonthly_badge">Recomandat</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Tot ce este inclus în Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Asistență prioritară atunci când ai cea mai mare nevoie de ajutor</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Deblochează toate temele de culori premium și personalizările aplicației</string>
-    <string name="upgrade_plans_premiumMonthly_price">11,99 $</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (lunar)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Eliminați distragerile și deblocați instrumentele practice de comunicare.</string>

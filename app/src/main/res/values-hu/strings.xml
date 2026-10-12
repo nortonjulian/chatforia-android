@@ -2749,7 +2749,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Hívások és SMS-ek továbbítása a valódi telefonszámodra</string>
     <string name="upgrade_plans_plus_features_history">Hosszabb üzenettörténet (akár 6 hónapig)</string>
     <string name="upgrade_plans_plus_features_support">Gyorsabb támogatás, ha valami baj van</string>
-    <string name="upgrade_plans_plus_price">6,99 $</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Upgrade prémium évesre</string>
     <string name="upgrade_plans_premiumAnnual_badge">Mentés 30%</string>
@@ -2762,7 +2762,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">A legjobb energiafelhasználóknak, távmunkásoknak és sokat utazóknak</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Tartsa Chatforia számodat védve, amíg a terved aktív</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Körülbelül 30%-ot spórolhat a havi fizetéshez képest</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 $</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Prémium (éves)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Havi prémiumra frissítés</string>
     <string name="upgrade_plans_premiumMonthly_badge">Ajánlott</string>
@@ -2774,7 +2774,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Minden, ami a Plus-ban van</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Elsőbbségi támogatás, amikor a legnagyobb szükség van a segítségre</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Minden prémium színséma és alkalmazás-testreszabás feloldása</string>
-    <string name="upgrade_plans_premiumMonthly_price">11,99 $</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Prémium (havi)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Távolítsa el a zavaró tényezőket, és szabadítsa fel a gyakorlati kommunikációs eszközöket.</string>

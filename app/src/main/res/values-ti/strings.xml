@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">ጻውዒታትን ጽሑፋትን ናብቲ ሓቀኛ ቁጽሪ ተሌፎንካ ኣመሓላልፎ</string>
     <string name="upgrade_plans_plus_features_history">ነዊሕ ታሪኽ መልእኽቲ (ክሳብ 6 ወርሒ)</string>
     <string name="upgrade_plans_plus_features_support">ሓደ ነገር ክጋገ ከሎ ዝቐልጠፈ ደገፍ</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">ተወሳኺ</string>
     <string name="upgrade_plans_premiumAnnual_aria">ናብ ፕሪምየም ዓመታዊ ምዕባይ</string>
     <string name="upgrade_plans_premiumAnnual_badge">30% ዕቋር</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">ንተጠቀምቲ ሓይሊ፡ ርሑቕ ዝሰርሑን ከበድቲ ተጓዓዝትን ዝበለጸ</string>
     <string name="upgrade_plans_premiumAnnual_features_number">ውጥንካ ንጡፍ ኣብ ዝኾነሉ እዋን ቁጽሪ ቻትፎርያኻ ተሓልዩ ይሕዞ</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">ምስ ወርሓዊ ምኽፋል ክነጻጸር ከሎ ከባቢ 30% ዕቋር</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">ፕሪምየም (ዓመታዊ)</string>
     <string name="upgrade_plans_premiumMonthly_aria">ናብ ፕሪምየም ወርሓዊ ምዕባይ</string>
     <string name="upgrade_plans_premiumMonthly_badge">ዝምከር</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">ኩሉ ኣብ ፕላስ ዘሎ</string>
     <string name="upgrade_plans_premiumMonthly_features_support">ዝያዳ ሓገዝ ኣብ ዘድልየካ እዋን ቀዳምነት ምሃብ ደገፍ</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">ኩሎም ፕሪምየም ሕብሪ ቴማታትን ናይ ኣፕ ምምዕርራይን ምኽፋት።</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99 ዶላር</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">ፕሪምየም (ወርሓዊ)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">ትኹረትካ ዝሰርቕ ነገራት ኣወግድን ግብራዊ ናይ ርክብ መሳርሒታት ምኽፋትን።</string>

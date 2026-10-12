@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">إعادة توجيه المكالمات والرسائل النصية إلى رقم هاتفك الحقيقي</string>
     <string name="upgrade_plans_plus_features_history">سجل رسائل أطول (حتى 6 أشهر)</string>
     <string name="upgrade_plans_plus_features_support">دعم أسرع عند حدوث أي مشكلة</string>
-    <string name="upgrade_plans_plus_price">6.99 دولار</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">قم بالترقية إلى الاشتراك السنوي المميز</string>
     <string name="upgrade_plans_premiumAnnual_badge">وفر 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">الأفضل للمستخدمين المحترفين والعاملين عن بُعد والمسافرين الدائمين</string>
     <string name="upgrade_plans_premiumAnnual_features_number">حافظ على رقم Chatforia الخاص بك محميًا أثناء سريان خطتك</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">وفر حوالي 30% مقارنة بالدفع الشهري</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 دولارًا</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (سنوي)</string>
     <string name="upgrade_plans_premiumMonthly_aria">الترقية إلى Premium شهري</string>
     <string name="upgrade_plans_premiumMonthly_badge">موصى به</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">كل ما في Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">دعم ذو أولوية عندما تكون في أمس الحاجة إلى المساعدة</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">فتح جميع السمات اللونية المميزة وتخصيصات التطبيق</string>
-    <string name="upgrade_plans_premiumMonthly_price">11.99 دولار</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (شهري)</string>
     <string name="upgrade_plusBadge">زائد</string>
     <string name="upgrade_plusSubtitle">أزل المشتتات وأطلق العنان لأدوات التواصل العملية.</string>

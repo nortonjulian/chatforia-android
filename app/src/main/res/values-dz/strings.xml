@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">ཁ་པར་དང་ཡིག་འཕྲིན་ཚུ་ ཁྱོད་རའི་ཁ་པར་ཨང་གྲངས་ངོ་མ་ལུ་ གདོང་བསྐྱོད་འབད།</string>
     <string name="upgrade_plans_plus_features_history">འཕྲིན་དོན་ལོ་རྒྱུས་རིངམོ་ (ཟླཝ་༦ ཚུན་)</string>
     <string name="upgrade_plans_plus_features_support">ག་ཅི་ཅིག་འཛོལ་བ་འགྱོ་བའི་སྐབས་རྒྱབ་སྐྱོར་མགྱོགས་དྲགས།</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">པ་ལཱསི།</string>
     <string name="upgrade_plans_premiumAnnual_aria">ལོ་བསྟར་གྱི་ གོང་ཚད་མཐོ་ཤོས་ལུ་ ཡར་འཕར་འབད།</string>
     <string name="upgrade_plans_premiumAnnual_badge">30% སྲུངས།</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">ནུས་ཤུགས་ལག་ལེན་འཐབ་མི་དང་ ཐག་རིང་ལས་མི་ དེ་ལས་ འགྲུལ་པ་ལྗིད་ཅན་ཚུ་གི་དོན་ལུ་ དྲག་ཤོས།</string>
     <string name="upgrade_plans_premiumAnnual_features_number">ཁྱོད་ཀྱི་འཆར་གཞི་ཤུགས་ལྡན་ཡོད་པའི་སྐབས་ ཁྱོད་ཀྱི་ཅཱཊ་ཕོ་རི་ཡ་ཨང་གྲངས་འདི་ཉེན་སྲུང་འབད་དེ་བཞག།</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">ཟླ་རིམ་གྱི་དངུལ་སྤྲོད་མི་དང་ཕྱདཔ་ད་ བརྒྱ་ཆ་༣༠ དེ་ཅིག་ གསོག་འཇོག་འབད་ཚུགས།</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">ཁེ་འབབ་ (ལོ་རེའི་)</string>
     <string name="upgrade_plans_premiumMonthly_aria">ཟླ་རིམ་གོང་ཚད་ཡར་འཕར་འབད།</string>
     <string name="upgrade_plans_premiumMonthly_badge">རྒྱབ་སྣོན་འབད་ཡི</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">པ་ལཱསི་ནང་ལུ་ཡོད་ཚད།</string>
     <string name="upgrade_plans_premiumMonthly_features_support">ཁྱོད་ལུ་གྲོགས་རམ་མང་ཤོས་དགོཔ་ད་ གཙོ་རིམ་རྒྱབ་སྐྱོར།</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">གོང་ཚད་མཐོ་བའི་ཚོས་གཞིའི་བརྗོད་དོན་དང་གློག་རིམ་སྲོལ་སྒྲིག་ཚུ་ཆ་མཉམ་ལྡེ་མིག་ཕྱེ།</string>
-    <string name="upgrade_plans_premiumMonthly_price">$༡༡.༩༩</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">ཁེ་འབབ་ (ཟླ་རེ།)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">བར་ཆད་ཚུ་བཏོན་བཏང་ཞིནམ་ལས་ ལག་ལེན་འཐབ་བཏུབ་པའི་བརྒྱུད་འབྲེལ་ལག་ཆས་ཚུ་ ལྡེ་མིག་ཕྱེ་དགོ།</string>

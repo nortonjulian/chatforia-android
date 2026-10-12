@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Suuna kõned ja sõnumid oma päris telefoninumbrile</string>
     <string name="upgrade_plans_plus_features_history">Pikem sõnumiajalugu (kuni 6 kuud)</string>
     <string name="upgrade_plans_plus_features_support">Kiirem tugi, kui midagi läheb valesti</string>
-    <string name="upgrade_plans_plus_price">$6,99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Uuenda Premium aastapaketiks</string>
     <string name="upgrade_plans_premiumAnnual_badge">Säästke 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Sobib kõige paremini kogenud kasutajatele, kaugtöötajatele ja palju reisivatele inimestele</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Hoidke oma Chatforia numbrit kaitstuna, kuni teie pakett on aktiivne</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Säästa umbes 30% võrreldes igakuise maksmisega</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 $</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (aastane)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Uuendage Premium-kuupaketiks</string>
     <string name="upgrade_plans_premiumMonthly_badge">Soovitatav</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Kõik, mis on Plus-pakettis</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Prioriteetne tugi, kui abi kõige rohkem vajad</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Ava kõik premium-värviteemad ja rakenduse kohandamisvõimalused</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11,99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (kuupakett)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Eemaldage segavad asjaolud ja avage praktilised suhtlusvahendid.</string>

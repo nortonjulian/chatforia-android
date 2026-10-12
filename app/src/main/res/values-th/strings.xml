@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">โอนสายและข้อความไปยังหมายเลขโทรศัพท์จริงของคุณ</string>
     <string name="upgrade_plans_plus_features_history">ประวัติข้อความที่ยาวนานขึ้น (สูงสุด 6 เดือน)</string>
     <string name="upgrade_plans_plus_features_support">การสนับสนุนที่รวดเร็วขึ้นเมื่อมีปัญหา</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">พลัส</string>
     <string name="upgrade_plans_premiumAnnual_aria">อัปเกรดเป็นพรีเมียมรายปี</string>
     <string name="upgrade_plans_premiumAnnual_badge">ประหยัด 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">เหมาะที่สุดสำหรับผู้ใช้ที่ต้องการประสิทธิภาพสูง, ผู้ทำงานทางไกล, และนักเดินทางบ่อย</string>
     <string name="upgrade_plans_premiumAnnual_features_number">เก็บหมายเลข Chatforia ของคุณให้ปลอดภัยในขณะที่แผนของคุณยังใช้งานอยู่</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">ประหยัดประมาณ 30% เมื่อเทียบกับการจ่ายรายเดือน</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">พรีเมียม (รายปี)</string>
     <string name="upgrade_plans_premiumMonthly_aria">อัปเกรดเป็นพรีเมียมรายเดือน</string>
     <string name="upgrade_plans_premiumMonthly_badge">แนะนำ</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">ทุกสิ่งใน Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">การสนับสนุนที่รวดเร็วขึ้นเมื่อมีปัญหา</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">ปลดล็อกธีมสีพรีเมียมทั้งหมดและการปรับแต่งแอป</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">พรีเมียม (รายเดือน)</string>
     <string name="upgrade_plusBadge">พลัส</string>
     <string name="upgrade_plusSubtitle">กำจัดสิ่งรบกวนและปลดล็อกเครื่องมือสื่อสารที่ใช้งานได้จริง</string>

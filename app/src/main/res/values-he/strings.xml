@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">העבר שיחות והודעות טקסט למספר הטלפון האמיתי שלך</string>
     <string name="upgrade_plans_plus_features_history">היסטוריית הודעות ארוכה יותר (עד 6 חודשים)</string>
     <string name="upgrade_plans_plus_features_support">תמיכה מהירה יותר כשיש בעיה</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">שדרג ל-Premium שנתי</string>
     <string name="upgrade_plans_premiumAnnual_badge">חסוך 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">מתאים ביותר למשתמשים מתקדמים, עובדים מרחוק ומטיילים תכופים</string>
     <string name="upgrade_plans_premiumAnnual_features_number">שמור על מספר ה-Chatforia שלך מוגן כל עוד התוכנית שלך פעילה</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">חסוך כ-30% בהשוואה לתשלום חודשי</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 $</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (שנתי)</string>
     <string name="upgrade_plans_premiumMonthly_aria">שדרג ל-Premium חודשי</string>
     <string name="upgrade_plans_premiumMonthly_badge">מומלץ</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">הכל ב-Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">תמיכה מועדפת כשאתה זקוק לעזרה ביותר</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">שחרר את כל ערכות הצבעים וההתאמות האישיות של האפליקציה</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (חודשי)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">הסר הסחות דעת וגש לכלים מעשיים לתקשורת.</string>

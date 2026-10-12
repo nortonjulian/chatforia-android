@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">I-forward dagiti awag ken text iti pudno a numero ti teleponom</string>
     <string name="upgrade_plans_plus_features_history">Napapaut a pakasaritaan ti mensahe (agingga iti 6 a bulan) .</string>
     <string name="upgrade_plans_plus_features_support">Naparpartak a suporta no adda madi</string>
-    <string name="upgrade_plans_plus_price">$ 6.99 nga</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Ag-upgrade iti Premium Annual</string>
     <string name="upgrade_plans_premiumAnnual_badge">Makaurnong iti 30% .</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Kasayaatan para kadagiti agus-usar iti koriente, remote workers, ken nadagsen a biahero</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Pagtalinaedem a nasalakniban ti numero ti Chatforia-mo bayat nga aktibo ti planom</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Makaurnong iti agarup 30% no idilig iti binulan a panagbayad</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (Tinawen) .</string>
     <string name="upgrade_plans_premiumMonthly_aria">Ag-upgrade iti Premium Monthly</string>
     <string name="upgrade_plans_premiumMonthly_badge">Naikalikagum</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Amin nga adda iti Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Ipangpangruna ti suporta no kasapulam unay ti tulong</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Ilukat amin a premium color theme ken app customizations</string>
-    <string name="upgrade_plans_premiumMonthly_price">$ 11.99 nga</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (Binulan) .</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Ikkaten dagiti pakasingaan ken luktam dagiti praktikal nga alikamen iti komunikasion.</string>

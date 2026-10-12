@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Dërgo thirrjet dhe mesazhet në numrin tënd të vërtetë të telefonit</string>
     <string name="upgrade_plans_plus_features_history">Historia më e gjatë e mesazheve (deri në 6 muaj)</string>
     <string name="upgrade_plans_plus_features_support">Mbështetje më e shpejtë kur diçka shkon keq</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Përmirëso në Premium Vjetor</string>
     <string name="upgrade_plans_premiumAnnual_badge">Kurseni 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Më e mira për përdoruesit e avancuar, punonjësit në distancë dhe udhëtarët e shpeshtë</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Ruani numrin tuaj të Chatforia të mbrojtur ndërsa plani juaj është aktiv</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Kurseni rreth 30% krahasuar me pagesën mujore</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (Vjetor)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Përmirëso në Premium Mujore</string>
     <string name="upgrade_plans_premiumMonthly_badge">E rekomanduar</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Të gjitha në Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Mbështetje më e shpejtë kur diçka shkon keq</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Hapni të gjitha temat premium me ngjyra dhe personalizimet e aplikacionit</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (Mujor)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Hiqni shpërqendrimet dhe zhbllokoni mjete praktike komunikimi.</string>

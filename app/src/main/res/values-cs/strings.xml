@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Přesměrování hovorů a SMS na vaše skutečné telefonní číslo</string>
     <string name="upgrade_plans_plus_features_history">Delší historie zpráv (až 6 měsíců)</string>
     <string name="upgrade_plans_plus_features_support">Rychlejší podpora, když se něco pokazí</string>
-    <string name="upgrade_plans_plus_price">6,99 $</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Upgrade na roční Premium</string>
     <string name="upgrade_plans_premiumAnnual_badge">Ušetřete 30 %</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Nejlepší pro výkonné uživatele, vzdálené pracovníky a náročné cestovatele</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Chraňte své číslo Chatforia, dokud je váš plán aktivní.</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Ušetřete přibližně 30 % ve srovnání s měsíční platbou</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 $</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Pojistné (roční)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Upgrade na měsíční Premium</string>
     <string name="upgrade_plans_premiumMonthly_badge">Doporučené stránky</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Vše v Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Přednostní podpora, když potřebujete pomoc nejvíce</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Odemkněte všechny prémiové barevné motivy a přizpůsobení aplikace</string>
-    <string name="upgrade_plans_premiumMonthly_price">11,99 $</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Pojistné (měsíční)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Odstraňte rušivé vlivy a uvolněte praktické komunikační nástroje.</string>

@@ -752,18 +752,18 @@ private fun packsFor(
     return when (scope) {
         EsimScope.LOCAL -> listOf(
             DataPackOption("chatforia_esim_local_unlimited_premium", scope, "Local Unlimited", "Unlimited", "$59.99", "Best for heavy usage, streaming, and never worrying about data limits.", "US"),
-            DataPackOption("chatforia_esim_local_3_premium", scope, "Local 3GB", "3 GB", "$14.99", "Perfect for short trips and light browsing.", "US"),
-            DataPackOption("chatforia_esim_local_5_premium", scope, "Local 5GB", "5 GB", "$22.99", "Great for travel, messaging, maps, and everyday use.", "US"),
-            DataPackOption("chatforia_esim_local_10_premium", scope, "Local 10GB", "10 GB", "$34.99", "Ideal for heavier travel usage and streaming.", "US"),
-            DataPackOption("chatforia_esim_local_20_premium", scope, "Local 20GB", "20 GB", "$54.99", "Maximum data for extended travel and heavy usage.", "US")
+            DataPackOption("chatforia_esim_local_3_premium", scope, "Local 3GB", "3 GB", "$9.99", "Perfect for short trips and light browsing.", "US"),
+            DataPackOption("chatforia_esim_local_5_premium", scope, "Local 5GB", "5 GB", "$14.99", "Great for travel, messaging, maps, and everyday use.", "US"),
+            DataPackOption("chatforia_esim_local_10_premium", scope, "Local 10GB", "10 GB", "$24.99", "Ideal for heavier travel usage and streaming.", "US"),
+            DataPackOption("chatforia_esim_local_20_premium", scope, "Local 20GB", "20 GB", "$39.99", "Maximum data for extended travel and heavy usage.", "US")
         )
 
         EsimScope.EUROPE -> listOf(
             DataPackOption("chatforia_esim_europe_unlimited_premium", scope, "Europe Unlimited", "Unlimited", "$69.99", "Best for heavy usage, streaming, and never worrying about data limits.", "EU"),
-            DataPackOption("chatforia_esim_europe_3_premium", scope, "Europe 3GB", "3 GB", "$16.99", "Light browsing and messaging across Europe.", "EU"),
-            DataPackOption("chatforia_esim_europe_5_premium", scope, "Europe 5GB", "5 GB", "$24.99", "Great for maps, messaging, and travel.", "EU"),
-            DataPackOption("chatforia_esim_europe_10_premium", scope, "Europe 10GB", "10 GB", "$36.99", "More room for streaming and longer trips.", "EU"),
-            DataPackOption("chatforia_esim_europe_20_premium", scope, "Europe 20GB", "20 GB", "$64.99", "Maximum Europe coverage for heavy usage.", "EU")
+            DataPackOption("chatforia_esim_europe_3_premium", scope, "Europe 3GB", "3 GB", "$12.99", "Light browsing and messaging across Europe.", "EU"),
+            DataPackOption("chatforia_esim_europe_5_premium", scope, "Europe 5GB", "5 GB", "$19.99", "Great for maps, messaging, and travel.", "EU"),
+            DataPackOption("chatforia_esim_europe_10_premium", scope, "Europe 10GB", "10 GB", "$32.99", "More room for streaming and longer trips.", "EU"),
+            DataPackOption("chatforia_esim_europe_20_premium", scope, "Europe 20GB", "20 GB", "$49.99", "Maximum Europe coverage for heavy usage.", "EU")
         )
 
         EsimScope.GLOBAL -> listOf(

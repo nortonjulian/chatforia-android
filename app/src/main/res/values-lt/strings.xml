@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Skambučių ir žinučių persiuntimas į jūsų tikrąjį telefono numerį</string>
     <string name="upgrade_plans_plus_features_history">Ilgesnė žinučių istorija (iki 6 mėnesių)</string>
     <string name="upgrade_plans_plus_features_support">Greitesnė pagalba, kai kas nors nepavyksta</string>
-    <string name="upgrade_plans_plus_price">$6,99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Atnaujinkite į \"Premium\" metinį planą</string>
     <string name="upgrade_plans_premiumAnnual_badge">Sutaupykite 30 %</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Tinkamiausia pažengusiems vartotojams, nuotoliniams darbuotojams ir dažnai keliaujantiems</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Saugokite savo \"Chatforia\" numerį, kol jūsų planas yra aktyvus</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Sutaupykite apie 30 % palyginti su mokėjimu kas mėnesį</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 $</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (metinis)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Atnaujinkite į \"Premium\" kas mėnesį</string>
     <string name="upgrade_plans_premiumMonthly_badge">Rekomenduojama</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Viskas, kas yra \"Plus\" versijoje</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Prioritetinė pagalba, kai jos labiausiai reikia</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Atrakinkite visas \"Premium\" spalvų temas ir programėlės pritaikymo galimybes</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11,99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (mėnesinis)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Pašalinkite trukdžius ir išlaisvinkite praktines bendravimo priemones.</string>

@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Framsetja símtöl og skilaboð á raunverulega símanúmerið þitt</string>
     <string name="upgrade_plans_plus_features_history">Lengri skilaboðasaga (allt að 6 mánuðum)</string>
     <string name="upgrade_plans_plus_features_support">Fljótari aðstoð þegar eitthvað fer úrskeiðis</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Uppfærðu í ársáskrift Premium</string>
     <string name="upgrade_plans_premiumAnnual_badge">Sparaðu 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Besti kosturinn fyrir kraftnotendur, fjarvinnendur og mikla ferðalanga</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Verndaðu Chatforia-númerið þitt á meðan áætlunin þín er virk</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Sparaðu um 30% miðað við að greiða mánaðarlega.</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (árlegt)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Uppfærðu í Premium mánaðargreiðslu</string>
     <string name="upgrade_plans_premiumMonthly_badge">Mælt með</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Allt í Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Forystuhjálp þegar þú þarft mest á aðstoð að halda</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Læstu upp öll úrvals litasnið og forritanpassanir</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (mánaðarlegt)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Fjarlægið truflanir og opnið hagnýt samskiptatól.</string>

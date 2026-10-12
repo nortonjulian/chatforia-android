@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Cuir fiosan is teacsaichean air adhart chun fhìor àireamh fòn agad</string>
     <string name="upgrade_plans_plus_features_history">Eachdraidh teachdaireachdan nas fhaide (suas ri 6 mìosan)</string>
     <string name="upgrade_plans_plus_features_support">Taic nas luaithe nuair a thèid rudeigin ceàrr</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">A bharrachd air sin</string>
     <string name="upgrade_plans_premiumAnnual_aria">Ùrachadh gu Premium Bliadhnail</string>
     <string name="upgrade_plans_premiumAnnual_badge">Sàbhail 30%</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">As fheàrr airson luchd-cleachdaidh cumhachdach, luchd-obrach iomallach, agus luchd-siubhail trom</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Cùm an àireamh Chatforia agad fo dhìon fhad ‘s a tha do phlana gnìomhach</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Sàbhail timcheall air 30% an taca ri pàigheadh mìosail</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Prìomh (Bliadhnail)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Ùrachadh gu Premium Mìosail</string>
     <string name="upgrade_plans_premiumMonthly_badge">Air a mholadh</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">A h-uile rud ann am Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Taic prìomhachais nuair a bhios feum agad air a’ chuideachaidh as motha</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Fuasgail a h-uile cuspair dath àrd-inbhe agus gnàthachadh aplacaid</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Prìomh (Mìosail)</string>
     <string name="upgrade_plusBadge">A BHARACHD</string>
     <string name="upgrade_plusSubtitle">Thoir air falbh rudan a tha a’ tarraing aire agus fosgail innealan conaltraidh practaigeach.</string>

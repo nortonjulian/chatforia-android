@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">통화와 문자를 실제 전화번호로 전달</string>
     <string name="upgrade_plans_plus_features_history">더 긴 메시지 기록 (최대 6개월)</string>
     <string name="upgrade_plans_plus_features_support">문제가 발생했을 때 더 빠른 지원</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">프리미엄 연간 요금제로 업그레이드</string>
     <string name="upgrade_plans_premiumAnnual_badge">30% 절약</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">파워 유저, 재택 근무자, 자주 여행하는 분들에게 최적</string>
     <string name="upgrade_plans_premiumAnnual_features_number">요금제가 활성화되어 있는 동안 Chatforia 번호를 보호하세요.</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">월별 결제 대비 약 30% 절약</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">프리미엄 (연간)</string>
     <string name="upgrade_plans_premiumMonthly_aria">월간 프리미엄으로 업그레이드</string>
     <string name="upgrade_plans_premiumMonthly_badge">추천</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Plus의 모든 기능</string>
     <string name="upgrade_plans_premiumMonthly_features_support">도움이 가장 필요할 때 우선 지원</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">모든 프리미엄 색상 테마 및 앱 맞춤 설정 이용</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">프리미엄 (월간)</string>
     <string name="upgrade_plusBadge">플러스</string>
     <string name="upgrade_plusSubtitle">방해 요소를 제거하고 실용적인 커뮤니케이션 도구를 활용하세요.</string>
