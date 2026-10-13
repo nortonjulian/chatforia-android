@@ -27,22 +27,15 @@ class ContactsRepository(
 
         val trimmedQuery = query?.trim().orEmpty()
         if (trimmedQuery.isNotBlank()) {
-            val encoded =
-                URLEncoder.encode(
-                    trimmedQuery,
-                    "UTF-8"
-                )
-
+            val encoded = URLEncoder.encode(trimmedQuery, "UTF-8")
             params.add("q=$encoded")
         }
 
-        val path =
-            "contacts" +
-                    if (params.isNotEmpty()) {
-                        "?${params.joinToString("&")}"
-                    } else {
-                        ""
-                    }
+        val path = "contacts" + if (params.isNotEmpty()) {
+            "?${params.joinToString("&")}"
+        } else {
+            ""
+        }
 
         return withContext(Dispatchers.IO) {
             apiClient.send(
@@ -55,17 +48,30 @@ class ContactsRepository(
         }
     }
 
+    suspend fun searchPeople(query: String): PeopleSearchResponse {
+        val encoded = URLEncoder.encode(query.trim(), "UTF-8")
+
+        return withContext(Dispatchers.IO) {
+            apiClient.send(
+                ApiRequest(
+                    path = "search/people?q=$encoded&limit=12",
+                    method = HttpMethod.GET,
+                    requiresAuth = true
+                )
+            )
+        }
+    }
+
     suspend fun startSmsThread(
         phone: String,
         contactId: Int? = null
     ): SmsStartThreadResponse {
-        val bodyJson =
-            apiClient.json.encodeToString(
-                SmsStartThreadRequest(
-                    phone = phone,
-                    contactId = contactId
-                )
+        val bodyJson = apiClient.json.encodeToString(
+            SmsStartThreadRequest(
+                phone = phone,
+                contactId = contactId
             )
+        )
 
         return withContext(Dispatchers.IO) {
             apiClient.send(
@@ -83,13 +89,12 @@ class ContactsRepository(
         userIds: List<Int>,
         name: String? = null
     ): DirectChatRoomResponse {
-        val bodyJson =
-            apiClient.json.encodeToString(
-                CreateGroupChatRequest(
-                    userIds = userIds,
-                    name = name?.trim()?.ifBlank { null }
-                )
+        val bodyJson = apiClient.json.encodeToString(
+            CreateGroupChatRequest(
+                userIds = userIds,
+                name = name?.trim()?.ifBlank { null }
             )
+        )
 
         return withContext(Dispatchers.IO) {
             apiClient.send(
@@ -102,19 +107,19 @@ class ContactsRepository(
             )
         }
     }
+
     suspend fun saveUserContact(
         userId: Int,
         alias: String? = null,
         favorite: Boolean = false
     ): ContactDto {
-        val bodyJson =
-            apiClient.json.encodeToString(
-                SaveUserContactRequest(
-                    userId = userId,
-                    alias = alias?.trim()?.ifBlank { null },
-                    favorite = favorite
-                )
+        val bodyJson = apiClient.json.encodeToString(
+            SaveUserContactRequest(
+                userId = userId,
+                alias = alias?.trim()?.ifBlank { null },
+                favorite = favorite
             )
+        )
 
         return withContext(Dispatchers.IO) {
             apiClient.send(
@@ -131,11 +136,7 @@ class ContactsRepository(
     suspend fun lookupUser(
         username: String
     ): UserLookupResponse {
-        val encoded =
-            URLEncoder.encode(
-                username.trim(),
-                "UTF-8"
-            )
+        val encoded = URLEncoder.encode(username.trim(), "UTF-8")
 
         return withContext(Dispatchers.IO) {
             apiClient.send(
@@ -151,22 +152,20 @@ class ContactsRepository(
     suspend fun importContacts(
         phoneContacts: List<PhoneContactDto>
     ): ImportContactsResponse {
-        val items =
-            phoneContacts.map {
-                ImportContactItem(
-                    externalPhone = it.phone,
-                    externalName = it.name,
-                    alias = it.name,
-                    favorite = false
-                )
-            }
-
-        val bodyJson =
-            apiClient.json.encodeToString(
-                ImportContactsRequest(
-                    items = items
-                )
+        val items = phoneContacts.map {
+            ImportContactItem(
+                externalPhone = it.phone,
+                externalName = it.name,
+                alias = it.name,
+                favorite = false
             )
+        }
+
+        val bodyJson = apiClient.json.encodeToString(
+            ImportContactsRequest(
+                items = items
+            )
+        )
 
         return withContext(Dispatchers.IO) {
             apiClient.send(
@@ -186,15 +185,14 @@ class ContactsRepository(
         alias: String? = null,
         favorite: Boolean = false
     ): ContactDto {
-        val bodyJson =
-            apiClient.json.encodeToString(
-                SaveExternalContactRequest(
-                    externalPhone = phone.trim(),
-                    externalName = externalName?.trim()?.ifBlank { null },
-                    alias = alias?.trim()?.ifBlank { null },
-                    favorite = favorite
-                )
+        val bodyJson = apiClient.json.encodeToString(
+            SaveExternalContactRequest(
+                externalPhone = phone.trim(),
+                externalName = externalName?.trim()?.ifBlank { null },
+                alias = alias?.trim()?.ifBlank { null },
+                favorite = favorite
             )
+        )
 
         return withContext(Dispatchers.IO) {
             apiClient.send(
@@ -214,22 +212,18 @@ class ContactsRepository(
         externalName: String? = null,
         favorite: Boolean? = null
     ): ContactDto {
-        val userId =
-            contact.user?.id ?: contact.userId
+        val userId = contact.user?.id ?: contact.userId
+        val externalPhone = contact.externalPhone
 
-        val externalPhone =
-            contact.externalPhone
-
-        val bodyJson =
-            apiClient.json.encodeToString(
-                UpdateContactRequest(
-                    userId = userId,
-                    externalPhone = if (userId == null) externalPhone else null,
-                    alias = alias?.trim()?.ifBlank { null },
-                    externalName = externalName?.trim()?.ifBlank { null },
-                    favorite = favorite
-                )
+        val bodyJson = apiClient.json.encodeToString(
+            UpdateContactRequest(
+                userId = userId,
+                externalPhone = if (userId == null) externalPhone else null,
+                alias = alias?.trim()?.ifBlank { null },
+                externalName = externalName?.trim()?.ifBlank { null },
+                favorite = favorite
             )
+        )
 
         return withContext(Dispatchers.IO) {
             apiClient.send(
@@ -243,9 +237,7 @@ class ContactsRepository(
         }
     }
 
-    suspend fun deleteContact(
-        contactId: Int
-    ) {
+    suspend fun deleteContact(contactId: Int) {
         withContext(Dispatchers.IO) {
             apiClient.sendRaw(
                 ApiRequest(
@@ -257,9 +249,7 @@ class ContactsRepository(
         }
     }
 
-    suspend fun openDirectChat(
-        userId: Int
-    ): DirectChatRoomResponse {
+    suspend fun openDirectChat(userId: Int): DirectChatRoomResponse {
         return withContext(Dispatchers.IO) {
             apiClient.send(
                 ApiRequest(
