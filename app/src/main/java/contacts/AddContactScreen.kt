@@ -77,7 +77,8 @@ fun AddContactScreen(
         true
     } else {
         when (mode) {
-            AddContactMode.USERNAME -> selectedPeopleResult?.userId != null || username.isNotBlank()
+            // New app-user contacts must come from an explicit server-filtered search selection.
+            AddContactMode.USERNAME -> selectedPeopleResult?.userId != null
             AddContactMode.PHONE -> phone.isNotBlank()
         }
     }
@@ -306,11 +307,14 @@ fun AddContactScreen(
             onClick = {
                 when (mode) {
                     AddContactMode.USERNAME -> {
-                        val selectedId = selectedPeopleResult?.userId
-                        if (!isEditing && selectedId != null) {
-                            onSaveUserId(selectedId, alias, favorite)
-                        } else {
+                        if (isEditing) {
+                            // Existing linked contacts keep their current immutable userId;
+                            // this callback only updates alias/favorite metadata.
                             onSaveUsername(username, alias, favorite)
+                        } else {
+                            selectedPeopleResult?.userId?.let { selectedId ->
+                                onSaveUserId(selectedId, alias, favorite)
+                            }
                         }
                     }
                     AddContactMode.PHONE -> onSaveExternal(phone, name, alias, favorite)
