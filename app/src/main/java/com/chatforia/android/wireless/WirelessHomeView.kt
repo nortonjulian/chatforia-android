@@ -611,12 +611,19 @@ fun WirelessHomeView(
     }
 }
 
+internal fun shouldShowEsimProvisioningDetails(
+    status: String?
+): Boolean =
+    status?.uppercase() != "ACTIVE"
+
 @Composable
 private fun EsimActivationSheet(
     esim: EsimSubscriberDto,
     onClose: () -> Unit
 ) {
     val clipboard = LocalClipboardManager.current
+    val showsProvisioningDetails =
+        shouldShowEsimProvisioningDetails(esim.status)
 
     Column(
         modifier = Modifier
@@ -625,7 +632,12 @@ private fun EsimActivationSheet(
             .padding(bottom = 32.dp)
     ) {
         Text(
-            text = "Install your eSIM",
+            text =
+                if (showsProvisioningDetails) {
+                    "Install your eSIM"
+                } else {
+                    "Your eSIM is active"
+                },
             color = ChatforiaColors.primaryText,
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
@@ -635,12 +647,17 @@ private fun EsimActivationSheet(
 
         Text(
             text =
-                "Open your phone’s SIM settings and choose to add an eSIM. " +
-                    "If Android asks for carrier details, use the information below.",
+                if (showsProvisioningDetails) {
+                    "Open your phone’s SIM settings and choose to add an eSIM. " +
+                        "If Android asks for carrier details, use the information below."
+                } else {
+                    "Your Chatforia eSIM is installed and your mobile service is active."
+                },
             color = ChatforiaColors.secondaryText
         )
 
-        esim.smdp
+        if (showsProvisioningDetails) {
+            esim.smdp
             ?.takeIf { it.isNotBlank() }
             ?.let { smdp ->
                 Spacer(modifier = Modifier.height(20.dp))
@@ -698,15 +715,16 @@ private fun EsimActivationSheet(
                 }
             }
 
-        Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-        Text(
-            text =
-                "After Android finishes installing the eSIM, return to Chatforia. " +
-                    "We’ll check its activation status automatically.",
-            color = ChatforiaColors.secondaryText,
-            style = MaterialTheme.typography.bodyMedium
-        )
+            Text(
+                text =
+                    "After Android finishes installing the eSIM, return to Chatforia. " +
+                        "We’ll check its activation status automatically.",
+                color = ChatforiaColors.secondaryText,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
 
         Spacer(modifier = Modifier.height(20.dp))
 
