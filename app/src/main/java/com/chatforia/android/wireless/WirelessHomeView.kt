@@ -13,7 +13,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.network.ApiClient
 import com.chatforia.android.network.ApiException
@@ -32,6 +34,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import java.util.UUID
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WirelessHomeView(
     apiClient: ApiClient,
@@ -52,10 +55,14 @@ fun WirelessHomeView(
     var selectedScope by remember { mutableStateOf(EsimScope.LOCAL) }
     var status by remember { mutableStateOf<WirelessStatusResponse?>(null) }
     var esim by remember { mutableStateOf<EsimSubscriberDto?>(null) }
+    var showEsimActivationSheet by remember { mutableStateOf(false) }
+    var showReplaceEsimConfirmation by remember { mutableStateOf(false) }
+    var isReplacingEsim by remember { mutableStateOf(false) }
+    var replacementError by remember { mutableStateOf<String?>(null) }
+    var replacementIdempotencyKey by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var isPurchasing by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
-    var activation by remember { mutableStateOf<ReserveEsimResponse?>(null) }
 
     var pendingCheckout by remember {
         mutableStateOf(checkoutStore.load(currentUserId))
@@ -142,6 +149,16 @@ fun WirelessHomeView(
         reload()
     }
 
+    val canReplaceEsim =
+        esim != null &&
+            (status?.source?.id ?: 0) > 0 &&
+            status?.exhausted != true &&
+            status?.expired != true &&
+            status?.source?.remainingDataMb != 0 &&
+            status?.source?.addonKind
+                ?.uppercase()
+                ?.contains("UNLIMITED") != true
+
     val lifecycleOwner =
         LocalLifecycleOwner.current
 
@@ -206,8 +223,10 @@ fun WirelessHomeView(
 
         EsimSection(
             esim = esim,
-            activation = activation,
-            onOpenEsim = {
+            onActivateEsim = {
+                showEsimActivationSheet = true
+            },
+            onManageEsim = {
                 context.startActivity(
                     Intent(
                         Intent.ACTION_VIEW,
@@ -406,6 +425,22 @@ fun WirelessHomeView(
                 Text(stringResource(R.string.android_wireless_home_manage_wireless))
             }
 
+            if (canReplaceEsim) {
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedButton(
+                    onClick = {
+                        replacementError = null
+                        showReplaceEsimConfirmation = true
+                    },
+                    enabled = !isReplacingEsim,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text("Request eSIM for a new phone")
+                }
+            }
+
 //            Spacer(modifier = Modifier.height(10.dp))
 //
 //            OutlinedButton(
@@ -424,6 +459,264 @@ fun WirelessHomeView(
             color = ChatforiaColors.secondaryText,
             style = MaterialTheme.typography.bodySmall
         )
+    }
+
+    if (showReplaceEsimConfirmation) {
+        AlertDialog(
+            onDismissRequest = {
+                if (!isReplacingEsim) {
+                    showReplaceEsimConfirmation = false
+                    replacementIdempotencyKey = null
+                    replacementError = null
+                }
+            },
+            title = {
+                Text("Request eSIM for a new phone?")
+            },
+            text = {
+                Column {
+                    Text(
+                        "Your remaining data and expiration date will move " +
+                            "to a new eSIM. After replacement succeeds, " +
+                            "the old eSIM will stop working."
+                    )
+
+                    replacementError?.let { message ->
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = message,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (isReplacingEsim) {
+                            return@TextButton
+                        }
+
+                        val purchaseId =
+                            status?.source?.id
+                                ?.takeIf { it > 0 }
+                                ?: return@TextButton
+
+                        val key =
+                            replacementIdempotencyKey
+                                ?: UUID.randomUUID()
+                                    .toString()
+                                    .also {
+                                        replacementIdempotencyKey = it
+                                    }
+
+                        replacementError = null
+                        isReplacingEsim = true
+
+                        scope.launch {
+                            try {
+                                val result =
+                                    repository.replaceEsim(
+                                        purchaseId = purchaseId,
+                                        idempotencyKey = key
+                                    )
+
+                                if (!result.ok) {
+                                    replacementError =
+                                        "Chatforia could not replace this eSIM."
+                                    return@launch
+                                }
+
+                                // The backend confirmed the logical
+                                // replacement. A future replacement
+                                // should use a new idempotency key.
+                                replacementIdempotencyKey = null
+                                showReplaceEsimConfirmation = false
+
+                                // Re-read canonical state instead of
+                                // treating the replacement response as
+                                // the long-term subscriber state.
+                                status =
+                                    repository.getWirelessStatus()
+
+                                esim =
+                                    repository.getCurrentEsim()
+                                        .subscriber
+
+                                if (esim != null) {
+                                    showEsimActivationSheet = true
+                                } else {
+                                    replacementError =
+                                        "Your replacement eSIM was created, " +
+                                            "but its installation details " +
+                                            "could not be loaded. Please try " +
+                                            "Manage Wireless again."
+                                }
+                            } catch (e: Exception) {
+                                // Keep the idempotency key for this
+                                // logical attempt. Retrying with the
+                                // same key prevents duplicate
+                                // replacement work after an ambiguous
+                                // network/provider failure.
+                                replacementError =
+                                    e.message
+                                        ?: "Could not request a new eSIM."
+                            } finally {
+                                isReplacingEsim = false
+                            }
+                        }
+                    },
+                    enabled = !isReplacingEsim
+                ) {
+                    Text(
+                        if (isReplacingEsim)
+                            "Requesting…"
+                        else
+                            "Request new eSIM"
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showReplaceEsimConfirmation = false
+                        replacementIdempotencyKey = null
+                        replacementError = null
+                    },
+                    enabled = !isReplacingEsim
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showEsimActivationSheet) {
+        esim?.let { currentEsim ->
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showEsimActivationSheet = false
+                },
+                containerColor = ChatforiaColors.screenBackground
+            ) {
+                EsimActivationSheet(
+                    esim = currentEsim,
+                    onClose = {
+                        showEsimActivationSheet = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EsimActivationSheet(
+    esim: EsimSubscriberDto,
+    onClose: () -> Unit
+) {
+    val clipboard = LocalClipboardManager.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 32.dp)
+    ) {
+        Text(
+            text = "Install your eSIM",
+            color = ChatforiaColors.primaryText,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text =
+                "Open your phone’s SIM settings and choose to add an eSIM. " +
+                    "If Android asks for carrier details, use the information below.",
+            color = ChatforiaColors.secondaryText
+        )
+
+        esim.smdp
+            ?.takeIf { it.isNotBlank() }
+            ?.let { smdp ->
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Text(
+                    text = "SM-DP+ address",
+                    color = ChatforiaColors.secondaryText,
+                    style = MaterialTheme.typography.labelLarge
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = smdp,
+                    color = ChatforiaColors.primaryText
+                )
+
+                TextButton(
+                    onClick = {
+                        clipboard.setText(
+                            AnnotatedString(smdp)
+                        )
+                    }
+                ) {
+                    Text("Copy address")
+                }
+            }
+
+        esim.activationCode
+            ?.takeIf { it.isNotBlank() }
+            ?.let { activationCode ->
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Activation code",
+                    color = ChatforiaColors.secondaryText,
+                    style = MaterialTheme.typography.labelLarge
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = activationCode,
+                    color = ChatforiaColors.primaryText
+                )
+
+                TextButton(
+                    onClick = {
+                        clipboard.setText(
+                            AnnotatedString(activationCode)
+                        )
+                    }
+                ) {
+                    Text("Copy activation code")
+                }
+            }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Text(
+            text =
+                "After Android finishes installing the eSIM, return to Chatforia. " +
+                    "We’ll check its activation status automatically.",
+            color = ChatforiaColors.secondaryText,
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        OutlinedButton(
+            onClick = onClose,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Text("Done")
+        }
     }
 }
 
@@ -499,32 +792,43 @@ private fun CoverageSection(
 @Composable
 private fun EsimSection(
     esim: EsimSubscriberDto?,
-    activation: ReserveEsimResponse?,
-    onOpenEsim: () -> Unit,
+    onActivateEsim: () -> Unit,
+    onManageEsim: () -> Unit,
     onSetupEsim: () -> Unit
 ) {
     ChatforiaSectionCard(title = stringResource(R.string.android_wireless_home_your_esim)) {
-        val hasEsim = esim != null || activation != null
+        val hasEsim = esim != null
+        val esimStatus = esim?.status?.uppercase()
+        val needsInstallation =
+            esimStatus == "PENDING" ||
+                esimStatus == "PROVISIONING"
+        val isActive = esimStatus == "ACTIVE"
+
+        val headline =
+            when {
+                !hasEsim ->
+                    "You don’t have an eSIM yet."
+                isActive ->
+                    "Your eSIM is active."
+                needsInstallation ->
+                    "Your eSIM is ready to install."
+                else ->
+                    "Your eSIM is available."
+            }
 
         Text(
-            text =
-                if (hasEsim)
-                    "Your eSIM is ready to install."
-                else
-                    "You don’t have an eSIM yet.",
+            text = headline,
             color = ChatforiaColors.primaryText,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
 
-        if (hasEsim) {
+        if (needsInstallation) {
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
                 text =
-                    activation?.lpaUri
-                        ?: activation?.qrPayload
-                        ?: esim?.lpaUri
+                    esim?.lpaUri
                         ?: esim?.qrPayload
                         ?: "Activation details will appear here.",
                 color = ChatforiaColors.secondaryText,
@@ -535,12 +839,20 @@ private fun EsimSection(
         Spacer(modifier = Modifier.height(14.dp))
 
         ChatforiaGradientButton(
-            text = if (hasEsim) "Activate" else "Set up",
+            text =
+                when {
+                    !hasEsim -> "Set up"
+                    needsInstallation -> "Activate"
+                    else -> "Manage eSIM"
+                },
             onClick = {
-                if (hasEsim) {
-                    onOpenEsim()
-                } else {
-                    onSetupEsim()
+                when {
+                    !hasEsim ->
+                        onSetupEsim()
+                    needsInstallation ->
+                        onActivateEsim()
+                    else ->
+                        onManageEsim()
                 }
             },
             modifier = Modifier
@@ -617,6 +929,50 @@ private fun UsageSection(
                         text = "Expires in $it day${if (it == 1) "" else "s"}",
                         color = ChatforiaColors.secondaryText
                     )
+                }
+
+                status.queuedPacks.firstOrNull()?.let { queuedPack ->
+                    val queuedRemaining = queuedPack.remainingDataMb
+
+                    if (queuedRemaining != null && queuedRemaining > 0) {
+                        Spacer(modifier = Modifier.height(18.dp))
+
+                        Text(
+                            text = "Next Data Pack",
+                            color = ChatforiaColors.secondaryText,
+                            style = MaterialTheme.typography.labelLarge
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = "${formatGb(queuedRemaining)} · Queued",
+                            color = ChatforiaColors.primaryText,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                status.totalAvailableDataMb?.let { totalAvailable ->
+                    if (totalAvailable > remaining) {
+                        Spacer(modifier = Modifier.height(18.dp))
+
+                        Text(
+                            text = "Total Data Available",
+                            color = ChatforiaColors.secondaryText,
+                            style = MaterialTheme.typography.labelLarge
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = formatGb(totalAvailable),
+                            color = ChatforiaColors.primaryText,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
 

@@ -1,6 +1,6 @@
 package com.chatforia.android.wireless
 
-import com.chatforia.android.network.ApiClient
+import com.chatforia.android.network.ApiTransport
 import com.chatforia.android.network.ApiRequest
 import com.chatforia.android.network.HttpMethod
 import kotlinx.coroutines.Dispatchers
@@ -11,7 +11,7 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 class WirelessRepository(
-    private val apiClient: ApiClient
+    private val apiClient: ApiTransport
 ) {
     private val json = Json {
         ignoreUnknownKeys = true
@@ -19,9 +19,17 @@ class WirelessRepository(
         encodeDefaults = true
     }
 
+    private inline fun <reified T> send(
+        request: ApiRequest
+    ): T {
+        return json.decodeFromString(
+            apiClient.sendRaw(request)
+        )
+    }
+
     suspend fun getWirelessStatus(): WirelessStatusResponse {
         return withContext(Dispatchers.IO) {
-            apiClient.send(
+            send(
                 ApiRequest(
                     path = "api/wireless/status",
                     method = HttpMethod.GET,
@@ -33,7 +41,7 @@ class WirelessRepository(
 
     suspend fun getCurrentEsim(): CurrentEsimResponse {
         return withContext(Dispatchers.IO) {
-            apiClient.send(
+            send(
                 ApiRequest(
                     path = "esim/me",
                     method = HttpMethod.GET,
@@ -62,12 +70,40 @@ class WirelessRepository(
         )
 
         return withContext(Dispatchers.IO) {
-            apiClient.send(
+            send(
                 ApiRequest(
                     path = "billing/checkout",
                     method = HttpMethod.POST,
                     bodyJson = json.encodeToString(requestBody),
                     requiresAuth = true
+                )
+            )
+        }
+    }
+
+    suspend fun replaceEsim(
+        purchaseId: Int,
+        idempotencyKey: String
+    ): EsimReplacementResponse {
+        require(purchaseId > 0) {
+            "A valid wireless purchase ID is required."
+        }
+
+        val key = idempotencyKey.trim()
+
+        require(key.isNotEmpty() && key.length <= 200) {
+            "A valid eSIM replacement idempotency key is required."
+        }
+
+        return withContext(Dispatchers.IO) {
+            send(
+                ApiRequest(
+                    path = "api/wireless/esim/$purchaseId/replace",
+                    method = HttpMethod.POST,
+                    requiresAuth = true,
+                    headers = mapOf(
+                        "Idempotency-Key" to key
+                    )
                 )
             )
         }
@@ -87,7 +123,7 @@ class WirelessRepository(
             )
 
         return withContext(Dispatchers.IO) {
-            apiClient.send(
+            send(
                 ApiRequest(
                     path =
                         "billing/checkout-status" +

@@ -64,6 +64,14 @@ class ApiClient(
             .url(url)
             .addHeader("Accept", "application/json")
 
+        request.headers.forEach { (name, value) ->
+            require(!name.equals("Authorization", ignoreCase = true)) {
+                "Authorization is managed by ApiClient."
+            }
+
+            builder.header(name, value)
+        }
+
         if (request.requiresAuth) {
             val token =
                 explicitToken
