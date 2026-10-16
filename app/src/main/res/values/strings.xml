@@ -410,6 +410,7 @@
     <string name="android_profile_show_ria_powered_rewrite_assistance_and_quick_re">Show Ria-powered rewrite assistance and quick replies.</string>
     <string name="android_profile_show_the_original_message_alongside_the_translat">Show the original message alongside the translation.</string>
     <string name="android_profile_smart_reply_suggestions">Smart reply suggestions</string>
+    <string name="android_profile_smart_replies_upgrade_hint">Available with Plus or Premium.</string>
     <string name="android_profile_theme">Theme</string>
     <string name="android_profile_this_action_cannot_be_undone_are_you_sure_you_wa">This action cannot be undone. Are you sure you want to delete your account?</string>
     <string name="android_profile_uploading">Uploading…</string>
