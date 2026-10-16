@@ -113,6 +113,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.chatforia.android.calls.CallPermissionHelper
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 enum class AppTab {
     CHATS,
@@ -1044,10 +1045,20 @@ class MainActivity : ComponentActivity() {
         LaunchedEffect(socketManager, user.id) {
             chatsViewModel.configureCurrentUser(user.id)
 
-            socketManager.messageUpserts.collect { messageJson ->
-                chatsViewModel.applyRealtimeMessageJson(
-                    messageJson
-                )
+            launch {
+                socketManager.messageUpserts.collect { messageJson ->
+                    chatsViewModel.applyRealtimeMessageJson(
+                        messageJson
+                    )
+                }
+            }
+
+            launch {
+                socketManager.messageDeleted.collect { payloadJson ->
+                    chatsViewModel.applyRealtimeDeleteJson(
+                        payloadJson
+                    )
+                }
             }
         }
 
