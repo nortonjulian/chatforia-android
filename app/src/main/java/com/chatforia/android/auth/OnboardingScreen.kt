@@ -216,7 +216,11 @@ fun OnboardingScreen(
 
                                                 voicemailAutoDeleteDays = currentUser.voicemailAutoDeleteDays,
                                                 voicemailForwardEmail =
-                                                    currentUser.voicemailForwardEmail.orEmpty(),
+                                                    currentUser.voicemailForwardEmail
+                                                        .takeIf { currentUser.canForwardVoicemailEmail == true },
+                                                voicemailEmailForwardingEnabled =
+                                                    currentUser.voicemailEmailForwardingEnabled
+                                                        .takeIf { currentUser.canForwardVoicemailEmail == true },
                                                 voicemailGreetingText =
                                                     currentUser.voicemailGreetingText
                                                         ?: currentUser.voicemailGreeting

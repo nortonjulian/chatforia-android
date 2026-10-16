@@ -960,10 +960,22 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            SettingSwitchRow(
+                title = stringResource(R.string.android_profile_forward_voicemail_to_email),
+                subtitle = if (settingsState.canForwardVoicemailEmail) "" else
+                    stringResource(R.string.voicemail_email_requires_plus),
+                checked = settingsState.canForwardVoicemailEmail && settingsState.voicemailEmailForwardingEnabled,
+                enabled = settingsState.canForwardVoicemailEmail,
+                onCheckedChange = { enabled ->
+                    settingsViewModel.update { it.copy(voicemailEmailForwardingEnabled = enabled) }
+                }
+            )
+
             SettingsTextField(
-                stringResource(R.string.android_profile_forward_voicemail_to_email),
+                stringResource(R.string.android_profile_email_address),
                 value = settingsState.voicemailForwardEmail,
                 stringResource(R.string.android_profile_email_address),
+                enabled = settingsState.canForwardVoicemailEmail,
                 onValueChange = { value ->
                     settingsViewModel.update {
                         it.copy(voicemailForwardEmail = value)
@@ -1812,6 +1824,7 @@ private fun SettingsTextField(
     value: String,
     placeholder: String,
     minLines: Int = 1,
+    enabled: Boolean = true,
     onValueChange: (String) -> Unit
 ) {
     Column {
@@ -1827,6 +1840,7 @@ private fun SettingsTextField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
+            enabled = enabled,
             placeholder = {
                 Text(
                     text = placeholder,
@@ -1929,3 +1943,4 @@ fun ChatforiaGradientButton(
         }
     }
 }
+
