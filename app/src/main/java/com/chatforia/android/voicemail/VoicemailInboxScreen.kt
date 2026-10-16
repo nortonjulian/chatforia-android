@@ -141,6 +141,51 @@ class VoicemailViewModel(
         }
     }
 
+    fun deleteSelected(ids: Set<String>) {
+        if (ids.isEmpty()) return
+
+        val previousState = _state.value
+
+        _state.value =
+            previousState.copy(
+                items = previousState.items.filterNot {
+                    it.id in ids
+                },
+                selected =
+                    previousState.selected?.takeUnless {
+                        it.id in ids
+                    },
+                error = null
+            )
+
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                repository.deleteSelected(ids)
+            }.onFailure {
+                load()
+            }
+        }
+    }
+
+    fun clearAll() {
+        val previousState = _state.value
+
+        _state.value =
+            previousState.copy(
+                items = emptyList(),
+                selected = null,
+                error = null
+            )
+
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                repository.clearVoicemails()
+            }.onFailure {
+                load()
+            }
+        }
+    }
+
     fun delete(item: VoicemailDto) {
         _state.value = _state.value.copy(
             items = _state.value.items.filterNot {
@@ -167,6 +212,8 @@ class VoicemailViewModel(
 @Composable
 fun VoicemailInboxScreen(
     viewModel: VoicemailViewModel,
+    isEditing: Boolean = false,
+    onEditingChange: (Boolean) -> Unit = {},
     onCallBack: (VoicemailDto) -> Unit = {}
 ) {
     val state by viewModel.state.collectAsState()
@@ -175,66 +222,250 @@ fun VoicemailInboxScreen(
         mutableStateOf<VoicemailDto?>(null)
     }
 
+    var selectedIds by remember {
+        mutableStateOf(setOf<String>())
+    }
+
+    var showDeleteSelectedConfirmation by remember {
+        mutableStateOf(false)
+    }
+
+    var showClearAllConfirmation by remember {
+        mutableStateOf(false)
+    }
+
     LaunchedEffect(Unit) {
         viewModel.load()
     }
 
-    Box(
+    LaunchedEffect(isEditing) {
+        if (!isEditing) {
+            selectedIds = emptySet()
+        }
+    }
+
+    LaunchedEffect(state.items.map { it.id }) {
+        val visibleIds =
+            state.items
+                .map { it.id }
+                .toSet()
+
+        selectedIds =
+            selectedIds.intersect(visibleIds)
+
+        if (state.items.isEmpty() && isEditing) {
+            onEditingChange(false)
+        }
+    }
+
+    Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        when {
-            state.isLoading && state.items.isEmpty() -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-
-            state.items.isEmpty() -> {
-                EmptyVoicemailState()
-            }
-
-            else -> {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    shape = RoundedCornerShape(28.dp),
-                    color = ChatforiaColors.cardBackground,
-                    tonalElevation = 2.dp
-                ) {
-                    LazyColumn(
-                        contentPadding = PaddingValues(
-                            horizontal = 12.dp,
-                            vertical = 6.dp
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            when {
+                state.isLoading && state.items.isEmpty() -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(
+                            Alignment.Center
                         )
-                    ) {
-                        items(
-                            items = state.items,
-                            key = { it.id }
-                        ) { item ->
-                            SwipeRevealVoicemailRow(
-                                item = item,
-                                onPlay = {
-                                    viewModel.select(item)
-                                },
-                                onDelete = {
-                                    pendingDelete = item
-                                }
-                            )
+                    )
+                }
 
-                            HorizontalDivider()
+                state.items.isEmpty() -> {
+                    EmptyVoicemailState()
+                }
+
+                else -> {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        shape = RoundedCornerShape(28.dp),
+                        color = ChatforiaColors.cardBackground,
+                        tonalElevation = 2.dp
+                    ) {
+                        LazyColumn(
+                            contentPadding = PaddingValues(
+                                horizontal = 12.dp,
+                                vertical = 6.dp
+                            )
+                        ) {
+                            items(
+                                items = state.items,
+                                key = { it.id }
+                            ) { item ->
+                                if (isEditing) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(
+                                                RoundedCornerShape(
+                                                    20.dp
+                                                )
+                                            )
+                                            .clickable {
+                                                selectedIds =
+                                                    if (
+                                                        item.id in
+                                                        selectedIds
+                                                    ) {
+                                                        selectedIds -
+                                                            item.id
+                                                    } else {
+                                                        selectedIds +
+                                                            item.id
+                                                    }
+                                            },
+                                        verticalAlignment =
+                                            Alignment.CenterVertically
+                                    ) {
+                                        Checkbox(
+                                            checked =
+                                                item.id in selectedIds,
+                                            onCheckedChange = {
+                                                checked ->
+                                                selectedIds =
+                                                    if (checked) {
+                                                        selectedIds +
+                                                            item.id
+                                                    } else {
+                                                        selectedIds -
+                                                            item.id
+                                                    }
+                                            }
+                                        )
+
+                                        Box(
+                                            modifier =
+                                                Modifier.weight(1f)
+                                        ) {
+                                            VoicemailRow(
+                                                item = item,
+                                                onPlay = {}
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    SwipeRevealVoicemailRow(
+                                        item = item,
+                                        onPlay = {
+                                            viewModel.select(item)
+                                        },
+                                        onDelete = {
+                                            pendingDelete = item
+                                        }
+                                    )
+                                }
+
+                                HorizontalDivider()
+                            }
                         }
                     }
                 }
             }
+
+            state.error?.let { message ->
+                Text(
+                    text = message,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp)
+                )
+            }
         }
 
-        state.error?.let { message ->
-            Text(
-                text = message,
-                color = MaterialTheme.colorScheme.error,
+        if (
+            isEditing &&
+            state.items.isNotEmpty()
+        ) {
+            HorizontalDivider()
+
+            Row(
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp)
-            )
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = 4.dp,
+                        vertical = 6.dp
+                    ),
+                verticalAlignment =
+                    Alignment.CenterVertically
+            ) {
+                TextButton(
+                    onClick = {
+                        selectedIds =
+                            if (
+                                selectedIds.size ==
+                                state.items.size
+                            ) {
+                                emptySet()
+                            } else {
+                                state.items
+                                    .map { it.id }
+                                    .toSet()
+                            }
+                    }
+                ) {
+                    Text(
+                        if (
+                            selectedIds.size ==
+                            state.items.size
+                        ) {
+                            "Deselect All"
+                        } else {
+                            "Select All"
+                        }
+                    )
+                }
+
+                Spacer(
+                    modifier = Modifier.weight(1f)
+                )
+
+                TextButton(
+                    onClick = {
+                        showDeleteSelectedConfirmation =
+                            true
+                    },
+                    enabled = selectedIds.isNotEmpty()
+                ) {
+                    Text(
+                        text =
+                            if (selectedIds.isEmpty()) {
+                                "Delete"
+                            } else {
+                                "Delete (${selectedIds.size})"
+                            },
+                        color =
+                            if (selectedIds.isEmpty()) {
+                                MaterialTheme
+                                    .colorScheme
+                                    .onSurface
+                                    .copy(alpha = 0.38f)
+                            } else {
+                                MaterialTheme
+                                    .colorScheme
+                                    .error
+                            }
+                    )
+                }
+
+                TextButton(
+                    onClick = {
+                        showClearAllConfirmation = true
+                    }
+                ) {
+                    Text(
+                        text = "Clear All",
+                        color =
+                            MaterialTheme
+                                .colorScheme
+                                .error
+                    )
+                }
+            }
         }
     }
 
@@ -268,11 +499,17 @@ fun VoicemailInboxScreen(
                 pendingDelete = null
             },
             title = {
-                Text(stringResource(R.string.android_voicemail_inbox_delete_voicemail))
+                Text(
+                    stringResource(
+                        R.string.android_voicemail_inbox_delete_voicemail
+                    )
+                )
             },
             text = {
                 Text(
-                    stringResource(R.string.android_voicemail_delete_message)
+                    stringResource(
+                        R.string.android_voicemail_delete_message
+                    )
                 )
             },
             confirmButton = {
@@ -282,7 +519,11 @@ fun VoicemailInboxScreen(
                         pendingDelete = null
                     }
                 ) {
-                    Text(stringResource(R.string.android_voicemail_delete))
+                    Text(
+                        stringResource(
+                            R.string.android_voicemail_delete
+                        )
+                    )
                 }
             },
             dismissButton = {
@@ -291,7 +532,106 @@ fun VoicemailInboxScreen(
                         pendingDelete = null
                     }
                 ) {
-                    Text(stringResource(R.string.android_voicemail_cancel))
+                    Text(
+                        stringResource(
+                            R.string.android_voicemail_cancel
+                        )
+                    )
+                }
+            }
+        )
+    }
+
+    if (showDeleteSelectedConfirmation) {
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteSelectedConfirmation = false
+            },
+            title = {
+                Text("Delete selected voicemails?")
+            },
+            text = {
+                Text(
+                    "These voicemails will be removed from your voicemail inbox."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val ids = selectedIds
+
+                        viewModel.deleteSelected(ids)
+
+                        selectedIds = emptySet()
+                        showDeleteSelectedConfirmation =
+                            false
+
+                        if (ids.size == state.items.size) {
+                            onEditingChange(false)
+                        }
+                    }
+                ) {
+                    Text(
+                        text = "Delete",
+                        color =
+                            MaterialTheme
+                                .colorScheme
+                                .error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteSelectedConfirmation =
+                            false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showClearAllConfirmation) {
+        AlertDialog(
+            onDismissRequest = {
+                showClearAllConfirmation = false
+            },
+            title = {
+                Text("Clear all voicemails?")
+            },
+            text = {
+                Text(
+                    "This will remove all voicemails from your voicemail inbox."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.clearAll()
+
+                        selectedIds = emptySet()
+                        onEditingChange(false)
+                        showClearAllConfirmation = false
+                    }
+                ) {
+                    Text(
+                        text = "Clear All",
+                        color =
+                            MaterialTheme
+                                .colorScheme
+                                .error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showClearAllConfirmation = false
+                    }
+                ) {
+                    Text("Cancel")
                 }
             }
         )

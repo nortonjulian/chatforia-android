@@ -30,6 +30,37 @@ class CallHistoryRepository(
         )
     }
 
+    fun deleteSelected(callIds: Collection<Int>) {
+        val ids =
+            callIds
+                .filter { it > 0 }
+                .distinct()
+
+        if (ids.isEmpty()) return
+
+        val body =
+            """{"ids":[${ids.joinToString(",") }]}"""
+
+        apiClient.sendRaw(
+            ApiRequest(
+                path = "calls/history/delete-selected",
+                method = HttpMethod.POST,
+                bodyJson = body,
+                requiresAuth = true
+            )
+        )
+    }
+
+    fun clearHistory() {
+        apiClient.sendRaw(
+            ApiRequest(
+                path = "calls/history",
+                method = HttpMethod.DELETE,
+                requiresAuth = true
+            )
+        )
+    }
+
     fun acknowledgeMissedCalls() {
         apiClient.sendRaw(
             ApiRequest(

@@ -145,6 +145,52 @@ class CallsViewModel(
         }
     }
 
+    fun deleteSelectedCalls(callIds: Set<Int>) {
+        if (callIds.isEmpty()) return
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val previousCalls = _state.value.calls
+
+            _state.value =
+                _state.value.copy(
+                    calls = previousCalls.filterNot { it.id in callIds },
+                    error = null
+                )
+
+            try {
+                callHistoryRepository.deleteSelected(callIds)
+            } catch (e: Exception) {
+                _state.value =
+                    _state.value.copy(
+                        calls = previousCalls,
+                        error = e.message ?: "Failed to delete selected calls."
+                    )
+            }
+        }
+    }
+
+    fun clearCallHistory() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val previousCalls = _state.value.calls
+
+            _state.value =
+                _state.value.copy(
+                    calls = emptyList(),
+                    error = null
+                )
+
+            try {
+                callHistoryRepository.clearHistory()
+            } catch (e: Exception) {
+                _state.value =
+                    _state.value.copy(
+                        calls = previousCalls,
+                        error = e.message ?: "Failed to clear call history."
+                    )
+            }
+        }
+    }
+
     private fun observeSocketEvents() {
         viewModelScope.launch {
             socketManager.incomingCalls.collect { raw ->
