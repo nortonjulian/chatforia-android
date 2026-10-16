@@ -128,7 +128,7 @@ fun PlanView(
                 PlanCompareRow(stringResource(R.string.billing_feature_adFree), plus = true, premium = true)
                 PlanCompareRow(stringResource(R.string.billing_feature_longerHistory), plus = true, premium = true)
                 PlanCompareRow(stringResource(R.string.billing_feature_forwarding), plus = true, premium = true)
-                PlanCompareRow(stringResource(R.string.billing_feature_aiTools), plus = false, premium = true)
+                PlanCompareRow(stringResource(R.string.billing_feature_aiTools), plus = true, premium = true)
                 PlanCompareRow(stringResource(R.string.billing_feature_premiumThemes), plus = false, premium = true)
                 PlanCompareRow(stringResource(R.string.billing_feature_prioritySupport), plus = false, premium = true)
                 Spacer(modifier = Modifier.height(16.dp))
