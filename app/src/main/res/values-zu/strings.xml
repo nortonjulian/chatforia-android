@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Dlulisa izingcingo nemiyalezo kumnombolo wakho wangempela wefoni</string>
     <string name="upgrade_plans_plus_features_history">Umlando wemilayezo omude (kuze kube izinyanga eziyisithupha)</string>
     <string name="upgrade_plans_plus_features_support">Ukusekelwa okusheshayo uma kukhona okungahambi kahle</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Yithuthukise ube yinguqulo yonyaka ye-Premium</string>
     <string name="upgrade_plans_premiumAnnual_badge">Londoloza amaphesenti angu-30</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Okungcono kakhulu kubasebenzisi abanamandla, abasebenzi abasebenza kude, nabahambi abahamba kakhulu.</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Gcina inombolo yakho ye-Chatforia ivikelekile ngenkathi uhlelo lwakho lusebenza</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Londoloza cishe amaphesenti angu-30 uma kuqhathaniswa nokukhokha njalo ngenyanga.</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Okuphakeme (Wonyaka)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Yithuthukise ube yinguqulo ye-Premium yenyanga</string>
     <string name="upgrade_plans_premiumMonthly_badge">Kunconywa</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Konke ku-Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Ukusekelwa okuphambili lapho udinga usizo kakhulu</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Vula zonke izindikimba zemibala ezisezingeni eliphezulu kanye nokwenza ngokwezifiso kohlelo lokusebenza</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Okuphezulu (Kwenyanga)</string>
     <string name="upgrade_plusBadge">Okwengeziwe</string>
     <string name="upgrade_plusSubtitle">Susa iziphazamiso bese uvula amathuluzi okuxhumana asebenzayo.</string>

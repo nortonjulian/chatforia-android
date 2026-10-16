@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Videresend opkald og sms\'er til dit rigtige telefonnummer</string>
     <string name="upgrade_plans_plus_features_history">Længere beskedhistorik (op til 6 måneder)</string>
     <string name="upgrade_plans_plus_features_support">Hurtigere support, når noget går galt</string>
-    <string name="upgrade_plans_plus_price">$6,99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Opgrader til Premium Annual</string>
     <string name="upgrade_plans_premiumAnnual_badge">Spar 30%.</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Bedst til power-brugere, fjernarbejdere og travle rejsende</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Hold dit Chatforia-nummer beskyttet, mens din plan er aktiv</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Spar ca. 30 % sammenlignet med månedlig betaling</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 $</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Præmie (årlig)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Opgrader til Premium månedligt</string>
     <string name="upgrade_plans_premiumMonthly_badge">Anbefalet</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Alt i Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Prioriteret support, når du har mest brug for hjælp</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Få adgang til alle premium-farvetemaer og app-tilpasninger</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11,99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Præmie (månedlig)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Fjern distraktioner og lås op for praktiske kommunikationsværktøjer.</string>

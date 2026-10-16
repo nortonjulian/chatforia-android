@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import java.time.Instant
 import com.chatforia.android.crypto.KeyStorage
 import com.chatforia.android.crypto.MessageDecryptor
@@ -99,6 +100,45 @@ class ChatsViewModel(
 
             } catch (e: Exception) {
                 println("❌ Failed to apply realtime conversation preview: ${e.message}")
+                refreshConversations()
+            }
+        }
+    }
+
+    fun applyRealtimeDeleteJson(payloadJson: String) {
+        viewModelScope.launch {
+            try {
+                val payload =
+                    json.parseToJsonElement(payloadJson)
+                        .jsonObject
+
+                val roomId =
+                    payload["chatRoomId"]?.toString()?.trim('"')?.toIntOrNull()
+                        ?: payload["roomId"]?.toString()?.trim('"')?.toIntOrNull()
+
+                val messageId =
+                    payload["id"]?.toString()?.trim('"')?.toIntOrNull()
+                        ?: payload["messageId"]?.toString()?.trim('"')?.toIntOrNull()
+
+                if (roomId == null || messageId == null) {
+                    return@launch
+                }
+
+                val conversation =
+                    _conversations.value.firstOrNull {
+                        it.kind.equals("chat", ignoreCase = true) &&
+                                it.id == roomId
+                    }
+                        ?: return@launch
+
+                if (conversation.last?.messageId != messageId) {
+                    return@launch
+                }
+
+                refreshConversations()
+
+            } catch (e: Exception) {
+                println("❌ Failed to apply realtime conversation delete: ${e.message}")
                 refreshConversations()
             }
         }

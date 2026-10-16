@@ -9,7 +9,19 @@ data class WirelessStatusResponse(
     val low: Boolean? = null,
     val exhausted: Boolean? = null,
     val expired: Boolean? = null,
-    val source: WirelessStatusSourceDto? = null
+    val source: WirelessStatusSourceDto? = null,
+    val queuedPacks: List<WirelessQueuedPackDto> = emptyList(),
+    val queuedDataMb: Int? = null,
+    val totalAvailableDataMb: Int? = null
+)
+
+@Serializable
+data class WirelessQueuedPackDto(
+    val id: Int? = null,
+    val addonKind: String? = null,
+    val totalDataMb: Int? = null,
+    val remainingDataMb: Int? = null,
+    val expiresAt: String? = null
 )
 
 @Serializable
@@ -41,7 +53,43 @@ data class EsimSubscriberDto(
     val qrPayload: String? = null,
     val msisdn: String? = null,
     val region: String? = null,
-    val status: String? = null
+    val status: String? = null,
+    val activatedAt: String? = null,
+    val suspendedAt: String? = null,
+    val expiresAt: String? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null
+)
+
+@Serializable
+data class EsimReplacementResponse(
+    val ok: Boolean = false,
+    val replacement: EsimReplacementDto? = null
+)
+
+@Serializable
+data class EsimReplacementDto(
+    val id: String? = null,
+    val purchaseId: Int? = null,
+    val status: String? = null,
+    val oldIccid: String? = null,
+    val newIccid: String? = null,
+    val remainingDataMb: Int? = null,
+    val expiresAt: String? = null,
+    val createdAt: String? = null,
+    val completedAt: String? = null,
+    val installation: EsimReplacementInstallationDto? = null
+)
+
+@Serializable
+data class EsimReplacementInstallationDto(
+    val subscriberId: Int? = null,
+    val iccid: String? = null,
+    val providerProfileId: String? = null,
+    val smdp: String? = null,
+    val activationCode: String? = null,
+    val lpaUri: String? = null,
+    val qrPayload: String? = null
 )
 
 @Serializable

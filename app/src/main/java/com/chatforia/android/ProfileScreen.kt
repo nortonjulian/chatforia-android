@@ -1,5 +1,7 @@
 package com.chatforia.android
 
+import com.chatforia.android.auth.hasPremiumAccess
+import com.chatforia.android.auth.accessPlan
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -62,6 +64,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.runtime.setValue
 import com.chatforia.android.billing.UpgradeView
 import com.chatforia.android.billing.PlanView
+import com.chatforia.android.billing.PlanEntitlementsStore
+import com.chatforia.android.billing.resolveAiRewriteLevel
 import android.content.Intent
 import androidx.core.net.toUri
 import androidx.compose.material.icons.filled.Delete
@@ -201,6 +205,16 @@ fun ProfileScreen(
     }
 
     val settingsState by settingsViewModel.state.collectAsState()
+    val planEntitlements by PlanEntitlementsStore.state.collectAsState()
+
+    val aiRewriteLevel =
+        resolveAiRewriteLevel(
+            backendLevel = planEntitlements?.entitlements?.aiRewriteLevel,
+            fallbackPlan = user.plan
+        )
+
+    val smartRepliesAvailable =
+        aiRewriteLevel != "NONE"
 
     LaunchedEffect(
         settingsState.messageTone,
@@ -379,6 +393,7 @@ fun ProfileScreen(
             onSave = {
                 settingsViewModel.saveAccessibility(onUserUpdated)
             },
+            isPremium = user.hasPremiumAccess(),
             onUpgradeRequired = {
                 showAccessibility = false
                 showUpgrade = true
@@ -607,11 +622,33 @@ fun ProfileScreen(
 
             SettingSwitchRow(
                 title = stringResource(R.string.android_profile_smart_reply_suggestions),
-                subtitle = stringResource(R.string.android_profile_show_ria_powered_rewrite_assistance_and_quick_re),
-                checked = settingsState.enableSmartReplies,
+                subtitle =
+                    if (smartRepliesAvailable) {
+                        stringResource(R.string.android_profile_show_ria_powered_rewrite_assistance_and_quick_re)
+                    } else {
+                        stringResource(R.string.android_profile_smart_replies_upgrade_hint)
+                    },
+                checked =
+                    smartRepliesAvailable &&
+                        settingsState.enableSmartReplies,
+                enabled = smartRepliesAvailable,
+                actionLabel =
+                    if (smartRepliesAvailable) {
+                        null
+                    } else {
+                        stringResource(R.string.common_upgrade)
+                    },
+                onActionClick =
+                    if (smartRepliesAvailable) {
+                        null
+                    } else {
+                        { showUpgrade = true }
+                    },
                 onCheckedChange = { enabled ->
-                    settingsViewModel.update {
-                        it.copy(enableSmartReplies = enabled)
+                    if (smartRepliesAvailable) {
+                        settingsViewModel.update {
+                            it.copy(enableSmartReplies = enabled)
+                        }
                     }
                 }
             )
@@ -643,7 +680,7 @@ fun ProfileScreen(
             )
 
             SoundSettingsView(
-                currentPlan = user.plan,
+                currentPlan = user.accessPlan(),
                 state = settingsState,
                 onMessageToneChange = { tone ->
                     settingsViewModel.update {
@@ -1098,7 +1135,7 @@ fun ProfileScreen(
     if (showThemePicker) {
         ThemePickerDialog(
             currentTheme = settingsState.theme,
-            currentPlan = user.plan,
+            currentPlan = user.accessPlan(),
             onDismiss = { showThemePicker = false },
             onThemeSelected = { code ->
                 settingsViewModel.update {
@@ -1593,16 +1630,21 @@ private fun SettingSwitchRow(
     subtitle: String,
     checked: Boolean,
     enabled: Boolean = true,
+    actionLabel: String? = null,
+    onActionClick: (() -> Unit)? = null,
     onCheckedChange: (Boolean) -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp)
-            .alpha(if (enabled) 1f else 0.55f),
+            .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .alpha(if (enabled) 1f else 0.55f)
+        ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
@@ -1618,10 +1660,33 @@ private fun SettingSwitchRow(
             }
         }
 
+        if (!actionLabel.isNullOrBlank() && onActionClick != null) {
+            TextButton(
+                onClick = onActionClick,
+                modifier = Modifier.height(32.dp),
+                contentPadding = PaddingValues(
+                    horizontal = 8.dp,
+                    vertical = 0.dp
+                ),
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = ChatforiaColors.accent
+                )
+            ) {
+                Text(
+                    text = actionLabel,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            Spacer(modifier = Modifier.width(4.dp))
+        }
+
         Switch(
             checked = checked,
             enabled = enabled,
             onCheckedChange = onCheckedChange,
+            modifier = Modifier.alpha(if (enabled) 1f else 0.55f),
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
                 checkedTrackColor = ChatforiaColors.accent,
@@ -1878,3 +1943,4 @@ fun ChatforiaGradientButton(
         }
     }
 }
+

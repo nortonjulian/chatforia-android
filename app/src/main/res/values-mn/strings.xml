@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Дуудлага, мессежийг бодит утасны дугаар руу дамжуулах</string>
     <string name="upgrade_plans_plus_features_history">Урт мессежийн түүх (6 сар хүртэл)</string>
     <string name="upgrade_plans_plus_features_support">Асуудал гарвал хурдан дэмжлэг</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Premium жилийн төлөвлөгөөнд шинэчлэгдээрэй</string>
     <string name="upgrade_plans_premiumAnnual_badge">30%-ийн хөнгөлөлт</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Илүү их эрчим хүч шаарддаг хэрэглэгчид, алсаас ажилладаг хүмүүс болон ихээр аялагчдад хамгийн тохиромжтой</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Төлөвлөгөө идэвхтэй байхад Chatforia дугаараа хамгаалж байгаарай</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Ойролцоогоор 30%-ийг хэмнэнэ сар бүр төлөхтэй харьцуулахад</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Дээд зэрэглэлийн (Жилд)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Премиум сар бүрийн төлөвлөгөөнд шилжих</string>
     <string name="upgrade_plans_premiumMonthly_badge">Санал болгож байна</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Plus-д багтсан бүх зүйл</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Асуудал гарвал хурдан дэмжлэг</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Бүх премиум өнгөний сэдэв болон аппликейшний тохиргоог нээх</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (сар бүрийн)</string>
     <string name="upgrade_plusBadge">ДЭЭРЭЭС НЭМЭЭД</string>
     <string name="upgrade_plusSubtitle">Анхаарал сарниулах зүйлсийг арилгаж, практик харилцааны хэрэгслүүдийг нээх.</string>

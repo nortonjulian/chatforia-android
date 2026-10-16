@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Çağrıları ve metinleri gerçek telefon numaranıza yönlendirin</string>
     <string name="upgrade_plans_plus_features_history">Daha uzun mesaj geçmişi (6 aya kadar)</string>
     <string name="upgrade_plans_plus_features_support">Bir şeyler ters gittiğinde daha hızlı destek</string>
-    <string name="upgrade_plans_plus_price">6,99 $</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Yıllık Premium\'a Yükseltme</string>
     <string name="upgrade_plans_premiumAnnual_badge">30 Tasarruf Edin</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Güçlü kullanıcılar, uzaktan çalışanlar ve yoğun seyahat edenler için en iyisi</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Planınız aktif olduğu sürece Chatforia numaranızı koruyun</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Aylık ödemeye kıyasla yaklaşık %30 tasarruf edin</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 $</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Prim (Yıllık)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Aylık Premium\'a Yükseltme</string>
     <string name="upgrade_plans_premiumMonthly_badge">Tavsiye edilir</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Her şey Plus\'ta</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Yardıma en çok ihtiyaç duyduğunuzda öncelikli destek</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Tüm premium renk temalarının ve uygulama özelleştirmelerinin kilidini açın</string>
-    <string name="upgrade_plans_premiumMonthly_price">11,99 $</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Prim (Aylık)</string>
     <string name="upgrade_plusBadge">ARTI</string>
     <string name="upgrade_plusSubtitle">Dikkat dağıtıcı unsurları ortadan kaldırın ve pratik iletişim araçlarının kilidini açın.</string>

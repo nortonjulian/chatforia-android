@@ -410,6 +410,7 @@
     <string name="android_profile_show_ria_powered_rewrite_assistance_and_quick_re">Show Ria-powered rewrite assistance and quick replies.</string>
     <string name="android_profile_show_the_original_message_alongside_the_translat">Show the original message alongside the translation.</string>
     <string name="android_profile_smart_reply_suggestions">Smart reply suggestions</string>
+    <string name="android_profile_smart_replies_upgrade_hint">Available with Plus or Premium.</string>
     <string name="android_profile_theme">Theme</string>
     <string name="android_profile_this_action_cannot_be_undone_are_you_sure_you_wa">This action cannot be undone. Are you sure you want to delete your account?</string>
     <string name="android_profile_uploading">Uploading…</string>
@@ -641,7 +642,7 @@
     <string name="billing_cancelNowConfirm">Are you sure you want to cancel your plan immediately? This cannot be undone.</string>
     <string name="billing_cancelNowError">Unable to cancel your plan right now. Please try again or use Manage billing.</string>
     <string name="billing_changePlanCta">Change plan</string>
-    <string name="billing_compareDescription">Go ad-free with Plus, or unlock AI tools and customization with Premium.</string>
+    <string name="billing_compareDescription">Go ad-free with Plus and get Standard AI tools. Premium adds Full AI tools and customization.</string>
     <string name="billing_comparePlans">Compare Plans</string>
     <string name="billing_currentPlan">Current plan</string>
     <string name="billing_description_free">Basic access to Chatforia with core messaging features.</string>
@@ -2854,7 +2855,7 @@
     <string name="upgrade_faq_family_q">How do Family packs work?</string>
     <string name="upgrade_faq_free_a">Yes. The Free plan includes a Chatforia number, calling, and messaging with ads. You can stay on Free as long as you like, or upgrade to remove ads and unlock more features.</string>
     <string name="upgrade_faq_free_q">Is the Free plan really free?</string>
-    <string name="upgrade_faq_plusPremium_a">Plus removes ads and extends your message history — perfect for everyday use. Premium adds extra customization, AI tools for rewrites and replies, and priority support for heavy users.</string>
+    <string name="upgrade_faq_plusPremium_a">Plus includes Standard AI tools, removes ads, and extends your message history. Premium upgrades you to Full AI tools, more customization, and priority support.</string>
     <string name="upgrade_faq_plusPremium_q">What’s the difference between Plus and Premium?</string>
     <string name="upgrade_faq_title">Pricing &amp; plans FAQ</string>
     <string name="upgrade_feature_additionalThemes">Additional Chatforia themes</string>
@@ -2966,7 +2967,7 @@
     <string name="upgrade_plans_free_ctaPublic">Get started – continue to login</string>
     <string name="upgrade_plans_free_desc">Start messaging for free. Ideal if you’re just trying Chatforia.</string>
     <string name="upgrade_plans_free_features_ads">Free forever with ads in the app</string>
-    <string name="upgrade_plans_free_features_ai">AI-powered smart replies and instant translation (fair use)</string>
+    <string name="upgrade_plans_free_features_ai">Limited Ria chat and instant translation</string>
     <string name="upgrade_plans_free_features_chat">Real-time 1:1 and group chat, plus voice and video calls</string>
     <string name="upgrade_plans_free_features_disappearing">Disappearing messages and basic privacy controls</string>
     <string name="upgrade_plans_free_features_media">Share photos, voice messages, and short videos</string>
@@ -2981,7 +2982,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Forward calls and texts to your real phone number</string>
     <string name="upgrade_plans_plus_features_history">Longer message history (up to 6 months)</string>
     <string name="upgrade_plans_plus_features_support">Faster support when something goes wrong</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Upgrade to Premium Annual</string>
     <string name="upgrade_plans_premiumAnnual_badge">Save 30%</string>
@@ -2994,19 +2995,19 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Best for power users, remote workers, and heavy travelers</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Keep your Chatforia number protected while your plan is active</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Save around 30% compared to paying monthly</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (Annual)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Upgrade to Premium Monthly</string>
     <string name="upgrade_plans_premiumMonthly_badge">Recommended</string>
     <string name="upgrade_plans_premiumMonthly_cta">Upgrade (Monthly)</string>
     <string name="upgrade_plans_premiumMonthly_ctaPublic">Unlock Premium – continue to login</string>
-    <string name="upgrade_plans_premiumMonthly_desc">The full Chatforia experience: AI power tools, customization, and priority support.</string>
-    <string name="upgrade_plans_premiumMonthly_features_ai">Premium-only AI power tools for rewrites, smart replies, and summaries</string>
+    <string name="upgrade_plans_premiumMonthly_desc">The full Chatforia experience: Full AI tools, customization, and priority support.</string>
+    <string name="upgrade_plans_premiumMonthly_features_ai">Full AI tools, including advanced rewrites and summaries</string>
     <string name="upgrade_plans_premiumMonthly_features_number">Keep your Chatforia number protected while your plan is active</string>
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Everything in Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Priority support when you need help most</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Unlock all premium color themes and app customizations</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (Monthly)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Remove distractions and unlock practical communication tools.</string>

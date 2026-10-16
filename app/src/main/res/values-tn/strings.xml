@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Romela megala le melaetsa kwa nomorong ya gago ya molaetsa ya nnete</string>
     <string name="upgrade_plans_plus_features_history">Ditso tse di telele tsa melaetsa (go fitlha dikgwedi di le 6)</string>
     <string name="upgrade_plans_plus_features_support">Kemonokeng e e bofefo fa sengwe se sa tsamaye sentle</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Tlhabolola go ya go Premium ya Ngwaga le Ngwaga</string>
     <string name="upgrade_plans_premiumAnnual_badge">Boloka 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">E siametse thata badirisi ba ba nang le bokgoni, badiri ba ba direlang kgakala, le bapalami ba ba tsamayang thata.</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Sireletsa nomoro ya gago ya Chatforia fa polane ya gago e santse e bereka</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Boloka mo e ka nnang 30% fa o bapisa le go duela kgwedi le kgwedi</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Tuelo ya Ngwaga le Ngwaga</string>
     <string name="upgrade_plans_premiumMonthly_aria">Tlhabolola go ya go Premium ya Kgwedi le Kgwedi</string>
     <string name="upgrade_plans_premiumMonthly_badge">Go a kgothalediwa</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Sengwe le sengwe se se mo Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Kemonokeng e e bofefo fa sengwe se sa tsamaye sentle</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Bula ditema tsotlhe tsa mebala tsa maemo a a kwa godimo le ditlhabololo tsa app.</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Tuelo ya kgwedi le kgwedi</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Tlosa ditshitiso mme o bula didirisiwa tsa puisano tse di mosola.</string>

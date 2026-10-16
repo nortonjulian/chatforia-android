@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">သင့်အမှန်တကယ် ဖုန်းနံပါတ်သို့ ခေါ်ဆိုမှုများနှင့် စာများ ပို့လွှတ်</string>
     <string name="upgrade_plans_plus_features_history">ပိုရှည်သော မက်ဆေ့ချ်မှတ်တမ်း (၆ လ အထိ)</string>
     <string name="upgrade_plans_plus_features_support">တစ်စုံတစ်ခု မှားယွင်းပါက ပိုမြန်သော ပံ့ပိုးမှု</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">ပရီမီယံ နှစ်စဉ် သို့ အဆင့်မြှင့်</string>
     <string name="upgrade_plans_premiumAnnual_badge">၃၀% ချွေတာ</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">စွမ်းအားရှိသော အသုံးပြုသူများ၊ အဝေးမှ အလုပ်လုပ်သူများနှင့် လေးလံသော ခရီးသွားသူများအတွက် အကောင်းဆုံး</string>
     <string name="upgrade_plans_premiumAnnual_features_number">သင့်အစီအစဉ် လည်ပတ်နေစဉ် Chatforia နံပါတ်ကို ကာကွယ်ထားပါ။</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">လစဉ်ပေးချေမှုနှင့် နှိုင်းယှဉ်ပါက ခန့်မှန်း ၃၀% ချွေတာ</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">ပရီမီယံ (နှစ်စဉ်)</string>
     <string name="upgrade_plans_premiumMonthly_aria">ပရီမီယံ လစဉ် သို့ အဆင့်မြှင့်</string>
     <string name="upgrade_plans_premiumMonthly_badge">အကြံပြုထားသော</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Plus တွင် အားလုံး</string>
     <string name="upgrade_plans_premiumMonthly_features_support">အကူအညီ အများဆုံး လိုအပ်သည့်အခါ ဦးစားပေး ပံ့ပိုးမှု</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">ပရီမီယံ အရောင်အဆင်များနှင့် အက်ပ် စိတ်ကြိုက်ပြင်ဆင်မှုများ အားလုံး ဖွင့်</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">ပရီမီယံ (လစဉ်)</string>
     <string name="upgrade_plusBadge">ပို</string>
     <string name="upgrade_plusSubtitle">အနှောင့်အယှက်များကို ဖယ်ရှားပြီး လက်တွေ့အသုံးဝင်သော ဆက်သွယ်ရေးကိရိယာများကို ဖြေရှင်းပါ။</string>

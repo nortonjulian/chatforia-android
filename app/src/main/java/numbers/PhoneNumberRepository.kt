@@ -1,6 +1,7 @@
 package com.chatforia.android.numbers
 
-import com.chatforia.android.network.ApiClient
+import com.chatforia.android.network.ApiTransport
+import com.chatforia.android.network.ApiException
 import com.chatforia.android.network.ApiRequest
 import com.chatforia.android.network.HttpMethod
 import kotlinx.coroutines.Dispatchers
@@ -10,7 +11,7 @@ import kotlinx.serialization.json.Json
 import java.net.URLEncoder
 
 class PhoneNumberRepository(
-    private val apiClient: ApiClient
+    private val apiClient: ApiTransport
 ) {
     private val json = Json {
         ignoreUnknownKeys = true
@@ -20,11 +21,13 @@ class PhoneNumberRepository(
 
     suspend fun getMyNumber(): MyNumberResponse {
         return withContext(Dispatchers.IO) {
-            apiClient.send(
-                ApiRequest(
-                    path = "numbers/my",
-                    method = HttpMethod.GET,
-                    requiresAuth = true
+            json.decodeFromString<MyNumberResponse>(
+                apiClient.sendRaw(
+                    ApiRequest(
+                        path = "numbers/my",
+                        method = HttpMethod.GET,
+                        requiresAuth = true
+                    )
                 )
             )
         }
@@ -44,11 +47,13 @@ class PhoneNumberRepository(
             }
 
         return withContext(Dispatchers.IO) {
-            apiClient.send(
-                ApiRequest(
-                    path = path,
-                    method = HttpMethod.GET,
-                    requiresAuth = true
+            json.decodeFromString<NumberPoolResponse>(
+                apiClient.sendRaw(
+                    ApiRequest(
+                        path = path,
+                        method = HttpMethod.GET,
+                        requiresAuth = true
+                    )
                 )
             )
         }
@@ -67,20 +72,49 @@ class PhoneNumberRepository(
             )
 
         return withContext(Dispatchers.IO) {
-            apiClient.send(
-                ApiRequest(
-                    path = "numbers/lease",
-                    method = HttpMethod.POST,
-                    bodyJson = bodyJson,
-                    requiresAuth = true
+            try {
+                json.decodeFromString<LeaseNumberResponse>(
+                    apiClient.sendRaw(
+                        ApiRequest(
+                            path = "numbers/lease",
+                            method = HttpMethod.POST,
+                            bodyJson = bodyJson,
+                            requiresAuth = true
+                        )
+                    )
                 )
-            )
+            } catch (error: ApiException) {
+                if (error.statusCode != 409) {
+                    throw error
+                }
+
+                val regulatory =
+                    runCatching {
+                        json.decodeFromString<NumberRegulatoryLeaseResponse>(
+                            error.responseBody
+                        )
+                    }.getOrNull()
+                        ?: throw error
+
+                val actionable =
+                    regulatory.decision in setOf(
+                        "VERIFICATION_REQUIRED",
+                        "VERIFICATION_PENDING",
+                        "VERIFICATION_REJECTED"
+                    )
+
+                if (!actionable) {
+                    throw error
+                }
+
+                throw NumberRegulatoryLeaseException(regulatory)
+            }
         }
     }
 
     suspend fun releaseNumber() {
         withContext(Dispatchers.IO) {
-            apiClient.send<Unit>(
+            apiClient.sendRaw(
                 ApiRequest(
                     path = "numbers/release",
                     method = HttpMethod.POST,

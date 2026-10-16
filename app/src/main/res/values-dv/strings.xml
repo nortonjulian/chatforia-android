@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">ކޯލްތަކާއި ޓެކްސްޓްތައް ތިމާގެ އަސްލު ފޯނު ނަންބަރަށް ފޯވާޑް ކުރާށެވެ</string>
     <string name="upgrade_plans_plus_features_history">މެސެޖް ތާރީޚު ދިގުވުން (6 މަސްދުވަހާއި ހަމައަށް)</string>
     <string name="upgrade_plans_plus_features_support">ކަމެއް ގޯސްވެއްޖެ ނަމަ އަވަސް ސަޕޯޓެއް</string>
-    <string name="upgrade_plans_plus_price">6.99 ޑޮލަރެވެ</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">ޕްލަސް</string>
     <string name="upgrade_plans_premiumAnnual_aria">ޕްރީމިއަމް އެނިއަލް އަށް އަޕްގްރޭޑް ކުރުން</string>
     <string name="upgrade_plans_premiumAnnual_badge">%30 ސަލާމަތް ކޮށްލައްވާ</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">އެންމެ ރަނގަޅީ ކަރަންޓް ބޭނުންކުރާ މީހުންނާއި، ދުރުދުރުން މަސައްކަތްކުރާ މީހުންނާއި، ބޮޑެތި ދަތުރުވެރިންނަށް</string>
     <string name="upgrade_plans_premiumAnnual_features_number">ޕްލޭން އެކްޓިވް ވާއިރު ޗެޓްފޯރިއާ ނަންބަރު ރައްކާތެރިކޮށްފައި ބެހެއްޓުން</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">މަހަކު ފައިސާ ދެއްކުމާ އަޅާބަލާއިރު ގާތްގަނޑަކަށް %30 ސަލާމަތް ކުރެވޭނެއެވެ</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 ޑޮލަރު</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">ޕްރީމިއަމް (އަހަރީ)</string>
     <string name="upgrade_plans_premiumMonthly_aria">ޕްރީމިއަމް މަންތްލީ އަށް އަޕްގްރޭޑް ކުރުން</string>
     <string name="upgrade_plans_premiumMonthly_badge">ލަފާދެވިފައިވުން</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">ޕްލަސްގައި ހުރިހާ ކަމެއް</string>
     <string name="upgrade_plans_premiumMonthly_features_support">އެންމެ ބޮޑަށް އެހީތެރިކަން ބޭނުންވާ ވަގުތުތަކުގައި އިސްކަންދޭ ސަޕޯޓެވެ</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">ހުރިހާ ޕްރީމިއަމް ކުލަ ތީމްތަކާއި އެޕް ކަސްޓަމައިޒޭޝަންތައް އަންލޮކް ކޮށްލާށެވެ</string>
-    <string name="upgrade_plans_premiumMonthly_price">11.99 ޑޮލަރެވެ</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">ޕްރީމިއަމް (މަހަކު އެއްފަހަރު)</string>
     <string name="upgrade_plusBadge">ޕްލަސް އެވެ</string>
     <string name="upgrade_plusSubtitle">ވިސްނުން ފޭރިގަންނަ ކަންތައްތައް ނައްތާލައި، މުވާސަލާތީ އަމަލީ ވަސީލަތްތައް ހުޅުވާލުން.</string>

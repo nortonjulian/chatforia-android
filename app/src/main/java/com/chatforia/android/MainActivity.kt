@@ -1,5 +1,6 @@
 package com.chatforia.android
 
+import com.chatforia.android.auth.accessPlan
 import android.Manifest
 import android.os.Build
 import android.os.Bundle
@@ -38,6 +39,8 @@ import com.chatforia.android.auth.LoginScreen
 import com.chatforia.android.auth.*
 import com.chatforia.android.network.ApiClient
 import com.chatforia.android.auth.GoogleAuthClient
+import com.chatforia.android.auth.CreatorReferralStore
+import analytics.AnalyticsManager
 import com.chatforia.android.chats.ChatsScreen
 import com.chatforia.android.chats.ChatsRepository
 import com.chatforia.android.chats.ChatsViewModel
@@ -60,6 +63,7 @@ import com.chatforia.android.calls.CallService
 import com.chatforia.android.calls.VideoCallRepository
 import com.chatforia.android.calls.CallHistoryRepository
 import com.chatforia.android.calls.CallsViewModel
+import com.chatforia.android.calls.CallsSegment
 import com.chatforia.android.voicemail.VoicemailRepository
 import com.chatforia.android.voicemail.VoicemailViewModel
 import com.chatforia.android.crypto.LinkedDevicesRepository
@@ -98,8 +102,10 @@ import android.view.WindowManager
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import com.google.android.gms.ads.MobileAds
+import com.chatforia.android.billing.PlanEntitlementsStore
 import com.chatforia.android.ads.InterstitialAdManager
 import com.chatforia.android.ads.shouldShowAds
+import com.chatforia.android.ads.resolveAdsEnabled
 import com.chatforia.android.calls.TwilioVoicePushRegistrar
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -107,6 +113,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.chatforia.android.calls.CallPermissionHelper
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 enum class AppTab {
     CHATS,
@@ -118,12 +125,32 @@ enum class AppTab {
 class MainActivity : ComponentActivity() {
 
     private var latestLaunchIntent by mutableStateOf<Intent?>(null)
+    private val creatorReferralStore by lazy { CreatorReferralStore(applicationContext) }
+    private var pendingReferralRegistration by mutableStateOf(false)
+
+    private fun handleCreatorReferralIntent(intent: Intent?) {
+        val link = intent?.dataString ?: return
+        val incomingCode = CreatorReferralStore.codeFromLink(link) ?: return
+        val attributedCode = creatorReferralStore.capture(link) ?: return
+        pendingReferralRegistration = true
+        AnalyticsManager.capture(
+            "referral_link_visited",
+            mapOf(
+                "referral_code" to incomingCode,
+                "attributed_referral_code" to attributedCode,
+                "source" to "app_link"
+            )
+        )
+    }
 
     private var pendingNotificationChatRoomId by
         mutableStateOf<Int?>(null)
 
     private var pendingNotificationSmsThreadId by
         mutableStateOf<Int?>(null)
+
+    private var pendingOpenVoicemail by
+        mutableStateOf(false)
 
     private var pendingOpenWireless by mutableStateOf(false)
 
@@ -222,6 +249,12 @@ class MainActivity : ComponentActivity() {
                         null
                 }
             }
+
+            "voicemail_new" -> {
+                pendingOpenVoicemail = true
+                pendingNotificationChatRoomId = null
+                pendingNotificationSmsThreadId = null
+            }
         }
     }
 
@@ -276,6 +309,7 @@ class MainActivity : ComponentActivity() {
         latestLaunchIntent = intent
         handleMessageNotificationIntent(intent)
         handleEsimCheckoutIntent(intent)
+        handleCreatorReferralIntent(intent)
 
         val launchedForIncomingCall =
             intent
@@ -351,7 +385,8 @@ class MainActivity : ComponentActivity() {
                         remember {
                             AuthRepository(
                                 apiClient,
-                                tokenStorage
+                                tokenStorage,
+                                referralStore = creatorReferralStore
                             )
                         }
 
@@ -397,7 +432,8 @@ class MainActivity : ComponentActivity() {
                                         return AuthViewModel(
                                             repository = repository,
                                             accountKeyManager = accountKeyManager,
-                                            pushTokenRegistrar = pushTokenRegistrar
+                                            pushTokenRegistrar = pushTokenRegistrar,
+                                            referralStore = creatorReferralStore
                                         ) as T
                                     }
                                 }
@@ -411,6 +447,27 @@ class MainActivity : ComponentActivity() {
 
                     val authState by
                     authViewModel.state.collectAsState()
+
+                    LaunchedEffect(authState, pendingReferralRegistration) {
+                        if (pendingReferralRegistration) {
+                            when (authState) {
+                                AuthState.LoggedOut -> {
+                                    pendingReferralRegistration = false
+                                    authViewModel.showRegistration()
+                                }
+                                is AuthState.LoggedIn -> pendingReferralRegistration = false
+                                else -> Unit
+                            }
+                        }
+                    }
+
+                    val mfaPending by authViewModel.mfaPending.collectAsState()
+                    if (mfaPending) {
+                        MfaLoginDialog(
+                            onConfirm = authViewModel::completeMfa,
+                            onCancel = authViewModel::cancelMfa
+                        )
+                    }
 
                     val deviceReplacementPrompt by
                     authViewModel.deviceReplacementPrompt.collectAsState()
@@ -610,7 +667,8 @@ class MainActivity : ComponentActivity() {
                                         keyStorage = keyStorage,
                                         onRegistered = {
                                             authViewModel.bootstrap()
-                                        }
+                                        },
+                                        referralStore = creatorReferralStore
                                     )
                                 }
 
@@ -740,6 +798,7 @@ class MainActivity : ComponentActivity() {
         latestLaunchIntent = intent
         handleMessageNotificationIntent(intent)
         handleEsimCheckoutIntent(intent)
+        handleCreatorReferralIntent(intent)
 
         val incomingCall =
             intent.getStringExtra("type") ==
@@ -768,6 +827,12 @@ class MainActivity : ComponentActivity() {
             mutableStateOf(AppTab.CHATS)
         }
 
+        LaunchedEffect(pendingOpenVoicemail) {
+            if (pendingOpenVoicemail) {
+                selectedTab = AppTab.CALLS
+            }
+        }
+
         /*
          * NotificationCoordinator runs outside Compose when a
          * background FCM message arrives, so persist the resolved
@@ -779,7 +844,7 @@ class MainActivity : ComponentActivity() {
             user.messageTone,
             user.messageSound,
             user.tone,
-            user.plan
+            user.accessPlan()
         ) {
             val accountMessageTone =
                 user.messageTone
@@ -789,7 +854,7 @@ class MainActivity : ComponentActivity() {
             val resolvedMessageTone =
                 resolvedMessageToneForPlan(
                     filename = accountMessageTone,
-                    plan = user.plan
+                    plan = user.accessPlan()
                 )
 
             AudioPlayerService.saveMessageTone(
@@ -826,6 +891,33 @@ class MainActivity : ComponentActivity() {
             interstitialAdManager.setAdsEnabled(
                 user.shouldShowAds()
             )
+        }
+
+
+        /*
+         * Keep the backend's authoritative app-plan allowances available
+         * to Android features. The user record still drives legacy plan
+         * UI while /premium/entitlements supplies caps and monthly usage.
+         */
+        LaunchedEffect(
+            user.id,
+            user.plan
+        ) {
+            runCatching {
+                PlanEntitlementsStore.refresh(apiClient)
+            }.onSuccess { response ->
+                interstitialAdManager.setAdsEnabled(
+                    user.resolveAdsEnabled(
+                        response.entitlements.adsEnabled
+                    )
+                )
+            }.onFailure { error ->
+                Log.w(
+                    "ChatforiaEntitlements",
+                    "Failed to refresh plan entitlements",
+                    error
+                )
+            }
         }
 
         DisposableEffect(interstitialAdManager) {
@@ -933,7 +1025,8 @@ class MainActivity : ComponentActivity() {
                 ChatThreadViewModel(
                     repository = messagesRepository,
                     keyStorage = keyStorage,
-                    queueStorage = MessageQueueStorage(context)
+                    queueStorage = MessageQueueStorage(context),
+                    appContext = context.applicationContext
                 )
             }
 
@@ -952,10 +1045,20 @@ class MainActivity : ComponentActivity() {
         LaunchedEffect(socketManager, user.id) {
             chatsViewModel.configureCurrentUser(user.id)
 
-            socketManager.messageUpserts.collect { messageJson ->
-                chatsViewModel.applyRealtimeMessageJson(
-                    messageJson
-                )
+            launch {
+                socketManager.messageUpserts.collect { messageJson ->
+                    chatsViewModel.applyRealtimeMessageJson(
+                        messageJson
+                    )
+                }
+            }
+
+            launch {
+                socketManager.messageDeleted.collect { payloadJson ->
+                    chatsViewModel.applyRealtimeDeleteJson(
+                        payloadJson
+                    )
+                }
             }
         }
 
@@ -1673,6 +1776,15 @@ class MainActivity : ComponentActivity() {
                         CallsScreen(
                             callsViewModel = callsViewModel,
                             voicemailViewModel = voicemailViewModel,
+                            initialSegment =
+                                if (pendingOpenVoicemail) {
+                                    CallsSegment.Voicemail
+                                } else {
+                                    CallsSegment.Recents
+                                },
+                            onInitialSegmentConsumed = {
+                                pendingOpenVoicemail = false
+                            },
 
                             onCallBackVoicemail = { voicemail ->
                                 val displayName =

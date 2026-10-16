@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Przesyłać połōnczynia i sms-y na prawdziwy numer telefōnu</string>
     <string name="upgrade_plans_plus_features_history">Dugszo historyjo wiadōmości (do 6 miesiyncy)</string>
     <string name="upgrade_plans_plus_features_support">Gibszo wsparcie, kej coś idzie nie tak</string>
-    <string name="upgrade_plans_plus_price">6,99 USD</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Uaktualnij do Premium Roczny</string>
     <string name="upgrade_plans_premiumAnnual_badge">Zaoszczydź 30%</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Nojlepsze dlo używoczy energije, ôddalōnych robotnikōw i ciynżkich wandrusōw</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Trzimaj swōj numer Chatforia chrōniōny, kej swōj plan je aktywny</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Ôszczyndź kole 30% w porōwnaniu z płacyniym co miesiōnc</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premia (Roczno)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Uaktualnij do Premium Miesiynczny</string>
     <string name="upgrade_plans_premiumMonthly_badge">Zalycany</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Wszysko w Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Priorytetowe wsparcie, kej nojbarzij potrzebujesz pōmocy</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Ôdblokuj wszyske premium motywy farbōw i spersōnalizacyje aplikacyje</string>
-    <string name="upgrade_plans_premiumMonthly_price">11,99 USD</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premia (miesiōncznie)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Usuń ôdrymbnianie uwogi i ôdblokuj praktyczne norzyńdzia kōmunikacyjne.</string>

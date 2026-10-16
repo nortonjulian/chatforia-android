@@ -3101,7 +3101,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Reenvía llamadas y mensajes de texto a tu número de teléfono real</string>
     <string name="upgrade_plans_plus_features_history">Historial de mensajes más extenso (hasta 6 meses)</string>
     <string name="upgrade_plans_plus_features_support">Asistencia más rápida cuando algo va mal</string>
-    <string name="upgrade_plans_plus_price">6,99 $</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Actualiza a Premium Anual</string>
     <string name="upgrade_plans_premiumAnnual_badge">Ahorra un 30 %</string>
@@ -3114,7 +3114,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Ideal para usuarios avanzados, teletrabajadores y viajeros frecuentes</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Mantén protegido tu número de Chatforia mientras tu plan esté activo</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Ahorra alrededor de un 30 % en comparación con el pago mensual</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 $</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (anual)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Actualiza a Premium mensual</string>
     <string name="upgrade_plans_premiumMonthly_badge">Recomendado</string>
@@ -3126,7 +3126,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Todo lo incluido en Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Asistencia prioritaria cuando más la necesitas</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Desbloquea todos los temas de color premium y personalizaciones de la aplicación</string>
-    <string name="upgrade_plans_premiumMonthly_price">11,99 $</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (mensual)</string>
     <string name="upgrade_plusBadge">MÁS</string>
     <string name="upgrade_plusSubtitle">Elimine las distracciones y desbloquee herramientas prácticas de comunicación.</string>

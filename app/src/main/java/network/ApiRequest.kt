@@ -4,5 +4,6 @@ data class ApiRequest(
     val path: String,
     val method: HttpMethod,
     val bodyJson: String? = null,
-    val requiresAuth: Boolean = true
+    val requiresAuth: Boolean = true,
+    val headers: Map<String, String> = emptyMap()
 )

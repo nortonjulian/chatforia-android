@@ -123,40 +123,6 @@ fun RegisterScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                OutlinedTextField(
-                    value = state.phone,
-                    onValueChange = viewModel::updatePhone,
-                    label = { Text(stringResource(R.string.android_register_phone_optional)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Phone
-                    ),
-                    shape = RoundedCornerShape(18.dp)
-                )
-
-                if (state.phone.trim().isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Switch(
-                            checked = state.smsConsent,
-                            onCheckedChange = viewModel::updateSmsConsent
-                        )
-
-                        Spacer(modifier = Modifier.width(10.dp))
-
-                        Text(
-                            text = stringResource(R.string.android_register_i_agree_to_receive_sms_verification_messages),
-                            color = ChatforiaColors.secondaryText,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
-
                 state.errorMessage?.let {
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
@@ -179,7 +145,7 @@ fun RegisterScreen(
 
                 Button(
                     onClick = viewModel::submit,
-                    enabled = !state.isSubmitting,
+                    enabled = !state.isSubmitting && !state.registrationCompleted,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = ChatforiaColors.accent
                     ),

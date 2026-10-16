@@ -287,12 +287,13 @@ fun UpgradeView(
                             quote = quotes[PricingProduct.Plus],
                             fallbackProduct = PricingProduct.Plus
                         )
-                        ?: "$6.99",
+                        ?: "$7.99",
                 period = "/ month",
                 features = listOf(
                     "Ad-free experience",
                     "Message forwarding",
                     "Longer history",
+                    "Standard AI tools, including Smart Replies and rewrite assistance",
                     "Faster support"
                 ),
                 highlighted = false,
@@ -326,7 +327,7 @@ fun UpgradeView(
                 period = "/ month",
                 features = listOf(
                     "Everything in Plus",
-                    "AI tools with Ria",
+                    "Full AI tools, including advanced rewrites and summaries",
                     "Premium themes",
                     "Premium message tones",
                     "Premium ringtones",
@@ -359,11 +360,11 @@ fun UpgradeView(
                             quote = quotes[PricingProduct.PremiumAnnual],
                             fallbackProduct = PricingProduct.PremiumAnnual
                         )
-                        ?: "$99.99",
+                        ?: "$119.99",
                 period = "/ year",
                 features = listOf(
                     "Full Premium access",
-                    "AI tools",
+                    "Full AI tools",
                     "Premium customization",
                     "Best yearly value"
                 ),

@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Pludonu vokojn kaj tekstmesaĝojn al via reala telefonnumero.</string>
     <string name="upgrade_plans_plus_features_history">Pli longa mesaĝhistorio (ĝis 6 monatoj)</string>
     <string name="upgrade_plans_plus_features_support">Pli rapida subteno kiam io misfunkcias</string>
-    <string name="upgrade_plans_plus_price">$0</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Ĝisdatigu al jara Premium-abono</string>
     <string name="upgrade_plans_premiumAnnual_badge">Ŝparu 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Plej bona por potencaj uzantoj, telelaborantoj kaj oftaj vojaĝantoj</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Protektu vian Chatforia-numeron dum via plano estas aktiva.</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Ŝparu ĉirkaŭ 30% kompare kun monata pago.</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Supera (Jara)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Ĝisdatigu al monata Premium-abono</string>
     <string name="upgrade_plans_premiumMonthly_badge">Rekomendita</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Ĉio en Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Prioritata subteno kiam vi plej bezonas helpon.</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Malŝlosu ĉiujn altkvalitajn kolorajn temojn kaj aplikaĵajn personigojn.</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Supera (Monata)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Forigu distraktojn kaj malŝlosu praktikajn komunikilajn ilojn.</string>

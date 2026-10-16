@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Προώθηση κλήσεων και μηνυμάτων στον πραγματικό αριθμό τηλεφώνου σας</string>
     <string name="upgrade_plans_plus_features_history">Μεγαλύτερο ιστορικό μηνυμάτων (έως 6 μήνες)</string>
     <string name="upgrade_plans_plus_features_support">Ταχύτερη υποστήριξη όταν κάτι πάει στραβά</string>
-    <string name="upgrade_plans_plus_price">$6,99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Αναβάθμιση σε Premium Ετήσιο</string>
     <string name="upgrade_plans_premiumAnnual_badge">Εξοικονομήστε 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Ιδανικό για έμπειρους χρήστες, τηλεργαζόμενους και συχνά ταξιδιώτες</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Διατηρήστε τον αριθμό σας Chatforia προστατευμένο όσο το πρόγραμμά σας είναι ενεργό</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Εξοικονομήστε περίπου 30% σε σύγκριση με την μηνιαία πληρωμή</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (Ετήσια)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Αναβάθμιση σε Premium Μηνιαία</string>
     <string name="upgrade_plans_premiumMonthly_badge">Συνιστάται</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Όλα όσα περιλαμβάνει το Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Προτεραιότητα στην υποστήριξη όταν τη χρειάζεστε περισσότερο</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Ξεκλειδώστε όλα τα premium χρωματικά θέματα και τις προσαρμογές της εφαρμογής</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (Μηνιαίο)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Απομακρύνετε τους περισπασμούς και ξεκλειδώστε πρακτικά εργαλεία επικοινωνίας.</string>

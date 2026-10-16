@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Videresend samtaler og tekstmeldinger til ditt ekte telefonnummer</string>
     <string name="upgrade_plans_plus_features_history">Lengre meldingshistorikk (opptil 6 måneder)</string>
     <string name="upgrade_plans_plus_features_support">Raskere support når noe går galt</string>
-    <string name="upgrade_plans_plus_price">$6,99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Oppgrader til Premium Annual</string>
     <string name="upgrade_plans_premiumAnnual_badge">Spar 30 prosent</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Best for avanserte brukere, fjernarbeidere og folk som reiser mye</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Hold Chatforia-nummeret ditt beskyttet mens abonnementet ditt er aktivt</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Spar rundt 30 % sammenlignet med månedlig betaling</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premie (årlig)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Oppgrader til Premium månedlig</string>
     <string name="upgrade_plans_premiumMonthly_badge">Anbefales</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Alt i Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Prioritert støtte når du trenger hjelp som mest</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Lås opp alle premium fargetemaer og apptilpasninger</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11,99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premie (månedlig)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Fjern distraksjoner og lås opp praktiske kommunikasjonsverktøy.</string>

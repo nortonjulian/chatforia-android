@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">ໂອນສາຍ ແລະ ຂໍ້ຄວາມໄປຫາເບີໂທລະສັບຕົວຈິງຂອງທ່ານ</string>
     <string name="upgrade_plans_plus_features_history">ປະຫວັດຂໍ້ຄວາມທີ່ຍາວກວ່າ (ສູງສຸດ 6 ເດືອນ)</string>
     <string name="upgrade_plans_plus_features_support">ການຊ່ວຍເຫຼືອໄວຂຶ້ນເມື່ອມີບາງຢ່າງຜິດພາດເກີດຂຶ້ນ</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">ບວກ</string>
     <string name="upgrade_plans_premiumAnnual_aria">ອັບເກຣດເປັນພຣີມຽມລາຍປີ</string>
     <string name="upgrade_plans_premiumAnnual_badge">ປະຢັດ 30%</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">ເໝາະສຳລັບຜູ້ໃຊ້ພະລັງງານສູງ, ຜູ້ເຮັດວຽກຫ່າງໄກສອກຫຼີກ ແລະ ນັກທ່ອງທ່ຽວໜັກ</string>
     <string name="upgrade_plans_premiumAnnual_features_number">ຮັກສາເບີໂທລະສັບ Chatforia ຂອງທ່ານໃຫ້ປອດໄພໃນຂະນະທີ່ແຜນການຂອງທ່ານຍັງເປີດໃຊ້ງານຢູ່</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">ປະຫຍັດໄດ້ປະມານ 30% ເມື່ອທຽບກັບການຈ່າຍເປັນລາຍເດືອນ</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 ໂດລາ</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">ເບ້ຍປະກັນໄພ (ລາຍປີ)</string>
     <string name="upgrade_plans_premiumMonthly_aria">ອັບເກຣດເປັນພຣີມຽມລາຍເດືອນ</string>
     <string name="upgrade_plans_premiumMonthly_badge">ແນະນຳ</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">ທຸກຢ່າງໃນ Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">ການສະໜັບສະໜູນທີ່ສຳຄັນເມື່ອທ່ານຕ້ອງການຄວາມຊ່ວຍເຫຼືອຫຼາຍທີ່ສຸດ</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">ປົດລັອກຮູບແບບສີພຣີມຽມ ແລະ ການປັບແຕ່ງແອັບທັງໝົດ</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">ພຣີມຽມ (ລາຍເດືອນ)</string>
     <string name="upgrade_plusBadge">ບວກ</string>
     <string name="upgrade_plusSubtitle">ກຳຈັດສິ່ງລົບກວນ ແລະ ປົດລັອກເຄື່ອງມືການສື່ສານທີ່ໃຊ້ໄດ້ຈິງ.</string>

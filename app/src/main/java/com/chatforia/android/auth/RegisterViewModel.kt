@@ -13,8 +13,7 @@ data class RegisterUiState(
     val email: String = "",
     val password: String = "",
     val confirmPassword: String = "",
-    val phone: String = "",
-    val smsConsent: Boolean = false,
+    val registrationCompleted: Boolean = false,
     val isSubmitting: Boolean = false,
     val errorMessage: String? = null,
     val successMessage: String? = null
@@ -25,7 +24,8 @@ class RegisterViewModel(
     private val tokenStorage: TokenStorage,
     private val keyStorage: KeyStorage,
     private val onRegistered: () -> Unit,
-    private val analytics: AnalyticsTracker = AnalyticsManager
+    private val analytics: AnalyticsTracker = AnalyticsManager,
+    private val referralStore: CreatorReferralStore? = null
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RegisterUiState())
@@ -47,23 +47,15 @@ class RegisterViewModel(
         _state.value = _state.value.copy(confirmPassword = value, errorMessage = null)
     }
 
-    fun updatePhone(value: String) {
-        _state.value = _state.value.copy(phone = value, errorMessage = null)
-    }
-
-    fun updateSmsConsent(value: Boolean) {
-        _state.value = _state.value.copy(smsConsent = value, errorMessage = null)
-    }
-
     fun submit() {
         val current = _state.value
+        if (current.isSubmitting || current.registrationCompleted) return
 
         val username = current.username.trim()
         val email = current.email.trim()
-        val phone = current.phone.trim()
 
-        if (username.isBlank()) {
-            setError("Username is required.")
+        if (!Regex("^[a-zA-Z0-9_]{3,20}$").matches(username)) {
+            setError("Username must be 3–20 letters, numbers, or underscores.")
             return
         }
 
@@ -77,8 +69,8 @@ class RegisterViewModel(
             return
         }
 
-        if (current.password.length < 6) {
-            setError("Password must be at least 6 characters.")
+        if (current.password.length < 8) {
+            setError("Password must be at least 8 characters.")
             return
         }
 
@@ -87,34 +79,28 @@ class RegisterViewModel(
             return
         }
 
-        if (phone.isNotBlank() && !current.smsConsent) {
-            setError("SMS consent is required when adding a phone number.")
-            return
-        }
+        _state.value = _state.value.copy(
+            isSubmitting = true,
+            errorMessage = null,
+            successMessage = null
+        )
 
         viewModelScope.launch {
-            _state.value =
-                _state.value.copy(
-                    isSubmitting = true,
-                    errorMessage = null,
-                    successMessage = null
-                )
-
             try {
+                val referralCode = referralStore?.currentCode()
                 val response =
                     authRepository.register(
                         username = username,
                         email = email,
                         password = current.password,
-                        phone = phone.takeIf { it.isNotBlank() },
-                        smsConsent =
-                            if (phone.isBlank()) null else current.smsConsent
+                        referralCode = referralCode
                     )
+                referralStore?.clear()
 
                 val token = response.token
                 val resolvedUser = response.resolvedUser
 
-                if (!token.isNullOrBlank() && resolvedUser != null) {
+                if (resolvedUser != null) {
                     val privateKey = response.privateKey
                     val publicKey = resolvedUser.publicKey
 
@@ -137,27 +123,31 @@ class RegisterViewModel(
                         )
                     )
 
+                    val properties = mutableMapOf<String, Any>(
+                        "method" to "email",
+                        "plan" to "FREE"
+                    )
+                    referralCode?.let { properties["referral_code"] = it }
                     analytics.capture(
                         "user_registered",
-                        mapOf(
-                            "method" to "email",
-                            "hasPhone" to phone.isNotBlank(),
-                            "smsConsent" to current.smsConsent,
-                            "plan" to "FREE"
-                        )
+                        properties
                     )
 
-                    tokenStorage.save(token)
-                    onRegistered()
-                    return@launch
+                    if (!response.requiresEmailVerification && !token.isNullOrBlank()) {
+                        _state.value = _state.value.copy(registrationCompleted = true, password = "", confirmPassword = "")
+                        tokenStorage.save(token)
+                        onRegistered()
+                        return@launch
+                    }
                 }
 
                 _state.value =
                     _state.value.copy(
                         isSubmitting = false,
-                        successMessage =
-                            response.message
-                                ?: "Check your email to verify your account."
+                        registrationCompleted = true,
+                        password = "",
+                        confirmPassword = "",
+                        successMessage = "Check your email to verify your account, then log in."
                     )
 
             } catch (error: Exception) {

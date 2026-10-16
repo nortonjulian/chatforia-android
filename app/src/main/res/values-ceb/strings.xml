@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">I-forward ang mga tawag ug text ngadto sa imong tinuod nga numero sa telepono.</string>
     <string name="upgrade_plans_plus_features_history">Mas taas nga kasaysayan sa mensahe (hangtod sa 6 ka bulan)</string>
     <string name="upgrade_plans_plus_features_support">Mas paspas nga suporta kung adunay masayop</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">I-upgrade sa Premium nga Taonan</string>
     <string name="upgrade_plans_premiumAnnual_badge">Makatipid og 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Pinakamaayo para sa mga power user, mga nagtrabaho sa layo, ug mga kanunay nga biyahero</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Panalipdi ang imong Chatforia nga numero samtang aktibo ang imong plano.</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Makatipid og hapit 30% kumpara sa pagbayad matag bulan.</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (Tinag-tuig)</string>
     <string name="upgrade_plans_premiumMonthly_aria">I-upgrade sa Premium Matag-Bulan</string>
     <string name="upgrade_plans_premiumMonthly_badge">Girekomenda</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Tanan sa Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Prioridad nga suporta kung pinakakinahanglan nimo og tabang</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">I-unlock ang tanan nga premium nga tema sa kolor ug mga pag-customize sa app</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (Bulan-bulan)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Tangtanga ang mga samok ug ablihi ang praktikal nga mga himan sa komunikasyon.</string>

@@ -1283,6 +1283,7 @@ class ChatThreadViewModelTest {
             repository = repository,
             keyStorage = FakePrivateKeyReader(),
             queueStorage = storage,
+            appContext = context,
             messageDecryptorFactory = {
                 NoOpDisplayMessageDecryptor()
             },

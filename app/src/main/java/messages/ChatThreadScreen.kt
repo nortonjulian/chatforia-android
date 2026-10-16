@@ -78,6 +78,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import com.chatforia.android.ads.InterstitialAdManager
+import com.chatforia.android.billing.PlanEntitlementsStore
+import com.chatforia.android.billing.resolveAiRewriteLevel
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -111,6 +113,17 @@ fun ChatThreadScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val isSending by viewModel.isSending.collectAsState()
     val error by viewModel.error.collectAsState()
+    val planEntitlements by PlanEntitlementsStore.state.collectAsState()
+
+    val aiRewriteLevel =
+        resolveAiRewriteLevel(
+            backendLevel =
+                planEntitlements?.entitlements?.aiRewriteLevel,
+            fallbackPlan = currentUser.plan
+        )
+
+    val composerAiEnabled =
+        aiRewriteLevel != "NONE"
 
     var pendingGifUrl by remember { mutableStateOf<String?>(null) }
     var pendingGifPreviewUrl by remember { mutableStateOf<String?>(null) }
@@ -742,8 +755,13 @@ fun ChatThreadScreen(
             val canSendText = draft.trim().isNotEmpty() || pendingGifUrl != null
             val canSendVoice = voiceDraft != null
 
-            val smartRepliesEnabled = currentUser.enableSmartReplies == true
-            val riaAvailable = smartRepliesEnabled && draft.isNotBlank()
+            val smartRepliesEnabled =
+                composerAiEnabled &&
+                    currentUser.enableSmartReplies == true
+
+            val rewriteAvailable =
+                composerAiEnabled &&
+                    draft.isNotBlank()
 
 
             Row(
@@ -771,7 +789,7 @@ fun ChatThreadScreen(
                             imageVector = Icons.Default.AutoAwesome,
                             contentDescription = stringResource(R.string.android_chat_thread_rewrite_with_ria),
                             tint =
-                                if (riaAvailable) {
+                                if (rewriteAvailable) {
                                     ChatforiaColors.accent.copy(alpha = 0.85f)
                                 } else {
                                     ChatforiaColors.secondaryText.copy(alpha = 0.45f)
@@ -779,7 +797,7 @@ fun ChatThreadScreen(
                             modifier = Modifier
                                 .size(16.dp)
                                 .padding(start = 4.dp)
-                                .clickable(enabled = riaAvailable) {
+                                .clickable(enabled = rewriteAvailable) {
                                     showRewriteSheet = true
                                 }
                         )

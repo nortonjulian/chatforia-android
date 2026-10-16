@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Piga mbele simu na ujumbe mfupi kwenye nambari yako halisi ya simu</string>
     <string name="upgrade_plans_plus_features_history">Kumbukumbu ya ujumbe</string>
     <string name="upgrade_plans_plus_features_support">Usaidizi wa kipaumbele unapohitaji msaada zaidi</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Boresha hadi Usajili wa Kila Mwaka wa Premium</string>
     <string name="upgrade_plans_premiumAnnual_badge">Okoa 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Bora kwa watumiaji wenye mahitaji ya juu, wafanyakazi wa mbali, na wasafiri wazito</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Linda nambari yako ya Chatforia ikiwa mpango wako bado unafanya kazi</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Okoa takriban 30% ikilinganishwa na kulipa kila mwezi</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Premium (ya Mwaka)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Boresha hadi Premium ya kila mwezi</string>
     <string name="upgrade_plans_premiumMonthly_badge">Inapendekezwa</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Kila kitu katika Plus</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Usaidizi wa kipaumbele unapohitaji msaada zaidi</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Fungua mandhari zote za rangi za premium na ubinafsishaji wa programu</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Premium (Kwa Mwezi)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">Ondoa mvurugiko na fungua zana za mawasiliano zinazofaa.</string>

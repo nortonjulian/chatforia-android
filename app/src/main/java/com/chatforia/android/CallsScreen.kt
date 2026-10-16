@@ -52,6 +52,8 @@ import androidx.compose.material.icons.filled.Message
 fun CallsScreen(
     callsViewModel: CallsViewModel,
     voicemailViewModel: VoicemailViewModel,
+    initialSegment: CallsSegment = CallsSegment.Recents,
+    onInitialSegmentConsumed: () -> Unit = {},
     onStartAudioCall: (CallDto) -> Unit = {},
     onStartVideoCall: (CallDto) -> Unit = {},
     onDialNumber: (String) -> Unit = {},
@@ -59,14 +61,42 @@ fun CallsScreen(
     onCallBackVoicemail: (VoicemailDto) -> Unit = {}
 ) {
     var selectedSegment by remember {
-        mutableStateOf(CallsSegment.Recents)
+        mutableStateOf(initialSegment)
     }
 
     var showDialer by remember {
         mutableStateOf(false)
     }
 
+    var isEditingRecents by remember {
+        mutableStateOf(false)
+    }
+
+    var isEditingVoicemails by remember {
+        mutableStateOf(false)
+    }
+
+    var selectedCallIds by remember {
+        mutableStateOf(setOf<Int>())
+    }
+
+    var showDeleteSelectedConfirmation by remember {
+        mutableStateOf(false)
+    }
+
+    var showClearAllConfirmation by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(initialSegment) {
+        if (initialSegment == CallsSegment.Voicemail) {
+            selectedSegment = CallsSegment.Voicemail
+            onInitialSegmentConsumed()
+        }
+    }
+
     val callsState by callsViewModel.state.collectAsState()
+    val voicemailState by voicemailViewModel.state.collectAsState()
 
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -74,6 +104,16 @@ fun CallsScreen(
 
     LaunchedEffect(Unit) {
         callsViewModel.loadCalls()
+    }
+
+    LaunchedEffect(selectedSegment) {
+        if (selectedSegment == CallsSegment.Recents) {
+            callsViewModel.acknowledgeMissedCalls()
+            isEditingVoicemails = false
+        } else {
+            isEditingRecents = false
+            selectedCallIds = emptySet()
+        }
     }
 
     Column(
@@ -96,16 +136,76 @@ fun CallsScreen(
                 color = ChatforiaColors.primaryText
             )
 
-            IconButton(
-                onClick = {
-                    showDialer = true
-                }
+            Row(
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    Icons.Default.Dialpad,
-                    contentDescription = stringResource(R.string.android_calls_open_dial_pad),
-                    tint = ChatforiaColors.accent
-                )
+                val canEditCurrentSegment =
+                    when (selectedSegment) {
+                        CallsSegment.Recents ->
+                            callsState.calls.isNotEmpty()
+
+                        CallsSegment.Voicemail ->
+                            voicemailState.items.isNotEmpty()
+                    }
+
+                if (canEditCurrentSegment) {
+                    TextButton(
+                        onClick = {
+                            when (selectedSegment) {
+                                CallsSegment.Recents -> {
+                                    isEditingRecents =
+                                        !isEditingRecents
+
+                                    if (!isEditingRecents) {
+                                        selectedCallIds = emptySet()
+                                    }
+                                }
+
+                                CallsSegment.Voicemail -> {
+                                    isEditingVoicemails =
+                                        !isEditingVoicemails
+                                }
+                            }
+                        }
+                    ) {
+                        Text(
+                            text =
+                                when (selectedSegment) {
+                                    CallsSegment.Recents ->
+                                        if (isEditingRecents) {
+                                            "Done"
+                                        } else {
+                                            "Edit"
+                                        }
+
+                                    CallsSegment.Voicemail ->
+                                        if (isEditingVoicemails) {
+                                            "Done"
+                                        } else {
+                                            "Edit"
+                                        }
+                                },
+                            color = ChatforiaColors.accent
+                        )
+                    }
+                }
+
+                if (
+                    !isEditingRecents &&
+                    !isEditingVoicemails
+                ) {
+                    IconButton(
+                        onClick = {
+                            showDialer = true
+                        }
+                    ) {
+                        Icon(
+                            Icons.Default.Dialpad,
+                            contentDescription = stringResource(R.string.android_calls_open_dial_pad),
+                            tint = ChatforiaColors.accent
+                        )
+                    }
+                }
             }
         }
 
@@ -172,24 +272,139 @@ fun CallsScreen(
                                 items = callsState.calls,
                                 key = { it.id }
                             ) { call ->
-                                SwipeRevealCallRow(
-                                    call = call,
-                                    onStartAudioCall = {
-                                        onStartAudioCall(call)
-                                    },
-                                    onStartVideoCall = {
-                                        onStartVideoCall(call)
-                                    },
-                                    onMessage = {
-                                        onMessageCall(call)
-                                    },
-                                    onDelete = {
-                                        callsViewModel.deleteCall(call)
+                                if (isEditingRecents) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(20.dp))
+                                            .clickable {
+                                                selectedCallIds =
+                                                    if (call.id in selectedCallIds) {
+                                                        selectedCallIds - call.id
+                                                    } else {
+                                                        selectedCallIds + call.id
+                                                    }
+                                            },
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Checkbox(
+                                            checked = call.id in selectedCallIds,
+                                            onCheckedChange = { checked ->
+                                                selectedCallIds =
+                                                    if (checked) {
+                                                        selectedCallIds + call.id
+                                                    } else {
+                                                        selectedCallIds - call.id
+                                                    }
+                                            }
+                                        )
+
+                                        Box(
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            CallHistoryRow(
+                                                call = call,
+                                                onStartAudioCall = {},
+                                                onStartVideoCall = {}
+                                            )
+                                        }
                                     }
-                                )
+                                } else {
+                                    SwipeRevealCallRow(
+                                        call = call,
+                                        onStartAudioCall = {
+                                            onStartAudioCall(call)
+                                        },
+                                        onStartVideoCall = {
+                                            onStartVideoCall(call)
+                                        },
+                                        onMessage = {
+                                            onMessageCall(call)
+                                        },
+                                        onDelete = {
+                                            callsViewModel.deleteCall(call)
+                                        }
+                                    )
+                                }
 
                                 HorizontalDivider()
                             }
+                        }
+                    }
+                }
+
+                if (
+                    isEditingRecents &&
+                    callsState.calls.isNotEmpty()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(
+                            onClick = {
+                                selectedCallIds =
+                                    if (
+                                        selectedCallIds.size ==
+                                        callsState.calls.size
+                                    ) {
+                                        emptySet()
+                                    } else {
+                                        callsState.calls
+                                            .map { it.id }
+                                            .toSet()
+                                    }
+                            }
+                        ) {
+                            Text(
+                                if (
+                                    selectedCallIds.size ==
+                                    callsState.calls.size
+                                ) {
+                                    "Deselect All"
+                                } else {
+                                    "Select All"
+                                }
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        TextButton(
+                            onClick = {
+                                showDeleteSelectedConfirmation = true
+                            },
+                            enabled = selectedCallIds.isNotEmpty()
+                        ) {
+                            Text(
+                                text =
+                                    if (selectedCallIds.isEmpty()) {
+                                        "Delete"
+                                    } else {
+                                        "Delete (${selectedCallIds.size})"
+                                    },
+                                color =
+                                    if (selectedCallIds.isEmpty()) {
+                                        MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.38f
+                                        )
+                                    } else {
+                                        MaterialTheme.colorScheme.error
+                                    }
+                            )
+                        }
+
+                        TextButton(
+                            onClick = {
+                                showClearAllConfirmation = true
+                            }
+                        ) {
+                            Text(
+                                text = "Clear All",
+                                color = MaterialTheme.colorScheme.error
+                            )
                         }
                     }
                 }
@@ -198,10 +413,105 @@ fun CallsScreen(
             CallsSegment.Voicemail -> {
                 VoicemailInboxScreen(
                     viewModel = voicemailViewModel,
+                    isEditing = isEditingVoicemails,
+                    onEditingChange = {
+                        isEditingVoicemails = it
+                    },
                     onCallBack = onCallBackVoicemail
                 )
             }
         }
+    }
+
+    if (showDeleteSelectedConfirmation) {
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteSelectedConfirmation = false
+            },
+            title = {
+                Text("Delete selected calls?")
+            },
+            text = {
+                Text(
+                    "These calls will be removed from your Recents only."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val deletingAll =
+                            selectedCallIds.size ==
+                                callsState.calls.size
+
+                        callsViewModel.deleteSelectedCalls(
+                            selectedCallIds
+                        )
+
+                        selectedCallIds = emptySet()
+                        showDeleteSelectedConfirmation = false
+
+                        if (deletingAll) {
+                            isEditingRecents = false
+                        }
+                    }
+                ) {
+                    Text(
+                        text = "Delete",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteSelectedConfirmation = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showClearAllConfirmation) {
+        AlertDialog(
+            onDismissRequest = {
+                showClearAllConfirmation = false
+            },
+            title = {
+                Text("Clear all Recents?")
+            },
+            text = {
+                Text(
+                    "This removes all calls from your Recents only."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        callsViewModel.clearCallHistory()
+
+                        selectedCallIds = emptySet()
+                        isEditingRecents = false
+                        showClearAllConfirmation = false
+                    }
+                ) {
+                    Text(
+                        text = "Clear All",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showClearAllConfirmation = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     if (showDialer) {

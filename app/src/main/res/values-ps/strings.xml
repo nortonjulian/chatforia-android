@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">اړیکې او پیغامونه خپل اصلي ټیلیفون شمېرې ته واستوئ</string>
     <string name="upgrade_plans_plus_features_history">د پیغامونو اوږده تاریخچه (تر ۶ میاشتو پورې)</string>
     <string name="upgrade_plans_plus_features_support">کله چې کومه ستونزه رامنځته شي، ګړندۍ مرسته</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">پریمیئم کلنۍ ته پرمختګ ورکړئ</string>
     <string name="upgrade_plans_premiumAnnual_badge">۳۰٪ سپما کړئ</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">د پرمختللو کاروونکو، لیرې کارکوونکو، او ډېرو سفر کوونکو لپاره غوره</string>
     <string name="upgrade_plans_premiumAnnual_features_number">خپل چاتفوریا شمېره خوندي وساتئ، ترڅو چې ستاسو پلان فعال وي.</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">د میاشتنۍ تادیې په پرتله شاوخوا ۳۰٪ سپما وکړئ</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">پریمیم (کلنی)</string>
     <string name="upgrade_plans_premiumMonthly_aria">پرمختللي میاشتنۍ ګډون ته لوړول</string>
     <string name="upgrade_plans_premiumMonthly_badge">وړاندیز شوی</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">هر څه په پلس کې</string>
     <string name="upgrade_plans_premiumMonthly_features_support">تر ټولو ډېرې مرستې ته د اړتیا پر وخت، لومړیتوب لرونکې مرسته</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">ټولې غوره رنګه موضوعګانې او د اپلیکیشن تنظیمات خلاص کړئ</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">پریمیم (میاشتنی)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">ګډوډي لرې کړئ او عملي ارتباطي وسیلې خلاصې کړئ.</string>

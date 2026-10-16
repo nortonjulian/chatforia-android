@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">گواستنەوەی پەیوەندی و نامەکان بۆ ژمارەی تەلەفۆنی ڕاستەقینەی خۆت</string>
     <string name="upgrade_plans_plus_features_history">مێژووی نامەی درێژتر (تا ٦ مانگ)</string>
     <string name="upgrade_plans_plus_features_support">پشتیوانی خێراتر کاتێک شتێک بە هەڵە دەچێت</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">بەرزکردنەوە بۆ ئەندامێتی ساڵانەی پڕێمیەم</string>
     <string name="upgrade_plans_premiumAnnual_badge">پشتیوانی</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">باشترینە بۆ بەکارهێنەرە پێشکەوتووەکان، کارمەندانی دوورەدەست، و گەشتیارە زۆر گەشتکەرەکان</string>
     <string name="upgrade_plans_premiumAnnual_features_number">ژمارەکەی چاتفۆریات بپارێزە کاتێک پلانەکەت چالاکە</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">نزیکەی 30% پاشەکەوت بکە بە بەراورد بە پارەدانی مانگانە</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">پڕێمیەم (ساڵانە)</string>
     <string name="upgrade_plans_premiumMonthly_aria">بەرزکردنەوە بۆ پریمێمی مانگانە</string>
     <string name="upgrade_plans_premiumMonthly_badge">پشتیوانی</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">هەموو شتێک لە پڵەسدا</string>
     <string name="upgrade_plans_premiumMonthly_features_support">پشتیوانیی لەپێشینە کاتێک زۆرترین پێویستیت بە یارمەتییە</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">هەموو تیمە ڕەنگە پریمیەمەکان و تایبەتکردنەکانی ئەپ بکەرەوە</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">پڕێمیەم (مانگانە)</string>
     <string name="upgrade_plusBadge">PLUS</string>
     <string name="upgrade_plusSubtitle">سەرنجلادەران لابەرە و ئامرازە پراکتیکییەکانی پەیوەندیکردن بکەرەوە.</string>

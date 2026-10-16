@@ -80,7 +80,31 @@
                     android:pathPrefix="/esim/" />
             </intent-filter>
 
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="chatforia.com" android:pathPrefix="/ref/" />
+                <data android:scheme="https" android:host="chatforia.com" android:path="/register" />
+                <data android:scheme="https" android:host="www.chatforia.com" android:pathPrefix="/ref/" />
+                <data android:scheme="https" android:host="www.chatforia.com" android:path="/register" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="chatforia" android:host="ref" />
+            </intent-filter>
+
         </activity>
+
+        <activity
+            android:name=".notifications.IncomingCallActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.Chatforia" />
 
         <receiver
             android:name=".notifications.IncomingCallActionReceiver"

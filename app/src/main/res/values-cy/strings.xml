@@ -3100,7 +3100,7 @@
     <string name="upgrade_plans_plus_features_forwarding">Ailgyfeirio galwadau a negeseuon testun i\'ch rhif ffôn go iawn</string>
     <string name="upgrade_plans_plus_features_history">Hanes negeseuon hwy (hyd at 6 mis)</string>
     <string name="upgrade_plans_plus_features_support">Cymorth cyflymach pan aiff rhywbeth o\'i le</string>
-    <string name="upgrade_plans_plus_price">$6.99</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">Plus</string>
     <string name="upgrade_plans_premiumAnnual_aria">Uwchraddiwch i Flwyddynol Premiwm</string>
     <string name="upgrade_plans_premiumAnnual_badge">Arbed 30%</string>
@@ -3113,7 +3113,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">Gorau i ddefnyddwyr pŵer, gweithwyr o bell, a theithwyr pybyr</string>
     <string name="upgrade_plans_premiumAnnual_features_number">Cadwch eich rhif Chatforia wedi\'i ddiogelu tra bo\'ch cynllun yn weithredol</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">Arbedwch oddeutu 30% o\'i gymharu â thalu\'n fisol.</string>
-    <string name="upgrade_plans_premiumAnnual_price">$99</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">Uwch (Blynyddol)</string>
     <string name="upgrade_plans_premiumMonthly_aria">Uwchraddiwch i Fisoedd Premiwm</string>
     <string name="upgrade_plans_premiumMonthly_badge">Argymhellir</string>
@@ -3125,7 +3125,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Popeth ym Mwy</string>
     <string name="upgrade_plans_premiumMonthly_features_support">Cymorth blaenoriaethol pan fyddwch chi ei angen fwyaf</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">Datgloi\'r holl themâu lliw premiwm ac addasiadau\'r ap</string>
-    <string name="upgrade_plans_premiumMonthly_price">$11.99</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">Uwch (Misol)</string>
     <string name="upgrade_plusBadge">PLWS</string>
     <string name="upgrade_plusSubtitle">Tynnwch ymaith gwyredd a datgloi offer cyfathrebu ymarferol.</string>

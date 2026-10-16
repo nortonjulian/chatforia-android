@@ -2589,7 +2589,7 @@
     <string name="upgrade_plans_plus_features_forwarding">تېلېفون ۋە تېكىستلەرنى ھەقىقىي تېلېفون نومۇرىڭىزغا يۆتكەڭ</string>
     <string name="upgrade_plans_plus_features_history">ئۇزۇنراق ئۇچۇر تارىخى (6 ئايغىچە)</string>
     <string name="upgrade_plans_plus_features_support">بىرەر ئىش خاتا بولغاندا تېخىمۇ تېز ياردەم</string>
-    <string name="upgrade_plans_plus_price">6.99 دوللار</string>
+    <string name="upgrade_plans_plus_price">$7.99</string>
     <string name="upgrade_plans_plus_title">قوشۇمچە</string>
     <string name="upgrade_plans_premiumAnnual_aria">Premium يىللىق نەشرىگە يېڭىلاڭ</string>
     <string name="upgrade_plans_premiumAnnual_badge">%30 تېجەڭ</string>
@@ -2602,7 +2602,7 @@
     <string name="upgrade_plans_premiumAnnual_features_bestFor">توك ئىشلەتكۈچىلەر، يىراقتىن ئىشلەيدىغانلار ۋە ئېغىر يولۇچىلار ئۈچۈن ئەڭ ياخشى</string>
     <string name="upgrade_plans_premiumAnnual_features_number">پىلانىڭىز ئاكتىپ بولغان مەزگىلدە Chatforia نومۇرىڭىزنى قوغداڭ</string>
     <string name="upgrade_plans_premiumAnnual_features_save25">ئايلىق تۆلەشكە سېلىشتۇرغاندا تەخمىنەن %30 تېجەڭ</string>
-    <string name="upgrade_plans_premiumAnnual_price">99 دوللار</string>
+    <string name="upgrade_plans_premiumAnnual_price">$119.99</string>
     <string name="upgrade_plans_premiumAnnual_title">يىللىق مۇكاپات پۇلى</string>
     <string name="upgrade_plans_premiumMonthly_aria">Premium Monthly غا يېڭىلاڭ</string>
     <string name="upgrade_plans_premiumMonthly_badge">تەۋسىيە قىلىنىدۇ</string>
@@ -2614,7 +2614,7 @@
     <string name="upgrade_plans_premiumMonthly_features_plusAll">Plus دىكى ھەممە نەرسە</string>
     <string name="upgrade_plans_premiumMonthly_features_support">ئەڭ كۆپ ياردەمگە ئېھتىياجلىق بولغاندا ئالدىنقى ئورۇندا تۇرىدىغان قوللاش</string>
     <string name="upgrade_plans_premiumMonthly_features_themes">بارلىق ئالىي دەرىجىلىك رەڭ تېمىلىرى ۋە ئەپ خاسلاشتۇرۇشلىرىنىڭ قۇلۇپىنى ئېچىڭ</string>
-    <string name="upgrade_plans_premiumMonthly_price">11.99 دوللار</string>
+    <string name="upgrade_plans_premiumMonthly_price">$12.99</string>
     <string name="upgrade_plans_premiumMonthly_title">مۇكاپات (ئايلىق)</string>
     <string name="upgrade_plusBadge">قوشۇمچە</string>
     <string name="upgrade_plusSubtitle">دىققەتنى چېچىدىغان نەرسىلەرنى يوقىتىڭ ۋە ئەمەلىي ئالاقە قوراللىرىنى ئېچىڭ.</string>
