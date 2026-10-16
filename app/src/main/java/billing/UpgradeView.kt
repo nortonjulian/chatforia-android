@@ -293,6 +293,7 @@ fun UpgradeView(
                     "Ad-free experience",
                     "Message forwarding",
                     "Longer history",
+                    "Standard AI tools, including Smart Replies and rewrite assistance",
                     "Faster support"
                 ),
                 highlighted = false,
@@ -326,7 +327,7 @@ fun UpgradeView(
                 period = "/ month",
                 features = listOf(
                     "Everything in Plus",
-                    "AI tools with Ria",
+                    "Full AI tools, including advanced rewrites and summaries",
                     "Premium themes",
                     "Premium message tones",
                     "Premium ringtones",
@@ -363,7 +364,7 @@ fun UpgradeView(
                 period = "/ year",
                 features = listOf(
                     "Full Premium access",
-                    "AI tools",
+                    "Full AI tools",
                     "Premium customization",
                     "Best yearly value"
                 ),
