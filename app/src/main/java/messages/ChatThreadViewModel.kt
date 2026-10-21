@@ -382,21 +382,31 @@ class ChatThreadViewModel(
         }
     }
 
+    private var lastLoadedSmsThreadId: Int? = null
+
     fun loadSmsThread(threadId: Int) {
         activeSmsThreadId = threadId
 
         viewModelScope.launch {
-            _isLoading.value = true
+            _isLoading.value = lastLoadedSmsThreadId != threadId
             _error.value = null
 
             try {
                 val thread = repository.loadSmsThread(threadId)
+                if (activeSmsThreadId != threadId) return@launch
 
                 _smsMessages.value = thread.sortedMessages
+                lastLoadedSmsThreadId = threadId
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
-                _error.value = e.message ?: "Failed to load SMS thread."
+                if (activeSmsThreadId == threadId) {
+                    _error.value = e.message ?: "Failed to load SMS thread."
+                }
             } finally {
-                _isLoading.value = false
+                if (activeSmsThreadId == threadId) {
+                    _isLoading.value = false
+                }
             }
         }
     }

@@ -90,6 +90,40 @@ class ChatsViewModel(
         }
     }
 
+
+    private val _isDeletingConversations = MutableStateFlow(false)
+    val isDeletingConversations: StateFlow<Boolean> = _isDeletingConversations
+
+    suspend fun deleteConversations(
+        selected: List<ConversationDto>
+    ): Set<String> {
+        if (_isDeletingConversations.value) {
+            return selected.map { it.uniqueId }.toSet()
+        }
+
+        _isDeletingConversations.value = true
+        _error.value = null
+        val failed = mutableSetOf<String>()
+
+        try {
+            for (conversation in selected.distinctBy { it.uniqueId }) {
+                try {
+                    repository.deleteConversation(conversation)
+                    _conversations.value = _conversations.value.filterNot {
+                        it.uniqueId == conversation.uniqueId
+                    }
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    failed.add(conversation.uniqueId)
+                }
+            }
+            return failed
+        } finally {
+            _isDeletingConversations.value = false
+        }
+    }
+
     fun applyRealtimeMessageJson(messageJson: String) {
         viewModelScope.launch {
             try {
