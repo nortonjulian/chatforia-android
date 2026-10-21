@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chat_selection_edit">Edit</string>
+    <string name="chat_selection_done">Done</string>
+    <string name="chat_selection_select_all">Select All</string>
+    <string name="chat_selection_deselect_all">Deselect All</string>
+    <string name="chat_selection_delete">Delete</string>
+    <string name="chat_selection_delete_count">Delete (%1$d)</string>
+    <string name="chat_selection_confirm_title">Delete %1$d conversations?</string>
+    <string name="chat_selection_confirm_body">This will remove the selected conversations from your list.</string>
+    <string name="chat_selection_failed_title">Some conversations remain</string>
+    <string name="chat_selection_failed_body">%1$d conversations could not be deleted. They remain selected so you can try again.</string>
+</resources>

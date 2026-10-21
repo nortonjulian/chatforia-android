@@ -26,6 +26,9 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.clickable
 import com.chatforia.android.messages.ChatThreadScreen
 import com.chatforia.android.messages.ChatThreadViewModel
@@ -88,6 +91,15 @@ fun ChatsScreen(
     onRiaVisibilityChanged: (Boolean) -> Unit = {},
     onThreadVisibilityChanged: (Boolean) -> Unit = {}
 ) {
+    var isEditing by remember { mutableStateOf(false) }
+    var selectedIds by remember { mutableStateOf(emptySet<String>()) }
+    var pendingBulkDeletion by remember {
+        mutableStateOf<List<ConversationDto>>(emptyList())
+    }
+    var failedDeletionCount by remember { mutableStateOf(0) }
+    val selectionScope = rememberCoroutineScope()
+    val isDeleting by viewModel.isDeletingConversations.collectAsState()
+
     var searchText by remember {
         mutableStateOf("")
     }
@@ -235,6 +247,12 @@ fun ChatsScreen(
         }
     }
 
+    LaunchedEffect(conversations) {
+        selectedIds = selectedIds.intersect(
+            conversations.map { it.uniqueId }.toSet()
+        )
+    }
+
     val filtered =
         conversations.filter {
 
@@ -373,6 +391,7 @@ fun ChatsScreen(
                         icon = Icons.Default.Add,
                         contentDescription = stringResource(R.string.android_chats_new_chat),
                         onClick = {
+                            if (isEditing || isDeleting) return@ChatforiaAction
                             showStartChat = true
                         }
                     ),
@@ -380,6 +399,7 @@ fun ChatsScreen(
                         icon = Icons.Default.Refresh,
                         contentDescription = stringResource(R.string.android_chats_refresh),
                         onClick = {
+                            if (isEditing || isDeleting) return@ChatforiaAction
                             viewModel.loadConversations()
                         }
                     ),
@@ -387,6 +407,7 @@ fun ChatsScreen(
                         icon = Icons.Default.AutoAwesome,
                         contentDescription = "Ria",
                         onClick = {
+                            if (isEditing || isDeleting) return@ChatforiaAction
                             showRia = true
                         }
                     ),
@@ -394,6 +415,7 @@ fun ChatsScreen(
                         icon = Icons.Default.Shuffle,
                         contentDescription = stringResource(R.string.android_chats_random_chat),
                         onClick = {
+                            if (isEditing || isDeleting) return@ChatforiaAction
                             showRandomMatching = true
                             randomChatViewModel.startSearch()
                         }
@@ -402,7 +424,49 @@ fun ChatsScreen(
             )
         }
 
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(
+                enabled = !isDeleting,
+                onClick = {
+                    isEditing = !isEditing
+                    selectedIds = emptySet()
+                }
+            ) {
+                Text(stringResource(
+                    if (isEditing) R.string.chat_selection_done
+                    else R.string.chat_selection_edit
+                ))
+            }
+
+            if (isEditing) {
+                val visibleIds = filtered.map { it.uniqueId }.toSet()
+                val allSelected = visibleIds.isNotEmpty() &&
+                    selectedIds.containsAll(visibleIds)
+
+                TextButton(
+                    enabled = !isDeleting && visibleIds.isNotEmpty(),
+                    onClick = {
+                        selectedIds = if (allSelected) {
+                            selectedIds - visibleIds
+                        } else {
+                            selectedIds + visibleIds
+                        }
+                    }
+                ) {
+                    Text(stringResource(
+                        if (allSelected) R.string.chat_selection_deselect_all
+                        else R.string.chat_selection_select_all
+                    ))
+                }
+            }
+        }
+
         OutlinedTextField(
+            enabled = !isDeleting,
             value = searchText,
             onValueChange = { searchText = it },
             placeholder = { Text(stringResource(R.string.android_chats_search_chats)) },
@@ -455,15 +519,30 @@ fun ChatsScreen(
                     key = { _, item -> item.uniqueId }
                 ) { index, chat ->
 
-                    SwipeRevealConversationRow(
-                        conversation = chat,
-                        onClick = {
-                            selectedConversation = chat
-                        },
-                        onDelete = {
-                            pendingDeleteConversation = chat
-                        }
-                    )
+                    if (isEditing) {
+                        ConversationRow(
+                            conversation = chat,
+                            isSelected = chat.uniqueId in selectedIds,
+                            enabled = !isDeleting,
+                            onClick = {
+                                selectedIds = if (chat.uniqueId in selectedIds) {
+                                    selectedIds - chat.uniqueId
+                                } else {
+                                    selectedIds + chat.uniqueId
+                                }
+                            }
+                        )
+                    } else {
+                        SwipeRevealConversationRow(
+                            conversation = chat,
+                            onClick = {
+                                selectedConversation = chat
+                            },
+                            onDelete = {
+                                pendingDeleteConversation = chat
+                            }
+                        )
+                    }
 
                     if (index < filtered.lastIndex) {
                         HorizontalDivider(
@@ -480,6 +559,34 @@ fun ChatsScreen(
         }
 
 
+        if (isEditing) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Button(
+                    enabled = selectedIds.isNotEmpty() && !isDeleting,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    ),
+                    onClick = {
+                        pendingBulkDeletion = conversations.filter {
+                            it.uniqueId in selectedIds
+                        }
+                    }
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(
+                        R.string.chat_selection_delete_count,
+                        selectedIds.size
+                    ))
+                }
+            }
+        }
+
         if (currentUser.shouldShowAds()) {
             AdMobBanner(
                 modifier = Modifier
@@ -490,6 +597,65 @@ fun ChatsScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
         }
+    }
+
+    if (pendingBulkDeletion.isNotEmpty()) {
+        AlertDialog(
+            onDismissRequest = { pendingBulkDeletion = emptyList() },
+            title = {
+                Text(stringResource(
+                    R.string.chat_selection_confirm_title,
+                    pendingBulkDeletion.size
+                ))
+            },
+            text = {
+                Text(stringResource(R.string.chat_selection_confirm_body))
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val snapshot = pendingBulkDeletion
+                    pendingBulkDeletion = emptyList()
+                    selectionScope.launch {
+                        val failed = viewModel.deleteConversations(snapshot)
+                        selectedIds = failed
+                        failedDeletionCount = failed.size
+                        if (failed.isEmpty()) isEditing = false
+                    }
+                }) {
+                    Text(
+                        stringResource(R.string.chat_selection_delete),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    pendingBulkDeletion = emptyList()
+                }) {
+                    Text(stringResource(R.string.android_chats_cancel))
+                }
+            }
+        )
+    }
+
+    if (failedDeletionCount > 0) {
+        AlertDialog(
+            onDismissRequest = { failedDeletionCount = 0 },
+            title = {
+                Text(stringResource(R.string.chat_selection_failed_title))
+            },
+            text = {
+                Text(stringResource(
+                    R.string.chat_selection_failed_body,
+                    failedDeletionCount
+                ))
+            },
+            confirmButton = {
+                TextButton(onClick = { failedDeletionCount = 0 }) {
+                    Text(stringResource(R.string.chat_selection_done))
+                }
+            }
+        )
     }
 
     pendingDeleteConversation?.let { conversation ->
@@ -579,7 +745,9 @@ private fun formatConversationTime(
 @Composable
 private fun ConversationRow(
     conversation: ConversationDto,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    isSelected: Boolean? = null,
+    enabled: Boolean = true
 ) {
     val title = conversation.randomAwareTitle
 
@@ -626,12 +794,30 @@ private fun ConversationRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                onClick()
-            }
+            .then(
+                if (isSelected != null) {
+                    Modifier.selectable(
+                        selected = isSelected,
+                        enabled = enabled,
+                        role = Role.Checkbox,
+                        onClick = onClick
+                    )
+                } else {
+                    Modifier.clickable(enabled = enabled, onClick = onClick)
+                }
+            )
             .padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        if (isSelected != null) {
+            Checkbox(
+                checked = isSelected,
+                onCheckedChange = null,
+                enabled = enabled
+            )
+            Spacer(Modifier.width(8.dp))
+        }
+
         ChatforiaAvatar(
             name = title,
             size = 48.dp
