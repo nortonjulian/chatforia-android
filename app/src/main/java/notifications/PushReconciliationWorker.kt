@@ -105,10 +105,14 @@ class PushReconciliationWorker(
             }
 
             is PushRegistrationResult.Failed -> {
-                retryOrStop(
-                    reason =
-                        registration.message
-                )
+                if (!registration.retryable) {
+                    Log.w("ChatforiaFCM", "Push registration requires device recovery; stopping retries")
+                    Result.success()
+                } else {
+                    retryOrStop(
+                        reason = registration.message
+                    )
+                }
             }
         }
     }

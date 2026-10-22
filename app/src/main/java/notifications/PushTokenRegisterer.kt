@@ -14,7 +14,9 @@ sealed interface PushRegistrationResult {
     ) : PushRegistrationResult
 
     data class Failed(
-        val message: String
+        val message: String,
+        // A revoked identity requires user recovery, not an automatic retry.
+        val retryable: Boolean = true
     ) : PushRegistrationResult
 }
 

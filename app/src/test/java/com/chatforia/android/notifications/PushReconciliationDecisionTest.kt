@@ -43,6 +43,19 @@ class PushReconciliationDecisionTest {
     }
 
     @Test
+    fun revokedDeviceRequiresUserActionRatherThanRetry() {
+        assertEquals(
+            PushReconciliationDecision.USER_ACTION_REQUIRED,
+            classifyPushReconciliation(
+                PushRegistrationResult.Failed(
+                    message = "Device revoked",
+                    retryable = false
+                )
+            )
+        )
+    }
+
+    @Test
     fun requireUserActionForDeviceReplacement() {
         assertEquals(
             PushReconciliationDecision.USER_ACTION_REQUIRED,

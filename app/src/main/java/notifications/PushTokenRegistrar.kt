@@ -8,6 +8,7 @@ import com.chatforia.android.crypto.DeviceRegisterRequest
 import com.chatforia.android.crypto.DeviceReplacementRequiredException
 import com.chatforia.android.crypto.DeviceReplacementTargetStaleException
 import com.chatforia.android.crypto.LinkedDevicesDataSource
+import com.chatforia.android.network.ApiException
 
 private fun currentAndroidDeviceName(): String {
     val manufacturer = Build.MANUFACTURER.trim()
@@ -145,6 +146,14 @@ class PushTokenRegistrar(
                     ?: "The selected device is no longer active."
             )
         } catch (error: Exception) {
+            if (error is ApiException && error.statusCode == 409 &&
+                error.responseBody.contains("\"DEVICE_REVOKED\"")) {
+                Log.w("ChatforiaFCM", "Device is revoked; background registration must stop")
+                return PushRegistrationResult.Failed(
+                    message = "This device was removed from your account. Secure recovery is required.",
+                    retryable = false
+                )
+            }
             Log.e(
                 "ChatforiaFCM",
                 "Device registration failed",
