@@ -66,49 +66,26 @@ class DeviceIdentityStorage(context: Context) : DeviceIdentityStore {
         return publicKeyB64 to privateKeyB64
     }
 
-    // Keep the old/revoked identity intact until the server confirms the
-    // new registration. A crash during recovery must not lose either keypair.
-    @Synchronized
-    fun stageRecoveryIdentity(): RecoveryDeviceIdentity {
-        val savedId = prefs.getString("recovery.device.id", null)
-        val savedPublic = prefs.getString("recovery.device.publicKey", null)
-        if (!savedId.isNullOrBlank() && !savedPublic.isNullOrBlank() &&
-            !prefs.getString("recovery.device.privateKey", null).isNullOrBlank()
-        ) return RecoveryDeviceIdentity(savedId, savedPublic)
-
-        val pub = ByteArray(32)
-        val secret = ByteArray(32)
-        if (!sodium.cryptoBoxKeypair(pub, secret)) {
-            throw IllegalStateException("Could not prepare device recovery")
-        }
-        val id = UUID.randomUUID().toString().lowercase()
-        val publicB64 = Base64.encodeToString(pub, Base64.NO_WRAP)
-        val privateB64 = Base64.encodeToString(secret, Base64.NO_WRAP)
-        check(prefs.edit()
-            .putString("recovery.device.id", id)
-            .putString("recovery.device.publicKey", publicB64)
-            .putString("recovery.device.privateKey", privateB64)
-            .commit()) { "Could not save pending recovery identity" }
-        return RecoveryDeviceIdentity(id, publicB64)
+    private val recoveryStore by lazy {
+        RecoveryIdentityStore(
+            preferences = prefs,
+            createKeyPair = {
+                val publicKey = ByteArray(32)
+                val privateKey = ByteArray(32)
+                check(sodium.cryptoBoxKeypair(publicKey, privateKey)) {
+                    "Could not prepare device recovery"
+                }
+                Base64.encodeToString(publicKey, Base64.NO_WRAP) to
+                    Base64.encodeToString(privateKey, Base64.NO_WRAP)
+            }
+        )
     }
 
-    @Synchronized
-    fun activateRecoveryIdentity(expectedId: String) {
-        val id = prefs.getString("recovery.device.id", null)
-        val pub = prefs.getString("recovery.device.publicKey", null)
-        val secret = prefs.getString("recovery.device.privateKey", null)
-        require(id == expectedId && !pub.isNullOrBlank() && !secret.isNullOrBlank()) {
-            "Pending recovery identity was not found"
-        }
-        check(prefs.edit()
-            .putString("chatforia.device.id", id)
-            .putString("chatforia.device.publicKey", pub)
-            .putString("chatforia.device.privateKey", secret)
-            .remove("recovery.device.id")
-            .remove("recovery.device.publicKey")
-            .remove("recovery.device.privateKey")
-            .commit()) { "Could not finish device recovery" }
-    }
+    fun stageRecoveryIdentity(): RecoveryDeviceIdentity =
+        recoveryStore.stage()
+
+    fun activateRecoveryIdentity(expectedId: String) =
+        recoveryStore.activate(expectedId)
 
     fun readPublicKey(): String? {
         return prefs.getString("chatforia.device.publicKey", null)

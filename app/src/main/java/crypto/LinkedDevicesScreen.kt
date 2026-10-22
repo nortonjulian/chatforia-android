@@ -244,17 +244,14 @@ class LinkedDevicesViewModel(
                     throw IllegalStateException("Restore your Secure Messages key from its backup before recovering this device.")
                 }
                 val oldId = deviceIdentityStorage.getOrCreateDeviceId()
-                val pending = deviceIdentityStorage.stageRecoveryIdentity()
-                repository.recoverRevokedDevice(
-                    RecoverDeviceRequest(
-                        oldDeviceId = oldId,
-                        newDeviceId = pending.deviceId,
-                        publicKey = pending.publicKey,
-                        password = password,
-                        mfaCode = mfaCode.trim().takeIf { it.isNotEmpty() }
-                    )
+                performRevokedDeviceRecovery(
+                    oldDeviceId = oldId,
+                    stageIdentity = deviceIdentityStorage::stageRecoveryIdentity,
+                    register = repository::recoverRevokedDevice,
+                    activateIdentity = deviceIdentityStorage::activateRecoveryIdentity,
+                    password = password,
+                    mfaCode = mfaCode.trim().takeIf { it.isNotEmpty() }
                 )
-                deviceIdentityStorage.activateRecoveryIdentity(pending.deviceId)
                 _state.value = _state.value.copy(
                     currentDeviceRevoked = false,
                     recoverySucceeded = true,
