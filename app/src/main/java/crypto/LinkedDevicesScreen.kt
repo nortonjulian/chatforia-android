@@ -20,8 +20,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import com.chatforia.android.ChatforiaGradientButton
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import com.chatforia.android.R
 import com.chatforia.android.network.ApiException
+import com.chatforia.android.notifications.PushReconciliationScheduler
 
 // Never expose raw HTTP response bodies or server JSON in the product UI.
 internal fun linkedDeviceErrorMessage(error: Exception): String = when {
@@ -40,7 +43,9 @@ data class LinkedDevicesUiState(
     val pending: List<LinkedDeviceDto> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val currentDeviceRevoked: Boolean = false
+    val currentDeviceRevoked: Boolean = false,
+    val isRecovering: Boolean = false,
+    val recoverySucceeded: Boolean = false
 )
 
 class LinkedDevicesViewModel(
@@ -226,6 +231,53 @@ class LinkedDevicesViewModel(
             }
         }
     }
+
+    fun recoverThisDevice(accountPublicKey: String?, password: String, mfaCode: String) {
+        if (_state.value.isRecovering || !_state.value.currentDeviceRevoked) return
+        viewModelScope.launch(Dispatchers.IO) {
+            _state.value = _state.value.copy(isRecovering = true, error = null)
+            try {
+                val expected = accountPublicKey?.trim().orEmpty()
+                val local = keyStorage.readPublicKey()?.trim().orEmpty()
+                if (expected.isBlank() || local != expected ||
+                    keyStorage.readPrivateKey().isNullOrBlank()) {
+                    throw IllegalStateException("Restore your Secure Messages key from its backup before recovering this device.")
+                }
+                val oldId = deviceIdentityStorage.getOrCreateDeviceId()
+                val pending = deviceIdentityStorage.stageRecoveryIdentity()
+                repository.recoverRevokedDevice(
+                    RecoverDeviceRequest(
+                        oldDeviceId = oldId,
+                        newDeviceId = pending.deviceId,
+                        publicKey = pending.publicKey,
+                        password = password,
+                        mfaCode = mfaCode.trim().takeIf { it.isNotEmpty() }
+                    )
+                )
+                deviceIdentityStorage.activateRecoveryIdentity(pending.deviceId)
+                _state.value = _state.value.copy(
+                    currentDeviceRevoked = false,
+                    recoverySucceeded = true,
+                    error = null
+                )
+                load()
+            } catch (error: Exception) {
+                val message = when {
+                    error is ApiException && error.statusCode == 401 ->
+                        "Invalid account password or authenticator code."
+                    error is ApiException && error.responseBody.contains("MFA_REQUIRED") ->
+                        "Enter your authenticator code to recover this device."
+                    error is ApiException && error.responseBody.contains("DEVICE_REPLACEMENT_REQUIRED") ->
+                        "Device limit reached. Remove a trusted device before recovering."
+                    error is IllegalStateException -> error.message ?: "Device recovery failed."
+                    else -> "Could not recover this device. Please try again."
+                }
+                _state.value = _state.value.copy(error = message)
+            } finally {
+                _state.value = _state.value.copy(isRecovering = false)
+            }
+        }
+    }
 }
 
 @Composable
@@ -235,12 +287,19 @@ fun LinkedDevicesScreen(
     onBack: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    val context = LocalContext.current
     var pendingRevoke by remember { mutableStateOf<LinkedDeviceDto?>(null) }
+    var showRecovery by remember { mutableStateOf(false) }
+    var recoveryPassword by remember { mutableStateOf("") }
+    var recoveryCode by remember { mutableStateOf("") }
 
     BackHandler(onBack = onBack)
 
     LaunchedEffect(Unit) {
         viewModel.load()
+    }
+    LaunchedEffect(state.recoverySucceeded) {
+        if (state.recoverySucceeded) PushReconciliationScheduler.enqueue(context)
     }
 
     Column(
@@ -276,34 +335,30 @@ fun LinkedDevicesScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         if (state.currentDeviceRevoked) {
-            Text(
-                "This installation was removed from your account. It cannot request approval with its revoked identity. Contact support for secure recovery; do not clear app data or encryption keys."
+            Text("This installation was removed from your account. Verify your credentials to enroll a new device identity. Your encrypted messages and revoked-device history will be preserved.")
+            Spacer(modifier = Modifier.height(12.dp))
+            ChatforiaGradientButton(
+                text = "Recover this device",
+                onClick = { showRecovery = true },
+                modifier = Modifier.fillMaxWidth().height(50.dp)
             )
         } else {
-        ChatforiaGradientButton(
-            text = stringResource(R.string.android_linked_devices_request_approval_for_this_device),
-            onClick = {
-                viewModel.requestPairingForThisDevice()
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-        )
+            ChatforiaGradientButton(
+                text = stringResource(R.string.android_linked_devices_request_approval_for_this_device),
+                onClick = { viewModel.requestPairingForThisDevice() },
+                modifier = Modifier.fillMaxWidth().height(50.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            ChatforiaGradientButton(
+                text = stringResource(R.string.android_linked_devices_finish_device_approval),
+                onClick = { viewModel.completePairingForThisDevice(accountPublicKey) },
+                modifier = Modifier.fillMaxWidth().height(50.dp)
+            )
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        ChatforiaGradientButton(
-            text = stringResource(R.string.android_linked_devices_finish_device_approval),
-            onClick = {
-                viewModel.completePairingForThisDevice(
-                    accountPublicKey = accountPublicKey
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-        )
+        if (state.isRecovering) CircularProgressIndicator()
+        if (state.recoverySucceeded) {
+            Text("Device recovered. Notification registration is being refreshed.")
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -363,6 +418,54 @@ fun LinkedDevicesScreen(
 
             HorizontalDivider()
         }
+    }
+
+    if (showRecovery) {
+        AlertDialog(
+            onDismissRequest = {
+                showRecovery = false
+                recoveryPassword = ""
+                recoveryCode = ""
+            },
+            title = { Text("Recover this device") },
+            text = {
+                Column {
+                    Text("Verify your account password and authenticator code (if enabled). Your Secure Messages key must already be restored on this device. This does not reactivate the old device ID.")
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = recoveryPassword,
+                        onValueChange = { recoveryPassword = it },
+                        label = { Text("Account password") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = recoveryCode,
+                        onValueChange = { recoveryCode = it },
+                        label = { Text("Authenticator code (if enabled)") },
+                        singleLine = true
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = recoveryPassword.isNotEmpty() && !state.isRecovering,
+                    onClick = {
+                        viewModel.recoverThisDevice(accountPublicKey, recoveryPassword, recoveryCode)
+                        recoveryPassword = ""
+                        recoveryCode = ""
+                        showRecovery = false
+                    }
+                ) { Text("Recover") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showRecovery = false
+                    recoveryPassword = ""
+                    recoveryCode = ""
+                }) { Text("Cancel") }
+            }
+        )
     }
 
     pendingRevoke?.let { target ->
