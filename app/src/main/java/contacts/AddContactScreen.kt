@@ -113,31 +113,61 @@ fun AddContactScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            ContactModeButton(
-                text = stringResource(R.string.android_profile_username),
-                selected = mode == AddContactMode.USERNAME,
-                enabled = !isEditing,
-                onClick = {
-                    mode = AddContactMode.USERNAME
-                    onClearSelectedPeople()
-                },
-                modifier = Modifier.weight(1f)
-            )
+        if (isEditing) {
+            // An existing contact is identified by its linked user or saved
+            // phone number. Editing changes metadata, not that identity.
+            // Don't render disabled mode buttons that appear tappable.
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = ChatforiaColors.cardBackground,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = if (mode == AddContactMode.USERNAME) {
+                            stringResource(R.string.android_add_contact_type_chatforia)
+                        } else {
+                            stringResource(R.string.android_add_contact_type_phone)
+                        },
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = ChatforiaColors.primaryText
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.android_add_contact_edit_type_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ChatforiaColors.secondaryText
+                    )
+                }
+            }
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ContactModeButton(
+                    text = stringResource(R.string.android_profile_username),
+                    selected = mode == AddContactMode.USERNAME,
+                    enabled = true,
+                    onClick = {
+                        mode = AddContactMode.USERNAME
+                        onClearSelectedPeople()
+                    },
+                    modifier = Modifier.weight(1f)
+                )
 
-            ContactModeButton(
-                text = stringResource(R.string.android_add_contact_phone),
-                selected = mode == AddContactMode.PHONE,
-                enabled = !isEditing,
-                onClick = {
-                    mode = AddContactMode.PHONE
-                    onClearSelectedPeople()
-                },
-                modifier = Modifier.weight(1f)
-            )
+                ContactModeButton(
+                    text = stringResource(R.string.android_add_contact_phone),
+                    selected = mode == AddContactMode.PHONE,
+                    enabled = true,
+                    onClick = {
+                        mode = AddContactMode.PHONE
+                        onClearSelectedPeople()
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
