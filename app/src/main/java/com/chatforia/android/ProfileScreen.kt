@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chatforia.android.ui.theme.ChatforiaColors
@@ -1048,18 +1049,41 @@ fun ProfileScreen(
 
                             onUserUpdated(updatedUser)
 
+                            val savedLanguage = updatedUser.preferredLanguage ?: "en"
                             AppLocaleManager.saveLanguage(
                                 context = context,
-                                languageCode = updatedUser.preferredLanguage ?: "en"
+                                languageCode = savedLanguage
                             )
 
-                            (context as? Activity)?.recreate()
+                            // Do not restart the entire Activity after every settings save.
+                            if (savedLanguage != (user.preferredLanguage ?: "en")) {
+                                (context as? Activity)?.recreate()
+                            }
                         }
                     )
                 },
                 modifier = Modifier
                     .width(220.dp)
                     .height(50.dp)
+            )
+        }
+
+        settingsState.error?.let { message ->
+            Text(
+                text = message,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+        settingsState.success?.let { message ->
+            Text(
+                text = message,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                color = ChatforiaColors.primaryText,
+                style = MaterialTheme.typography.bodySmall
             )
         }
 

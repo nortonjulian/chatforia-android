@@ -80,7 +80,7 @@ class SettingsViewModelTest {
         assertTrue(state.maskAIProfanity)
 
         assertEquals("Default.mp3", state.messageTone)
-        assertEquals("classic.mp3", state.ringtone)
+        assertEquals("Classic.mp3", state.ringtone)
         assertEquals(42, state.soundVolume)
 
         assertEquals("ADULT_25_34", state.ageBand)
@@ -134,7 +134,7 @@ class SettingsViewModelTest {
         assertFalse(state.maskAIProfanity)
 
         assertEquals("Default.mp3", state.messageTone)
-        assertEquals("classic.mp3", state.ringtone)
+        assertEquals("Classic.mp3", state.ringtone)
         assertEquals(70, state.soundVolume)
 
         assertNull(state.ageBand)
@@ -154,6 +154,19 @@ class SettingsViewModelTest {
         assertEquals("lg", state.a11yCaptionFont)
         assertEquals("dark", state.a11yCaptionBg)
     }
+
+    @Test
+    fun savingDefaultSettingsUsesBackendCanonicalRingtone() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeUserSettingsRepository()
+            val viewModel = SettingsViewModel(repository)
+            viewModel.load(user(id = 5, ringtone = "classic.mp3"))
+
+            viewModel.save { }
+            advanceUntilIdle()
+
+            assertEquals("Classic.mp3", repository.updateSettingsRequests.single().ringtone)
+        }
 
     @Test
     fun update_changesStateImmediately() {
