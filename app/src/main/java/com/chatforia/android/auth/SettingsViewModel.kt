@@ -159,6 +159,10 @@ class SettingsViewModel(
         _state.value = transform(_state.value)
     }
 
+    fun clearSaveSuccess() {
+        _state.value = _state.value.copy(success = null)
+    }
+
     fun save(onUserUpdated: (UserDto) -> Unit) {
         viewModelScope.launch {
             val current = _state.value

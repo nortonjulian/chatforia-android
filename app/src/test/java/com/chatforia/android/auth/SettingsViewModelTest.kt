@@ -169,6 +169,24 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun clearSaveSuccessPreservesSelectedDiscoverability() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeUserSettingsRepository()
+            val viewModel = SettingsViewModel(repository)
+
+            viewModel.update { it.copy(discoverability = "NO_ONE") }
+            viewModel.save { }
+            advanceUntilIdle()
+
+            assertEquals("NO_ONE", repository.updateSettingsRequests.single().discoverability)
+            assertEquals("Settings saved.", viewModel.state.value.success)
+
+            viewModel.clearSaveSuccess()
+            assertNull(viewModel.state.value.success)
+            assertEquals("NO_ONE", viewModel.state.value.discoverability)
+        }
+
+    @Test
     fun update_changesStateImmediately() {
         val repository = FakeUserSettingsRepository()
         val viewModel = SettingsViewModel(repository)
