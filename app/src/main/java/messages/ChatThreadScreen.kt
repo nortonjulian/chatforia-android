@@ -439,32 +439,31 @@ fun ChatThreadScreen(
                 )
             )
 
-            add(
-                ChatforiaAction(
-                    icon = Icons.Default.Videocam,
-                    contentDescription = stringResource(R.string.android_chat_thread_video_call),
-                    onClick = {
-                        val callee = conversation.avatarUsers
-                            ?.firstOrNull { it.id != currentUser.id }
+            // Carrier SMS conversations have an audio phone call, not a video call.
+            if (conversation.kind != "sms" && conversation.isGroup != true) {
+                add(
+                    ChatforiaAction(
+                        icon = Icons.Default.Videocam,
+                        contentDescription = stringResource(R.string.android_chat_thread_video_call),
+                        onClick = {
+                            val callee = conversation.avatarUsers
+                                ?.firstOrNull { it.id != currentUser.id }
 
-                        if (
-                            conversation.kind != "sms" &&
-                            conversation.isGroup != true &&
-                            callee != null
-                        ) {
-                            androidCallManager.startVideoCall(
-                                currentUser = currentUser,
-                                calleeId = callee.id,
-                                displayName = callee.displayName
-                                    ?: callee.username
-                                    ?: conversation.displayName
-                                    ?: conversation.title,
-                                chatRoomId = conversation.id
-                            )
+                            if (callee != null) {
+                                androidCallManager.startVideoCall(
+                                    currentUser = currentUser,
+                                    calleeId = callee.id,
+                                    displayName = callee.displayName
+                                        ?: callee.username
+                                        ?: conversation.displayName
+                                        ?: conversation.title,
+                                    chatRoomId = conversation.id
+                                )
+                            }
                         }
-                    }
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -513,15 +512,23 @@ fun ChatThreadScreen(
 
                     Spacer(modifier = Modifier.width(14.dp))
 
-                    Text(
-                        text = headerTitle,
-                        fontSize = 21.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = ChatforiaColors.primaryText,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = headerTitle,
+                            fontSize = 21.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = ChatforiaColors.primaryText,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        if (!isTemporaryRandomChat) {
+                            Text(
+                                text = if (conversation.kind.equals("sms", ignoreCase = true)) "SMS" else "Chatforia",
+                                fontSize = 13.sp,
+                                color = ChatforiaColors.secondaryText
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.width(12.dp))
 

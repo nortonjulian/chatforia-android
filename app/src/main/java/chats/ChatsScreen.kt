@@ -826,11 +826,28 @@ private fun ConversationRow(
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = ChatforiaColors.primaryText
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = ChatforiaColors.primaryText,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                Text(
+                    text = if (conversation.kind.equals("sms", ignoreCase = true)) "SMS" else "Chatforia",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ChatforiaColors.accent,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(ChatforiaColors.accent.copy(alpha = 0.12f))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                )
+            }
 
             Text(
                 text = subtitle,
