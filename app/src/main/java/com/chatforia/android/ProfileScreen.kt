@@ -110,6 +110,7 @@ import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
 import android.util.Log
 import android.app.Activity
+import kotlinx.coroutines.delay
 @Composable
 fun ProfileScreen(
     user: UserDto,
@@ -206,6 +207,15 @@ fun ProfileScreen(
     }
 
     val settingsState by settingsViewModel.state.collectAsState()
+
+    // A successful save should not leave a permanent message or alter the button.
+    LaunchedEffect(settingsState.success) {
+        if (settingsState.success != null) {
+            delay(2_500L)
+            settingsViewModel.clearSaveSuccess()
+        }
+    }
+
     val planEntitlements by PlanEntitlementsStore.state.collectAsState()
 
     val aiRewriteLevel =
@@ -1065,6 +1075,11 @@ fun ProfileScreen(
                 modifier = Modifier
                     .width(220.dp)
                     .height(50.dp)
+                    // Solid gold fallback under the existing gradient after recomposition.
+                    .background(
+                        color = ChatforiaColors.buttonStart,
+                        shape = RoundedCornerShape(999.dp)
+                    )
             )
         }
 
@@ -1080,7 +1095,9 @@ fun ProfileScreen(
         settingsState.success?.let { message ->
             Text(
                 text = message,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
                 textAlign = TextAlign.Center,
                 color = ChatforiaColors.primaryText,
                 style = MaterialTheme.typography.bodySmall

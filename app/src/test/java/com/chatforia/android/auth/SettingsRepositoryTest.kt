@@ -158,6 +158,44 @@ class SettingsRepositoryTest {
         }
 
     @Test
+    fun updateSettings_requiresReloadedDiscoverabilityToMatchRequest() =
+        runTest {
+            val api = FakeApiTransport()
+            api.enqueueResponse("{}")
+            api.enqueueResponse("""{"user":{"id":4,"username":"papi","discoverability":"NO_ONE"}}""")
+
+            val repository = SettingsRepository(
+                apiClient = api,
+                ioDispatcher = UnconfinedTestDispatcher(testScheduler)
+            )
+            val updated = repository.updateSettings(
+                SettingsUpdateRequest(discoverability = "NO_ONE")
+            )
+
+            assertEquals("NO_ONE", updated.discoverability)
+        }
+
+    @Test
+    fun updateSettings_doesNotReportSuccessWhenReloadOmitsDiscoverability() =
+        runTest {
+            val api = FakeApiTransport()
+            api.enqueueResponse("{}")
+            api.enqueueResponse("""{"user":{"id":4,"username":"papi"}}""")
+
+            val repository = SettingsRepository(
+                apiClient = api,
+                ioDispatcher = UnconfinedTestDispatcher(testScheduler)
+            )
+            var rejected = false
+            try {
+                repository.updateSettings(SettingsUpdateRequest(discoverability = "NO_ONE"))
+            } catch (error: IllegalStateException) {
+                rejected = error.message?.contains("Who can find me") == true
+            }
+            assertTrue(rejected)
+        }
+
+    @Test
     fun updateAccessibility_patchesA11yThenFetchesMe() =
         runTest {
             val api = FakeApiTransport()

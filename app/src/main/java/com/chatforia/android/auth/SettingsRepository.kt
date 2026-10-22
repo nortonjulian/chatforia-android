@@ -88,6 +88,17 @@ class SettingsRepository(
                 )
             )
 
+        // For privacy settings, a 200 from PATCH isn't sufficient if the
+        // follow-up user reload silently drops the saved value.
+        if (
+            request.discoverability != null &&
+            response.user.discoverability != request.discoverability
+        ) {
+            throw IllegalStateException(
+                "Could not confirm Who can find me was saved. Please try again."
+            )
+        }
+
         return response.user
     }
 
