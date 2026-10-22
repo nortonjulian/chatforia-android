@@ -409,18 +409,30 @@ class SocketManager(
 
         if (client == null) return
 
-        client.dispatcher.cancelAll()
-        client.connectionPool.evictAll()
-
-        try {
-            client.dispatcher.executorService.shutdown()
-        } catch (error: RuntimeException) {
-            Log.w(
-                "ChatforiaSocket",
-                "Could not shut down socket transport",
-                error
-            )
-        }
+        // OkHttp's connection pool can close active SSL sockets. Never evict
+        // them on the UI thread, including during Activity/Compose teardown.
+        Thread({
+            try {
+                client.dispatcher.cancelAll()
+                client.connectionPool.evictAll()
+            } catch (error: RuntimeException) {
+                Log.w(
+                    "ChatforiaSocket",
+                    "Could not close socket transport",
+                    error
+                )
+            } finally {
+                try {
+                    client.dispatcher.executorService.shutdown()
+                } catch (error: RuntimeException) {
+                    Log.w(
+                        "ChatforiaSocket",
+                        "Could not shut down socket executor",
+                        error
+                    )
+                }
+            }
+        }, "ChatforiaSocketCleanup").start()
     }
 
     private fun recoverForValidatedNetwork(
