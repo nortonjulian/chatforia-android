@@ -22,6 +22,7 @@ fun classifyPushReconciliation(
             PushReconciliationDecision.USER_ACTION_REQUIRED
 
         is PushRegistrationResult.Failed ->
-            PushReconciliationDecision.RETRY
+            if (result.retryable) PushReconciliationDecision.RETRY
+            else PushReconciliationDecision.USER_ACTION_REQUIRED
     }
 }

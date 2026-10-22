@@ -21,12 +21,26 @@ import kotlinx.coroutines.launch
 import com.chatforia.android.ChatforiaGradientButton
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
+import com.chatforia.android.network.ApiException
+
+// Never expose raw HTTP response bodies or server JSON in the product UI.
+internal fun linkedDeviceErrorMessage(error: Exception): String = when {
+    error is ApiException && error.statusCode == 409 &&
+        error.responseBody.contains("\"DEVICE_REVOKED\"") ->
+        "This device was removed from your Chatforia account. It cannot be approved again using the same identity. Use account recovery or contact support."
+    error is ApiException && error.statusCode == 404 ->
+        "No active approval request was found for this device. Request approval first, or contact support if it was removed."
+    error is ApiException ->
+        "Could not complete the device action. Please try again, or contact support."
+    else -> "Could not complete the device action. Please try again."
+}
 
 data class LinkedDevicesUiState(
     val devices: List<LinkedDeviceDto> = emptyList(),
     val pending: List<LinkedDeviceDto> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val currentDeviceRevoked: Boolean = false
 )
 
 class LinkedDevicesViewModel(
@@ -38,6 +52,12 @@ class LinkedDevicesViewModel(
 
     private val _state = MutableStateFlow(LinkedDevicesUiState())
     val state: StateFlow<LinkedDevicesUiState> = _state
+
+    // If the local identity cannot be read, fail closed rather than risk
+    // presenting a self-revoke action.
+    fun isCurrentDevice(deviceId: String): Boolean =
+        runCatching { deviceIdentityStorage.getOrCreateDeviceId() }
+            .getOrNull()?.let { it == deviceId } ?: true
 
     fun load() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -57,7 +77,7 @@ class LinkedDevicesViewModel(
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    error = e.message ?: "Failed to load devices"
+                    error = linkedDeviceErrorMessage(e)
                 )
             }
         }
@@ -86,7 +106,7 @@ class LinkedDevicesViewModel(
                 load()
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
-                    error = e.message ?: "Failed to approve device"
+                    error = linkedDeviceErrorMessage(e)
                 )
             }
         }
@@ -99,7 +119,7 @@ class LinkedDevicesViewModel(
                 load()
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
-                    error = e.message ?: "Failed to reject device"
+                    error = linkedDeviceErrorMessage(e)
                 )
             }
         }
@@ -108,11 +128,17 @@ class LinkedDevicesViewModel(
     fun revoke(deviceId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                if (isCurrentDevice(deviceId)) {
+                    _state.value = _state.value.copy(
+                        error = "You cannot revoke the device you are using. To move to another device, use the device-replacement flow."
+                    )
+                    return@launch
+                }
                 repository.revoke(deviceId)
                 load()
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
-                    error = e.message ?: "Failed to revoke device"
+                    error = linkedDeviceErrorMessage(e)
                 )
             }
         }
@@ -159,7 +185,7 @@ class LinkedDevicesViewModel(
                 load()
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
-                    error = e.message ?: "Failed to complete device pairing"
+                    error = linkedDeviceErrorMessage(e)
                 )
             }
         }
@@ -191,8 +217,11 @@ class LinkedDevicesViewModel(
 
                 load()
             } catch (e: Exception) {
+                val revoked = e is ApiException && e.statusCode == 409 &&
+                    e.responseBody.contains("\"DEVICE_REVOKED\"")
                 _state.value = _state.value.copy(
-                    error = e.message ?: "Failed to request device pairing"
+                    error = linkedDeviceErrorMessage(e),
+                    currentDeviceRevoked = _state.value.currentDeviceRevoked || revoked
                 )
             }
         }
@@ -206,6 +235,7 @@ fun LinkedDevicesScreen(
     onBack: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    var pendingRevoke by remember { mutableStateOf<LinkedDeviceDto?>(null) }
 
     BackHandler(onBack = onBack)
 
@@ -245,6 +275,11 @@ fun LinkedDevicesScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        if (state.currentDeviceRevoked) {
+            Text(
+                "This installation was removed from your account. It cannot request approval with its revoked identity. Contact support for secure recovery; do not clear app data or encryption keys."
+            )
+        } else {
         ChatforiaGradientButton(
             text = stringResource(R.string.android_linked_devices_request_approval_for_this_device),
             onClick = {
@@ -254,6 +289,7 @@ fun LinkedDevicesScreen(
                 .fillMaxWidth()
                 .height(50.dp)
         )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -288,7 +324,8 @@ fun LinkedDevicesScreen(
             items(state.devices) { device ->
                 DeviceRow(
                     device = device,
-                    onRevoke = viewModel::revoke
+                    isCurrentDevice = viewModel.isCurrentDevice(device.deviceId),
+                    onRevoke = { pendingRevoke = it }
                 )
                 HorizontalDivider()
             }
@@ -327,12 +364,30 @@ fun LinkedDevicesScreen(
             HorizontalDivider()
         }
     }
+
+    pendingRevoke?.let { target ->
+        AlertDialog(
+            onDismissRequest = { pendingRevoke = null },
+            title = { Text("Revoke trusted device?") },
+            text = { Text("${target.name ?: "This device"} will lose its trusted access and notification registration. This cannot be undone by pairing with the same device identity.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    pendingRevoke = null
+                    viewModel.revoke(target.deviceId)
+                }) { Text("Revoke device", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingRevoke = null }) { Text("Cancel") }
+            }
+        )
+    }
 }
 
 @Composable
 private fun DeviceRow(
     device: LinkedDeviceDto,
-    onRevoke: (String) -> Unit
+    isCurrentDevice: Boolean,
+    onRevoke: (LinkedDeviceDto) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -342,10 +397,14 @@ private fun DeviceRow(
     ) {
         DeviceSummary(device)
 
-        TextButton(
-            onClick = { onRevoke(device.deviceId) }
-        ) {
-            Text(stringResource(R.string.android_linked_devices_revoke))
+        if (isCurrentDevice) {
+            Text("This device", style = MaterialTheme.typography.bodySmall)
+        } else {
+            TextButton(
+                onClick = { onRevoke(device) }
+            ) {
+                Text(stringResource(R.string.android_linked_devices_revoke))
+            }
         }
     }
 }
