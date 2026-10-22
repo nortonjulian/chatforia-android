@@ -68,6 +68,15 @@ data class DeviceRegisterRequest(
 )
 
 @Serializable
+data class RecoverDeviceRequest(
+    val oldDeviceId: String,
+    val newDeviceId: String,
+    val publicKey: String,
+    val password: String,
+    val mfaCode: String? = null
+)
+
+@Serializable
 data class DeviceRegistrationResponse(
     val device: LinkedDeviceDto? = null,
     val replacedDeviceIds: List<String> = emptyList()
@@ -178,6 +187,16 @@ class LinkedDevicesRepository(
             throw error
         }
     }
+
+    fun recoverRevokedDevice(request: RecoverDeviceRequest): DeviceRegistrationResponse =
+        apiClient.send(
+            ApiRequest(
+                path = "devices/recovery",
+                method = HttpMethod.POST,
+                bodyJson = json.encodeToString(request),
+                requiresAuth = true
+            )
+        )
 
     override fun approve(deviceId: String, wrappedAccountKey: String) {
         apiClient.sendRaw(
