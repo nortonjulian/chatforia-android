@@ -177,6 +177,48 @@ class ContactsViewModel(
         }
     }
 
+    fun openSmsThread(contact: ContactDto) {
+        viewModelScope.launch {
+            val phone = contact.externalPhone?.trim()?.takeIf { it.isNotEmpty() }
+            if (phone == null) {
+                _state.value = _state.value.copy(error = "This contact does not have a phone number.")
+                return@launch
+            }
+
+            _state.value = _state.value.copy(
+                isOpeningChat = true,
+                error = null,
+                openedConversation = null
+            )
+
+            try {
+                val thread = repository.startSmsThread(phone = phone, contactId = contact.id)
+                val title = thread.displayName?.trim()?.takeIf { it.isNotEmpty() }
+                    ?: thread.contactName?.trim()?.takeIf { it.isNotEmpty() }
+                    ?: displayName(contact)
+                val resolvedPhone = thread.contactPhone?.trim()?.takeIf { it.isNotEmpty() } ?: phone
+                _state.value = _state.value.copy(
+                    isOpeningChat = false,
+                    openedConversation = ConversationDto(
+                        kind = "sms",
+                        id = thread.id,
+                        title = title,
+                        displayName = title,
+                        updatedAt = thread.updatedAt,
+                        isGroup = false,
+                        phone = resolvedPhone,
+                        unreadCount = 0
+                    )
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isOpeningChat = false,
+                    error = e.message ?: "Failed to open SMS conversation."
+                )
+            }
+        }
+    }
+
     fun saveUserContact(
         userId: Int,
         alias: String? = null,

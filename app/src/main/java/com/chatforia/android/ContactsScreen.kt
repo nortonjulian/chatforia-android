@@ -119,6 +119,7 @@ fun ContactsScreen(
 
     var editingContact by remember { mutableStateOf<ContactDto?>(null) }
     var pendingDeleteContact by remember { mutableStateOf<ContactDto?>(null) }
+    var pendingMessageChoice by remember { mutableStateOf<ContactDto?>(null) }
     var revealedContactId by remember { mutableStateOf<Int?>(null) }
 
     fun showSavedDetail(saved: ContactDto) {
@@ -163,6 +164,27 @@ fun ContactsScreen(
                 TextButton(onClick = { pendingDeleteContact = null }) {
                     Text(stringResource(R.string.android_chats_cancel))
                 }
+            }
+        )
+    }
+
+    // Offer transport choice only when this saved contact has both options.
+    pendingMessageChoice?.let { contact ->
+        AlertDialog(
+            onDismissRequest = { pendingMessageChoice = null },
+            title = { Text("Send message with") },
+            text = { Text("How would you like to message ${viewModel.displayName(contact)}?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    pendingMessageChoice = null
+                    viewModel.openDirectChat(contact)
+                }) { Text("Chatforia") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    pendingMessageChoice = null
+                    viewModel.openSmsThread(contact)
+                }) { Text("SMS") }
             }
         )
     }
@@ -324,7 +346,20 @@ fun ContactsScreen(
             contact = contact,
             displayName = viewModel.displayName(contact),
             subtitle = viewModel.subtitle(contact),
-            onMessage = { viewModel.openDirectChat(contact) },
+            onMessage = {
+                val chatUserId = contact.user?.id ?: contact.userId
+                val savedPhone = contact.externalPhone?.trim()?.takeIf { it.isNotEmpty() }
+                when {
+                    chatUserId != null && savedPhone != null -> pendingMessageChoice = contact
+                    chatUserId != null -> viewModel.openDirectChat(contact)
+                    savedPhone != null -> viewModel.openSmsThread(contact)
+                    else -> android.widget.Toast.makeText(
+                        context,
+                        "This contact has no available messaging method.",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
+            },
             onCall = {
                 val userId = contact.user?.id ?: contact.userId
                 val phone = contact.externalPhone?.trim()?.takeIf { it.isNotBlank() }
