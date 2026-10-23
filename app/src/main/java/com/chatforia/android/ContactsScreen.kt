@@ -1,6 +1,7 @@
 package com.chatforia.android
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -8,14 +9,25 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import com.chatforia.android.ui.components.ChatforiaSearchField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -106,6 +118,8 @@ fun ContactsScreen(
     }
 
     var editingContact by remember { mutableStateOf<ContactDto?>(null) }
+    var pendingDeleteContact by remember { mutableStateOf<ContactDto?>(null) }
+    var revealedContactId by remember { mutableStateOf<Int?>(null) }
 
     fun showSavedDetail(saved: ContactDto) {
         savedDetail = saved
@@ -122,6 +136,36 @@ fun ContactsScreen(
 
     val filteredContacts = contacts
     val openedConversation = state.openedConversation
+
+    // Both swipe and detail-screen deletion require confirmation.
+    pendingDeleteContact?.let { contact ->
+        AlertDialog(
+            onDismissRequest = { pendingDeleteContact = null },
+            title = { Text(stringResource(R.string.android_contact_detail_delete_contact)) },
+            text = { Text("Delete ${viewModel.displayName(contact)} from your contacts?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteContact(contact)
+                    if (state.selectedContactId == contact.id) {
+                        savedDetail = null
+                        viewModel.clearSelectedContact()
+                    }
+                    pendingDeleteContact = null
+                    revealedContactId = null
+                }) {
+                    Text(
+                        stringResource(R.string.android_contact_detail_delete_contact),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDeleteContact = null }) {
+                    Text(stringResource(R.string.android_chats_cancel))
+                }
+            }
+        )
+    }
 
     if (showingNewChat) {
         startChatState.openedConversation?.let { conversation ->
@@ -306,10 +350,7 @@ fun ContactsScreen(
                 viewModel.clearPeopleSelection()
                 editingContact = contact
             },
-            onDelete = {
-                viewModel.deleteContact(contact)
-                viewModel.clearSelectedContact()
-            },
+            onDelete = { pendingDeleteContact = contact },
             onBack = {
                 savedDetail = null
                 viewModel.clearSelectedContact()
@@ -428,11 +469,25 @@ fun ContactsScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 LazyColumn(modifier = Modifier.padding(12.dp)) {
-                    items(filteredContacts) { contact ->
-                        ContactPreviewRow(
+                    items(filteredContacts, key = { it.id }) { contact ->
+                        SwipeableContactPreviewRow(
                             contact = contact,
                             viewModel = viewModel,
-                            onClick = { viewModel.selectContact(contact.id) }
+                            revealed = revealedContactId == contact.id,
+                            onRevealChanged = { show ->
+                                revealedContactId = if (show) contact.id else
+                                    revealedContactId.takeUnless { it == contact.id }
+                            },
+                            onClick = { viewModel.selectContact(contact.id) },
+                            onEdit = {
+                                revealedContactId = null
+                                viewModel.clearPeopleSelection()
+                                editingContact = contact
+                            },
+                            onDelete = {
+                                revealedContactId = null
+                                pendingDeleteContact = contact
+                            }
                         )
                         HorizontalDivider(color = ChatforiaColors.border)
                     }
@@ -493,5 +548,119 @@ private fun ContactPreviewRow(
             contentDescription = stringResource(R.string.android_contacts_open_contact),
             tint = ChatforiaColors.secondaryText
         )
+    }
+}
+
+// Reveal actions; never delete as a direct consequence of swiping.
+@Composable
+private fun SwipeableContactPreviewRow(
+    contact: ContactDto,
+    viewModel: ContactsViewModel,
+    revealed: Boolean,
+    onRevealChanged: (Boolean) -> Unit,
+    onClick: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val actionWidth = 94.dp
+    val revealDistance = with(LocalDensity.current) { (actionWidth * 2).toPx() }
+    var offsetX by remember(contact.id) { mutableFloatStateOf(0f) }
+
+    LaunchedEffect(revealed) {
+        if (!revealed) offsetX = 0f
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+    ) {
+        Row(
+            modifier = Modifier.matchParentSize(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            ContactSwipeAction(
+                title = stringResource(R.string.android_contact_detail_edit_contact),
+                icon = Icons.Default.Edit,
+                backgroundColor = ChatforiaColors.highlightedSurface,
+                contentColor = ChatforiaColors.primaryText,
+                modifier = Modifier.width(actionWidth).fillMaxHeight(),
+                onClick = onEdit
+            )
+            ContactSwipeAction(
+                title = stringResource(R.string.android_contact_detail_delete_contact),
+                icon = Icons.Default.Delete,
+                backgroundColor = MaterialTheme.colorScheme.error,
+                contentColor = MaterialTheme.colorScheme.onError,
+                modifier = Modifier.width(actionWidth).fillMaxHeight(),
+                onClick = onDelete
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(offsetX.roundToInt(), 0) }
+                .background(ChatforiaColors.cardBackground)
+                .pointerInput(contact.id, revealDistance) {
+                    detectHorizontalDragGestures(
+                        onHorizontalDrag = { change, dragAmount ->
+                            change.consume()
+                            offsetX = (offsetX + dragAmount).coerceIn(-revealDistance, 0f)
+                        },
+                        onDragEnd = {
+                            val shouldReveal = offsetX < -revealDistance * 0.4f
+                            offsetX = if (shouldReveal) -revealDistance else 0f
+                            onRevealChanged(shouldReveal)
+                        },
+                        onDragCancel = {
+                            offsetX = if (revealed) -revealDistance else 0f
+                        }
+                    )
+                }
+        ) {
+            ContactPreviewRow(
+                contact = contact,
+                viewModel = viewModel,
+                onClick = {
+                    if (revealed) {
+                        offsetX = 0f
+                        onRevealChanged(false)
+                    } else {
+                        onClick()
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun ContactSwipeAction(
+    title: String,
+    icon: ImageVector,
+    backgroundColor: Color,
+    contentColor: Color,
+    modifier: Modifier,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        color = backgroundColor,
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 4.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(icon, contentDescription = title, tint = contentColor)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = title,
+                color = contentColor,
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 1
+            )
+        }
     }
 }

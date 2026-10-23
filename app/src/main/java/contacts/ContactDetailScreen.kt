@@ -3,7 +3,6 @@ package com.chatforia.android.contacts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,24 +12,29 @@ import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Videocam
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
-import com.chatforia.android.ChatforiaGradientButton
 
 @Composable
 fun ContactDetailScreen(
@@ -44,6 +48,8 @@ fun ContactDetailScreen(
     onBack: () -> Unit,
     onEdit: () -> Unit,
 ) {
+    var showContactMenu by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -54,6 +60,7 @@ fun ContactDetailScreen(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
@@ -62,6 +69,39 @@ fun ContactDetailScreen(
                     contentDescription = stringResource(R.string.android_plan_back),
                     tint = ChatforiaColors.primaryText
                 )
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onEdit) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.android_contact_detail_edit_contact),
+                        tint = ChatforiaColors.accent
+                    )
+                }
+
+                Box {
+                    IconButton(onClick = { showContactMenu = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "More contact options",
+                            tint = ChatforiaColors.primaryText
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showContactMenu,
+                        onDismissRequest = { showContactMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.android_contact_detail_delete_contact)) },
+                            leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
+                            onClick = {
+                                showContactMenu = false
+                                onDelete()
+                            }
+                        )
+                    }
+                }
             }
         }
 
@@ -160,40 +200,6 @@ fun ContactDetailScreen(
                     )
                 }
             }
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        ChatforiaGradientButton(
-            text = stringResource(R.string.android_contact_detail_edit_contact),
-            onClick = onEdit,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedButton(
-            onClick = onDelete,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            shape = RoundedCornerShape(20.dp),
-            border = BorderStroke(
-                width = 1.dp,
-                color = Color(0xFFFF4D57)
-            ),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = Color(0xFFFF4D57)
-            )
-        ) {
-            Text(
-                text = stringResource(
-                    R.string.android_contact_detail_delete_contact
-                ),
-                fontWeight = FontWeight.SemiBold
-            )
         }
 
     }
