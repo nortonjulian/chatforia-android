@@ -1,6 +1,8 @@
 package com.chatforia.android.contacts
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -14,6 +16,8 @@ import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -44,9 +48,25 @@ fun ContactDetailScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(ChatforiaColors.screenBackground)
+            .verticalScroll(rememberScrollState())
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.android_plan_back),
+                    tint = ChatforiaColors.primaryText
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         Surface(
             modifier = Modifier.size(88.dp),
             shape = CircleShape,
@@ -142,7 +162,7 @@ fun ContactDetailScreen(
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(20.dp))
 
         ChatforiaGradientButton(
             text = stringResource(R.string.android_contact_detail_edit_contact),
@@ -176,24 +196,6 @@ fun ContactDetailScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedButton(
-            onClick = onBack,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            shape = RoundedCornerShape(20.dp),
-            border = BorderStroke(
-                width = 1.dp,
-                color = ChatforiaColors.border
-            ),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = ChatforiaColors.primaryText
-            )
-        ) {
-            Text(stringResource(R.string.android_plan_back))
-        }
     }
 }
 

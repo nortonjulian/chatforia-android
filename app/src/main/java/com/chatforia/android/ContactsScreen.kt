@@ -98,11 +98,20 @@ fun ContactsScreen(
     val searchText = state.searchText
     val contacts = state.contacts
 
+    var savedDetail by remember { mutableStateOf<ContactDto?>(null) }
+
     val selectedContact = state.selectedContactId?.let { selectedContactId ->
-        contacts.firstOrNull { contact -> contact.id == selectedContactId }
+        contacts.firstOrNull { it.id == selectedContactId }
+            ?: savedDetail?.takeIf { it.id == selectedContactId }
     }
 
     var editingContact by remember { mutableStateOf<ContactDto?>(null) }
+
+    fun showSavedDetail(saved: ContactDto) {
+        savedDetail = saved
+        viewModel.selectContact(saved.id)
+        editingContact = null
+    }
     var showingAddContact by remember { mutableStateOf(false) }
     var showingInviteFriends by remember { mutableStateOf(false) }
     var showingNewChat by remember { mutableStateOf(false) }
@@ -145,25 +154,53 @@ fun ContactsScreen(
     editingContact?.let { contact ->
         AddContactScreen(
             editingContact = contact,
+            peopleSearchResults = state.peopleSearchResults,
+            selectedPeopleResult = state.selectedPeopleResult,
+            isSearchingPeople = state.isSearchingPeople,
+            peopleSearchError = state.peopleSearchError,
+            onSearchPeople = { query -> viewModel.searchPeople(query) },
+            onSelectPeople = { person -> viewModel.selectPeopleResult(person) },
+            onClearSelectedPeople = { viewModel.clearPeopleSelection() },
+            onSaveUserId = { userId, alias, favorite ->
+                // Switching to Username adds/updates that account contact;
+                // it must not overwrite the originally saved identity.
+                viewModel.saveUserContact(
+                    userId, alias, favorite, onSaved = ::showSavedDetail
+                )
+            },
             onSaveUsername = { _, alias, favorite ->
                 viewModel.updateContact(
                     contact = contact,
                     alias = alias,
                     externalName = null,
-                    favorite = favorite
+                    favorite = favorite,
+                    onSaved = ::showSavedDetail
                 )
-                editingContact = null
             },
-            onSaveExternal = { _, name, alias, favorite ->
-                viewModel.updateContact(
-                    contact = contact,
-                    alias = alias,
-                    externalName = name,
-                    favorite = favorite
-                )
-                editingContact = null
+            onSaveExternal = { phone, name, alias, favorite ->
+                val sameExternalIdentity =
+                    contact.userId == null && contact.user?.id == null &&
+                    contact.externalPhone?.trim() == phone.trim()
+                if (sameExternalIdentity) {
+                    viewModel.updateContact(
+                        contact = contact,
+                        alias = alias,
+                        externalName = name,
+                        favorite = favorite,
+                        onSaved = ::showSavedDetail
+                    )
+                } else {
+                    // Use the normal phone upsert; do not rewrite contact identity here.
+                    viewModel.saveExternalContact(
+                        phone, name, alias, favorite,
+                        onSaved = ::showSavedDetail
+                    )
+                }
             },
-            onBack = { editingContact = null }
+            onBack = {
+                editingContact = null
+                viewModel.clearSelectedContact()
+            }
         )
         return
     }
@@ -266,14 +303,17 @@ fun ContactsScreen(
                 }
             },
             onEdit = {
+                viewModel.clearPeopleSelection()
                 editingContact = contact
-                viewModel.clearSelectedContact()
             },
             onDelete = {
                 viewModel.deleteContact(contact)
                 viewModel.clearSelectedContact()
             },
-            onBack = { viewModel.clearSelectedContact() }
+            onBack = {
+                savedDetail = null
+                viewModel.clearSelectedContact()
+            }
         )
         return
     }

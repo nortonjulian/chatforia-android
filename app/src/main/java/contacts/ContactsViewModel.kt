@@ -180,15 +180,17 @@ class ContactsViewModel(
     fun saveUserContact(
         userId: Int,
         alias: String? = null,
-        favorite: Boolean = false
+        favorite: Boolean = false,
+        onSaved: (ContactDto) -> Unit = {}
     ) {
         viewModelScope.launch {
             try {
-                repository.saveUserContact(
+                val saved = repository.saveUserContact(
                     userId = userId,
                     alias = alias,
                     favorite = favorite
                 )
+                onSaved(saved)
                 clearPeopleSelection()
                 loadContacts()
             } catch (e: Exception) {
@@ -255,16 +257,18 @@ class ContactsViewModel(
         phone: String,
         name: String? = null,
         alias: String? = null,
-        favorite: Boolean = false
+        favorite: Boolean = false,
+        onSaved: (ContactDto) -> Unit = {}
     ) {
         viewModelScope.launch {
             try {
-                repository.saveExternalContact(
+                val saved = repository.saveExternalContact(
                     phone = phone,
                     externalName = name,
                     alias = alias,
                     favorite = favorite
                 )
+                onSaved(saved)
                 loadContacts()
             } catch (e: Exception) {
                 _state.value = _state.value.copy(error = e.message ?: "Failed to save contact.")
@@ -276,7 +280,8 @@ class ContactsViewModel(
         contact: ContactDto,
         alias: String? = null,
         externalName: String? = null,
-        favorite: Boolean
+        favorite: Boolean,
+        onSaved: (ContactDto) -> Unit = {}
     ) {
         viewModelScope.launch {
             try {
@@ -294,6 +299,7 @@ class ContactsViewModel(
                     error = null,
                     importMessage = "Contact updated."
                 )
+                onSaved(updated)
                 loadContacts()
             } catch (e: Exception) {
                 _state.value = _state.value.copy(error = e.message ?: "Failed to update contact.")

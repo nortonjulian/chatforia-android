@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaColors
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
-import com.chatforia.android.ChatforiaGradientButton
 
 private enum class AddContactMode {
     USERNAME,
@@ -65,22 +64,24 @@ fun AddContactScreen(
     val alias = aliasText.trim().ifBlank { null }
     val isEditing = editingContact != null
 
-    val isEditingLinkedUser = editingContact?.let {
+    val originallyLinkedUser = editingContact?.let {
         it.user?.id != null || it.userId != null
     } == true
-
-    val isEditingExternalPhone = editingContact?.let {
-        !it.externalPhone.isNullOrBlank() && it.user?.id == null && it.userId == null
-    } == true
-
-    val canSave = if (isEditing) {
-        true
+    val originalMode = if (editingContact != null && !originallyLinkedUser) {
+        AddContactMode.PHONE
     } else {
-        when (mode) {
-            // New app-user contacts must come from an explicit server-filtered search selection.
-            AddContactMode.USERNAME -> selectedPeopleResult?.userId != null
-            AddContactMode.PHONE -> phone.isNotBlank()
-        }
+        AddContactMode.USERNAME
+    }
+    val originalUsername = editingContact?.user?.username?.trim().orEmpty()
+    val unchangedUsername = isEditing && originalMode == AddContactMode.USERNAME &&
+        username.equals(originalUsername, ignoreCase = true) &&
+        selectedPeopleResult == null
+    // Switching to another identity creates/updates that contact separately.
+    // Only an unchanged contact identity may be saved through PATCH /contacts.
+    val canSave = when (mode) {
+        AddContactMode.USERNAME ->
+            selectedPeopleResult?.userId != null || unchangedUsername
+        AddContactMode.PHONE -> phone.isNotBlank()
     }
 
     Column(
@@ -94,7 +95,12 @@ fun AddContactScreen(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             TextButton(onClick = onBack) {
-                Text(stringResource(R.string.android_chats_cancel))
+                Text(
+                    if (editingContact == null)
+                        stringResource(R.string.android_chats_cancel)
+                    else
+                        stringResource(R.string.android_plan_back)
+                )
             }
 
             Text(
@@ -113,61 +119,40 @@ fun AddContactScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        if (isEditing) {
-            // An existing contact is identified by its linked user or saved
-            // phone number. Editing changes metadata, not that identity.
-            // Don't render disabled mode buttons that appear tappable.
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = ChatforiaColors.cardBackground,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = if (mode == AddContactMode.USERNAME) {
-                            stringResource(R.string.android_add_contact_type_chatforia)
-                        } else {
-                            stringResource(R.string.android_add_contact_type_phone)
-                        },
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = ChatforiaColors.primaryText
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.android_add_contact_edit_type_note),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = ChatforiaColors.secondaryText
-                    )
-                }
-            }
-        } else {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                ContactModeButton(
-                    text = stringResource(R.string.android_profile_username),
-                    selected = mode == AddContactMode.USERNAME,
-                    enabled = true,
-                    onClick = {
-                        mode = AddContactMode.USERNAME
-                        onClearSelectedPeople()
-                    },
-                    modifier = Modifier.weight(1f)
-                )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ContactModeButton(
+                text = stringResource(R.string.android_profile_username),
+                selected = mode == AddContactMode.USERNAME,
+                enabled = true,
+                onClick = {
+                    mode = AddContactMode.USERNAME
+                    onClearSelectedPeople()
+                },
+                modifier = Modifier.weight(1f)
+            )
 
-                ContactModeButton(
-                    text = stringResource(R.string.android_add_contact_phone),
-                    selected = mode == AddContactMode.PHONE,
-                    enabled = true,
-                    onClick = {
-                        mode = AddContactMode.PHONE
-                        onClearSelectedPeople()
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-            }
+            ContactModeButton(
+                text = stringResource(R.string.android_add_contact_phone),
+                selected = mode == AddContactMode.PHONE,
+                enabled = true,
+                onClick = {
+                    mode = AddContactMode.PHONE
+                    onClearSelectedPeople()
+                },
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        if (isEditing && mode != originalMode) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.android_add_contact_switch_type_note),
+                style = MaterialTheme.typography.bodySmall,
+                color = ChatforiaColors.secondaryText
+            )
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -182,7 +167,7 @@ fun AddContactScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 if (mode == AddContactMode.USERNAME) {
-                    if (!isEditingLinkedUser && selectedPeopleResult != null) {
+                    if (selectedPeopleResult != null) {
                         Surface(
                             shape = RoundedCornerShape(16.dp),
                             color = ChatforiaColors.screenBackground,
@@ -218,18 +203,16 @@ fun AddContactScreen(
                         OutlinedTextField(
                             value = usernameText,
                             onValueChange = {
-                                if (!isEditingLinkedUser) {
-                                    usernameText = it
-                                    onSearchPeople(it)
-                                }
+                                usernameText = it
+                                onClearSelectedPeople()
+                                onSearchPeople(it)
                             },
-                            enabled = !isEditingLinkedUser,
-                            label = { Text(if (isEditingLinkedUser) "Username" else "Name or username") },
+                            label = { Text("Name or username") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true
                         )
 
-                        if (!isEditingLinkedUser && username.isNotEmpty() && username.length < 3) {
+                        if (username.isNotEmpty() && username.length < 3) {
                             Text(
                                 text = "Enter at least 3 characters to search people.",
                                 style = MaterialTheme.typography.bodySmall,
@@ -241,7 +224,7 @@ fun AddContactScreen(
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         }
 
-                        if (!isEditingLinkedUser) {
+                        if (mode == AddContactMode.USERNAME) {
                             peopleSearchResults.forEach { person ->
                                 Surface(
                                     shape = RoundedCornerShape(14.dp),
@@ -279,10 +262,7 @@ fun AddContactScreen(
                 } else {
                     OutlinedTextField(
                         value = phoneText,
-                        onValueChange = {
-                            if (!isEditingExternalPhone) phoneText = it
-                        },
-                        enabled = !isEditingExternalPhone,
+                        onValueChange = { phoneText = it },
                         label = { Text(stringResource(R.string.android_profile_phone_number)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
@@ -328,21 +308,16 @@ fun AddContactScreen(
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        ChatforiaGradientButton(
-            text = if (editingContact == null) {
-                stringResource(R.string.android_add_contact_save_contact)
-            } else {
-                stringResource(R.string.android_add_contact_save_changes)
-            },
+        Button(
             onClick = {
                 when (mode) {
                     AddContactMode.USERNAME -> {
-                        if (isEditing) {
-                            // Existing linked contacts keep their current immutable userId;
-                            // this callback only updates alias/favorite metadata.
+                        if (unchangedUsername) {
+                            // Preserve metadata editing for the original contact.
                             onSaveUsername(username, alias, favorite)
                         } else {
                             selectedPeopleResult?.userId?.let { selectedId ->
+                                // Different user: upsert a separate account contact.
                                 onSaveUserId(selectedId, alias, favorite)
                             }
                         }
@@ -353,8 +328,24 @@ fun AddContactScreen(
             enabled = canSave,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
-        )
+                .height(56.dp),
+            shape = RoundedCornerShape(999.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ChatforiaColors.buttonStart,
+                contentColor = ChatforiaColors.buttonForeground,
+                disabledContainerColor = ChatforiaColors.buttonStart.copy(alpha = 0.35f),
+                disabledContentColor = ChatforiaColors.buttonForeground.copy(alpha = 0.60f)
+            )
+        ) {
+            Text(
+                text = if (editingContact == null) {
+                    stringResource(R.string.android_add_contact_save_contact)
+                } else {
+                    stringResource(R.string.android_add_contact_save_changes)
+                },
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 
