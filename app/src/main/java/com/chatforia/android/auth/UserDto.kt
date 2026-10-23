@@ -56,6 +56,8 @@ data class UserDto(
     val voicemailEnabled: Boolean? = null,
     val voicemailAutoDeleteDays: Int? = null,
     val voicemailForwardEmail: String? = null,
+    val voicemailEmailForwardingEnabled: Boolean? = null,
+    val canForwardVoicemailEmail: Boolean? = null,
     val voicemailGreetingText: String? = null,
     val voicemailGreeting: String? = null,
 

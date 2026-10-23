@@ -87,6 +87,7 @@ class SettingsViewModelTest {
         assertFalse(state.wantsAgeFilter)
         assertEquals(listOf("ADULT_18_24", "ADULT_25_34"), state.randomChatAllowedBands)
 
+        assertFalse(state.voicemailEmailForwardingEnabled)
         assertEquals(14, state.voicemailAutoDeleteDays)
         assertEquals("voice@example.com", state.voicemailForwardEmail)
         assertEquals("Leave a message.", state.voicemailGreetingText)
@@ -141,6 +142,7 @@ class SettingsViewModelTest {
         assertTrue(state.wantsAgeFilter)
         assertEquals(emptyList<String>(), state.randomChatAllowedBands)
 
+        assertFalse(state.voicemailEmailForwardingEnabled)
         assertNull(state.voicemailAutoDeleteDays)
         assertEquals("", state.voicemailForwardEmail)
         assertEquals("", state.voicemailGreetingText)
@@ -245,6 +247,8 @@ class SettingsViewModelTest {
                     ageBand = "ADULT_35_49",
                     wantsAgeFilter = false,
                     randomChatAllowedBands = listOf("ADULT_25_34", "ADULT_35_49"),
+                    voicemailEmailForwardingEnabled = false,
+                    canForwardVoicemailEmail = true,
                     voicemailAutoDeleteDays = 30,
                     voicemailForwardEmail = "voice@example.com",
                     voicemailGreetingText = "Custom greeting"
@@ -284,6 +288,7 @@ class SettingsViewModelTest {
             assertFalse(request.wantsAgeFilter)
             assertEquals(listOf("ADULT_25_34", "ADULT_35_49"), request.randomChatAllowedBands)
 
+            assertEquals(false, request.voicemailEmailForwardingEnabled)
             assertEquals(30, request.voicemailAutoDeleteDays)
             assertEquals("voice@example.com", request.voicemailForwardEmail)
             assertEquals("Custom greeting", request.voicemailGreetingText)
@@ -419,6 +424,40 @@ class SettingsViewModelTest {
             assertNull(state.success)
             assertFalse(callbackCalled)
         }
+
+    @Test
+    fun emailForwardingOffPreservesSavedAddress() = runTest(mainDispatcherRule.testDispatcher) {
+        val repository = FakeUserSettingsRepository()
+        val viewModel = SettingsViewModel(repository)
+        viewModel.load(user(id = 65).copy(
+            canForwardVoicemailEmail = true,
+            voicemailEmailForwardingEnabled = true,
+            voicemailForwardEmail = "saved@example.com"
+        ))
+        viewModel.update { it.copy(voicemailEmailForwardingEnabled = false) }
+        viewModel.save { }
+        advanceUntilIdle()
+        val request = repository.updateSettingsRequests.single()
+        assertEquals(false, request.voicemailEmailForwardingEnabled)
+        assertEquals("saved@example.com", request.voicemailForwardEmail)
+    }
+
+    @Test
+    fun freeSaveOmitsPaidPreferencesAndPreservesSavedAddress() = runTest(mainDispatcherRule.testDispatcher) {
+        val repository = FakeUserSettingsRepository()
+        val viewModel = SettingsViewModel(repository)
+        viewModel.load(user(id = 65).copy(
+            canForwardVoicemailEmail = false,
+            voicemailEmailForwardingEnabled = true,
+            voicemailForwardEmail = "saved@example.com"
+        ))
+        viewModel.save { }
+        advanceUntilIdle()
+        val request = repository.updateSettingsRequests.single()
+        assertNull(request.voicemailEmailForwardingEnabled)
+        assertNull(request.voicemailForwardEmail)
+        assertEquals("saved@example.com", viewModel.state.value.voicemailForwardEmail)
+    }
 
     private fun user(
         id: Int,
