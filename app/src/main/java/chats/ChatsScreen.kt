@@ -253,6 +253,10 @@ fun ChatsScreen(
         )
     }
 
+    val showTransportBadges =
+        conversations.any { it.kind.equals("sms", ignoreCase = true) } &&
+        conversations.any { it.kind.equals("chat", ignoreCase = true) }
+
     val filtered =
         conversations.filter {
 
@@ -522,6 +526,7 @@ fun ChatsScreen(
                     if (isEditing) {
                         ConversationRow(
                             conversation = chat,
+                            showTransportBadge = showTransportBadges,
                             isSelected = chat.uniqueId in selectedIds,
                             enabled = !isDeleting,
                             onClick = {
@@ -535,6 +540,7 @@ fun ChatsScreen(
                     } else {
                         SwipeRevealConversationRow(
                             conversation = chat,
+                            showTransportBadge = showTransportBadges,
                             onClick = {
                                 selectedConversation = chat
                             },
@@ -747,7 +753,8 @@ private fun ConversationRow(
     conversation: ConversationDto,
     onClick: () -> Unit,
     isSelected: Boolean? = null,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    showTransportBadge: Boolean
 ) {
     val title = conversation.randomAwareTitle
 
@@ -838,15 +845,17 @@ private fun ConversationRow(
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false)
                 )
-                Text(
-                    text = if (conversation.kind.equals("sms", ignoreCase = true)) "SMS" else "Chatforia",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = ChatforiaColors.accent,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(ChatforiaColors.accent.copy(alpha = 0.12f))
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
-                )
+                if (showTransportBadge) {
+                    Text(
+                        text = if (conversation.kind.equals("sms", ignoreCase = true)) "SMS" else "Chatforia",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ChatforiaColors.accent,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(ChatforiaColors.accent.copy(alpha = 0.12f))
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
             }
 
             Text(
@@ -877,7 +886,8 @@ private fun ConversationRow(
 private fun SwipeRevealConversationRow(
     conversation: ConversationDto,
     onClick: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    showTransportBadge: Boolean
 ) {
     var offsetX by remember(conversation.uniqueId) {
         mutableFloatStateOf(0f)
@@ -932,7 +942,8 @@ private fun SwipeRevealConversationRow(
         ) {
             ConversationRow(
                 conversation = conversation,
-                onClick = onClick
+                onClick = onClick,
+                showTransportBadge = showTransportBadge
             )
         }
     }
