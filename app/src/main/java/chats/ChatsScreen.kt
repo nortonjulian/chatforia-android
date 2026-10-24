@@ -295,6 +295,7 @@ fun ChatsScreen(
             uploadRepository = uploadRepository,
             tenorRepository = tenorRepository,
             riaRepository = RiaRepository(apiClient),
+            apiClient = apiClient,
             isTemporaryRandomChat = isTemporaryRandomChat,
             randomChatTitle = activeRandomTitle,
             isRandomAlreadyFriend = randomState.session?.isAlreadyFriend == true,
