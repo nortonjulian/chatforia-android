@@ -4,6 +4,7 @@ import com.chatforia.android.ui.theme.ChatforiaColors
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -278,6 +279,22 @@ fun ChatsScreen(
                     )
         }
 
+    val chatsListState = rememberLazyListState()
+    val newestConversationKey = filtered.firstOrNull()?.uniqueId
+
+    LaunchedEffect(newestConversationKey) {
+        // Keyed LazyColumn preserves the previous first visible chat when a
+        // newer conversation moves above it. Near the top, this can leave
+        // the new first row partly clipped behind the list viewport edge.
+        // Keep recent chats fully visible without jumping users who are
+        // browsing farther down their history.
+        if (newestConversationKey != null &&
+            chatsListState.firstVisibleItemIndex <= 1
+        ) {
+            chatsListState.scrollToItem(0)
+        }
+    }
+
     selectedConversation?.let { room ->
 
         val isTemporaryRandomChat =
@@ -515,6 +532,7 @@ fun ChatsScreen(
             }
         } else {
             LazyColumn(
+                state = chatsListState,
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(bottom = 12.dp)
             ) {
