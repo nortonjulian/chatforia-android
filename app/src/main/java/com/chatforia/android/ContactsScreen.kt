@@ -87,7 +87,8 @@ fun ContactsScreen(
     tenorRepository: TenorRepository,
     uploadRepository: UploadRepository,
     riaRepository: RiaRepository,
-    apiClient: ApiClient
+    apiClient: ApiClient,
+    onThreadVisibilityChanged: (Boolean) -> Unit = {}
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val startChatState by startChatViewModel.state.collectAsStateWithLifecycle()
@@ -145,6 +146,20 @@ fun ContactsScreen(
 
     val filteredContacts = contacts
     val openedConversation = state.openedConversation
+
+    // Threads opened from Contacts use the same main Scaffold as Chats.
+    // Tell MainActivity when to release the bottom tab bar's keyboard space.
+    val isThreadVisible =
+        openedConversation != null ||
+            (showingNewChat && startChatState.openedConversation != null)
+
+    LaunchedEffect(isThreadVisible) {
+        onThreadVisibilityChanged(isThreadVisible)
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { onThreadVisibilityChanged(false) }
+    }
 
     // The server's persistent block list is authoritative across website, iOS, and Android.
     val detailUserId = selectedContact?.user?.id ?: selectedContact?.userId
