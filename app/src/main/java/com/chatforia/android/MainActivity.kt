@@ -2011,7 +2011,8 @@ class MainActivity : ComponentActivity() {
                             tenorRepository = tenorRepository,
                             uploadRepository = uploadRepository,
                             riaRepository = RiaRepository(apiClient),
-                            apiClient = apiClient
+                            apiClient = apiClient,
+                            onThreadVisibilityChanged = { isChatThreadOpen = it }
                         )
 
                     AppTab.PROFILE ->
