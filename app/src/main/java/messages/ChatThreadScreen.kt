@@ -80,6 +80,10 @@ import android.content.ContextWrapper
 import com.chatforia.android.ads.InterstitialAdManager
 import com.chatforia.android.billing.PlanEntitlementsStore
 import com.chatforia.android.billing.resolveAiRewriteLevel
+import com.chatforia.android.network.ApiClient
+import com.chatforia.android.groups.GroupInviteManagementService
+import com.chatforia.android.groups.GroupInviteManagementSheet
+import androidx.compose.material.icons.filled.PersonAdd
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -98,6 +102,7 @@ fun ChatThreadScreen(
     uploadRepository: UploadRepository,
     tenorRepository: TenorRepository,
     riaRepository: RiaRepository,
+    apiClient: ApiClient? = null,
     isTemporaryRandomChat: Boolean = false,
     randomChatTitle: String? = null,
     isRandomAlreadyFriend: Boolean = false,
@@ -247,6 +252,7 @@ fun ChatThreadScreen(
             }
         }
 
+    var showInviteSheet by remember { mutableStateOf(false) }
     var showSearchSheet by remember { mutableStateOf(false) }
     var threadSearchText by remember { mutableStateOf("") }
 
@@ -401,7 +407,18 @@ fun ChatThreadScreen(
         )
     }
 
+    val showGroupInvites = conversation.kind == "chat" &&
+        conversation.isGroup == true && !isTemporaryRandomChat &&
+        conversation.id != null && currentUserId != null && apiClient != null
+
     val topActions = buildList {
+        if (showGroupInvites) {
+            add(ChatforiaAction(
+                icon = Icons.Default.PersonAdd,
+                contentDescription = "Manage group invitations",
+                onClick = { showInviteSheet = true }
+            ))
+        }
         add(
             ChatforiaAction(
                 icon = Icons.Default.Search,
@@ -983,6 +1000,17 @@ fun ChatThreadScreen(
                         showMediaPicker = false
                         showGifPicker = true
                     }
+                )
+            }
+
+            if (showInviteSheet && showGroupInvites) {
+                GroupInviteManagementSheet(
+                    roomId = requireNotNull(conversation.id),
+                    userId = requireNotNull(currentUserId),
+                    service = remember(apiClient) {
+                        GroupInviteManagementService(requireNotNull(apiClient))
+                    },
+                    onDismiss = { showInviteSheet = false }
                 )
             }
 
