@@ -312,6 +312,7 @@ fun ContactsScreen(
                 uploadRepository = uploadRepository,
                 tenorRepository = tenorRepository,
                 riaRepository = riaRepository,
+                apiClient = apiClient,
                 onBack = {
                     viewModel.clearOpenedConversation()
                     viewModel.clearSelectedContact()
@@ -445,6 +446,7 @@ fun ContactsScreen(
                 uploadRepository = uploadRepository,
                 tenorRepository = tenorRepository,
                 riaRepository = riaRepository,
+                apiClient = apiClient,
                 onBack = { viewModel.clearOpenedConversation() }
             )
         }
