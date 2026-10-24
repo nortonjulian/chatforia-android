@@ -1664,10 +1664,15 @@ class MainActivity : ComponentActivity() {
             mutableStateOf(false)
         }
 
+        // ChatThreadScreen handles the IME. Reserve no bottom navigation
+        // space while its keyboard is open.
+        val isKeyboardVisible =
+            WindowInsets.ime.getBottom(LocalDensity.current) > 0
+
         Scaffold(
 
             bottomBar = {
-                if (!isRiaOpen) {
+                if (!isRiaOpen && !(isChatThreadOpen && isKeyboardVisible)) {
                     NavigationBar(
                         containerColor = ChatforiaColors.cardBackground
                     ) {
@@ -1820,11 +1825,6 @@ class MainActivity : ComponentActivity() {
                     }
                 )
             }
-
-            val isKeyboardVisible =
-                WindowInsets.ime.getBottom(
-                    LocalDensity.current
-                ) > 0
 
             Box(
                 modifier =
@@ -2011,7 +2011,8 @@ class MainActivity : ComponentActivity() {
                             tenorRepository = tenorRepository,
                             uploadRepository = uploadRepository,
                             riaRepository = RiaRepository(apiClient),
-                            apiClient = apiClient
+                            apiClient = apiClient,
+                            onThreadVisibilityChanged = { isChatThreadOpen = it }
                         )
 
                     AppTab.PROFILE ->
