@@ -43,10 +43,15 @@ fun GroupMembersSheet(
 
     val ownerId = room?.ownerId
     val selfRole = room?.participants?.firstOrNull { it.userId == currentUserId }?.role
-    val manager = ownerId == currentUserId ||
-        selfRole.equals("ADMIN", ignoreCase = true)
-    val canModerate = manager ||
-        selfRole.equals("MODERATOR", ignoreCase = true)
+    // Match the backend rank ladder (OWNER > ADMIN > MODERATOR > MEMBER).
+    // The server is authoritative; these checks only keep inappropriate
+    // Remove buttons out of the UI.
+    val actorRank = when {
+        ownerId == currentUserId -> 3
+        selfRole.equals("ADMIN", ignoreCase = true) -> 2
+        selfRole.equals("MODERATOR", ignoreCase = true) -> 1
+        else -> 0
+    }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
@@ -63,10 +68,14 @@ fun GroupMembersSheet(
                 val role = if (isOwner) "Owner" else member.role ?: "Member"
                 val name = member.user?.username?.takeIf { it.isNotBlank() }
                     ?: "User #" + member.userId
-                val targetRole = member.role?.uppercase() ?: "MEMBER"
-                val permitted = canModerate && !isOwner && !isSelf &&
-                    (ownerId == currentUserId ||
-                        (targetRole == "MEMBER" && manager))
+                val targetRank = when (member.role?.uppercase()) {
+                    "OWNER" -> 3
+                    "ADMIN" -> 2
+                    "MODERATOR" -> 1
+                    else -> 0
+                }
+                val permitted = !isOwner && !isSelf &&
+                    actorRank >= 1 && targetRank < actorRank
                 HorizontalDivider()
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
