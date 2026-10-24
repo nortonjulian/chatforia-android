@@ -1161,6 +1161,22 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+
+            // SMS realtime was wired to the open thread but not the Chats list.
+            // Refresh from the canonical conversation API so preview text,
+            // unread count, and ordering update without a manual refresh.
+            launch {
+                socketManager.smsMessages.collect {
+                    chatsViewModel.refreshConversations()
+                }
+            }
+
+            // Catch up if the socket reconnects after background/network loss.
+            launch {
+                socketManager.socketConnected.collect {
+                    chatsViewModel.refreshConversations()
+                }
+            }
         }
 
         LaunchedEffect(pendingNotificationChatRoomId, user.id) {
