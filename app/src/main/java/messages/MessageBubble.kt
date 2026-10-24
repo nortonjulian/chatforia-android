@@ -28,6 +28,12 @@ import com.chatforia.android.ui.theme.ChatforiaColors
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.LinkInteractionListener
+import androidx.compose.ui.platform.LocalContext
+import android.content.Intent
+import android.net.Uri
+import com.chatforia.android.MainActivity
+import com.chatforia.android.groups.GroupInvitationLink
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
@@ -39,7 +45,8 @@ private val webUrlRegex =
 
 private fun buildLinkifiedMessageText(
     text: String,
-    linkColor: Color
+    linkColor: Color,
+    onGroupInvitation: (String) -> Unit
 ): AnnotatedString {
     return buildAnnotatedString {
         var currentIndex = 0
@@ -78,9 +85,15 @@ private fun buildLinkifiedMessageText(
                         visibleUrl
                     }
 
+                // A trusted invite tapped inside Chatforia should stay in the signed-in app.
+                // Other URLs keep their ordinary browser-opening behavior.
+                val groupInviteCode = GroupInvitationLink.extract(destinationUrl)
                 withLink(
                     LinkAnnotation.Url(
                         url = destinationUrl,
+                        linkInteractionListener = groupInviteCode?.let { code ->
+                            LinkInteractionListener { onGroupInvitation(code) }
+                        },
                         styles = TextLinkStyles(
                             style = SpanStyle(
                                 color = linkColor,
@@ -112,6 +125,7 @@ fun MessageBubble(
     isMine: Boolean
 ) {
     val isDeleted = message.deletedForAll == true
+    val context = LocalContext.current
 
     val displayText =
         when {
@@ -224,7 +238,17 @@ fun MessageBubble(
                     Text(
                         text = buildLinkifiedMessageText(
                             text = displayText,
-                            linkColor = messageTextColor
+                            linkColor = messageTextColor,
+                            onGroupInvitation = { code ->
+                                context.startActivity(
+                                    Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse("chatforia://join/$code"),
+                                        context,
+                                        MainActivity::class.java
+                                    )
+                                )
+                            }
                         ),
                         color = messageTextColor
                     )
