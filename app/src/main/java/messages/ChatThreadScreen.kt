@@ -83,6 +83,8 @@ import com.chatforia.android.billing.resolveAiRewriteLevel
 import com.chatforia.android.network.ApiClient
 import com.chatforia.android.groups.GroupInviteManagementService
 import com.chatforia.android.groups.GroupInviteManagementSheet
+import com.chatforia.android.groups.GroupMembersSheet
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.PersonAdd
 
 @OptIn(
@@ -252,6 +254,7 @@ fun ChatThreadScreen(
             }
         }
 
+    var showMembersSheet by remember { mutableStateOf(false) }
     var showInviteSheet by remember { mutableStateOf(false) }
     var showSearchSheet by remember { mutableStateOf(false) }
     var threadSearchText by remember { mutableStateOf("") }
@@ -413,6 +416,11 @@ fun ChatThreadScreen(
 
     val topActions = buildList {
         if (showGroupInvites) {
+            add(ChatforiaAction(
+                icon = Icons.Default.Group,
+                contentDescription = "Group members",
+                onClick = { showMembersSheet = true }
+            ))
             add(ChatforiaAction(
                 icon = Icons.Default.PersonAdd,
                 contentDescription = "Manage group invitations",
@@ -1000,6 +1008,17 @@ fun ChatThreadScreen(
                         showMediaPicker = false
                         showGifPicker = true
                     }
+                )
+            }
+
+            if (showMembersSheet && showGroupInvites) {
+                GroupMembersSheet(
+                    roomId = requireNotNull(conversation.id),
+                    currentUserId = requireNotNull(currentUserId),
+                    service = remember(apiClient) {
+                        GroupInviteManagementService(requireNotNull(apiClient))
+                    },
+                    onDismiss = { showMembersSheet = false }
                 )
             }
 
