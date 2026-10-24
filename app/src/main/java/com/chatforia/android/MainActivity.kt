@@ -38,6 +38,11 @@ import com.chatforia.android.auth.AuthState
 import com.chatforia.android.auth.LoginScreen
 import com.chatforia.android.auth.*
 import com.chatforia.android.network.ApiClient
+import com.chatforia.android.groups.GroupInvitationLink
+import com.chatforia.android.groups.GroupInvitationService
+import com.chatforia.android.groups.GroupInvitationPreview
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.chatforia.android.auth.GoogleAuthClient
 import com.chatforia.android.auth.CreatorReferralStore
 import analytics.AnalyticsManager
@@ -141,6 +146,13 @@ class MainActivity : ComponentActivity() {
                 "source" to "app_link"
             )
         )
+    }
+
+    private var pendingGroupInviteCode by mutableStateOf<String?>(null)
+
+    private fun handleGroupInviteIntent(intent: Intent?) {
+        val code = GroupInvitationLink.extract(intent?.dataString) ?: return
+        pendingGroupInviteCode = code
     }
 
     private var pendingNotificationChatRoomId by
@@ -310,6 +322,7 @@ class MainActivity : ComponentActivity() {
         handleMessageNotificationIntent(intent)
         handleEsimCheckoutIntent(intent)
         handleCreatorReferralIntent(intent)
+        handleGroupInviteIntent(intent)
 
         val launchedForIncomingCall =
             intent
@@ -799,6 +812,7 @@ class MainActivity : ComponentActivity() {
         handleMessageNotificationIntent(intent)
         handleEsimCheckoutIntent(intent)
         handleCreatorReferralIntent(intent)
+        handleGroupInviteIntent(intent)
 
         val incomingCall =
             intent.getStringExtra("type") ==
@@ -941,6 +955,93 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
+        val invitationService = remember(apiClient) {
+            GroupInvitationService(apiClient)
+        }
+        var invitationPreview by remember { mutableStateOf<GroupInvitationPreview?>(null) }
+        var invitationLoading by remember { mutableStateOf(false) }
+        var invitationJoining by remember { mutableStateOf(false) }
+        var invitationError by remember { mutableStateOf<String?>(null) }
+        val invitationScope = rememberCoroutineScope()
+
+        LaunchedEffect(user.id, pendingGroupInviteCode) {
+            val code = pendingGroupInviteCode ?: return@LaunchedEffect
+            invitationPreview = null
+            invitationError = null
+            invitationLoading = true
+            try {
+                val preview = withContext(Dispatchers.IO) {
+                    invitationService.preview(code)
+                }
+                invitationPreview = preview
+                if (preview.status != "ok") {
+                    invitationError = "This invitation is ${preview.status}."
+                }
+            } catch (error: Exception) {
+                invitationError = error.message ?: "Unable to preview invitation."
+            } finally {
+                invitationLoading = false
+            }
+        }
+
+        if (pendingGroupInviteCode != null) {
+            AlertDialog(
+                onDismissRequest = {
+                    if (!invitationJoining) pendingGroupInviteCode = null
+                },
+                title = { Text("Group invitation") },
+                text = {
+                    Column {
+                        if (invitationLoading) {
+                            androidx.compose.material3.CircularProgressIndicator()
+                        } else {
+                            invitationPreview?.let {
+                                Text("Join “${it.roomName ?: "Group chat"}”?")
+                            }
+                            invitationError?.let {
+                                Text(it, color = androidx.compose.material3.MaterialTheme.colorScheme.error)
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        enabled = !invitationLoading && !invitationJoining &&
+                            invitationPreview?.status == "ok",
+                        onClick = {
+                            val code = pendingGroupInviteCode ?: return@TextButton
+                            invitationJoining = true
+                            invitationScope.launch {
+                                try {
+                                    val result = withContext(Dispatchers.IO) {
+                                        invitationService.accept(code)
+                                    }
+                                    if (!result.ok || result.roomId <= 0) {
+                                        error("Group join was not confirmed.")
+                                    }
+                                    selectedTab = AppTab.CHATS
+                                    pendingNotificationChatRoomId = result.roomId
+                                    pendingGroupInviteCode = null
+                                } catch (error: Exception) {
+                                    invitationError = error.message ?: "Could not join group."
+                                } finally {
+                                    invitationJoining = false
+                                }
+                            }
+                        }
+                    ) {
+                        Text(if (invitationJoining) "Joining…" else "Join Group")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { pendingGroupInviteCode = null },
+                        enabled = !invitationJoining
+                    ) { Text("Cancel") }
+                }
+            )
+        }
+
         val chatsRepository =
             remember {
                 ChatsRepository(apiClient)
@@ -1059,6 +1160,12 @@ class MainActivity : ComponentActivity() {
                         payloadJson
                     )
                 }
+            }
+        }
+
+        LaunchedEffect(pendingNotificationChatRoomId, user.id) {
+            if (pendingNotificationChatRoomId != null) {
+                chatsViewModel.loadConversations()
             }
         }
 
