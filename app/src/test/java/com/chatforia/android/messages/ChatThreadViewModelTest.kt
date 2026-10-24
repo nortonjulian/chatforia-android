@@ -1,6 +1,7 @@
 package com.chatforia.android.messages
 
 import android.content.Context
+import com.chatforia.android.network.ApiException
 import androidx.test.core.app.ApplicationProvider
 import com.chatforia.android.chats.ConversationDto
 import com.chatforia.android.crypto.DisplayMessageDecryptor
@@ -102,6 +103,40 @@ class ChatThreadViewModelTest {
                 listOf(10 to 2),
                 repository.loadDeltasCalls
             )
+        }
+
+    @Test
+    fun loadMessages_forbiddenAccess_showsFriendlyErrorWithoutCrashing() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            repository.forbiddenLoad = true
+            val viewModel = createViewModel(repository)
+
+            viewModel.loadMessages(roomId = 10, currentUserId = 1)
+            advanceUntilIdle()
+
+            assertFalse(viewModel.isLoading.value)
+            assertEquals("You no longer have access to this chat.", viewModel.error.value)
+        }
+
+    @Test
+    fun reconnect_forbiddenDeltas_doesNotCrashAndShowsFriendlyError() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            repository.messagesToLoad = listOf(message(15, 99, "existing"))
+            val realtime = FakeRealtimeEvents()
+            val viewModel = createViewModel(repository)
+
+            viewModel.loadMessages(roomId = 10, currentUserId = 1)
+            advanceUntilIdle()
+            repository.forbiddenDeltas = true
+
+            viewModel.connectRealtime(roomId = 10, socketManager = realtime, currentUserId = 1)
+            runCurrent()
+            realtime.emitSocketConnected()
+            advanceUntilIdle()
+
+            assertEquals("You no longer have access to this chat.", viewModel.error.value)
         }
 
     @Test
@@ -1380,6 +1415,8 @@ class ChatThreadViewModelTest {
         var reportMessageShouldFail = false
 
         var sendQueuedShouldFail = false
+        var forbiddenLoad = false
+        var forbiddenDeltas = false
 
         var queuedSendGate: CompletableDeferred<Unit>? = null
 
@@ -1388,6 +1425,9 @@ class ChatThreadViewModelTest {
         override suspend fun loadMessages(
             roomId: Int
         ): List<MessageDto> {
+            if (forbiddenLoad) {
+                throw ApiException(403, """{"message":"Not a participant in this chat"}""")
+            }
             return messagesToLoad
         }
 
@@ -1402,6 +1442,9 @@ class ChatThreadViewModelTest {
             sinceId: Int
         ): List<MessageDto> {
             loadDeltasCalls.add(roomId to sinceId)
+            if (forbiddenDeltas) {
+                throw ApiException(403, """{"message":"Not a participant in this chat"}""")
+            }
             return deltasToLoad
         }
 
@@ -1653,6 +1696,10 @@ class ChatThreadViewModelTest {
 
         override fun joinRoom(roomId: Int) {
             joinedRooms.add(roomId)
+        }
+
+        suspend fun emitSocketConnected() {
+            _socketConnected.emit(Unit)
         }
 
         suspend fun emitMessageUpsert(payload: String) {

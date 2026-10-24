@@ -52,6 +52,9 @@ class ChatThreadViewModel(
         messageDecryptorFactory()
     }
 
+    // Accessible to the queue's failure callback even during queue restoration.
+    private val _error = MutableStateFlow<String?>(null)
+
     private val messageQueueManager =
         MessageQueueManager(
             repository = repository,
@@ -60,7 +63,12 @@ class ChatThreadViewModel(
             scope = viewModelScope,
             messageEncryptorFactory = messageEncryptorFactory,
             ioDispatcher = queueDispatcher,
-            delayProvider = queueDelayProvider
+            delayProvider = queueDelayProvider,
+            onPermanentFailure = { failure ->
+                _error.value =
+                    chatAccessErrorMessage(failure, "Could not send message.") +
+                        " Your message was not sent."
+            }
         )
 
     val messages: StateFlow<List<MessageDto>>
@@ -75,7 +83,6 @@ class ChatThreadViewModel(
     private val _isSending = MutableStateFlow(false)
     val isSending: StateFlow<Boolean> = _isSending
 
-    private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
     private val json = Json {
@@ -127,6 +134,14 @@ class ChatThreadViewModel(
         }
     }
 
+    private fun chatAccessErrorMessage(error: Throwable, fallback: String): String {
+        return if (error is ApiException && error.statusCode == 403) {
+            "You no longer have access to this chat."
+        } else {
+            error.message?.takeIf { it.isNotBlank() } ?: fallback
+        }
+    }
+
     private var activeRealtimeRoomId: Int? = null
     private var activeSmsThreadId: Int? = null
     private var smsRealtimeConnected = false
@@ -149,10 +164,20 @@ class ChatThreadViewModel(
             socketManager.socketConnected.collect {
                 val activeRoomId = activeRealtimeRoomId ?: return@collect
 
-                recoverMissingMessages(
-                    roomId = activeRoomId,
-                    currentUserId = currentUserId
-                )
+                try {
+                    recoverMissingMessages(
+                        roomId = activeRoomId,
+                        currentUserId = currentUserId
+                    )
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    if (e is ApiException && e.statusCode == 403) {
+                        _error.value = chatAccessErrorMessage(e, "Failed to refresh chat.")
+                    } else {
+                        println("⚠️ Failed to recover messages: ${e.message}")
+                    }
+                }
             }
         }
 
@@ -375,8 +400,10 @@ class ChatThreadViewModel(
                         println("⚠️ Failed to load message deltas: ${e.message}")
                     }
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
-                _error.value = e.message ?: "Failed to load messages."
+                _error.value = chatAccessErrorMessage(e, "Failed to load messages.")
                 _isLoading.value = false
             }
         }
