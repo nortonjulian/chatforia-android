@@ -1903,7 +1903,8 @@ class MainActivity : ComponentActivity() {
                             socketManager = socketManager,
                             tenorRepository = tenorRepository,
                             uploadRepository = uploadRepository,
-                            riaRepository = RiaRepository(apiClient)
+                            riaRepository = RiaRepository(apiClient),
+                            apiClient = apiClient
                         )
 
                     AppTab.PROFILE ->

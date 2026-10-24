@@ -3308,4 +3308,22 @@
     <string name="android_wireless_valid_for_30_days_from_first_data_connection">Valid for 30 days from first data connection</string>
     <string name="android_wireless_one_time_purchase_with_no_contract">One-time purchase with no contract</string>
     <string name="android_wireless_top_up_anytime">Top up anytime</string>
+    <!-- Chatforia account blocking (separate from SMS/MMS phone-number blocking). -->
+    <string name="android_blocked_accounts_title">Blocked Chatforia accounts</string>
+    <string name="android_blocked_accounts_profile_description">Manage Chatforia accounts you have blocked</string>
+    <string name="android_blocked_accounts_empty">No blocked Chatforia accounts</string>
+    <string name="android_blocked_accounts_empty_description">Blocked Chatforia accounts will appear here. Your existing messages are not erased.</string>
+    <string name="android_blocked_accounts_description">Blocked accounts cannot contact you directly on Chatforia. Phone-number blocking is managed separately.</string>
+    <string name="android_blocked_accounts_unblock">Unblock account</string>
+    <string name="android_blocked_accounts_unblock_title">Unblock Chatforia account?</string>
+    <string name="android_blocked_accounts_unblock_confirmation">Allow direct Chatforia contact with %1$s again?</string>
+    <string name="android_blocked_accounts_unblock_success">Chatforia account unblocked.</string>
+    <string name="android_blocked_accounts_blocked_on">Blocked on %1$s</string>
+    <string name="android_blocked_accounts_refresh">Refresh</string>
+    <string name="android_blocked_accounts_load_failed">Could not load blocked accounts. Try refreshing.</string>
+    <string name="android_block_chatforia_account">Block Chatforia account</string>
+    <string name="android_block_chatforia_account_confirm_title">Block this Chatforia account?</string>
+    <string name="android_block_chatforia_account_confirm_message">Block %1$s from contacting you directly through Chatforia? Previous messages will remain.</string>
+    <string name="android_block_chatforia_account_success">Chatforia account blocked.</string>
+    <string name="android_block_chatforia_account_failed">Could not update the account block.</string>
 </resources>

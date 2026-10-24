@@ -105,6 +105,9 @@ import com.chatforia.android.forwarding.ForwardingSettingsViewModel
 import com.chatforia.android.blocking.BlockedNumbersRepository
 import com.chatforia.android.blocking.BlockedNumbersView
 import com.chatforia.android.blocking.BlockedNumbersViewModel
+import com.chatforia.android.blocking.BlockedAccountsRepository
+import com.chatforia.android.blocking.BlockedAccountsView
+import com.chatforia.android.blocking.BlockedAccountsViewModel
 import com.chatforia.android.auth.AppLocaleManager
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
@@ -280,6 +283,11 @@ fun ProfileScreen(
     var showPhoneNumbers by remember { mutableStateOf(false) }
 
     var showBlockedNumbers by remember { mutableStateOf(false) }
+    var showBlockedAccounts by remember { mutableStateOf(false) }
+
+    val blockedAccountsViewModel = remember(user.id, apiClient) {
+        BlockedAccountsViewModel(BlockedAccountsRepository(apiClient))
+    }
 
     val blockedNumbersViewModel = remember {
         BlockedNumbersViewModel(
@@ -422,6 +430,14 @@ fun ProfileScreen(
                 showPhoneNumbers = false
                 showUpgrade = true
             }
+        )
+        return
+    }
+
+    if (showBlockedAccounts) {
+        BlockedAccountsView(
+            viewModel = blockedAccountsViewModel,
+            onBack = { showBlockedAccounts = false }
         )
         return
     }
@@ -799,6 +815,16 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         ChatforiaSectionCard(title = stringResource(R.string.android_profile_privacy)) {
+            ProfileRow(
+                icon = Icons.Default.Security,
+                title = stringResource(R.string.android_blocked_accounts_title),
+                subtitle = stringResource(R.string.android_blocked_accounts_profile_description),
+                showChevron = true,
+                onClick = { showBlockedAccounts = true }
+            )
+
+            HorizontalDivider(color = ChatforiaColors.border)
+
             ProfileRow(
                 icon = Icons.Default.Security,
                 title =

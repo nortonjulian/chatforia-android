@@ -68,6 +68,8 @@ import com.chatforia.android.upload.UploadRepository
 import com.chatforia.android.auth.UserDto
 import com.chatforia.android.calls.AndroidCallManager
 import com.chatforia.android.ria.RiaRepository
+import com.chatforia.android.network.ApiClient
+import com.chatforia.android.blocking.BlockedAccountsRepository
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
 
@@ -84,12 +86,16 @@ fun ContactsScreen(
     socketManager: SocketManager,
     tenorRepository: TenorRepository,
     uploadRepository: UploadRepository,
-    riaRepository: RiaRepository
+    riaRepository: RiaRepository,
+    apiClient: ApiClient
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val startChatState by startChatViewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val blockedAccountsRepository = remember(apiClient) { BlockedAccountsRepository(apiClient) }
+    var blockedUserIds by remember(currentUserId) { mutableStateOf<Set<Int>>(emptySet()) }
+    var blockStatusLoading by remember { mutableStateOf(false) }
 
     var showingImportContacts by remember { mutableStateOf(false) }
     var phoneContactsToImport by remember { mutableStateOf<List<PhoneContactDto>>(emptyList()) }
@@ -119,6 +125,8 @@ fun ContactsScreen(
 
     var editingContact by remember { mutableStateOf<ContactDto?>(null) }
     var pendingDeleteContact by remember { mutableStateOf<ContactDto?>(null) }
+    var pendingBlockContact by remember { mutableStateOf<ContactDto?>(null) }
+    var blockingAccount by remember { mutableStateOf(false) }
     var pendingMessageChoice by remember { mutableStateOf<ContactDto?>(null) }
     var revealedContactId by remember { mutableStateOf<Int?>(null) }
 
@@ -137,6 +145,93 @@ fun ContactsScreen(
 
     val filteredContacts = contacts
     val openedConversation = state.openedConversation
+
+    // The server's persistent block list is authoritative across website, iOS, and Android.
+    val detailUserId = selectedContact?.user?.id ?: selectedContact?.userId
+    LaunchedEffect(detailUserId, currentUserId) {
+        if (detailUserId == null || currentUserId == null) return@LaunchedEffect
+        blockStatusLoading = true
+        try {
+            blockedUserIds = blockedAccountsRepository.listBlockedAccounts()
+                .map { it.userId }.toSet()
+        } catch (error: Exception) {
+            android.util.Log.w("ContactsScreen", "Could not refresh blocked accounts", error)
+            // Do not allow an ambiguous Block/Unblock action if we cannot load its state.
+            android.widget.Toast.makeText(
+                context,
+                context.getString(R.string.android_blocked_accounts_load_failed),
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+        } finally {
+            blockStatusLoading = false
+        }
+    }
+
+    pendingBlockContact?.let { contact ->
+        val targetUserId = contact.user?.id ?: contact.userId
+        val alreadyBlocked = targetUserId != null && blockedUserIds.contains(targetUserId)
+        val contactName = viewModel.displayName(contact)
+        AlertDialog(
+            onDismissRequest = { if (!blockingAccount) pendingBlockContact = null },
+            title = {
+                Text(stringResource(
+                    if (alreadyBlocked) R.string.android_blocked_accounts_unblock_title
+                    else R.string.android_block_chatforia_account_confirm_title
+                ))
+            },
+            text = {
+                Text(stringResource(
+                    if (alreadyBlocked) R.string.android_blocked_accounts_unblock_confirmation
+                    else R.string.android_block_chatforia_account_confirm_message,
+                    contactName
+                ))
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !blockingAccount && targetUserId != null,
+                    onClick = {
+                        val uid = targetUserId ?: return@TextButton
+                        coroutineScope.launch {
+                            blockingAccount = true
+                            try {
+                                if (alreadyBlocked) blockedAccountsRepository.unblockAccount(uid)
+                                else blockedAccountsRepository.blockAccount(uid)
+                                blockedUserIds = if (alreadyBlocked) blockedUserIds - uid
+                                    else blockedUserIds + uid
+                                pendingBlockContact = null
+                                android.widget.Toast.makeText(
+                                    context,
+                                    context.getString(
+                                        if (alreadyBlocked) R.string.android_blocked_accounts_unblock_success
+                                        else R.string.android_block_chatforia_account_success
+                                    ),
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
+                            } catch (error: Exception) {
+                                android.widget.Toast.makeText(
+                                    context,
+                                    error.message ?: context.getString(R.string.android_block_chatforia_account_failed),
+                                    android.widget.Toast.LENGTH_LONG
+                                ).show()
+                            } finally {
+                                blockingAccount = false
+                            }
+                        }
+                    }
+                ) {
+                    Text(stringResource(
+                        if (alreadyBlocked) R.string.android_blocked_accounts_unblock
+                        else R.string.android_block_chatforia_account
+                    ))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingBlockContact = null }, enabled = !blockingAccount) {
+                    Text(stringResource(R.string.android_chats_cancel))
+                }
+            }
+        )
+    }
 
     // Both swipe and detail-screen deletion require confirmation.
     pendingDeleteContact?.let { contact ->
@@ -386,6 +481,11 @@ fun ContactsScreen(
                 editingContact = contact
             },
             onDelete = { pendingDeleteContact = contact },
+            isAccountBlocked = (contact.user?.id ?: contact.userId)
+                ?.let { blockedUserIds.contains(it) } == true,
+            onToggleAccountBlock = {
+                if (!blockStatusLoading) pendingBlockContact = contact
+            },
             onBack = {
                 savedDetail = null
                 viewModel.clearSelectedContact()

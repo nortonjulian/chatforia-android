@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.DropdownMenu
@@ -47,6 +48,8 @@ fun ContactDetailScreen(
     onDelete: () -> Unit,
     onBack: () -> Unit,
     onEdit: () -> Unit,
+    isAccountBlocked: Boolean,
+    onToggleAccountBlock: () -> Unit,
 ) {
     var showContactMenu by remember { mutableStateOf(false) }
 
@@ -156,6 +159,14 @@ fun ContactDetailScreen(
                 title = stringResource(R.string.android_contact_detail_video),
                 icon = Icons.Default.Videocam,
                 onClick = onVideo
+            )
+            ContactActionRow(
+                title = stringResource(
+                    if (isAccountBlocked) R.string.android_blocked_accounts_unblock
+                    else R.string.android_block_chatforia_account
+                ),
+                icon = Icons.Default.Block,
+                onClick = onToggleAccountBlock
             )
         }
 
