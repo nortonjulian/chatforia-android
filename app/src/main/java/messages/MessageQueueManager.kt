@@ -1,6 +1,8 @@
 package com.chatforia.android.messages
 
 
+import com.chatforia.android.network.ApiException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -22,7 +24,8 @@ class MessageQueueManager(
     private val messageEncryptorFactory: () -> MessageEncryptor = { MessageEncryptor() },
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val delayProvider: suspend (Long) -> Unit = { delay(it) },
-    private val analytics: AnalyticsTracker = AnalyticsManager
+    private val analytics: AnalyticsTracker = AnalyticsManager,
+    private val onPermanentFailure: (Throwable) -> Unit = {}
 ) {
 
     private val mutex = Mutex()
@@ -222,9 +225,32 @@ class MessageQueueManager(
                     wasEncrypted = encryptedPayloads.isNotEmpty()
                 )
             )
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             println("❌ MessageQueueManager failed: ${e::class.simpleName}: ${e.message}")
-            markTemporaryFailure(job)
+            if (e is ApiException && e.statusCode == 403) {
+                // Forbidden group access is permanent until membership changes.
+                // Keep the unsent draft, but never retry this job automatically.
+                markPermanentFailure(job)
+                onPermanentFailure(e)
+            } else {
+                markTemporaryFailure(job)
+            }
+        }
+    }
+
+    private suspend fun markPermanentFailure(job: QueuedMessageJob) {
+        mutex.withLock {
+            jobs = jobs.map { queued ->
+                if (queued.clientMessageId == job.clientMessageId) {
+                    queued.copy(state = QueuedMessageState.FAILED)
+                } else {
+                    queued
+                }
+            }
+            queueStorage.save(jobs)
+            messageStore.markFailed(job.clientMessageId)
         }
     }
 
