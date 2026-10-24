@@ -1,6 +1,7 @@
 package com.chatforia.android.messages
 
 import android.content.Context
+import com.chatforia.android.network.ApiException
 import androidx.test.core.app.ApplicationProvider
 import com.chatforia.android.crypto.EncryptedMessagePayloadForUser
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -110,6 +111,47 @@ class MessageQueueManagerTest {
             assertEquals(QueuedMessageState.FAILED, savedJobs.first().state)
             assertTrue(savedJobs.first().retryCount > 10)
 
+            manager.stop()
+        }
+    }
+
+    @Test
+    fun forbiddenAccess_marksFailedWithoutRetryingAndNotifiesUser() {
+        runTest {
+            val dispatcher = StandardTestDispatcher(testScheduler)
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            val storage = cleanStorage(context, dispatcher)
+            val store = MessageStore()
+            val repository = FakeQueueRepository()
+            repository.forbiddenSend = true
+            var failure: Throwable? = null
+
+            val manager = MessageQueueManager(
+                repository = repository,
+                messageStore = store,
+                queueStorage = storage,
+                scope = this,
+                ioDispatcher = dispatcher,
+                delayProvider = { _: Long -> },
+                onPermanentFailure = { failure = it }
+            )
+            advanceUntilIdle()
+
+            manager.enqueue(
+                QueuedMessageJob(
+                    clientMessageId = "client-forbidden",
+                    roomId = 30,
+                    text = "keep this draft",
+                    senderUserId = 1
+                )
+            )
+            advanceUntilIdle()
+
+            assertEquals(1, repository.sendCalls.size)
+            assertEquals(MessageDeliveryState.FAILED, store.deliveryStateFor("client-forbidden"))
+            assertEquals(QueuedMessageState.FAILED, storage.load().single().state)
+            assertTrue(failure is ApiException)
+            assertEquals(403, (failure as ApiException).statusCode)
             manager.stop()
         }
     }
@@ -243,6 +285,7 @@ class MessageQueueManagerTest {
 
     private class FakeQueueRepository : MessageQueueRepository {
         var shouldFailSend = false
+        var forbiddenSend = false
 
         val sendCalls =
             mutableListOf<SendCall>()
@@ -275,6 +318,10 @@ class MessageQueueManagerTest {
                     encryptedPayloads = encryptedPayloads
                 )
             )
+
+            if (forbiddenSend) {
+                throw ApiException(403, """{"message":"Not a participant in this chat"}""")
+            }
 
             if (shouldFailSend) {
                 throw RuntimeException("Network failed.")
