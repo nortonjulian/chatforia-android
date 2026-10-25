@@ -5,6 +5,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
@@ -34,9 +38,10 @@ fun ChatMessageRow(
     onMessageInfo: ((MessageDto) -> Unit)? = null
 ) {
     var showMenu by remember { mutableStateOf(false) }
-    var revealed by rememberSaveable(message.id, message.clientMessageId) { mutableStateOf(false) }
-    var fingerDown by remember(message.id, message.clientMessageId) { mutableStateOf(false) }
     val requireHold = blurByDefault && holdToReveal
+    // A privacy-mode switch must not preserve a prior tap-to-reveal.
+    var revealed by rememberSaveable(message.id, message.clientMessageId, requireHold) { mutableStateOf(false) }
+    var fingerDown by remember(message.id, message.clientMessageId, requireHold) { mutableStateOf(false) }
     val currentlyRevealed = isPrivacyMessageRevealed(blurByDefault, holdToReveal, revealed, fingerDown)
     val concealed = shouldConcealChatMessage(
         blurByDefault = blurByDefault,
@@ -126,6 +131,16 @@ fun ChatMessageRow(
                             isMine = isMine
                         )
                     }
+                }
+            }
+            if (requireHold && message.deletedForAll != true) {
+                // Hold is reserved for reveal. Keep delete/report/info available
+                // outside the gesture detector instead of making them unreachable.
+                IconButton(onClick = { showMenu = true }) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = stringResource(R.string.android_chat_message_row_actions)
+                    )
                 }
             }
         }
