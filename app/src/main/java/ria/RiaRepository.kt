@@ -17,6 +17,33 @@ class RiaRepository(
         encodeDefaults = true
     }
 
+    // Server-authoritative, per-member group consent; unrelated to standalone Ria.
+    suspend fun loadGroupConsent(roomId: Int): Boolean = withContext(Dispatchers.IO) {
+        require(roomId > 0)
+        val response: GroupRiaRoomConsent = apiClient.send(
+            ApiRequest(path = "chatrooms/$roomId", method = HttpMethod.GET, requiresAuth = true)
+        )
+        response.me.allowAIBot
+    }
+
+    suspend fun saveGroupConsent(roomId: Int, allowed: Boolean): Boolean = withContext(Dispatchers.IO) {
+        require(roomId > 0)
+        val response: GroupRiaConsentResult = apiClient.send(
+            ApiRequest(
+                path = "chatrooms/$roomId/ai-opt",
+                method = HttpMethod.PATCH,
+                bodyJson = json.encodeToString(GroupRiaConsentUpdate(allow = allowed)),
+                requiresAuth = true
+            )
+        )
+        check(response.allowAIBot == allowed) { "Could not verify Ria consent update." }
+        val confirmed: GroupRiaRoomConsent = apiClient.send(
+            ApiRequest(path = "chatrooms/$roomId", method = HttpMethod.GET, requiresAuth = true)
+        )
+        check(confirmed.me.allowAIBot == allowed) { "Could not verify saved Ria consent." }
+        confirmed.me.allowAIBot
+    }
+
     suspend fun chat(
         messages: List<RiaContextMessageDto>,
         memoryEnabled: Boolean,
@@ -101,3 +128,14 @@ class RiaRepository(
         return response.rewrites
     }
 }
+@kotlinx.serialization.Serializable
+data class GroupRiaRoomConsent(val me: GroupRiaMemberConsent)
+
+@kotlinx.serialization.Serializable
+data class GroupRiaMemberConsent(val allowAIBot: Boolean)
+
+@kotlinx.serialization.Serializable
+data class GroupRiaConsentUpdate(val allow: Boolean)
+
+@kotlinx.serialization.Serializable
+data class GroupRiaConsentResult(val allowAIBot: Boolean)
