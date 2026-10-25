@@ -7,6 +7,8 @@ import android.net.NetworkCapabilities
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.widget.Toast
+import com.chatforia.android.R
 import com.chatforia.android.network.Environment
 import io.socket.client.IO
 import io.socket.client.Socket
@@ -23,6 +25,7 @@ import com.chatforia.android.calls.CallRealtimeEvents
 class SocketManager(
     context: Context
 ) : ChatRealtimeEvents, CallRealtimeEvents {
+    private val appContext = context.applicationContext
     private val connectivityManager =
         context.applicationContext.getSystemService(
             Context.CONNECTIVITY_SERVICE
@@ -222,6 +225,20 @@ class SocketManager(
 
             emitJoinRooms()
             _socketConnected.tryEmit(Unit)
+        }
+
+        socket?.on("message:copy-notice") { args ->
+            // No copied message body is sent to or displayed on the receiving device.
+            val id = (args.firstOrNull() as? JSONObject)?.optInt("messageId") ?: 0
+            if (id > 0) {
+                mainHandler.post {
+                    Toast.makeText(
+                        appContext,
+                        appContext.getString(R.string.android_message_copy_notice),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
         }
 
         socket?.on("message_read") { args ->
@@ -574,6 +591,11 @@ class SocketManager(
     fun joinRooms(roomIds: List<Int>) {
         joinedRoomIds.addAll(roomIds)
         emitJoinRooms()
+    }
+
+    fun reportMessageCopied(messageId: Int) {
+        if (messageId <= 0 || socket?.connected() != true) return
+        socket?.emit("message:copied", JSONObject().put("messageId", messageId))
     }
 
     fun startRandomChat() {
