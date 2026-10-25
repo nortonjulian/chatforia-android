@@ -1,15 +1,19 @@
 package com.chatforia.android.messages
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
@@ -20,12 +24,20 @@ import com.chatforia.android.R
 fun ChatMessageRow(
     message: MessageDto,
     isMine: Boolean,
+    blurByDefault: Boolean = false,
     onEdit: ((MessageDto) -> Unit)? = null,
     onDelete: ((MessageDto) -> Unit)? = null,
     onReport: ((MessageDto) -> Unit)? = null,
     onMessageInfo: ((MessageDto) -> Unit)? = null
 ) {
     var showMenu by remember { mutableStateOf(false) }
+    var revealed by rememberSaveable(message.id, message.clientMessageId) { mutableStateOf(false) }
+    val concealed = shouldConcealChatMessage(
+        blurByDefault = blurByDefault,
+        revealed = revealed,
+        deletedForAll = message.deletedForAll == true,
+        deletedForSender = message.deletedBySender == true
+    )
     val clipboard = LocalClipboardManager.current
 
     val attachments =
@@ -36,7 +48,7 @@ fun ChatMessageRow(
         }
 
     val hasAttachments = attachments.isNotEmpty()
-    val copyText = message.visibleTextOrNull(isMine)
+    val copyText = if (concealed) null else message.visibleTextOrNull(isMine)
     val canEdit =
         isMine &&
                 message.deletedForAll != true &&
@@ -70,6 +82,15 @@ fun ChatMessageRow(
                         }
                     )
             ) {
+                if (concealed) {
+                    Text(
+                        text = "Message hidden · Tap to reveal",
+                        modifier = Modifier
+                            .clickable { revealed = true }
+                            .semantics { contentDescription = "Message hidden. Tap to reveal" }
+                            .padding(12.dp)
+                    )
+                } else {
                 if (hasAttachments) {
                     MessageAttachmentsView(
                         attachments = attachments,
@@ -82,6 +103,7 @@ fun ChatMessageRow(
                         message = message,
                         isMine = isMine
                     )
+                }
                 }
             }
         }
