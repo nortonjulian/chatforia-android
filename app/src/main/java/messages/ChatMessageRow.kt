@@ -3,6 +3,7 @@ package com.chatforia.android.messages
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -12,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -25,6 +27,7 @@ fun ChatMessageRow(
     message: MessageDto,
     isMine: Boolean,
     blurByDefault: Boolean = false,
+    holdToReveal: Boolean = false,
     onEdit: ((MessageDto) -> Unit)? = null,
     onDelete: ((MessageDto) -> Unit)? = null,
     onReport: ((MessageDto) -> Unit)? = null,
@@ -32,9 +35,12 @@ fun ChatMessageRow(
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var revealed by rememberSaveable(message.id, message.clientMessageId) { mutableStateOf(false) }
+    var fingerDown by remember(message.id, message.clientMessageId) { mutableStateOf(false) }
+    val requireHold = blurByDefault && holdToReveal
+    val currentlyRevealed = if (requireHold) fingerDown else revealed
     val concealed = shouldConcealChatMessage(
         blurByDefault = blurByDefault,
-        revealed = revealed,
+        revealed = currentlyRevealed,
         deletedForAll = message.deletedForAll == true,
         deletedForSender = message.deletedBySender == true
     )
@@ -76,19 +82,34 @@ fun ChatMessageRow(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier
                     .widthIn(max = 300.dp)
-                    .combinedClickable(
-                        onClick = {},
-                        onLongClick = {
-                            showMenu = true
+                    .then(
+                        if (requireHold) {
+                            Modifier.pointerInput(message.id, message.clientMessageId) {
+                                detectTapGestures(
+                                    onPress = {
+                                        fingerDown = true
+                                        try {
+                                            tryAwaitRelease()
+                                        } finally {
+                                            fingerDown = false
+                                        }
+                                    }
+                                )
+                            }
+                        } else {
+                            Modifier.combinedClickable(
+                                onClick = {},
+                                onLongClick = { showMenu = true }
+                            )
                         }
                     )
             ) {
                 if (concealed) {
                     Text(
-                        text = "Message hidden · Tap to reveal",
+                        text = if (requireHold) "Message hidden · Hold to reveal" else "Message hidden · Tap to reveal",
                         modifier = Modifier
-                            .clickable { revealed = true }
-                            .semantics { contentDescription = "Message hidden. Tap to reveal" }
+                            .then(if (requireHold) Modifier else Modifier.clickable { revealed = true })
+                            .semantics { contentDescription = if (requireHold) "Message hidden. Hold to reveal" else "Message hidden. Tap to reveal" }
                             .padding(12.dp)
                     )
                 } else {
