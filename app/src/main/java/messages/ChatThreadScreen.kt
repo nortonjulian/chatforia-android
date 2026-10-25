@@ -52,6 +52,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Videocam
 import com.chatforia.android.auth.UserDto
 import com.chatforia.android.calls.AndroidCallManager
@@ -248,6 +249,7 @@ fun ChatThreadScreen(
         }
 
     var showSearchSheet by remember { mutableStateOf(false) }
+    var showGroupRiaConsent by remember(conversation.id) { mutableStateOf(false) }
     var threadSearchText by remember { mutableStateOf("") }
 
     val scope = rememberCoroutineScope()
@@ -402,6 +404,13 @@ fun ChatThreadScreen(
     }
 
     val topActions = buildList {
+        if (conversation.kind == "chat" && conversation.isGroup == true && !isTemporaryRandomChat) {
+            add(ChatforiaAction(
+                icon = Icons.Default.Security,
+                contentDescription = "Group Ria privacy",
+                onClick = { showGroupRiaConsent = true }
+            ))
+        }
         add(
             ChatforiaAction(
                 icon = Icons.Default.Search,
@@ -983,6 +992,14 @@ fun ChatThreadScreen(
                         showMediaPicker = false
                         showGifPicker = true
                     }
+                )
+            }
+
+            if (showGroupRiaConsent && conversation.id != null) {
+                GroupRiaConsentDialog(
+                    roomId = conversation.id,
+                    repository = riaRepository,
+                    onDismiss = { showGroupRiaConsent = false }
                 )
             }
 
@@ -1573,3 +1590,85 @@ private fun SmsMessageBubble(
     }
 }
 
+
+
+@Composable
+private fun GroupRiaConsentDialog(
+    roomId: Int,
+    repository: RiaRepository,
+    onDismiss: () -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    var consent by remember(roomId) { mutableStateOf<Boolean?>(null) }
+    var isLoading by remember(roomId) { mutableStateOf(true) }
+    var isSaving by remember(roomId) { mutableStateOf(false) }
+    var errorText by remember(roomId) { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(roomId, repository) {
+        isLoading = true
+        consent = null
+        errorText = null
+        try {
+            consent = repository.loadGroupConsent(roomId)
+        } catch (error: Exception) {
+            errorText = error.message ?: "Could not load Ria consent."
+        } finally {
+            isLoading = false
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = { if (!isSaving) onDismiss() },
+        title = { Text("Group Ria privacy") },
+        text = {
+            Column {
+                Text("Allow Ria to respond to my requests in this group")
+                Spacer(Modifier.height(8.dp))
+                if (consent != null) {
+                    Switch(
+                        checked = consent == true,
+                        enabled = !isLoading && !isSaving,
+                        onCheckedChange = { allowed ->
+                            scope.launch {
+                                isSaving = true
+                                errorText = null
+                                try {
+                                    consent = repository.saveGroupConsent(roomId, allowed)
+                                } catch (error: Exception) {
+                                    // A PATCH may have succeeded even if GET fails.
+                                    // Unknown is safer than silently reverting.
+                                    consent = null
+                                    errorText = error.message ?: "Could not verify Ria consent."
+                                } finally {
+                                    isSaving = false
+                                }
+                            }
+                        }
+                    )
+                } else {
+                    Text("Consent status unavailable")
+                    if (isLoading) CircularProgressIndicator()
+                }
+                Text("Only explicit @Ria or /ask requests can invoke Group Ria when the room feature is enabled and consent requirements are met. Prior group history is not sent.")
+                if (errorText != null) {
+                    Text(errorText.orEmpty(), color = MaterialTheme.colorScheme.error)
+                    TextButton(
+                        enabled = !isLoading && !isSaving,
+                        onClick = {
+                            scope.launch {
+                                isLoading = true
+                                errorText = null
+                                try { consent = repository.loadGroupConsent(roomId) }
+                                catch (error: Exception) { errorText = error.message ?: "Could not load Ria consent." }
+                                finally { isLoading = false }
+                            }
+                        }
+                    ) { Text("Retry") }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = !isSaving, onClick = onDismiss) { Text("Done") }
+        }
+    )
+}
