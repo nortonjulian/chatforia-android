@@ -130,6 +130,17 @@ enum class AppTab {
 class MainActivity : ComponentActivity() {
 
     private var latestLaunchIntent by mutableStateOf<Intent?>(null)
+
+    private fun applyRecentsPrivacy(enabled: Boolean) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            setRecentsScreenshotEnabled(!enabled)
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        } else {
+            // Pre-Android 13 lacks a Recents-only screenshot toggle.
+            if (enabled) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            else window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
     private val creatorReferralStore by lazy { CreatorReferralStore(applicationContext) }
     private var pendingReferralRegistration by mutableStateOf(false)
 
@@ -460,6 +471,10 @@ class MainActivity : ComponentActivity() {
 
                     val authState by
                     authViewModel.state.collectAsState()
+
+                    val protectRecents = (authState as? AuthState.LoggedIn)
+                        ?.user?.privacyBlurOnUnfocus == true
+                    SideEffect { applyRecentsPrivacy(protectRecents) }
 
                     LaunchedEffect(authState, pendingReferralRegistration) {
                         if (pendingReferralRegistration) {
