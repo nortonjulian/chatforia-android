@@ -653,6 +653,11 @@ fun ChatThreadScreen(
                                         isMine = message.sender.id == currentUserId,
                                         blurByDefault = currentUser.privacyBlurEnabled == true,
                                         holdToReveal = currentUser.privacyHoldToReveal == true,
+                                        onCopy = { selected ->
+                                            if (selected.sender.id != currentUserId && selected.id > 0) {
+                                                socketManager.reportMessageCopied(selected.id)
+                                            }
+                                        },
                                         onEdit = { selected ->
                                             editingMessage = selected
 
