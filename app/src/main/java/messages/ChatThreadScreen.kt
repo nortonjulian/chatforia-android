@@ -651,6 +651,7 @@ fun ChatThreadScreen(
                                     ChatMessageRow(
                                         message = message,
                                         isMine = message.sender.id == currentUserId,
+                                        blurByDefault = currentUser.privacyBlurEnabled == true,
                                         onEdit = { selected ->
                                             editingMessage = selected
 
