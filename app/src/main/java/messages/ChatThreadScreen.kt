@@ -74,6 +74,8 @@ import com.chatforia.android.R
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.sp
 import android.app.Activity
 import android.content.Context
@@ -1599,6 +1601,7 @@ private fun GroupRiaConsentDialog(
     onDismiss: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
+    val consentLabel = "Allow Ria to use my messages in this room"
     var consent by remember(roomId) { mutableStateOf<Boolean?>(null) }
     var isLoading by remember(roomId) { mutableStateOf(true) }
     var isSaving by remember(roomId) { mutableStateOf(false) }
@@ -1623,10 +1626,11 @@ private fun GroupRiaConsentDialog(
         title = { Text("Group Ria privacy") },
         text = {
             Column {
-                Text("Allow Ria to use my messages in this room")
+                Text(consentLabel)
                 Spacer(Modifier.height(8.dp))
                 if (consent != null) {
                     Switch(
+                        modifier = Modifier.semantics { contentDescription = consentLabel },
                         checked = consent == true,
                         enabled = !isLoading && !isSaving,
                         onCheckedChange = { allowed ->
