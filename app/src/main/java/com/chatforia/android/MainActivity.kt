@@ -1,6 +1,7 @@
 package com.chatforia.android
 
 import com.chatforia.android.auth.accessPlan
+import com.chatforia.android.privacy.shouldProtectRecents
 import android.Manifest
 import android.os.Build
 import android.os.Bundle
@@ -472,8 +473,11 @@ class MainActivity : ComponentActivity() {
                     val authState by
                     authViewModel.state.collectAsState()
 
-                    val protectRecents = (authState as? AuthState.LoggedIn)
-                        ?.user?.privacyBlurOnUnfocus == true
+                    val protectRecents = shouldProtectRecents(
+                        signedIn = authState is AuthState.LoggedIn,
+                        blurWhenUnfocused = (authState as? AuthState.LoggedIn)
+                            ?.user?.privacyBlurOnUnfocus == true
+                    )
                     SideEffect { applyRecentsPrivacy(protectRecents) }
 
                     LaunchedEffect(authState, pendingReferralRegistration) {
