@@ -50,6 +50,7 @@ fun ChatMessageRow(
     val hasAttachments = attachments.isNotEmpty()
     val copyText = if (concealed) null else message.visibleTextOrNull(isMine)
     val canEdit =
+        !concealed &&
         isMine &&
                 message.deletedForAll != true &&
                 message.failed != true &&
@@ -91,19 +92,19 @@ fun ChatMessageRow(
                             .padding(12.dp)
                     )
                 } else {
-                if (hasAttachments) {
-                    MessageAttachmentsView(
-                        attachments = attachments,
-                        isMine = isMine
-                    )
-                }
+                    if (hasAttachments) {
+                        MessageAttachmentsView(
+                            attachments = attachments,
+                            isMine = isMine
+                        )
+                    }
 
-                if (shouldShowTextBubble(message, hasAttachments, isMine)) {
-                    MessageBubble(
-                        message = message,
-                        isMine = isMine
-                    )
-                }
+                    if (shouldShowTextBubble(message, hasAttachments, isMine)) {
+                        MessageBubble(
+                            message = message,
+                            isMine = isMine
+                        )
+                    }
                 }
             }
         }
