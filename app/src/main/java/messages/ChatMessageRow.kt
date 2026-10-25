@@ -32,6 +32,7 @@ fun ChatMessageRow(
     isMine: Boolean,
     blurByDefault: Boolean = false,
     holdToReveal: Boolean = false,
+    onCopy: ((MessageDto) -> Unit)? = null,
     onEdit: ((MessageDto) -> Unit)? = null,
     onDelete: ((MessageDto) -> Unit)? = null,
     onReport: ((MessageDto) -> Unit)? = null,
@@ -155,6 +156,8 @@ fun ChatMessageRow(
                     text = { Text(stringResource(R.string.android_chat_message_row_copy)) },
                     onClick = {
                         clipboard.setText(AnnotatedString(copyText))
+                        // Only an explicit, successful in-app Copy action reports.
+                        onCopy?.invoke(message)
                         showMenu = false
                     }
                 )
