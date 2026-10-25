@@ -37,7 +37,7 @@ fun ChatMessageRow(
     var revealed by rememberSaveable(message.id, message.clientMessageId) { mutableStateOf(false) }
     var fingerDown by remember(message.id, message.clientMessageId) { mutableStateOf(false) }
     val requireHold = blurByDefault && holdToReveal
-    val currentlyRevealed = if (requireHold) fingerDown else revealed
+    val currentlyRevealed = isPrivacyMessageRevealed(blurByDefault, holdToReveal, revealed, fingerDown)
     val concealed = shouldConcealChatMessage(
         blurByDefault = blurByDefault,
         revealed = currentlyRevealed,
