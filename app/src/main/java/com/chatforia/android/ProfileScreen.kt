@@ -916,6 +916,7 @@ fun ProfileScreen(
                 title = stringResource(R.string.android_profile_hold_to_reveal_messages),
                 subtitle = "",
                 checked = settingsState.privacyHoldToReveal,
+                enabled = settingsState.privacyBlurEnabled,
                 onCheckedChange = { enabled ->
                     settingsViewModel.update { it.copy(privacyHoldToReveal = enabled) }
                 }

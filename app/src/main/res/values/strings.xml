@@ -208,6 +208,7 @@
     <string name="android_calls_voicemail">Voicemail</string>
     <string name="android_calls_your_recent_calls_will_show_up_here">Your recent calls will show up here.</string>
     <string name="android_chat_message_row_copy">Copy</string>
+    <string name="android_chat_message_row_actions">Message actions</string>
     <string name="android_chat_message_row_edit">Edit</string>
     <string name="android_chat_message_row_message_info">Message Info</string>
     <string name="android_chat_message_row_report">Report</string>
