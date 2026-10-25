@@ -1604,7 +1604,8 @@ private fun GroupRiaConsentDialog(
     var isSaving by remember(roomId) { mutableStateOf(false) }
     var errorText by remember(roomId) { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(roomId, repository) {
+    // The repository can be recreated during Compose recomposition; don't reset the dialog.
+    LaunchedEffect(roomId) {
         isLoading = true
         consent = null
         errorText = null
@@ -1622,7 +1623,7 @@ private fun GroupRiaConsentDialog(
         title = { Text("Group Ria privacy") },
         text = {
             Column {
-                Text("Allow Ria to respond to my requests in this group")
+                Text("Allow Ria to use my messages in this room")
                 Spacer(Modifier.height(8.dp))
                 if (consent != null) {
                     Switch(
