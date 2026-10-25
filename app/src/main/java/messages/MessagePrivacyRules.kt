@@ -17,3 +17,11 @@ internal fun shouldConcealChatMessage(
         !revealed &&
         !deletedForAll &&
         !deletedForSender
+
+/** When hold mode is active, release must immediately conceal the row. */
+internal fun isPrivacyMessageRevealed(
+    blurByDefault: Boolean,
+    holdToReveal: Boolean,
+    tappedReveal: Boolean,
+    fingerPressed: Boolean
+): Boolean = if (blurByDefault && holdToReveal) fingerPressed else tappedReveal
