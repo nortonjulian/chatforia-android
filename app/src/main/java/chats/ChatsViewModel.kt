@@ -10,6 +10,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import java.time.Instant
 import com.chatforia.android.crypto.KeyStorage
 import com.chatforia.android.crypto.MessageDecryptor
@@ -150,6 +152,20 @@ class ChatsViewModel(
                 val message =
                     json.decodeFromString<MessageDto>(messageJson)
 
+                // A delete-for-everyone is also emitted as a message:upsert
+                // tombstone. It is not a new message and must never retain
+                // or replace the deleted text in the Chats list preview.
+                if (message.deletedForAll == true) {
+                    val roomId = message.chatRoomId
+                    if (roomId != null && shouldRefreshDeletedPreview(
+                            _conversations.value, roomId, message.id
+                        )
+                    ) {
+                        refreshConversations()
+                    }
+                    return@launch
+                }
+
                 applyRealtimeMessage(message)
 
             } catch (e: Exception) {
@@ -162,35 +178,19 @@ class ChatsViewModel(
     fun applyRealtimeDeleteJson(payloadJson: String) {
         viewModelScope.launch {
             try {
-                val payload =
-                    json.parseToJsonElement(payloadJson)
-                        .jsonObject
+                // Production sends { item: { id, chatRoomId, ... } }.
+                // Delete-for-me also includes a top-level roomId.
+                val target = parseConversationDeleteTarget(payloadJson)
+                    ?: return@launch
 
-                val roomId =
-                    payload["chatRoomId"]?.toString()?.trim('"')?.toIntOrNull()
-                        ?: payload["roomId"]?.toString()?.trim('"')?.toIntOrNull()
-
-                val messageId =
-                    payload["id"]?.toString()?.trim('"')?.toIntOrNull()
-                        ?: payload["messageId"]?.toString()?.trim('"')?.toIntOrNull()
-
-                if (roomId == null || messageId == null) {
-                    return@launch
+                if (shouldRefreshDeletedPreview(
+                        _conversations.value, target.roomId, target.messageId
+                    )
+                ) {
+                    // Canonical /conversations already excludes deleted
+                    // messages, so this restores the previous surviving one.
+                    refreshConversations()
                 }
-
-                val conversation =
-                    _conversations.value.firstOrNull {
-                        it.kind.equals("chat", ignoreCase = true) &&
-                                it.id == roomId
-                    }
-                        ?: return@launch
-
-                if (conversation.last?.messageId != messageId) {
-                    return@launch
-                }
-
-                refreshConversations()
-
             } catch (e: Exception) {
                 println("❌ Failed to apply realtime conversation delete: ${e.message}")
                 refreshConversations()
@@ -415,4 +415,44 @@ internal fun mergeConversationUnreadCounts(
         val count = countsByConversation[local.uniqueId]
         if (count == null) local else local.copy(unreadCount = count)
     }
+}
+
+/**
+ * Accept both the production event envelope { item: { id, chatRoomId } }
+ * and legacy flat delete events. Do not infer a message ID from a room ID.
+ */
+internal data class ConversationDeleteTarget(val roomId: Int, val messageId: Int)
+
+internal fun parseConversationDeleteTarget(payloadJson: String): ConversationDeleteTarget? {
+    val outer = Json.parseToJsonElement(payloadJson) as? JsonObject ?: return null
+    val item = (outer["item"] as? JsonObject)
+        ?: (outer["message"] as? JsonObject)
+        ?: outer
+
+    fun integer(value: kotlinx.serialization.json.JsonElement?): Int? =
+        (value as? JsonPrimitive)?.content?.toIntOrNull()
+
+    val roomId = integer(item["chatRoomId"])
+        ?: integer(item["roomId"])
+        ?: integer(outer["chatRoomId"])
+        ?: integer(outer["roomId"])
+        ?: return null
+    val messageId = integer(item["id"])
+        ?: integer(item["messageId"])
+        ?: integer(outer["id"])
+        ?: integer(outer["messageId"])
+        ?: return null
+
+    return ConversationDeleteTarget(roomId, messageId)
+}
+
+/** A deleted older message must not replace a newer conversation preview. */
+internal fun shouldRefreshDeletedPreview(
+    conversations: List<ConversationDto>,
+    roomId: Int,
+    messageId: Int
+): Boolean = conversations.any {
+    it.kind.equals("chat", ignoreCase = true) &&
+        it.id == roomId &&
+        it.last?.messageId == messageId
 }
