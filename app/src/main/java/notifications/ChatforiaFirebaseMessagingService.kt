@@ -382,6 +382,17 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                     )
 
                     if (ChatforiaAppState.isInForeground) {
+                        // Optional additional visual cue; never show message
+                        // contents from E2EE push payloads.
+                        if (AccessibilityAlertPreferences.visual(applicationContext)) {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                android.widget.Toast.makeText(
+                                    applicationContext,
+                                    "New Chatforia message",
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
                         Log.d(
                             "ChatforiaFCM",
                             "App is foreground; playing selected Chatforia message tone"
