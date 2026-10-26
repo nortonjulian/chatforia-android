@@ -6,7 +6,7 @@ package com.chatforia.android.messages
  * messages, translation payloads, report evidence, or clipboard contents.
  */
 private val explicitDisplayPattern = Regex(
-    """(?i)\b(?:motherfucker|fucking|fucked|fuck|shitty|shit|asshole|bitch|cunt|blow[\s-]?job|hand[\s-]?job)\b"""
+    """(?i)\b(?:motherfucker|bullshit|fucking|fucked|fuck|shitty|shit|asshole|bitch|cunt|blow[\s-]?job|hand[\s-]?job)\b"""
 )
 
 fun maskExplicitText(text: String, allowExplicitContent: Boolean): String {
