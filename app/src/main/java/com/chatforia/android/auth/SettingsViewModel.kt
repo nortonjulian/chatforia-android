@@ -41,6 +41,7 @@ data class SettingsUiState(
     val ringtone: String = "classic.mp3",
     val soundVolume: Int = 70,
 
+    val isLoadingAccessibility: Boolean = false,
     val isSaving: Boolean = false,
     val error: String? = null,
     val success: String? = null,
@@ -60,6 +61,37 @@ class SettingsViewModel(
 
     private val _state = MutableStateFlow(SettingsUiState())
     val state: StateFlow<SettingsUiState> = _state
+    private var accessibilitySnapshot: UserDto? = null
+
+    fun refreshAccessibility(accountId: Int, onUserUpdated: (UserDto) -> Unit) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoadingAccessibility = true, error = null)
+            try {
+                val fresh = repository.getCurrentUser()
+                if (fresh.id != accountId) error("Account changed")
+                accessibilitySnapshot = fresh
+                _state.value = _state.value.copy(
+                    a11yUiFont = fresh.a11yUiFont ?: "md",
+                    a11yVisualAlerts = fresh.a11yVisualAlerts ?: false,
+                    a11yVibrate = fresh.a11yVibrate ?: false,
+                    a11yFlashOnCall = fresh.a11yFlashOnCall ?: false,
+                    a11yLiveCaptions = fresh.a11yLiveCaptions ?: false,
+                    a11yVoiceNoteSTT = fresh.a11yVoiceNoteSTT ?: false,
+                    a11yCaptionFont = fresh.a11yCaptionFont ?: "lg",
+                    a11yCaptionBg = fresh.a11yCaptionBg ?: "dark",
+                    isLoadingAccessibility = false
+                )
+                onUserUpdated(fresh)
+            } catch (_: Exception) {
+                accessibilitySnapshot = null
+                _state.value = _state.value.copy(
+                    isLoadingAccessibility = false,
+                    error = "Could not refresh Accessibility settings. Reopen to retry."
+                )
+            }
+        }
+    }
+
 
     fun load(user: UserDto) {
         _state.value = SettingsUiState(
@@ -128,17 +160,18 @@ class SettingsViewModel(
             try {
                 val updatedUser = repository.updateAccessibility(
                     AccessibilitySettingsUpdateRequest(
-                        a11yUiFont = current.a11yUiFont,
-                        a11yVisualAlerts = current.a11yVisualAlerts,
-                        a11yVibrate = current.a11yVibrate,
-                        a11yFlashOnCall = current.a11yFlashOnCall,
-                        a11yLiveCaptions = current.a11yLiveCaptions,
-                        a11yVoiceNoteSTT = current.a11yVoiceNoteSTT,
-                        a11yCaptionFont = current.a11yCaptionFont,
-                        a11yCaptionBg = current.a11yCaptionBg,
+                        a11yUiFont = current.a11yUiFont.takeIf { accessibilitySnapshot == null || it != (accessibilitySnapshot!!.a11yUiFont ?: "md") },
+                        a11yVisualAlerts = current.a11yVisualAlerts.takeIf { accessibilitySnapshot == null || it != (accessibilitySnapshot!!.a11yVisualAlerts ?: false) },
+                        a11yVibrate = current.a11yVibrate.takeIf { accessibilitySnapshot == null || it != (accessibilitySnapshot!!.a11yVibrate ?: false) },
+                        a11yFlashOnCall = current.a11yFlashOnCall.takeIf { accessibilitySnapshot == null || it != (accessibilitySnapshot!!.a11yFlashOnCall ?: false) },
+                        a11yLiveCaptions = current.a11yLiveCaptions.takeIf { accessibilitySnapshot == null || it != (accessibilitySnapshot!!.a11yLiveCaptions ?: false) },
+                        a11yVoiceNoteSTT = current.a11yVoiceNoteSTT.takeIf { accessibilitySnapshot == null || it != (accessibilitySnapshot!!.a11yVoiceNoteSTT ?: false) },
+                        a11yCaptionFont = current.a11yCaptionFont.takeIf { accessibilitySnapshot == null || it != (accessibilitySnapshot!!.a11yCaptionFont ?: "lg") },
+                        a11yCaptionBg = current.a11yCaptionBg.takeIf { accessibilitySnapshot == null || it != (accessibilitySnapshot!!.a11yCaptionBg ?: "dark") },
                     )
                 )
 
+                accessibilitySnapshot = updatedUser
                 onUserUpdated(updatedUser)
                 load(updatedUser)
 
