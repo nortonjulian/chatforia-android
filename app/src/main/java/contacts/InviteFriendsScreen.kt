@@ -77,18 +77,19 @@ fun InviteFriendsScreen(
         }
     }
 
-    fun normalizeRecipient(raw: String): String? {
-        val value = raw.trim()
-        if (!value.all { it.isDigit() || it == '+' || it == '-' || it == '(' || it == ')' || it == '.' || it.isWhitespace() }) return null
-        val normalized = PhoneNumberUtils.formatNumberToE164(value, Locale.getDefault().country)
-        return normalized ?: PhoneNumberUtils.normalizeNumber(value)
-            .takeIf { it.startsWith("+") && it.count(Char::isDigit) in 8..15 }
-    }
+    fun normalizeRecipient(raw: String): String? =
+        normalizeInvitePhoneNumber(
+            raw = raw,
+            formattedE164 = PhoneNumberUtils.formatNumberToE164(
+                raw.trim(),
+                Locale.getDefault().country
+            )
+        )
 
     fun createSmsInvite() {
         val phone = normalizeRecipient(recipientPhone)
         if (phone == null) {
-            error = "Enter a valid phone number with country code."
+            error = "Enter a valid recipient phone number."
             return
         }
         coroutineScope.launch {
