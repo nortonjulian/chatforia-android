@@ -419,7 +419,9 @@ fun ContactsScreen(
             onInviteSms = { phone, message ->
                 inviteDraft = message
                 viewModel.openInviteSmsThread(phone)
-            }
+            },
+            isOpeningSmsThread = state.isOpeningChat,
+            smsThreadError = state.error
         )
         return
     }
