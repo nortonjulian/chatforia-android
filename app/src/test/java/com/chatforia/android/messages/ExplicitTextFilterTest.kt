@@ -6,7 +6,7 @@ import org.junit.Test
 class ExplicitTextFilterTest {
     @Test fun offMasksRecognizedProfanityAndPhrases() {
         assertEquals("What the ****?!", maskExplicitText("What the shit?!", false))
-        assertEquals("That was ********.", maskExplicitText("That was bullshit.", false).replace("bullshit", "********"))
+        assertEquals("That was ********.", maskExplicitText("That was bullshit.", false))
         assertEquals("****-***", maskExplicitText("blow-job", false))
     }
 
