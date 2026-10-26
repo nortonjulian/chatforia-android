@@ -922,14 +922,6 @@ fun ProfileScreen(
                 }
             )
 
-            SettingSwitchRow(
-                title = stringResource(R.string.android_profile_notify_when_messages_are_copied),
-                subtitle = "",
-                checked = settingsState.notifyOnCopy,
-                onCheckedChange = { enabled ->
-                    settingsViewModel.update { it.copy(notifyOnCopy = enabled) }
-                }
-            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
