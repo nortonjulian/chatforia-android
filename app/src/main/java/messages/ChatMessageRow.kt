@@ -32,6 +32,8 @@ fun ChatMessageRow(
     isMine: Boolean,
     blurByDefault: Boolean = false,
     holdToReveal: Boolean = false,
+    autoTranscribeReceived: Boolean = false,
+    transcriptAccountId: Int? = null,
     onEdit: ((MessageDto) -> Unit)? = null,
     onDelete: ((MessageDto) -> Unit)? = null,
     onReport: ((MessageDto) -> Unit)? = null,
@@ -122,6 +124,17 @@ fun ChatMessageRow(
                         MessageAttachmentsView(
                             attachments = attachments,
                             isMine = isMine
+                        )
+                    }
+
+                    if (!isMine && autoTranscribeReceived && transcriptAccountId != null &&
+                        attachments.any { it.kind.equals("AUDIO", ignoreCase = true) ||
+                            it.mimeType.orEmpty().startsWith("audio/", ignoreCase = true) }
+                    ) {
+                        VoiceNoteTranscript(
+                            message = message,
+                            accountId = transcriptAccountId,
+                            enabled = autoTranscribeReceived
                         )
                     }
 
