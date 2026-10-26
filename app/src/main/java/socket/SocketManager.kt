@@ -10,6 +10,7 @@ import android.util.Log
 import com.chatforia.android.network.Environment
 import io.socket.client.IO
 import io.socket.client.Socket
+import io.socket.engineio.client.transports.WebSocket
 import kotlinx.coroutines.flow.MutableSharedFlow
 import okhttp3.OkHttpClient
 import kotlinx.coroutines.flow.SharedFlow
@@ -189,11 +190,11 @@ class SocketManager(
             path = "/socket.io"
 
             /*
-             * Use Socket.IO's default polling-first negotiation.
-             * Polling provides a reliable reconnection path after
-             * Android suspends or replaces a WebSocket. The client
-             * upgrades to WebSocket when the network supports it.
+             * QA: bypass HTTP long-polling after repeated "xhr poll error"
+             * transport failures. Socket.IO reconnection still applies.
+             * Verify WebSocket connectivity on Wi-Fi and cellular before merge.
              */
+            transports = arrayOf(WebSocket.NAME)
             reconnection = true
             reconnectionAttempts = Int.MAX_VALUE
             reconnectionDelay = 1_000
