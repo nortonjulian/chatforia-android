@@ -102,6 +102,11 @@ class SettingsRepository(
         return response.user
     }
 
+    override suspend fun getCurrentUser(): UserDto =
+        sendJson<MeResponse>(
+            ApiRequest(path = "auth/me", method = HttpMethod.GET, requiresAuth = true)
+        ).user
+
     override suspend fun updateAccessibility(
         request: AccessibilitySettingsUpdateRequest
     ): UserDto {
