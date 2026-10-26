@@ -32,6 +32,7 @@ fun ChatMessageRow(
     isMine: Boolean,
     blurByDefault: Boolean = false,
     holdToReveal: Boolean = false,
+    allowExplicitContent: Boolean = true,
     onEdit: ((MessageDto) -> Unit)? = null,
     onDelete: ((MessageDto) -> Unit)? = null,
     onReport: ((MessageDto) -> Unit)? = null,
@@ -128,7 +129,8 @@ fun ChatMessageRow(
                     if (shouldShowTextBubble(message, hasAttachments, isMine)) {
                         MessageBubble(
                             message = message,
-                            isMine = isMine
+                            isMine = isMine,
+                            allowExplicitContent = allowExplicitContent
                         )
                     }
                 }
