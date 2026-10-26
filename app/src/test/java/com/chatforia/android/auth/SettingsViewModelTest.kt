@@ -344,6 +344,9 @@ class SettingsViewModelTest {
                     a11yCaptionBg = "light"
                 )
 
+            repository.updateAccessibilityUser = user(id = 4)
+            viewModel.refreshAccessibility(4) {}
+            advanceUntilIdle()
             repository.updateAccessibilityUser = updatedUser
 
             var callbackUser: UserDto? = null
@@ -403,6 +406,9 @@ class SettingsViewModelTest {
             repository.updateAccessibilityShouldThrow = true
 
             val viewModel = SettingsViewModel(repository)
+            viewModel.refreshAccessibility(101) {}
+            advanceUntilIdle()
+            viewModel.update { it.copy(a11yVoiceNoteSTT = true) }
 
             var callbackCalled = false
 
@@ -418,6 +424,65 @@ class SettingsViewModelTest {
             assertEquals("Accessibility boom", state.error)
             assertNull(state.success)
             assertFalse(callbackCalled)
+        }
+
+    @Test
+    fun saveAccessibility_withoutRefreshNeverPatches() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeUserSettingsRepository()
+            val vm = SettingsViewModel(repository)
+            vm.load(user(id = 101, a11yVoiceNoteSTT = true))
+
+            vm.saveAccessibility {}
+            advanceUntilIdle()
+
+            assertTrue(repository.updateAccessibilityRequests.isEmpty())
+            assertFalse(vm.state.value.isSaving)
+            assertEquals(
+                "Refresh Accessibility settings before saving.",
+                vm.state.value.error
+            )
+        }
+
+    @Test
+    fun refreshAccessibility_replacesStaleToggleWithoutChangingOtherProfileDrafts() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeUserSettingsRepository()
+            val vm = SettingsViewModel(repository)
+            vm.load(user(id = 101, a11yVoiceNoteSTT = true))
+            vm.update { it.copy(preferredLanguage = "fr") }
+            repository.updateAccessibilityUser = user(id = 101, a11yVoiceNoteSTT = false)
+
+            vm.refreshAccessibility(101) {}
+            advanceUntilIdle()
+
+            assertFalse(vm.state.value.a11yVoiceNoteSTT)
+            assertEquals("fr", vm.state.value.preferredLanguage)
+            assertFalse(vm.state.value.isLoadingAccessibility)
+        }
+
+    @Test
+    fun saveAccessibility_afterRefreshPatchesOnlyEditedSetting() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeUserSettingsRepository()
+            repository.updateAccessibilityUser = user(
+                id = 101, a11yVoiceNoteSTT = false, a11yVibrate = true,
+                a11yUiFont = "lg"
+            )
+            val vm = SettingsViewModel(repository)
+            vm.load(user(id = 101, a11yVoiceNoteSTT = true))
+            vm.refreshAccessibility(101) {}
+            advanceUntilIdle()
+            vm.update { it.copy(a11yVoiceNoteSTT = true) }
+            vm.saveAccessibility {}
+            advanceUntilIdle()
+
+            val patch = repository.updateAccessibilityRequests.single()
+            assertEquals(true, patch.a11yVoiceNoteSTT)
+            assertNull(patch.a11yVibrate)
+            assertNull(patch.a11yUiFont)
+            assertNull(patch.a11yVisualAlerts)
+            assertNull(patch.a11yCaptionFont)
         }
 
     private fun user(
@@ -527,6 +592,8 @@ class SettingsViewModelTest {
         var updateAccessibilityShouldThrow = false
         var deleteAccountCalled = false
         var removeAvatarCalled = false
+
+        override suspend fun getCurrentUser(): UserDto = updateAccessibilityUser
 
         override suspend fun updateUsername(
             username: String

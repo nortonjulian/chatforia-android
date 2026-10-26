@@ -56,7 +56,9 @@ fun AccessibilitySettingsScreen(
             )
         }
 
-        Column(
+        if (state.isLoadingAccessibility) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+        } else Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
@@ -174,8 +176,8 @@ fun AccessibilitySettingsScreen(
             }
 
             ChatforiaGradientButton(
-                text = if (state.isSaving) "Saving..." else "Save",
-                enabled = !state.isSaving,
+                text = if (state.isSaving) "Saving..." else if (state.isLoadingAccessibility) "Refreshing..." else "Save",
+                enabled = !state.isSaving && !state.isLoadingAccessibility && state.error == null,
                 onClick = onSave,
                 modifier = Modifier
                     .fillMaxWidth()
