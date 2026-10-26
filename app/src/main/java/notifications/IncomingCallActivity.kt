@@ -57,7 +57,13 @@ class IncomingCallActivity : ComponentActivity() {
                     IncomingCallSheet(
                         payload = current,
                         onAccept = ::accept,
-                        onDecline = ::decline
+                        onDecline = ::decline,
+                        flashOnCall = AccessibilityAlertPreferences.flash(applicationContext) &&
+                            android.provider.Settings.Global.getFloat(
+                                contentResolver,
+                                android.provider.Settings.Global.ANIMATOR_DURATION_SCALE,
+                                1f
+                            ) > 0f
                     )
                 }
             }
