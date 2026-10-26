@@ -159,7 +159,10 @@ class SettingsViewModel(
 
             try {
                 val fresh = accessibilitySnapshot
-                if (fresh != null &&
+                    ?: throw IllegalStateException(
+                        "Refresh Accessibility settings before saving."
+                    )
+                if (
                     current.a11yUiFont == (fresh.a11yUiFont ?: "md") &&
                     current.a11yVisualAlerts == (fresh.a11yVisualAlerts ?: false) &&
                     current.a11yVibrate == (fresh.a11yVibrate ?: false) &&
@@ -175,14 +178,14 @@ class SettingsViewModel(
 
                 val updatedUser = repository.updateAccessibility(
                     AccessibilitySettingsUpdateRequest(
-                        a11yUiFont = current.a11yUiFont.takeIf { accessibilitySnapshot == null || it != (accessibilitySnapshot!!.a11yUiFont ?: "md") },
-                        a11yVisualAlerts = current.a11yVisualAlerts.takeIf { accessibilitySnapshot == null || it != (accessibilitySnapshot!!.a11yVisualAlerts ?: false) },
-                        a11yVibrate = current.a11yVibrate.takeIf { accessibilitySnapshot == null || it != (accessibilitySnapshot!!.a11yVibrate ?: false) },
-                        a11yFlashOnCall = current.a11yFlashOnCall.takeIf { accessibilitySnapshot == null || it != (accessibilitySnapshot!!.a11yFlashOnCall ?: false) },
-                        a11yLiveCaptions = current.a11yLiveCaptions.takeIf { accessibilitySnapshot == null || it != (accessibilitySnapshot!!.a11yLiveCaptions ?: false) },
-                        a11yVoiceNoteSTT = current.a11yVoiceNoteSTT.takeIf { accessibilitySnapshot == null || it != (accessibilitySnapshot!!.a11yVoiceNoteSTT ?: false) },
-                        a11yCaptionFont = current.a11yCaptionFont.takeIf { accessibilitySnapshot == null || it != (accessibilitySnapshot!!.a11yCaptionFont ?: "lg") },
-                        a11yCaptionBg = current.a11yCaptionBg.takeIf { accessibilitySnapshot == null || it != (accessibilitySnapshot!!.a11yCaptionBg ?: "dark") },
+                        a11yUiFont = current.a11yUiFont.takeIf { it != (fresh.a11yUiFont ?: "md") },
+                        a11yVisualAlerts = current.a11yVisualAlerts.takeIf { it != (fresh.a11yVisualAlerts ?: false) },
+                        a11yVibrate = current.a11yVibrate.takeIf { it != (fresh.a11yVibrate ?: false) },
+                        a11yFlashOnCall = current.a11yFlashOnCall.takeIf { it != (fresh.a11yFlashOnCall ?: false) },
+                        a11yLiveCaptions = current.a11yLiveCaptions.takeIf { it != (fresh.a11yLiveCaptions ?: false) },
+                        a11yVoiceNoteSTT = current.a11yVoiceNoteSTT.takeIf { it != (fresh.a11yVoiceNoteSTT ?: false) },
+                        a11yCaptionFont = current.a11yCaptionFont.takeIf { it != (fresh.a11yCaptionFont ?: "lg") },
+                        a11yCaptionBg = current.a11yCaptionBg.takeIf { it != (fresh.a11yCaptionBg ?: "dark") },
                     )
                 )
 

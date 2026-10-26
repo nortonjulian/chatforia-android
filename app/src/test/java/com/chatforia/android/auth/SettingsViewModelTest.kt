@@ -344,6 +344,9 @@ class SettingsViewModelTest {
                     a11yCaptionBg = "light"
                 )
 
+            repository.updateAccessibilityUser = user(id = 4)
+            viewModel.refreshAccessibility(4) {}
+            advanceUntilIdle()
             repository.updateAccessibilityUser = updatedUser
 
             var callbackUser: UserDto? = null
@@ -403,6 +406,9 @@ class SettingsViewModelTest {
             repository.updateAccessibilityShouldThrow = true
 
             val viewModel = SettingsViewModel(repository)
+            viewModel.refreshAccessibility(101) {}
+            advanceUntilIdle()
+            viewModel.update { it.copy(a11yVoiceNoteSTT = true) }
 
             var callbackCalled = false
 
@@ -418,6 +424,24 @@ class SettingsViewModelTest {
             assertEquals("Accessibility boom", state.error)
             assertNull(state.success)
             assertFalse(callbackCalled)
+        }
+
+    @Test
+    fun saveAccessibility_withoutRefreshNeverPatches() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeUserSettingsRepository()
+            val vm = SettingsViewModel(repository)
+            vm.load(user(id = 101, a11yVoiceNoteSTT = true))
+
+            vm.saveAccessibility {}
+            advanceUntilIdle()
+
+            assertTrue(repository.updateAccessibilityRequests.isEmpty())
+            assertFalse(vm.state.value.isSaving)
+            assertEquals(
+                "Refresh Accessibility settings before saving.",
+                vm.state.value.error
+            )
         }
 
     @Test
