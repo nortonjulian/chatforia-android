@@ -119,6 +119,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.chatforia.android.calls.CallPermissionHelper
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 enum class AppTab {
@@ -1170,6 +1172,17 @@ class MainActivity : ComponentActivity() {
                     chatsViewModel.applyRealtimeMessageJson(
                         messageJson
                     )
+                }
+            }
+
+            // The live preview above intentionally keeps the last stored
+            // unreadCount unchanged. Reconcile counts with the server after
+            // an upsert (including read receipts), coalescing rapid events
+            // to avoid a request per message and duplicate increments.
+            launch {
+                socketManager.messageUpserts.collectLatest {
+                    delay(250)
+                    chatsViewModel.reconcileUnreadCounts()
                 }
             }
 
