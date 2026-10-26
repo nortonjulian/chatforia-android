@@ -620,6 +620,7 @@ fun ChatThreadScreen(
                                     SmsMessageBubble(
                                         message = message,
                                         isMine = message.isOutgoing,
+                                        allowExplicitContent = currentUser.allowExplicitContent == true,
                                         onDeleteForMe = {
                                             viewModel.deleteSmsMessage(message)
                                         },
@@ -651,6 +652,7 @@ fun ChatThreadScreen(
                                     ChatMessageRow(
                                         message = message,
                                         isMine = message.sender.id == currentUserId,
+                                        allowExplicitContent = currentUser.allowExplicitContent == true,
                                         blurByDefault = currentUser.privacyBlurEnabled == true,
                                         holdToReveal = currentUser.privacyHoldToReveal == true,
                                         onEdit = { selected ->
@@ -1417,6 +1419,7 @@ private fun CompactRandomChatControls(
 private fun SmsMessageBubble(
     message: SmsMessageDto,
     isMine: Boolean,
+    allowExplicitContent: Boolean,
     onDeleteForMe: () -> Unit,
     onReport: () -> Unit,
     onBlockNumber: () -> Unit
@@ -1426,8 +1429,8 @@ private fun SmsMessageBubble(
     val clipboard =
         LocalClipboardManager.current
 
-    val displayText =
-        message.displayFallbackText
+    val originalText = message.displayFallbackText
+    val displayText = maskExplicitText(originalText, allowExplicitContent)
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -1522,7 +1525,7 @@ private fun SmsMessageBubble(
                     showMenu = false
                 }
             ) {
-                if (displayText.isNotBlank()) {
+                if (originalText.isNotBlank()) {
                     DropdownMenuItem(
                         text = {
                             Text(
@@ -1533,7 +1536,7 @@ private fun SmsMessageBubble(
                         },
                         onClick = {
                             clipboard.setText(
-                                AnnotatedString(displayText)
+                                AnnotatedString(originalText)
                             )
                             showMenu = false
                         }

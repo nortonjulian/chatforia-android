@@ -68,6 +68,7 @@ import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
 import com.chatforia.android.ads.AdMobBanner
 import com.chatforia.android.ads.shouldShowAds
+import com.chatforia.android.messages.maskExplicitText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -545,6 +546,7 @@ fun ChatsScreen(
                         ConversationRow(
                             conversation = chat,
                             showTransportBadge = showTransportBadges,
+                            allowExplicitContent = currentUser.allowExplicitContent == true,
                             isSelected = chat.uniqueId in selectedIds,
                             enabled = !isDeleting,
                             onClick = {
@@ -559,6 +561,7 @@ fun ChatsScreen(
                         SwipeRevealConversationRow(
                             conversation = chat,
                             showTransportBadge = showTransportBadges,
+                            allowExplicitContent = currentUser.allowExplicitContent == true,
                             onClick = {
                                 selectedConversation = chat
                             },
@@ -772,7 +775,8 @@ private fun ConversationRow(
     onClick: () -> Unit,
     isSelected: Boolean? = null,
     enabled: Boolean = true,
-    showTransportBadge: Boolean
+    showTransportBadge: Boolean,
+    allowExplicitContent: Boolean
 ) {
     val title = conversation.randomAwareTitle
 
@@ -781,6 +785,7 @@ private fun ConversationRow(
     val baseSubtitle =
         last?.text
             ?.takeIf { it.isNotBlank() }
+            ?.let { maskExplicitText(it, allowExplicitContent) }
             ?: if (last?.hasMedia == true) {
                 "[media]"
             } else {
@@ -905,7 +910,8 @@ private fun SwipeRevealConversationRow(
     conversation: ConversationDto,
     onClick: () -> Unit,
     onDelete: () -> Unit,
-    showTransportBadge: Boolean
+    showTransportBadge: Boolean,
+    allowExplicitContent: Boolean
 ) {
     var offsetX by remember(conversation.uniqueId) {
         mutableFloatStateOf(0f)
@@ -961,7 +967,8 @@ private fun SwipeRevealConversationRow(
             ConversationRow(
                 conversation = conversation,
                 onClick = onClick,
-                showTransportBadge = showTransportBadge
+                showTransportBadge = showTransportBadge,
+                allowExplicitContent = allowExplicitContent
             )
         }
     }

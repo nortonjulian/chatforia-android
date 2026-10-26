@@ -122,7 +122,8 @@ private fun buildLinkifiedMessageText(
 @Composable
 fun MessageBubble(
     message: MessageDto,
-    isMine: Boolean
+    isMine: Boolean,
+    allowExplicitContent: Boolean = true
 ) {
     val isDeleted = message.deletedForAll == true
     val context = LocalContext.current
@@ -237,7 +238,7 @@ fun MessageBubble(
                 ) {
                     Text(
                         text = buildLinkifiedMessageText(
-                            text = displayText,
+                            text = maskExplicitText(displayText, allowExplicitContent),
                             linkColor = messageTextColor,
                             onGroupInvitation = { code ->
                                 context.startActivity(
