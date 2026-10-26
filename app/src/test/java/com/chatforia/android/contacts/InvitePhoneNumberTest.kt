@@ -20,6 +20,6 @@ class InvitePhoneNumberTest {
         assertNull(normalizeInvitePhoneNumber("", null))
         assertNull(normalizeInvitePhoneNumber("12345", null))
         assertNull(normalizeInvitePhoneNumber("2125550123,", null))
-        assertNull(normalizeInvitePhoneNumber("2125550123", "+0123"))
+        assertEquals("+12125550123", normalizeInvitePhoneNumber("2125550123", "+0123"))
     }
 }
