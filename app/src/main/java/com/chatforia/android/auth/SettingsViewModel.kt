@@ -158,6 +158,21 @@ class SettingsViewModel(
             _state.value = current.copy(isSaving = true, error = null, success = null)
 
             try {
+                val fresh = accessibilitySnapshot
+                if (fresh != null &&
+                    current.a11yUiFont == (fresh.a11yUiFont ?: "md") &&
+                    current.a11yVisualAlerts == (fresh.a11yVisualAlerts ?: false) &&
+                    current.a11yVibrate == (fresh.a11yVibrate ?: false) &&
+                    current.a11yFlashOnCall == (fresh.a11yFlashOnCall ?: false) &&
+                    current.a11yLiveCaptions == (fresh.a11yLiveCaptions ?: false) &&
+                    current.a11yVoiceNoteSTT == (fresh.a11yVoiceNoteSTT ?: false) &&
+                    current.a11yCaptionFont == (fresh.a11yCaptionFont ?: "lg") &&
+                    current.a11yCaptionBg == (fresh.a11yCaptionBg ?: "dark")
+                ) {
+                    _state.value = current.copy(isSaving = false, success = "No Accessibility changes to save.")
+                    return@launch
+                }
+
                 val updatedUser = repository.updateAccessibility(
                     AccessibilitySettingsUpdateRequest(
                         a11yUiFont = current.a11yUiFont.takeIf { accessibilitySnapshot == null || it != (accessibilitySnapshot!!.a11yUiFont ?: "md") },
