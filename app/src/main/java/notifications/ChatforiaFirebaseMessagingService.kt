@@ -388,7 +388,7 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                             android.os.Handler(android.os.Looper.getMainLooper()).post {
                                 android.widget.Toast.makeText(
                                     applicationContext,
-                                    "New Chatforia message",
+                                    "New message",
                                     android.widget.Toast.LENGTH_SHORT
                                 ).show()
                             }
