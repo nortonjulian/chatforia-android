@@ -89,6 +89,7 @@ import com.chatforia.android.notifications.PushTokenRegistrar
 import com.chatforia.android.notifications.PendingFcmTokenStorage
 import com.chatforia.android.notifications.PushReconciliationScheduler
 import com.chatforia.android.notifications.NotificationCoordinator
+import com.chatforia.android.notifications.AccessibilityAlertPreferences
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
@@ -474,6 +475,24 @@ class MainActivity : ComponentActivity() {
 
                     val authState by
                     authViewModel.state.collectAsState()
+
+                    // FCM callbacks run outside Compose; keep only the current
+                    // authenticated user's alert preferences in local storage.
+                    LaunchedEffect(authState) {
+                        when (val current = authState) {
+                            is AuthState.LoggedIn ->
+                                AccessibilityAlertPreferences.save(
+                                    applicationContext,
+                                    current.user.id,
+                                    current.user.a11yVisualAlerts == true,
+                                    current.user.a11yVibrate == true,
+                                    current.user.a11yFlashOnCall == true
+                                )
+                            AuthState.LoggedOut ->
+                                AccessibilityAlertPreferences.clear(applicationContext)
+                            else -> Unit
+                        }
+                    }
 
                     val protectRecents = shouldProtectRecents(
                         signedIn = authState is AuthState.LoggedIn,
