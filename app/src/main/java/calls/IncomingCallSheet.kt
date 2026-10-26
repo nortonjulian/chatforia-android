@@ -29,13 +29,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import com.chatforia.android.R
 
 @Composable
 fun IncomingCallSheet(
     payload: IncomingCallPayload,
     onAccept: () -> Unit,
-    onDecline: () -> Unit
+    onDecline: () -> Unit,
+    flashOnCall: Boolean = false
 ) {
     val isVideo =
         payload.mode?.uppercase() == "VIDEO" ||
@@ -55,6 +62,15 @@ fun IncomingCallSheet(
                     Color(0xFF090909)
                 )
         )
+
+    var flashVisible by remember(payload.callId) { mutableStateOf(false) }
+    LaunchedEffect(payload.callId, flashOnCall) {
+        if (flashOnCall) {
+            flashVisible = true
+            delay(180)
+            flashVisible = false
+        }
+    }
 
     Box(
         modifier =
@@ -88,6 +104,13 @@ fun IncomingCallSheet(
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
                 textAlign = TextAlign.Center
+            )
+        }
+
+        if (flashVisible) {
+            Box(
+                Modifier.fillMaxSize()
+                    .background(Color.White.copy(alpha = 0.20f))
             )
         }
 
