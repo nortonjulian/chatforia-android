@@ -6,6 +6,7 @@ import com.chatforia.android.messages.MessageDto
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -71,6 +72,25 @@ class ChatsViewModel(
 
     fun refreshConversations() {
         loadConversations()
+    }
+
+    /**
+     * Reconcile only authoritative unread badges after a realtime event.
+     * A full loadConversations() here can overwrite newer decrypted previews,
+     * re-sort chats, and race with other asynchronous list refreshes.
+     */
+    suspend fun reconcileUnreadCounts() {
+        try {
+            val authoritative = repository.loadConversations()
+            _conversations.value = mergeConversationUnreadCounts(
+                current = _conversations.value,
+                authoritative = authoritative
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            println("⚠️ Could not reconcile unread counts: ${e.message}")
+        }
     }
 
     fun deleteConversation(conversation: ConversationDto) {
@@ -378,5 +398,21 @@ class ChatsViewModel(
                 conversation.id ?: 0
             }
         )
+    }
+}
+/**
+ * Update unread badges without altering the current live previews,
+ * selection state, message ordering, or local decrypted text.
+ */
+internal fun mergeConversationUnreadCounts(
+    current: List<ConversationDto>,
+    authoritative: List<ConversationDto>
+): List<ConversationDto> {
+    val countsByConversation = authoritative.associate {
+        it.uniqueId to (it.unreadCount ?: 0)
+    }
+    return current.map { local ->
+        val count = countsByConversation[local.uniqueId]
+        if (count == null) local else local.copy(unreadCount = count)
     }
 }
