@@ -138,6 +138,7 @@ fun ContactsScreen(
     }
     var showingAddContact by remember { mutableStateOf(false) }
     var showingInviteFriends by remember { mutableStateOf(false) }
+    var inviteDraft by remember { mutableStateOf<String?>(null) }
     var showingNewChat by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -410,11 +411,15 @@ fun ContactsScreen(
         return
     }
 
-    if (showingInviteFriends) {
+    if (showingInviteFriends && openedConversation == null) {
         InviteFriendsScreen(
             repository = inviteRepository,
             currentUsername = currentUsername,
-            onBack = { showingInviteFriends = false }
+            onBack = { showingInviteFriends = false },
+            onInviteSms = { phone, message ->
+                inviteDraft = message
+                viewModel.openInviteSmsThread(phone)
+            }
         )
         return
     }
@@ -445,7 +450,12 @@ fun ContactsScreen(
                 uploadRepository = uploadRepository,
                 tenorRepository = tenorRepository,
                 riaRepository = riaRepository,
-                onBack = { viewModel.clearOpenedConversation() }
+                initialDraft = inviteDraft?.takeIf { conversation.kind == "sms" },
+                onBack = {
+                    inviteDraft = null
+                    showingInviteFriends = false
+                    viewModel.clearOpenedConversation()
+                }
             )
         }
         return
