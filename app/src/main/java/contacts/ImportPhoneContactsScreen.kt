@@ -23,7 +23,8 @@ fun ImportPhoneContactsScreen(
     contacts: List<PhoneContactDto>,
     isImporting: Boolean,
     onImportSelected: (List<PhoneContactDto>) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onAddContact: () -> Unit
 ) {
     var selectedPhones by remember {
         mutableStateOf(
@@ -61,6 +62,25 @@ fun ImportPhoneContactsScreen(
         }
 
         Spacer(modifier = Modifier.height(12.dp))
+
+        if (contacts.isEmpty()) {
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = stringResource(R.string.android_import_phone_contacts_empty_title),
+                style = MaterialTheme.typography.titleMedium,
+                color = ChatforiaColors.primaryText
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = stringResource(R.string.android_import_phone_contacts_empty_help),
+                color = ChatforiaColors.secondaryText
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+            Button(onClick = onAddContact, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.android_import_phone_contacts_add_manually))
+            }
+            return@Column
+        }
 
         Text(
             text = "${selectedContacts.size} of ${contacts.size} selected",
