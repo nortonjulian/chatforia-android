@@ -1182,7 +1182,7 @@ class MainActivity : ComponentActivity() {
             launch {
                 socketManager.messageUpserts.collectLatest {
                     delay(250)
-                    chatsViewModel.refreshConversations()
+                    chatsViewModel.reconcileUnreadCounts()
                 }
             }
 
