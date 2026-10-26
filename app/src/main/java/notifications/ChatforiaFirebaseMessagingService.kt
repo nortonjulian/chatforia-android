@@ -402,6 +402,12 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                             .playSavedMessageToneShared(
                                 applicationContext
                             )
+                        if (AccessibilityAlertPreferences.vibrate(applicationContext) &&
+                            !AudioPlayerService.savedMessageTone(applicationContext)
+                                .equals("Vibrate.mp3", ignoreCase = true)
+                        ) {
+                            AudioPlayerService.vibrateMessageAlert(applicationContext)
+                        }
                     } else {
                         NotificationCoordinator(
                             applicationContext
