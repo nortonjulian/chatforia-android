@@ -177,6 +177,42 @@ class ContactsViewModel(
         }
     }
 
+    // Open an ordinary Chatforia SMS thread; never send an invite automatically.
+    fun openInviteSmsThread(phone: String) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(
+                isOpeningChat = true,
+                error = null,
+                openedConversation = null
+            )
+            try {
+                val thread = repository.startSmsThread(phone = phone)
+                val resolved = thread.contactPhone?.trim()?.takeIf { it.isNotEmpty() } ?: phone
+                val title = thread.displayName?.trim()?.takeIf { it.isNotEmpty() }
+                    ?: thread.contactName?.trim()?.takeIf { it.isNotEmpty() }
+                    ?: resolved
+                _state.value = _state.value.copy(
+                    isOpeningChat = false,
+                    openedConversation = ConversationDto(
+                        kind = "sms",
+                        id = thread.id,
+                        title = title,
+                        displayName = title,
+                        updatedAt = thread.updatedAt,
+                        isGroup = false,
+                        phone = resolved,
+                        unreadCount = 0
+                    )
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isOpeningChat = false,
+                    error = e.message ?: "Could not open SMS invitation."
+                )
+            }
+        }
+    }
+
     fun openSmsThread(contact: ContactDto) {
         viewModelScope.launch {
             val phone = contact.externalPhone?.trim()?.takeIf { it.isNotEmpty() }

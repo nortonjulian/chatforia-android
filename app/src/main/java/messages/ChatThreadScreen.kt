@@ -101,6 +101,7 @@ fun ChatThreadScreen(
     uploadRepository: UploadRepository,
     tenorRepository: TenorRepository,
     riaRepository: RiaRepository,
+    initialDraft: String? = null,
     isTemporaryRandomChat: Boolean = false,
     randomChatTitle: String? = null,
     isRandomAlreadyFriend: Boolean = false,
@@ -183,7 +184,9 @@ fun ChatThreadScreen(
     var editGifUrl by remember { mutableStateOf<String?>(null) }
     var showEditGifPicker by remember { mutableStateOf(false) }
 
-    var draft by remember { mutableStateOf("") }
+    var draft by remember(conversation.kind, conversation.id, initialDraft) {
+        mutableStateOf(initialDraft.orEmpty())
+    }
     var showMediaPicker by remember { mutableStateOf(false) }
     var showGifPicker by remember { mutableStateOf(false) }
 
