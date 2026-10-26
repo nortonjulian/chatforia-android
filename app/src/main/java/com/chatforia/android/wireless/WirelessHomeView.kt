@@ -227,12 +227,9 @@ fun WirelessHomeView(
                 showEsimActivationSheet = true
             },
             onManageEsim = {
-                context.startActivity(
-                    Intent(
-                        Intent.ACTION_VIEW,
-                        "https://chatforia.com/account/esim".toUri()
-                    )
-                )
+                // Reuse authenticated native management; don't open an
+                // unauthenticated browser session for an installed eSIM.
+                showEsimActivationSheet = true
             },
             onSetupEsim = {
                 context.startActivity(
@@ -412,12 +409,16 @@ fun WirelessHomeView(
         ChatforiaSectionCard(title = stringResource(R.string.android_wireless_home_manage)) {
             OutlinedButton(
                 onClick = {
-                    context.startActivity(
-                        Intent(
-                            Intent.ACTION_VIEW,
-                            "https://chatforia.com/account/esim".toUri()
+                    if (esim != null) {
+                        showEsimActivationSheet = true
+                    } else {
+                        context.startActivity(
+                            Intent(
+                                Intent.ACTION_VIEW,
+                                "https://chatforia.com/upgrade?section=mobile".toUri()
+                            )
                         )
-                    )
+                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp)
@@ -616,6 +617,10 @@ internal fun shouldShowEsimProvisioningDetails(
 ): Boolean =
     status?.uppercase() != "ACTIVE"
 
+internal fun maskedEsimIccid(iccid: String?): String? =
+    iccid?.trim()?.takeIf { it.length >= 4 }
+        ?.let { "•••• •••• •••• ${it.takeLast(4)}" }
+
 @Composable
 private fun EsimActivationSheet(
     esim: EsimSubscriberDto,
@@ -655,6 +660,17 @@ private fun EsimActivationSheet(
                 },
             color = ChatforiaColors.secondaryText
         )
+
+        if (!showsProvisioningDetails) {
+            maskedEsimIccid(esim.iccid)?.let { maskedIccid ->
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "ICCID: $maskedIccid",
+                    color = ChatforiaColors.secondaryText,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
 
         if (showsProvisioningDetails) {
             esim.smdp
