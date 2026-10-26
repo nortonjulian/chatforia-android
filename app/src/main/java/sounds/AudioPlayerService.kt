@@ -27,6 +27,11 @@ class AudioPlayerService(
         @Volatile
         private var sharedIncomingRingtonePlayer: AudioPlayerService? = null
 
+        // Uses notification audio attributes so Android can enforce DND.
+        fun vibrateMessageAlert(context: Context) {
+            AudioPlayerService(context.applicationContext).vibrate()
+        }
+
         @Synchronized
         fun playSavedMessageToneShared(context: Context) {
             sharedMessageTonePlayer?.stop()
