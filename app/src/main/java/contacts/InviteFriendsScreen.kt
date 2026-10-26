@@ -62,9 +62,19 @@ fun InviteFriendsScreen(
         }
     }
 
+    fun shareText(inviteUrl: String): String {
+        val name = currentUsername?.trim()?.takeIf { it.isNotBlank() }
+
+        return if (name != null) {
+            "$name invited you to join Chatforia. Download or join here: $inviteUrl"
+        } else {
+            "Join me on Chatforia. Download or join here: $inviteUrl"
+        }
+    }
+
     fun normalizeRecipient(raw: String): String? {
         val value = raw.trim()
-        if (!value.matches(Regex("[+0-9().\\\\s-]+"))) return null
+        if (!value.all { it.isDigit() || it == '+' || it == '-' || it == '(' || it == ')' || it == '.' || it.isWhitespace() }) return null
         val normalized = PhoneNumberUtils.formatNumberToE164(value, Locale.getDefault().country)
         return normalized ?: PhoneNumberUtils.normalizeNumber(value)
             .takeIf { it.startsWith("+") && it.count(Char::isDigit) in 8..15 }
@@ -87,16 +97,6 @@ fun InviteFriendsScreen(
             } finally {
                 isLoading = false
             }
-        }
-    }
-
-    fun shareText(inviteUrl: String): String {
-        val name = currentUsername?.trim()?.takeIf { it.isNotBlank() }
-
-        return if (name != null) {
-            "$name invited you to join Chatforia. Download or join here: $inviteUrl"
-        } else {
-            "Join me on Chatforia. Download or join here: $inviteUrl"
         }
     }
 
