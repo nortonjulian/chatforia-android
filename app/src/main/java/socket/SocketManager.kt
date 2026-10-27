@@ -85,10 +85,10 @@ class SocketManager(
                 // serialize with delayed socket recovery and avoid querying
                 // ConnectivityManager directly inside its callback.
                 mainHandler.post {
-                    if (connectivityManager.activeNetwork != network) {
-                        return@post
-                    }
-
+                    // A default-network callback already tracks this app's
+                    // selected network. Crucially, activeNetwork can be null
+                    // while Android blocks the UID; checking it here would
+                    // discard the exact event needed to arm recovery.
                     if (blocked) {
                         networkAccessBlocked = true
                         recoveryPolicy.markNetworkLost()
