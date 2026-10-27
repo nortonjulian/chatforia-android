@@ -5,6 +5,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import com.chatforia.android.messages.AttachmentDto
 import com.chatforia.android.messages.MessageAttachmentsView
 import com.chatforia.android.messages.PrivateMediaUrlRepository
@@ -21,7 +23,7 @@ import java.net.URL
 /**
  * Opt-in local media QA only; no Chatforia login, production API or providers.
  *
- * Run using the separate PrivateMediaQaRunner, against emulator-5554 only.
+ * Run using the separate PrivateMediaQaRunner, against the explicitly selected disposable Android emulator only.
  * The host runner injects a disposable QA JWT as an instrumentation argument.
  * Never log credentials or signed URLs.
  */
@@ -100,9 +102,19 @@ class PrivateMediaAttachmentQaTest {
             }
         }
 
+        // The real attachment view resolves full/thumb authorization using
+        // produceState on Dispatchers.IO. Compose rendering can finish before
+        // the audio media grant completes, so wait for both native components.
+        compose.waitUntil(timeoutMillis = 15_000L) {
+            compose.onAllNodesWithContentDescription("Image attachment")
+                .fetchSemanticsNodes().isNotEmpty() &&
+                compose.onAllNodesWithText("QA voice note")
+                    .fetchSemanticsNodes().isNotEmpty()
+        }
         compose.onNodeWithContentDescription("Image attachment").assertExists()
         compose.onNodeWithText("QA voice note").assertExists()
         compose.onNodeWithContentDescription("Play voice note").assertExists()
-        // UI rendering is verified; audible native playback remains manual QA.
+        // This verifies authorized URLs and native Compose UI rendering;
+        // native audio playback and video decoding still require separate QA.
     }
 }
