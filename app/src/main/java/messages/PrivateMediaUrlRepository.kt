@@ -9,12 +9,24 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-/** Only local private attachment paths use the new participant-authorized media API.
- * Public provider / R2 / external URLs keep their existing behavior. */
+/** Chatforia message attachments require live participant authorization.
+ * Non-Chatforia external providers preserve their existing URL behavior.
+ * Reject confusing hosts, query parameters, encoded traversal and fragments.
+ */
 internal fun isLocalPrivateMessageMedia(value: String?): Boolean {
     if (value.isNullOrBlank()) return false
-    return Regex("^/?(?:uploads/)?(?:media|thumbs)/[A-Za-z0-9_.-]+$")
-        .matches(value.trim())
+    val raw = value.trim()
+    if (Regex("^/?(?:uploads/)?(?:media|thumbs)/[A-Za-z0-9_.-]+$").matches(raw)) {
+        return true
+    }
+    val uri = try { java.net.URI(raw) } catch (_: Exception) { return false }
+    return uri.scheme == "https" &&
+        uri.host?.equals("cdn.chatforia.com", ignoreCase = true) == true &&
+        uri.port == -1 && uri.rawUserInfo == null &&
+        uri.rawQuery == null && uri.rawFragment == null &&
+        Regex("^/uploads/u[1-9][0-9]*/(?:[A-Za-z0-9._-]+/)*[A-Za-z0-9._-]+$")
+            .matches(uri.rawPath.orEmpty()) &&
+        uri.rawPath?.split('/')?.none { it == "." || it == ".." } == true
 }
 
 @Serializable
