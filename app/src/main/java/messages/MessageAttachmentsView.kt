@@ -25,6 +25,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.produceState
+import kotlinx.coroutines.delay
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
 
@@ -32,7 +34,9 @@ import com.chatforia.android.R
 fun MessageAttachmentsView(
     attachments: List<AttachmentDto>,
     isMine: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    secureMedia: PrivateMediaUrlRepository? = null,
+    viewerId: Int? = null
 ) {
     if (attachments.isEmpty()) return
 
@@ -44,40 +48,82 @@ fun MessageAttachmentsView(
         attachments.forEach { attachment ->
             AttachmentCard(
                 attachment = attachment,
-                isMine = isMine
+                isMine = isMine,
+                secureMedia = secureMedia,
+                viewerId = viewerId
             )
         }
     }
 }
 
+
+@Composable
+private fun authorizedAttachmentUrl(
+    attachmentId: Int?,
+    original: String?,
+    variant: String,
+    secureMedia: PrivateMediaUrlRepository?,
+    viewerId: Int?
+): String? {
+    val isPrivate = isLocalPrivateMessageMedia(original)
+    val state by produceState<String?>(
+        initialValue = if (isPrivate) null else original,
+        attachmentId, original, variant, secureMedia, viewerId
+    ) {
+        if (!isPrivate) {
+            value = original
+            return@produceState
+        }
+        value = null
+        if (attachmentId == null || secureMedia == null || viewerId == null) return@produceState
+        while (true) {
+            value = try {
+                secureMedia.authorize(attachmentId, original, variant)
+            } catch (_: Exception) {
+                null // Never fall back to the unauthenticated media path.
+            }
+            delay(40_000L) // Backend capability expires after 60 seconds.
+        }
+    }
+    return state
+}
+
 @Composable
 private fun AttachmentCard(
     attachment: AttachmentDto,
-    isMine: Boolean
+    isMine: Boolean,
+    secureMedia: PrivateMediaUrlRepository?,
+    viewerId: Int?
 ) {
+    val fullUrl = authorizedAttachmentUrl(
+        attachment.id, attachment.url, "file", secureMedia, viewerId
+    )
+    val thumbUrl = authorizedAttachmentUrl(
+        attachment.id, attachment.thumbUrl, "thumb", secureMedia, viewerId
+    )
     val kind = attachment.kind.uppercase()
     val mime = attachment.mimeType.orEmpty().lowercase()
-    val url = attachment.url
+    val url = fullUrl
 
     when {
         kind == "GIF" || mime == "image/gif" -> {
-            ImageAttachment(url = url)
+            if (url != null) ImageAttachment(url = url)
         }
 
         kind == "IMAGE" || mime.startsWith("image/") -> {
-            ImageAttachment(
-                url = attachment.thumbUrl ?: url
+            if (thumbUrl ?: url != null) ImageAttachment(
+                url = (thumbUrl ?: url)!!
             )
         }
 
         kind == "VIDEO" || mime.startsWith("video/") -> {
-            VideoAttachment(
-                url = attachment.thumbUrl ?: url,
+            if (thumbUrl ?: url != null) VideoAttachment(
+                url = (thumbUrl ?: url)!!,
             )
         }
 
         kind == "AUDIO" || mime.startsWith("audio/") -> {
-            AudioAttachment(
+            if (url != null) AudioAttachment(
                 url = url,
                 title = attachment.caption ?: "Voice note",
                 durationSec = attachment.durationSec,
