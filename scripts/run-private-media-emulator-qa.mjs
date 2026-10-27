@@ -46,7 +46,7 @@ async function main() {
       adb(['shell', 'getprop', 'sys.boot_completed']) !== '1')
     throw new Error('The explicitly targeted emulator is not booted.');
   for (const pkg of ['com.chatforia.android', 'com.chatforia.android.test']) {
-    if (adb(['shell', 'pm', 'path', pkg]).includes('package:'))
+    if (adb(['shell', 'pm', 'list', 'packages', pkg]).split('\n').some(line => line.trim() === 'package:' + pkg))
       throw new Error(pkg + ' is already installed: refusing to overwrite it.');
   }
   const app = 'app/build/outputs/apk/debug/app-debug.apk';
