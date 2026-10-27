@@ -16,6 +16,12 @@ import kotlinx.serialization.json.Json
 internal fun isLocalPrivateMessageMedia(value: String?): Boolean {
     if (value.isNullOrBlank()) return false
     val raw = value.trim()
+    // Current R2 uploads are persisted as user-scoped storage keys, without
+    // any URL scheme. Never pass a private storage key directly to Coil/player.
+    if (Regex("^uploads/u[1-9][0-9]*/(?:[A-Za-z0-9._-]+/)*[A-Za-z0-9._-]+$").matches(raw) &&
+        raw.split('/').drop(2).none { it == "." || it == ".." }) {
+        return true
+    }
     if (Regex("^/?(?:uploads/)?(?:media|thumbs)/[A-Za-z0-9_.-]+$").matches(raw)) {
         return true
     }
