@@ -181,7 +181,12 @@ class SocketManager(
         val freshTransportClient =
             OkHttpClient.Builder()
                 .retryOnConnectionFailure(true)
-                .readTimeout(1, TimeUnit.MINUTES)
+                // WebSocket control frames keep idle network paths alive even
+                // between Socket.IO heartbeats; they do not carry app data.
+                .pingInterval(15, TimeUnit.SECONDS)
+                // The Socket.IO protocol manages liveness; a generic HTTP
+                // read timeout should not terminate a healthy WebSocket.
+                .readTimeout(0, TimeUnit.MILLISECONDS)
                 .build()
 
         transportClient = freshTransportClient
