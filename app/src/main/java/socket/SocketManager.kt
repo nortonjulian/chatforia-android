@@ -34,6 +34,7 @@ class SocketManager(
 
     private val recoveryPolicy =
         SocketRecoveryPolicy()
+    private val randomSearchIntent = RandomSearchIntent()
 
     private var socket: Socket? = null
     private var transportClient: OkHttpClient? = null
@@ -181,7 +182,7 @@ class SocketManager(
         val freshTransportClient =
             OkHttpClient.Builder()
                 .retryOnConnectionFailure(true)
-                .readTimeout(1, TimeUnit.MINUTES)
+                .readTimeout(0, TimeUnit.MILLISECONDS)
                 .build()
 
         transportClient = freshTransportClient
@@ -222,6 +223,9 @@ class SocketManager(
             )
 
             emitJoinRooms()
+            if (randomSearchIntent.shouldJoin(socket?.connected() == true)) {
+                socket?.emit("random:join")
+            }
             _socketConnected.tryEmit(Unit)
         }
 
@@ -260,18 +264,8 @@ class SocketManager(
                 )
             }
 
-            if (
-                recoveryPolicy.shouldRecoverAfterFailure(
-                    networkValidated =
-                        hasValidatedNetwork()
-                )
-            ) {
-                scheduleSocketRecovery(
-                    reason =
-                        "repeated failures on validated network",
-                    delayMs = 500
-                )
-            }
+            // Socket.IO already retries failed handshakes with backoff.
+            // Do not rebuild its OkHttp transport in parallel with those retries.
         }
 
         socket?.on("message:upsert") { args ->
@@ -376,6 +370,7 @@ class SocketManager(
         }
 
         socket?.on("random:matched") { args ->
+            randomSearchIntent.clear()
             args.firstOrNull()?.let {
                 _randomChatMatched.tryEmit(it.toString())
             }
@@ -392,6 +387,7 @@ class SocketManager(
 
     fun disconnect() {
         currentToken = null
+        randomSearchIntent.clear()
         cancelScheduledRecovery()
         unregisterNetworkCallback()
         recoveryPolicy.reset()
@@ -578,11 +574,15 @@ class SocketManager(
     }
 
     fun startRandomChat() {
-        socket?.emit("random:join")
+        randomSearchIntent.request()
+        if (randomSearchIntent.shouldJoin(socket?.connected() == true)) {
+            socket?.emit("random:join")
+        }
     }
 
     fun cancelRandomChat() {
-        socket?.emit("random:leave")
+        randomSearchIntent.clear()
+        if (socket?.connected() == true) socket?.emit("random:leave")
     }
 
     fun sendRandomMessage(roomId: Int, text: String) {
@@ -593,7 +593,8 @@ class SocketManager(
     }
 
     fun skipRandomChat() {
-        socket?.emit("random:skip")
+        randomSearchIntent.clear()
+        if (socket?.connected() == true) socket?.emit("random:skip")
     }
 
     fun requestRandomFriend(roomId: Int) {
