@@ -27,7 +27,7 @@ private data class PrivateMediaGrant(
  * Request an authenticated short-lived media URL without exposing access
  * tokens to the image/video/audio player. Must not be called on the UI thread.
  */
-internal class PrivateMediaUrlRepository(
+class PrivateMediaUrlRepository(
     private val api: ApiTransport,
     private val json: Json = Json { ignoreUnknownKeys = true }
 ) {
