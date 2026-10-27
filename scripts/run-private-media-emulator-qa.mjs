@@ -45,16 +45,21 @@ async function main() {
   if (adb(['shell', 'getprop', 'ro.kernel.qemu']) !== '1' ||
       adb(['shell', 'getprop', 'sys.boot_completed']) !== '1')
     throw new Error('The explicitly targeted emulator is not booted.');
-  for (const pkg of ['com.chatforia.android', 'com.chatforia.android.test']) {
-    if (adb(['shell', 'pm', 'list', 'packages', pkg]).split('\n').some(line => line.trim() === 'package:' + pkg))
-      throw new Error(pkg + ' is already installed: refusing to overwrite it.');
+  // Permit app updates only on our explicitly dedicated, disposable QA
+  // emulator. Never overwrite Chatforia on emulator-5554 or physical devices.
+  if (serial !== 'emulator-5556') {
+    for (const pkg of ['com.chatforia.android', 'com.chatforia.android.test']) {
+      if (adb(['shell', 'pm', 'list', 'packages', pkg]).split('\n').some(
+        line => line.trim() === 'package:' + pkg
+      )) throw new Error(pkg + ' is already installed: refusing to overwrite it.');
+    }
   }
   const app = 'app/build/outputs/apk/debug/app-debug.apk';
   const tests = 'app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk';
   await fs.access(app); await fs.access(tests);
   console.log('Isolated localhost API, secure QA session and emulator verified:', serial);
-  console.log(adb(['install', '-t', app]));
-  console.log(adb(['install', '-t', tests]));
+  console.log(adb(['install', '-r', '-t', app]));
+  console.log(adb(['install', '-r', '-t', tests]));
   console.log('Running the native Compose media attachment test (one test)...');
   const args = ['shell', 'am', 'instrument', '-w', '-r',
     '-e', 'class', 'com.chatforia.android.PrivateMediaAttachmentQaTest',
