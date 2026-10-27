@@ -55,6 +55,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Videocam
 import com.chatforia.android.auth.UserDto
+import com.chatforia.android.auth.TokenStorage
+import com.chatforia.android.network.ApiClient
 import com.chatforia.android.calls.AndroidCallManager
 import com.chatforia.android.ui.components.ChatforiaAction
 import com.chatforia.android.ui.components.ChatforiaActionPill
@@ -206,6 +208,9 @@ fun ChatThreadScreen(
     var voiceDraft by remember { mutableStateOf<VoiceNoteDraft?>(null) }
 
     val context = LocalContext.current
+    val secureMedia = remember(context) {
+        PrivateMediaUrlRepository(ApiClient(TokenStorage(context.applicationContext)))
+    }
 
     val activity = remember(context) {
         context.findActivity()
@@ -681,6 +686,8 @@ fun ChatThreadScreen(
                                         onReport = { selected ->
                                             reportingMessage = selected
                                         },
+                                        secureMedia = secureMedia,
+                                        viewerId = currentUserId,
                                         onMessageInfo = { selected ->
                                             receiptMessage = selected
                                         }
