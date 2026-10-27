@@ -19,6 +19,9 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.chatforia.android.ui.theme.ChatforiaColors
 import android.media.MediaPlayer
+import android.widget.VideoView
+import android.widget.MediaController
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateOf
@@ -117,8 +120,11 @@ private fun AttachmentCard(
         }
 
         kind == "VIDEO" || mime.startsWith("video/") -> {
-            if ((thumbUrl ?: url) != null) VideoAttachment(
-                url = (thumbUrl ?: url)!!,
+            // Thumbnail images are not playable media. Only use the
+            // independently authorized full file URL for playback.
+            if (url != null) VideoAttachment(
+                url = url,
+                thumbnailUrl = thumbUrl
             )
         }
 
@@ -160,24 +166,28 @@ private fun ImageAttachment(
 
 @Composable
 private fun VideoAttachment(
-    url: String
+    url: String,
+    thumbnailUrl: String?
 ) {
+    var showPlayer by remember(url) { mutableStateOf(false) }
+
     Box(
         modifier = Modifier
             .width(240.dp)
             .height(180.dp)
             .clip(RoundedCornerShape(18.dp))
             .background(ChatforiaColors.cardBackground)
-            .clickable { },
+            .clickable { showPlayer = true },
         contentAlignment = Alignment.Center
     ) {
-        AsyncImage(
-            model = url,
-            contentDescription = stringResource(R.string.android_message_attachments_video_attachment),
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-
+        if (thumbnailUrl != null) {
+            AsyncImage(
+                model = thumbnailUrl,
+                contentDescription = stringResource(R.string.android_message_attachments_video_attachment),
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
         Surface(
             shape = RoundedCornerShape(999.dp),
             color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.55f)
@@ -186,9 +196,34 @@ private fun VideoAttachment(
                 imageVector = Icons.Default.PlayArrow,
                 contentDescription = stringResource(R.string.android_message_attachments_play_video),
                 tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier
-                    .padding(12.dp)
-                    .size(30.dp)
+                modifier = Modifier.padding(12.dp).size(30.dp)
+            )
+        }
+    }
+
+    if (showPlayer) {
+        androidx.compose.ui.window.Dialog(
+            onDismissRequest = { showPlayer = false }
+        ) {
+            var video by remember(url) { mutableStateOf<VideoView?>(null) }
+            DisposableEffect(url) {
+                onDispose {
+                    video?.stopPlayback()
+                    video = null
+                }
+            }
+            AndroidView(
+                factory = { context ->
+                    VideoView(context).apply {
+                        val controller = MediaController(context)
+                        controller.setAnchorView(this)
+                        setMediaController(controller)
+                        setVideoURI(android.net.Uri.parse(url))
+                        setOnPreparedListener { start() }
+                        video = this
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(260.dp)
             )
         }
     }
