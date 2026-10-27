@@ -140,11 +140,22 @@ fun ChatsScreen(
     var activeRandomTitle by remember {
         mutableStateOf<String?>(null)
     }
+    var peerEndedNotice by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
     val randomState by
     randomChatViewModel.state.collectAsState()
+
+    LaunchedEffect(randomState.endedRoomId) {
+        val endedId = randomState.endedRoomId ?: return@LaunchedEffect
+        if (selectedConversation?.id == endedId) {
+            selectedConversation = null
+            activeRandomTitle = null
+            peerEndedNotice = true
+            viewModel.loadConversations()
+        }
+    }
 
     val conversations by
     viewModel.conversations.collectAsState()
@@ -711,6 +722,19 @@ fun ChatsScreen(
                     }
                 ) {
                     Text(stringResource(R.string.android_chats_cancel))
+                }
+            }
+        )
+    }
+
+    if (peerEndedNotice) {
+        AlertDialog(
+            onDismissRequest = { peerEndedNotice = false },
+            title = { Text("Random Chat ended") },
+            text = { Text("Your partner left the Random Chat.") },
+            confirmButton = {
+                TextButton(onClick = { peerEndedNotice = false }) {
+                    Text("OK")
                 }
             }
         )
