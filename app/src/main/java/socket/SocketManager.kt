@@ -34,6 +34,7 @@ class SocketManager(
 
     private val recoveryPolicy =
         SocketRecoveryPolicy()
+    private val randomSearchIntent = RandomSearchIntent()
 
     private var socket: Socket? = null
     private var transportClient: OkHttpClient? = null
@@ -261,6 +262,9 @@ class SocketManager(
             )
 
             emitJoinRooms()
+            if (randomSearchIntent.shouldJoin(socket?.connected() == true)) {
+                socket?.emit("random:join")
+            }
             _socketConnected.tryEmit(Unit)
         }
 
@@ -415,6 +419,7 @@ class SocketManager(
         }
 
         socket?.on("random:matched") { args ->
+            randomSearchIntent.clear()
             args.firstOrNull()?.let {
                 _randomChatMatched.tryEmit(it.toString())
             }
@@ -431,6 +436,7 @@ class SocketManager(
 
     fun disconnect() {
         currentToken = null
+        randomSearchIntent.clear()
         cancelScheduledRecovery()
         unregisterNetworkCallback()
         networkAccessBlocked = false
@@ -618,11 +624,15 @@ class SocketManager(
     }
 
     fun startRandomChat() {
-        socket?.emit("random:join")
+        randomSearchIntent.request()
+        if (randomSearchIntent.shouldJoin(socket?.connected() == true)) {
+            socket?.emit("random:join")
+        }
     }
 
     fun cancelRandomChat() {
-        socket?.emit("random:leave")
+        randomSearchIntent.clear()
+        if (socket?.connected() == true) socket?.emit("random:leave")
     }
 
     fun sendRandomMessage(roomId: Int, text: String) {
@@ -633,7 +643,8 @@ class SocketManager(
     }
 
     fun skipRandomChat() {
-        socket?.emit("random:skip")
+        randomSearchIntent.clear()
+        if (socket?.connected() == true) socket?.emit("random:skip")
     }
 
     fun requestRandomFriend(roomId: Int) {
