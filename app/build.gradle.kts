@@ -37,6 +37,14 @@ android {
                 "androidx.test.runner.AndroidJUnitRunner"
             }
 
+        // Allow emulator-loopback HTTP exclusively in the opt-in media QA build.
+        // Normal debug and release builds continue to disallow cleartext.
+        manifestPlaceholders["privateMediaQaCleartext"] =
+            if (providers.gradleProperty("CHATFORIA_PRIVATE_MEDIA_QA").orNull == "true")
+                "true"
+            else
+                "false"
+
         manifestPlaceholders["admobAppId"] =
             project.findProperty("ADMOB_APP_ID")
                 ?.toString()
