@@ -66,6 +66,7 @@ class ComposeSmokeTest {
                     onBack = {},
                     onUpdate = {},
                     onSave = {},
+                    isPremium = false,
                     onUpgradeRequired = {}
                 )
             }
@@ -91,7 +92,8 @@ class ComposeSmokeTest {
                     onToggleMute = {},
                     onToggleSpeaker = {},
                     onSendDigit = {},
-                    onEndCall = {}
+                    onEndCall = {},
+                    onAddParticipant = { _ -> }
                 )
             }
         }

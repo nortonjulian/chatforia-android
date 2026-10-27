@@ -19,12 +19,17 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.chatforia.android.ui.theme.ChatforiaColors
 import android.media.MediaPlayer
+import android.widget.VideoView
+import android.widget.MediaController
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.produceState
+import kotlinx.coroutines.delay
 import androidx.compose.ui.res.stringResource
 import com.chatforia.android.R
 
@@ -32,7 +37,9 @@ import com.chatforia.android.R
 fun MessageAttachmentsView(
     attachments: List<AttachmentDto>,
     isMine: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    secureMedia: PrivateMediaUrlRepository? = null,
+    viewerId: Int? = null
 ) {
     if (attachments.isEmpty()) return
 
@@ -44,40 +51,85 @@ fun MessageAttachmentsView(
         attachments.forEach { attachment ->
             AttachmentCard(
                 attachment = attachment,
-                isMine = isMine
+                isMine = isMine,
+                secureMedia = secureMedia,
+                viewerId = viewerId
             )
         }
     }
 }
 
+
+@Composable
+private fun authorizedAttachmentUrl(
+    attachmentId: Int?,
+    original: String?,
+    variant: String,
+    secureMedia: PrivateMediaUrlRepository?,
+    viewerId: Int?
+): String? {
+    val isPrivate = isLocalPrivateMessageMedia(original)
+    val state by produceState<String?>(
+        initialValue = if (isPrivate) null else original,
+        attachmentId, original, variant, secureMedia, viewerId
+    ) {
+        if (!isPrivate) {
+            value = original
+            return@produceState
+        }
+        value = null
+        if (attachmentId == null || secureMedia == null || viewerId == null) return@produceState
+        while (true) {
+            value = try {
+                secureMedia.authorize(attachmentId, original, variant)
+            } catch (_: Exception) {
+                null // Never fall back to the unauthenticated media path.
+            }
+            delay(40_000L) // Backend capability expires after 60 seconds.
+        }
+    }
+    return state
+}
+
 @Composable
 private fun AttachmentCard(
     attachment: AttachmentDto,
-    isMine: Boolean
+    isMine: Boolean,
+    secureMedia: PrivateMediaUrlRepository?,
+    viewerId: Int?
 ) {
+    val fullUrl = authorizedAttachmentUrl(
+        attachment.id, attachment.url, "file", secureMedia, viewerId
+    )
+    val thumbUrl = authorizedAttachmentUrl(
+        attachment.id, attachment.thumbUrl, "thumb", secureMedia, viewerId
+    )
     val kind = attachment.kind.uppercase()
     val mime = attachment.mimeType.orEmpty().lowercase()
-    val url = attachment.url
+    val url = fullUrl
 
     when {
         kind == "GIF" || mime == "image/gif" -> {
-            ImageAttachment(url = url)
+            if (url != null) ImageAttachment(url = url)
         }
 
         kind == "IMAGE" || mime.startsWith("image/") -> {
-            ImageAttachment(
-                url = attachment.thumbUrl ?: url
+            if ((thumbUrl ?: url) != null) ImageAttachment(
+                url = (thumbUrl ?: url)!!
             )
         }
 
         kind == "VIDEO" || mime.startsWith("video/") -> {
-            VideoAttachment(
-                url = attachment.thumbUrl ?: url,
+            // Thumbnail images are not playable media. Only use the
+            // independently authorized full file URL for playback.
+            if (url != null) VideoAttachment(
+                url = url,
+                thumbnailUrl = thumbUrl
             )
         }
 
         kind == "AUDIO" || mime.startsWith("audio/") -> {
-            AudioAttachment(
+            if (url != null) AudioAttachment(
                 url = url,
                 title = attachment.caption ?: "Voice note",
                 durationSec = attachment.durationSec,
@@ -114,24 +166,28 @@ private fun ImageAttachment(
 
 @Composable
 private fun VideoAttachment(
-    url: String
+    url: String,
+    thumbnailUrl: String?
 ) {
+    var showPlayer by remember(url) { mutableStateOf(false) }
+
     Box(
         modifier = Modifier
             .width(240.dp)
             .height(180.dp)
             .clip(RoundedCornerShape(18.dp))
             .background(ChatforiaColors.cardBackground)
-            .clickable { },
+            .clickable { showPlayer = true },
         contentAlignment = Alignment.Center
     ) {
-        AsyncImage(
-            model = url,
-            contentDescription = stringResource(R.string.android_message_attachments_video_attachment),
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-
+        if (thumbnailUrl != null) {
+            AsyncImage(
+                model = thumbnailUrl,
+                contentDescription = stringResource(R.string.android_message_attachments_video_attachment),
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
         Surface(
             shape = RoundedCornerShape(999.dp),
             color = MaterialTheme.colorScheme.scrim.copy(alpha = 0.55f)
@@ -140,9 +196,34 @@ private fun VideoAttachment(
                 imageVector = Icons.Default.PlayArrow,
                 contentDescription = stringResource(R.string.android_message_attachments_play_video),
                 tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier
-                    .padding(12.dp)
-                    .size(30.dp)
+                modifier = Modifier.padding(12.dp).size(30.dp)
+            )
+        }
+    }
+
+    if (showPlayer) {
+        androidx.compose.ui.window.Dialog(
+            onDismissRequest = { showPlayer = false }
+        ) {
+            var video by remember(url) { mutableStateOf<VideoView?>(null) }
+            DisposableEffect(url) {
+                onDispose {
+                    video?.stopPlayback()
+                    video = null
+                }
+            }
+            AndroidView(
+                factory = { context ->
+                    VideoView(context).apply {
+                        val controller = MediaController(context)
+                        controller.setAnchorView(this)
+                        setMediaController(controller)
+                        setVideoURI(android.net.Uri.parse(url))
+                        setOnPreparedListener { start() }
+                        video = this
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(260.dp)
             )
         }
     }

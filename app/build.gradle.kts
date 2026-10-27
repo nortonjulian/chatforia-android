@@ -26,7 +26,24 @@ android {
         versionCode = 50
         versionName = "1"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // QA-only runner avoids booting Chatforia's analytics, push and badge
+        // background services during isolated localhost media instrumentation.
+        // Default instrumentation behavior is unchanged without this property.
+        testInstrumentationRunner =
+            if (providers.gradleProperty("CHATFORIA_PRIVATE_MEDIA_QA")
+                    .orNull == "true") {
+                "com.chatforia.android.PrivateMediaQaRunner"
+            } else {
+                "androidx.test.runner.AndroidJUnitRunner"
+            }
+
+        // Allow emulator-loopback HTTP exclusively in the opt-in media QA build.
+        // Normal debug and release builds continue to disallow cleartext.
+        manifestPlaceholders["privateMediaQaCleartext"] =
+            if (providers.gradleProperty("CHATFORIA_PRIVATE_MEDIA_QA").orNull == "true")
+                "true"
+            else
+                "false"
 
         manifestPlaceholders["admobAppId"] =
             project.findProperty("ADMOB_APP_ID")
