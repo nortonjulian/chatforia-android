@@ -20,7 +20,10 @@ class RandomChatViewModel(
         observeSocket()
     }
 
+    private var searchGeneration = 0
+
     fun startSearch() {
+        val generation = ++searchGeneration
         _state.value = RandomChatUiState(
             isSearching = true,
             error = null
@@ -30,11 +33,12 @@ class RandomChatViewModel(
 
         viewModelScope.launch {
             kotlinx.coroutines.delay(200)
-            socketManager.startRandomChat()
+            if (generation == searchGeneration) socketManager.startRandomChat()
         }
     }
 
     fun cancelSearch() {
+        searchGeneration++
         socketManager.cancelRandomChat()
         _state.value = RandomChatUiState()
     }
@@ -140,9 +144,17 @@ class RandomChatViewModel(
         }
 
         viewModelScope.launch {
-            socketManager.randomChatEnded.collect {
+            socketManager.randomChatEnded.collect { raw ->
+                val roomId = runCatching {
+                    JSONObject(raw).optInt("roomId", 0)
+                }.getOrDefault(0)
+                val current = _state.value.session ?: return@collect
+                // Ignore delayed events from a previous pairing.
+                if (roomId != current.roomId) return@collect
+                searchGeneration++
                 _state.value = RandomChatUiState(
-                    error = "Random chat ended."
+                    endedRoomId = roomId,
+                    error = "Your partner left the Random Chat."
                 )
             }
         }
@@ -178,12 +190,13 @@ class RandomChatViewModel(
     }
 
     fun skip() {
+        val generation = ++searchGeneration
         socketManager.skipRandomChat()
         _state.value = RandomChatUiState(isSearching = true)
 
         viewModelScope.launch {
             kotlinx.coroutines.delay(200)
-            socketManager.startRandomChat()
+            if (generation == searchGeneration) socketManager.startRandomChat()
         }
     }
 
@@ -197,6 +210,7 @@ class RandomChatViewModel(
     }
 
     fun endChat() {
+        searchGeneration++
         socketManager.cancelRandomChat()
         _state.value = RandomChatUiState()
     }
