@@ -35,7 +35,9 @@ fun ChatMessageRow(
     onEdit: ((MessageDto) -> Unit)? = null,
     onDelete: ((MessageDto) -> Unit)? = null,
     onReport: ((MessageDto) -> Unit)? = null,
-    onMessageInfo: ((MessageDto) -> Unit)? = null
+    onMessageInfo: ((MessageDto) -> Unit)? = null,
+    secureMedia: PrivateMediaUrlRepository? = null,
+    viewerId: Int? = null
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val requireHold = blurByDefault && holdToReveal
@@ -121,7 +123,9 @@ fun ChatMessageRow(
                     if (hasAttachments) {
                         MessageAttachmentsView(
                             attachments = attachments,
-                            isMine = isMine
+                            isMine = isMine,
+                            secureMedia = secureMedia,
+                            viewerId = viewerId
                         )
                     }
 
