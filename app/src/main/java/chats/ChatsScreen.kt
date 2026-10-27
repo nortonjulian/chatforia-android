@@ -335,10 +335,11 @@ fun ChatsScreen(
                 val wasSmsThread = room.kind == "sms"
 
                 if (isTemporaryRandomChat) {
-                    randomChatViewModel.endChat()
-                    activeRandomTitle = null
+                    // Back is navigation, not an explicit Random Chat Leave.
+                    // Keep the active pairing so returning to this thread
+                    // retains Add Friend / Next / Leave and anonymous rules.
                     selectedConversation = null
-                    viewModel.deleteConversation(room)
+                    viewModel.loadConversations()
                     return@ChatThreadScreen
                 }
 
