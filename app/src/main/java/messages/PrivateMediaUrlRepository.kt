@@ -47,7 +47,8 @@ private data class PrivateMediaGrant(
  */
 class PrivateMediaUrlRepository(
     private val api: ApiTransport,
-    private val json: Json = Json { ignoreUnknownKeys = true }
+    private val json: Json = Json { ignoreUnknownKeys = true },
+    private val apiBaseUrl: String = Environment.API_BASE_URL
 ) {
     suspend fun authorize(
         attachmentId: Int,
@@ -68,7 +69,7 @@ class PrivateMediaUrlRepository(
             )
             val grant = json.decodeFromString<PrivateMediaGrant>(response)
             if (!grant.url.startsWith("/private-media/file?token=")) return@withContext null
-            Environment.API_BASE_URL.trimEnd('/') + grant.url
+            apiBaseUrl.trimEnd('/') + grant.url
         }
     }
 }
