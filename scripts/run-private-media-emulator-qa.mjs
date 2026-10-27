@@ -4,7 +4,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-const serial = 'emulator-5554';
+// Explicitly select a disposable emulator. Physical device serials are rejected.
+// Leave the existing emulator-5554 app installed and unchanged.
+const serial = process.env.CHATFORIA_QA_EMULATOR_SERIAL || 'emulator-5554';
+if (!/^emulator-[0-9]{4}$/.test(serial)) {
+  throw new Error('QA target must be an Android emulator serial (emulator-NNNN).');
+}
 function adb(args, timeout = 90000) {
   const result = spawnSync('adb', ['-s', serial, ...args], {
     encoding: 'utf8', timeout, maxBuffer: 1024 * 1024,
@@ -47,7 +52,7 @@ async function main() {
   const app = 'app/build/outputs/apk/debug/app-debug.apk';
   const tests = 'app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk';
   await fs.access(app); await fs.access(tests);
-  console.log('Isolated localhost API, secure QA session and emulator verified.');
+  console.log('Isolated localhost API, secure QA session and emulator verified:', serial);
   console.log(adb(['install', '-t', app]));
   console.log(adb(['install', '-t', tests]));
   console.log('Running the native Compose media attachment test (one test)...');
