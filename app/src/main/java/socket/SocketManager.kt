@@ -190,21 +190,24 @@ class SocketManager(
             OkHttpClient.Builder()
                 .retryOnConnectionFailure(true)
                 .readTimeout(0, TimeUnit.MILLISECONDS)
-                .dns(Dns { hostname ->
-                    resolveSocketHost(
-                        hostname = hostname,
-                        systemLookup = { Dns.SYSTEM.lookup(it) },
-                        validatedNetworkLookup = { host ->
-                            val network = connectivityManager.activeNetwork
-                                ?: return@resolveSocketHost null
-                            if (!isValidated(network)) return@resolveSocketHost null
-                            try {
-                                network.getAllByName(host).toList()
-                            } catch (_: java.net.UnknownHostException) {
-                                null
+                .dns(object : Dns {
+                    override fun lookup(hostname: String): List<InetAddress> =
+                        resolveSocketHost(
+                            hostname = hostname,
+                            systemLookup = { Dns.SYSTEM.lookup(it) },
+                            validatedNetworkLookup = { host ->
+                                val network = connectivityManager.activeNetwork
+                                if (network == null || !isValidated(network)) {
+                                    null
+                                } else {
+                                    try {
+                                        network.getAllByName(host).toList()
+                                    } catch (_: java.net.UnknownHostException) {
+                                        null
+                                    }
+                                }
                             }
-                        }
-                    )
+                        )
                 })
                 .build()
 
