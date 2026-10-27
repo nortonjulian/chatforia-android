@@ -34,12 +34,16 @@ class SocketManager(
 
     private val recoveryPolicy =
         SocketRecoveryPolicy()
+    private val randomSearchIntent = RandomSearchIntent()
 
     private var socket: Socket? = null
     private var transportClient: OkHttpClient? = null
     private var currentToken: String? = null
     private var networkCallbackRegistered = false
     private var recoveryRunnable: Runnable? = null
+    // Android may block this UID while Wi-Fi remains validated.
+    // Updated only on the main handler alongside recovery scheduling.
+    private var networkAccessBlocked = false
 
     private val joinedRoomIds = mutableSetOf<Int>()
 
@@ -56,7 +60,8 @@ class SocketManager(
             }
 
             override fun onAvailable(network: Network) {
-                recoverForValidatedNetwork(network)
+                // Do not query ConnectivityManager synchronously in a callback.
+                mainHandler.post { recoverForValidatedNetwork(network) }
             }
 
             override fun onCapabilitiesChanged(
@@ -68,7 +73,42 @@ class SocketManager(
                         NetworkCapabilities.NET_CAPABILITY_VALIDATED
                     )
                 ) {
-                    recoverForValidatedNetwork(network)
+                    mainHandler.post { recoverForValidatedNetwork(network) }
+                }
+            }
+
+            override fun onBlockedStatusChanged(
+                network: Network,
+                blocked: Boolean
+            ) {
+                // Android reports UID-level blocks even when the default
+                // network stays connected and validated. Handle on main to
+                // serialize with delayed socket recovery and avoid querying
+                // ConnectivityManager directly inside its callback.
+                mainHandler.post {
+                    // A default-network callback already tracks this app's
+                    // selected network. Crucially, activeNetwork can be null
+                    // while Android blocks the UID; checking it here would
+                    // discard the exact event needed to arm recovery.
+                    if (blocked) {
+                        networkAccessBlocked = true
+                        recoveryPolicy.markNetworkLost()
+                        cancelScheduledRecovery()
+                        Log.d(
+                            "ChatforiaSocket",
+                            "Android blocked app network access; awaiting unblock"
+                        )
+                    } else {
+                        val wasBlocked = networkAccessBlocked
+                        networkAccessBlocked = false
+                        if (wasBlocked) {
+                            Log.d(
+                                "ChatforiaSocket",
+                                "Android unblocked app network access; recovery armed"
+                            )
+                            recoverForValidatedNetwork(network)
+                        }
+                    }
                 }
             }
         }
@@ -222,6 +262,9 @@ class SocketManager(
             )
 
             emitJoinRooms()
+            if (randomSearchIntent.shouldJoin(socket?.connected() == true)) {
+                socket?.emit("random:join")
+            }
             _socketConnected.tryEmit(Unit)
         }
 
@@ -376,6 +419,7 @@ class SocketManager(
         }
 
         socket?.on("random:matched") { args ->
+            randomSearchIntent.clear()
             args.firstOrNull()?.let {
                 _randomChatMatched.tryEmit(it.toString())
             }
@@ -392,8 +436,10 @@ class SocketManager(
 
     fun disconnect() {
         currentToken = null
+        randomSearchIntent.clear()
         cancelScheduledRecovery()
         unregisterNetworkCallback()
+        networkAccessBlocked = false
         recoveryPolicy.reset()
 
         socket?.off()
@@ -439,7 +485,7 @@ class SocketManager(
     private fun recoverForValidatedNetwork(
         network: Network
     ) {
-        if (!isValidated(network)) return
+        if (networkAccessBlocked || !isValidated(network)) return
 
         if (
             recoveryPolicy
@@ -464,7 +510,7 @@ class SocketManager(
 
                 val token = currentToken
                 val networkValidated =
-                    hasValidatedNetwork()
+                    !networkAccessBlocked && hasValidatedNetwork()
                 val socketConnected =
                     socket?.connected() == true
 
@@ -578,11 +624,15 @@ class SocketManager(
     }
 
     fun startRandomChat() {
-        socket?.emit("random:join")
+        randomSearchIntent.request()
+        if (randomSearchIntent.shouldJoin(socket?.connected() == true)) {
+            socket?.emit("random:join")
+        }
     }
 
     fun cancelRandomChat() {
-        socket?.emit("random:leave")
+        randomSearchIntent.clear()
+        if (socket?.connected() == true) socket?.emit("random:leave")
     }
 
     fun sendRandomMessage(roomId: Int, text: String) {
@@ -593,7 +643,8 @@ class SocketManager(
     }
 
     fun skipRandomChat() {
-        socket?.emit("random:skip")
+        randomSearchIntent.clear()
+        if (socket?.connected() == true) socket?.emit("random:skip")
     }
 
     fun requestRandomFriend(roomId: Int) {
