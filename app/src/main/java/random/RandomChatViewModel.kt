@@ -144,9 +144,17 @@ class RandomChatViewModel(
         }
 
         viewModelScope.launch {
-            socketManager.randomChatEnded.collect {
+            socketManager.randomChatEnded.collect { raw ->
+                val roomId = runCatching {
+                    JSONObject(raw).optInt("roomId", 0)
+                }.getOrDefault(0)
+                val current = _state.value.session ?: return@collect
+                // Ignore delayed events from a previous pairing.
+                if (roomId != current.roomId) return@collect
+                searchGeneration++
                 _state.value = RandomChatUiState(
-                    error = "Random chat ended."
+                    endedRoomId = roomId,
+                    error = "Your partner left the Random Chat."
                 )
             }
         }
