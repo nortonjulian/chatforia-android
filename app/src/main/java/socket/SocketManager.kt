@@ -13,6 +13,8 @@ import io.socket.client.Socket
 import io.socket.engineio.client.transports.WebSocket
 import kotlinx.coroutines.flow.MutableSharedFlow
 import okhttp3.OkHttpClient
+import okhttp3.Dns
+import java.net.InetAddress
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import org.json.JSONArray
@@ -188,6 +190,22 @@ class SocketManager(
             OkHttpClient.Builder()
                 .retryOnConnectionFailure(true)
                 .readTimeout(0, TimeUnit.MILLISECONDS)
+                .dns(Dns { hostname ->
+                    resolveSocketHost(
+                        hostname = hostname,
+                        systemLookup = { Dns.SYSTEM.lookup(it) },
+                        validatedNetworkLookup = { host ->
+                            val network = connectivityManager.activeNetwork
+                                ?: return@resolveSocketHost null
+                            if (!isValidated(network)) return@resolveSocketHost null
+                            try {
+                                network.getAllByName(host).toList()
+                            } catch (_: java.net.UnknownHostException) {
+                                null
+                            }
+                        }
+                    )
+                })
                 .build()
 
         transportClient = freshTransportClient
