@@ -121,12 +121,17 @@ fun ChatMessageRow(
                     )
                 } else {
                     if (hasAttachments) {
-                        MessageAttachmentsView(
-                            attachments = attachments,
-                            isMine = isMine,
-                            secureMedia = secureMedia,
-                            viewerId = viewerId
-                        )
+                        // Replace the entire remembered media subtree when the
+                        // active account changes. Never briefly reuse another
+                        // account's previously authorized capability URL.
+                        key(viewerId) {
+                            MessageAttachmentsView(
+                                attachments = attachments,
+                                isMine = isMine,
+                                secureMedia = secureMedia,
+                                viewerId = viewerId
+                            )
+                        }
                     }
 
                     if (shouldShowTextBubble(message, hasAttachments, isMine)) {
