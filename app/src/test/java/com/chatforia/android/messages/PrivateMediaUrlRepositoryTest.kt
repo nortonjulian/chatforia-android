@@ -21,6 +21,22 @@ class PrivateMediaUrlRepositoryTest {
         assertTrue(seen?.requiresAuth == true)
     }
 
+    @Test fun cloudCdnMediaRequiresParticipantGrant() = runTest {
+        var seen: ApiRequest? = null
+        val api = object : ApiTransport {
+            override fun sendRaw(request: ApiRequest): String {
+                seen = request
+                return """{"url":"/private-media/file?token=cdn-grant"}"""
+            }
+        }
+        val url = PrivateMediaUrlRepository(api).authorize(
+            42, "https://cdn.chatforia.com/uploads/u1/voice.webm"
+        )
+        assertEquals("https://api.chatforia.com/private-media/file?token=cdn-grant", url)
+        assertEquals("private-media/message/42?variant=file", seen?.path)
+        assertFalse(isLocalPrivateMessageMedia("https://cdn.chatforia.com.evil.test/uploads/u1/voice.webm"))
+    }
+
     @Test fun externalMediaUnchangedWithoutNetworkCall() = runTest {
         val api = object : ApiTransport {
             override fun sendRaw(request: ApiRequest): String = error("unexpected request")
