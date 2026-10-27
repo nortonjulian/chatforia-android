@@ -804,7 +804,7 @@ private fun ConversationRow(
     val last = conversation.last
 
     val baseSubtitle =
-        last?.text
+        voiceNotePreview(last?.text, last?.hasMedia == true)
             ?.takeIf { it.isNotBlank() }
             ?: if (last?.hasMedia == true) {
                 "[media]"

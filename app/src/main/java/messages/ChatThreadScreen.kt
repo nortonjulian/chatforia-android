@@ -653,6 +653,8 @@ fun ChatThreadScreen(
                                         isMine = message.sender.id == currentUserId,
                                         blurByDefault = currentUser.privacyBlurEnabled == true,
                                         holdToReveal = currentUser.privacyHoldToReveal == true,
+                                        autoTranscribeReceived = currentUser.a11yVoiceNoteSTT == true,
+                                        transcriptAccountId = currentUser.id,
                                         onEdit = { selected ->
                                             editingMessage = selected
 
