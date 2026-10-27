@@ -20,7 +20,10 @@ class RandomChatViewModel(
         observeSocket()
     }
 
+    private var searchGeneration = 0
+
     fun startSearch() {
+        val generation = ++searchGeneration
         _state.value = RandomChatUiState(
             isSearching = true,
             error = null
@@ -30,11 +33,12 @@ class RandomChatViewModel(
 
         viewModelScope.launch {
             kotlinx.coroutines.delay(200)
-            socketManager.startRandomChat()
+            if (generation == searchGeneration) socketManager.startRandomChat()
         }
     }
 
     fun cancelSearch() {
+        searchGeneration++
         socketManager.cancelRandomChat()
         _state.value = RandomChatUiState()
     }
@@ -178,12 +182,13 @@ class RandomChatViewModel(
     }
 
     fun skip() {
+        val generation = ++searchGeneration
         socketManager.skipRandomChat()
         _state.value = RandomChatUiState(isSearching = true)
 
         viewModelScope.launch {
             kotlinx.coroutines.delay(200)
-            socketManager.startRandomChat()
+            if (generation == searchGeneration) socketManager.startRandomChat()
         }
     }
 
@@ -197,6 +202,7 @@ class RandomChatViewModel(
     }
 
     fun endChat() {
+        searchGeneration++
         socketManager.cancelRandomChat()
         _state.value = RandomChatUiState()
     }
