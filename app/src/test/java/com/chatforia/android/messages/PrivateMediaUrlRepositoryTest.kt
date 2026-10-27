@@ -21,6 +21,22 @@ class PrivateMediaUrlRepositoryTest {
         assertTrue(seen?.requiresAuth == true)
     }
 
+    @Test fun canonicalR2KeyRequiresParticipantGrant() = runTest {
+        var seen: ApiRequest? = null
+        val api = object : ApiTransport {
+            override fun sendRaw(request: ApiRequest): String {
+                seen = request
+                return """{"url":"/private-media/file?token=scoped"}"""
+            }
+        }
+        val key = "uploads/u123/2026/10/private.jpg"
+        val url = PrivateMediaUrlRepository(api).authorize(42, key)
+        assertEquals("https://api.chatforia.com/private-media/file?token=scoped", url)
+        assertTrue(seen?.requiresAuth == true)
+        assertFalse(isLocalPrivateMessageMedia("uploads/u123/../private.jpg"))
+        assertFalse(isLocalPrivateMessageMedia("uploads/u123/%2e%2e/private.jpg"))
+    }
+
     @Test fun cloudCdnMediaRequiresParticipantGrant() = runTest {
         var seen: ApiRequest? = null
         val api = object : ApiTransport {
