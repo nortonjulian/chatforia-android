@@ -111,13 +111,13 @@ private fun AttachmentCard(
         }
 
         kind == "IMAGE" || mime.startsWith("image/") -> {
-            if (thumbUrl ?: url != null) ImageAttachment(
+            if ((thumbUrl ?: url) != null) ImageAttachment(
                 url = (thumbUrl ?: url)!!
             )
         }
 
         kind == "VIDEO" || mime.startsWith("video/") -> {
-            if (thumbUrl ?: url != null) VideoAttachment(
+            if ((thumbUrl ?: url) != null) VideoAttachment(
                 url = (thumbUrl ?: url)!!,
             )
         }
