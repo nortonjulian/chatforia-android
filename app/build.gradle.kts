@@ -26,7 +26,16 @@ android {
         versionCode = 50
         versionName = "1"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // QA-only runner avoids booting Chatforia's analytics, push and badge
+        // background services during isolated localhost media instrumentation.
+        // Default instrumentation behavior is unchanged without this property.
+        testInstrumentationRunner =
+            if (providers.gradleProperty("CHATFORIA_PRIVATE_MEDIA_QA")
+                    .orNull == "true") {
+                "com.chatforia.android.PrivateMediaQaRunner"
+            } else {
+                "androidx.test.runner.AndroidJUnitRunner"
+            }
 
         manifestPlaceholders["admobAppId"] =
             project.findProperty("ADMOB_APP_ID")
