@@ -20,6 +20,11 @@ import org.json.JSONObject
 import java.net.URI
 import java.util.concurrent.TimeUnit
 import com.chatforia.android.calls.CallRealtimeEvents
+import com.chatforia.android.BuildConfig
+import okhttp3.WebSocket as OkHttpWebSocket
+import okhttp3.WebSocketListener
+import okhttp3.Response
+import okio.ByteString
 
 class SocketManager(
     context: Context
@@ -205,7 +210,7 @@ class SocketManager(
             auth = mapOf("token" to token)
 
             callFactory = freshTransportClient
-            webSocketFactory = freshTransportClient
+            webSocketFactory = diagnosticWebSocketFactory(freshTransportClient)
         }
 
         socket = IO.socket(
@@ -399,6 +404,83 @@ class SocketManager(
         closeTransportClient()
         joinedRoomIds.clear()
     }
+
+    /**
+     * Capture the actual OkHttp failure class without logging a request URL,
+     * authorization value, server response body, or message content.
+     * The Engine.IO client otherwise reports only "websocket error".
+     * All diagnostic output is limited to debug builds.
+     */
+    private fun diagnosticWebSocketFactory(
+        client: OkHttpClient
+    ): OkHttpWebSocket.Factory =
+        OkHttpWebSocket.Factory { request, listener ->
+            client.newWebSocket(request, object : WebSocketListener() {
+                override fun onOpen(
+                    webSocket: OkHttpWebSocket,
+                    response: Response
+                ) {
+                    if (BuildConfig.DEBUG) {
+                        Log.d("ChatforiaSocket", "OkHttp WebSocket opened status=${response.code}")
+                    }
+                    listener.onOpen(webSocket, response)
+                }
+
+                override fun onMessage(
+                    webSocket: OkHttpWebSocket,
+                    text: String
+                ) {
+                    listener.onMessage(webSocket, text)
+                }
+
+                override fun onMessage(
+                    webSocket: OkHttpWebSocket,
+                    bytes: ByteString
+                ) {
+                    listener.onMessage(webSocket, bytes)
+                }
+
+                override fun onClosing(
+                    webSocket: OkHttpWebSocket,
+                    code: Int,
+                    reason: String
+                ) {
+                    if (BuildConfig.DEBUG) {
+                        Log.d("ChatforiaSocket", "OkHttp WebSocket closing code=$code")
+                    }
+                    listener.onClosing(webSocket, code, reason)
+                }
+
+                override fun onClosed(
+                    webSocket: OkHttpWebSocket,
+                    code: Int,
+                    reason: String
+                ) {
+                    if (BuildConfig.DEBUG) {
+                        Log.d("ChatforiaSocket", "OkHttp WebSocket closed code=$code")
+                    }
+                    listener.onClosed(webSocket, code, reason)
+                }
+
+                override fun onFailure(
+                    webSocket: OkHttpWebSocket,
+                    t: Throwable,
+                    response: Response?
+                ) {
+                    if (BuildConfig.DEBUG) {
+                        val causeTypes = generateSequence(t) { it.cause }
+                            .take(5)
+                            .joinToString(" -> ") { it.javaClass.simpleName }
+                        Log.e(
+                            "ChatforiaSocket",
+                            "OkHttp WebSocket failure types=$causeTypes " +
+                                "httpStatus=${response?.code ?: "none"}"
+                        )
+                    }
+                    listener.onFailure(webSocket, t, response)
+                }
+            })
+        }
 
     private fun closeTransportClient() {
         val client = transportClient
