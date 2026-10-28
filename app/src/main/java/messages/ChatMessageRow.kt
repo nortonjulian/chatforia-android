@@ -35,7 +35,9 @@ fun ChatMessageRow(
     onEdit: ((MessageDto) -> Unit)? = null,
     onDelete: ((MessageDto) -> Unit)? = null,
     onReport: ((MessageDto) -> Unit)? = null,
-    onMessageInfo: ((MessageDto) -> Unit)? = null
+    onMessageInfo: ((MessageDto) -> Unit)? = null,
+    secureMedia: PrivateMediaUrlRepository? = null,
+    viewerId: Int? = null
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val requireHold = blurByDefault && holdToReveal
@@ -119,10 +121,17 @@ fun ChatMessageRow(
                     )
                 } else {
                     if (hasAttachments) {
-                        MessageAttachmentsView(
-                            attachments = attachments,
-                            isMine = isMine
-                        )
+                        // Replace the entire remembered media subtree when the
+                        // active account changes. Never briefly reuse another
+                        // account's previously authorized capability URL.
+                        key(viewerId) {
+                            MessageAttachmentsView(
+                                attachments = attachments,
+                                isMine = isMine,
+                                secureMedia = secureMedia,
+                                viewerId = viewerId
+                            )
+                        }
                     }
 
                     if (shouldShowTextBubble(message, hasAttachments, isMine)) {
