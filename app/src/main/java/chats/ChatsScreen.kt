@@ -803,14 +803,7 @@ private fun ConversationRow(
 
     val last = conversation.last
 
-    val baseSubtitle =
-        last?.text
-            ?.takeIf { it.isNotBlank() }
-            ?: if (last?.hasMedia == true) {
-                "[media]"
-            } else {
-                "No messages yet"
-            }
+    val baseSubtitle = formatConversationPreview(last)
 
     val senderName =
         last?.senderName

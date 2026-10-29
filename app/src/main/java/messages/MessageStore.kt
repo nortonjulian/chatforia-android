@@ -26,6 +26,55 @@ class MessageStore {
             .dedupeAndSort()
     }
 
+    fun replaceRoomMessages(
+        roomId: Int,
+        messages: List<MessageDto>
+    ) {
+        _messages.update { current ->
+            val loaded = messages.filterNot { message ->
+                message.id > 0 &&
+                    locallyRemovedMessageIds.contains(message.id)
+            }
+
+            val serverIds = loaded
+                .mapNotNull { it.id.takeIf { id -> id > 0 } }
+                .toSet()
+
+            val clientIds = loaded
+                .mapNotNull { it.clientMessageId }
+                .toSet()
+
+            val retained = current.filter { message ->
+                if (message.chatRoomId != roomId) {
+                    false
+                } else {
+                    val clientId = message.clientMessageId
+                    val matchesLoaded =
+                        (message.id > 0 && message.id in serverIds) ||
+                            (!clientId.isNullOrBlank() && clientId in clientIds)
+
+                    val pending =
+                        message.optimistic && message.id <= 0
+
+                    val locallyConfirmed =
+                        !clientId.isNullOrBlank() &&
+                            _deliveryStates.value[clientId] ==
+                                MessageDeliveryState.SENT
+
+                    val locallyRemoved =
+                        message.id > 0 &&
+                            locallyRemovedMessageIds.contains(message.id)
+
+                    !matchesLoaded &&
+                        !locallyRemoved &&
+                        (pending || locallyConfirmed)
+                }
+            }
+
+            (loaded + retained).dedupeAndSort()
+        }
+    }
+
     fun upsert(message: MessageDto) {
         if (
             message.id > 0 &&
@@ -70,7 +119,9 @@ class MessageStore {
                         deletedAt = deletedAt ?: message.deletedAt,
                         rawContent = "",
                         content = "",
-                        decryptedContent = ""
+                        decryptedContent = "",
+                        attachments = emptyList(),
+                        attachmentsInline = emptyList()
                     )
                 } else {
                     message
@@ -206,6 +257,18 @@ class MessageStore {
     private fun MessageDto.mergeWith(
         incoming: MessageDto
     ): MessageDto {
+        if (deletedForAll == true || incoming.deletedForAll == true) {
+            return copy(
+                deletedForAll = true,
+                deletedAt = incoming.deletedAt ?: deletedAt,
+                rawContent = "",
+                content = "",
+                decryptedContent = "",
+                attachments = emptyList(),
+                attachmentsInline = emptyList()
+            )
+        }
+
         return copy(
             id = if (incoming.id > 0) incoming.id else id,
 

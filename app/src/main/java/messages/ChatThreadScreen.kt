@@ -141,7 +141,12 @@ fun ChatThreadScreen(
         if (conversation.kind == "sms") {
             smsMessages.size
         } else {
-            chatMessages.size
+            chatMessages.count { message ->
+                message.deletedForAll != true &&
+                    (!isTemporaryRandomChat ||
+                        message.randomNoticeText() !=
+                            "You've been paired for a random chat. Be kind!")
+            } + if (isTemporaryRandomChat) 1 else 0
         }
 
     val isNearMessageBottom by remember(
@@ -264,12 +269,10 @@ fun ChatThreadScreen(
     val randomDisclaimerText = "You've been paired for a random chat. Be kind!"
 
     val visibleChatMessages =
-        if (isTemporaryRandomChat) {
-            chatMessages.filterNot { message ->
-                message.randomNoticeText() == randomDisclaimerText
-            }
-        } else {
-            chatMessages
+        chatMessages.filterNot { message ->
+            message.deletedForAll == true ||
+                (isTemporaryRandomChat &&
+                    message.randomNoticeText() == randomDisclaimerText)
         }
 
     val isThreadEmpty =
@@ -300,7 +303,8 @@ fun ChatThreadScreen(
 
                     viewModel.sendMedia(
                         conversation = conversation,
-                        mediaUrls = listOf(uploaded.url)
+                        mediaUrls = listOf(uploaded.url),
+                        currentUserId = currentUserId
                     )
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
@@ -335,7 +339,8 @@ fun ChatThreadScreen(
 
                     viewModel.sendMedia(
                         conversation = conversation,
-                        mediaUrls = listOf(uploaded.url)
+                        mediaUrls = listOf(uploaded.url),
+                        currentUserId = currentUserId
                     )
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
