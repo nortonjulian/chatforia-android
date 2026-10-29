@@ -18,31 +18,96 @@ class UploadRepository(
     }
     suspend fun uploadMedia(
         uri: Uri
-    ): UploadImageResponse {
-        val bytes =
-            withContext(Dispatchers.IO) {
-                context.contentResolver.openInputStream(uri)?.use { input ->
-                    input.readBytes()
-                } ?: throw Exception("Could not read selected media.")
-            }
+    ): UploadImageResponse = withContext(Dispatchers.IO) {
+        val resolver = context.contentResolver
+
+        // Match the server's current default upload limit.
+        // Revisit together with MAX_FILE_SIZE_BYTES configuration.
+        val maxUploadBytes = 10L * 1024L * 1024L
+
+        val bytes = resolver.openInputStream(uri)?.use { input ->
+            readBoundedMedia(input, maxUploadBytes)
+        } ?: throw Exception("Could not read selected media.")
+
+        if (bytes.isEmpty()) {
+            throw Exception("Selected media is empty.")
+        }
 
         val mimeType =
-            context.contentResolver.getType(uri)
+            resolver.getType(uri)
                 ?: "application/octet-stream"
 
-        val filename =
-            "android-upload-${UUID.randomUUID()}"
+        val extension = when (mimeType.lowercase()) {
+            "image/jpeg", "image/jpg" -> "jpg"
+            "image/png" -> "png"
+            "image/gif" -> "gif"
+            "image/webp" -> "webp"
+            "image/heic" -> "heic"
+            "image/heif" -> "heif"
+            "video/mp4" -> "mp4"
+            "video/quicktime" -> "mov"
+            "video/3gpp" -> "3gp"
+            else -> android.webkit.MimeTypeMap.getSingleton()
+                .getExtensionFromMimeType(mimeType)
+                ?.takeIf {
+                    it.matches(Regex("[a-zA-Z0-9]{1,8}"))
+                }
+                ?: "bin"
+        }
 
-        return withContext(Dispatchers.IO) {
-            apiClient.uploadMultipart(
-                path = "uploads/image",
-                fileFieldName = "file",
-                filename = filename,
-                mimeType = mimeType,
-                bytes = bytes,
+        val filename =
+            "android-upload-${UUID.randomUUID()}.$extension"
+
+        val intent: UploadIntentResponse = apiClient.send(
+            com.chatforia.android.network.ApiRequest(
+                path = "uploads/intent",
+                method = com.chatforia.android.network.HttpMethod.POST,
+                bodyJson = json.encodeToString(
+                    UploadIntentRequest(
+                        name = filename,
+                        size = bytes.size,
+                        mimeType = mimeType
+                    )
+                ),
                 requiresAuth = true
             )
+        )
+
+        apiClient.putBytesToUrl(
+            uploadUrl = intent.uploadUrl,
+            mimeType = mimeType,
+            bytes = bytes
+        )
+
+        val complete: UploadCompleteResponse = apiClient.send(
+            com.chatforia.android.network.ApiRequest(
+                path = "uploads/complete",
+                method = com.chatforia.android.network.HttpMethod.POST,
+                bodyJson = json.encodeToString(
+                    UploadCompleteRequest(
+                        key = intent.key,
+                        name = filename,
+                        mimeType = mimeType,
+                        size = bytes.size
+                    )
+                ),
+                requiresAuth = true
+            )
+        )
+
+        if (!complete.ok) {
+            throw Exception("Media upload could not be completed.")
         }
+
+        val canonicalKey =
+            complete.file.key
+                ?.takeIf { it.isNotBlank() }
+                ?: intent.key
+
+        UploadImageResponse(
+            ok = true,
+            url = canonicalKey
+        )
     }
 
     suspend fun uploadAudio(

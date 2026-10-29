@@ -285,13 +285,32 @@ fun ChatThreadScreen(
         ) { uri ->
             if (uri == null) return@rememberLauncherForActivityResult
 
-            scope.launch {
-                val uploaded = uploadRepository.uploadMedia(uri)
+            if (conversation.kind == "sms") {
+                Toast.makeText(
+                    context,
+                    "MMS attachments are temporarily unavailable.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@rememberLauncherForActivityResult
+            }
 
-                viewModel.sendMedia(
-                    conversation = conversation,
-                    mediaUrls = listOf(uploaded.url)
-                )
+            scope.launch {
+                try {
+                    val uploaded = uploadRepository.uploadMedia(uri)
+
+                    viewModel.sendMedia(
+                        conversation = conversation,
+                        mediaUrls = listOf(uploaded.url)
+                    )
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        context,
+                        e.message ?: "Media upload failed. Please try again.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         }
 
@@ -301,13 +320,32 @@ fun ChatThreadScreen(
         ) { uri ->
             if (uri == null) return@rememberLauncherForActivityResult
 
-            scope.launch {
-                val uploaded = uploadRepository.uploadMedia(uri)
+            if (conversation.kind == "sms") {
+                Toast.makeText(
+                    context,
+                    "MMS attachments are temporarily unavailable.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@rememberLauncherForActivityResult
+            }
 
-                viewModel.sendMedia(
-                    conversation = conversation,
-                    mediaUrls = listOf(uploaded.url)
-                )
+            scope.launch {
+                try {
+                    val uploaded = uploadRepository.uploadMedia(uri)
+
+                    viewModel.sendMedia(
+                        conversation = conversation,
+                        mediaUrls = listOf(uploaded.url)
+                    )
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        context,
+                        e.message ?: "Media upload failed. Please try again.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         }
 
