@@ -2,6 +2,8 @@ package com.chatforia.android.messages
 
 import com.chatforia.android.network.ApiRequest
 import com.chatforia.android.network.ApiTransport
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
@@ -84,4 +86,127 @@ class PrivateMediaUrlRepositoryTest {
         assertNotNull(PrivateMediaUrlRepository(api).authorize(42, "thumbs/preview.jpg", "thumb"))
         assertEquals("private-media/message/42?variant=thumb", path)
     }
+
+    @Test fun repeatedRequestsReuseUnexpiredGrant() = runTest {
+        var calls = 0
+        val api = object : ApiTransport {
+            override fun sendRaw(request: ApiRequest): String {
+                calls++
+                return """{"url":"/private-media/file?token=grant-1","expiresSec":60}"""
+            }
+        }
+
+        val repo = PrivateMediaUrlRepository(api)
+
+        val first = repo.authorize(
+            284, "uploads/u68/photo.jpg", viewerId = 68
+        )
+        val second = repo.authorize(
+            284, "uploads/u68/photo.jpg", viewerId = 68
+        )
+
+        assertEquals(first, second)
+        assertEquals(1, calls)
+    }
+
+    @Test fun differentViewersNeverShareCachedGrant() = runTest {
+        var calls = 0
+        val api = object : ApiTransport {
+            override fun sendRaw(request: ApiRequest): String {
+                calls++
+                return """{"url":"/private-media/file?token=grant-$calls","expiresSec":60}"""
+            }
+        }
+
+        val repo = PrivateMediaUrlRepository(api)
+
+        val first = repo.authorize(
+            284, "uploads/u68/photo.jpg", viewerId = 68
+        )
+        val second = repo.authorize(
+            284, "uploads/u68/photo.jpg", viewerId = 1
+        )
+
+        assertNotEquals(first, second)
+        assertEquals(2, calls)
+    }
+
+    @Test fun expiredGrantIsRequestedAgain() = runTest {
+        var calls = 0
+        var clock = 1000L
+
+        val api = object : ApiTransport {
+            override fun sendRaw(request: ApiRequest): String {
+                calls++
+                return """{"url":"/private-media/file?token=grant-$calls","expiresSec":60}"""
+            }
+        }
+
+        val repo = PrivateMediaUrlRepository(
+            api = api,
+            nowMillis = { clock }
+        )
+
+        val first = repo.authorize(
+            284, "uploads/u68/photo.jpg", viewerId = 68
+        )
+
+        clock += 46000L
+
+        val second = repo.authorize(
+            284, "uploads/u68/photo.jpg", viewerId = 68
+        )
+
+        assertNotEquals(first, second)
+        assertEquals(2, calls)
+    }
+
+    @Test fun clearedCacheRequiresNewAuthorization() = runTest {
+        var calls = 0
+
+        val api = object : ApiTransport {
+            override fun sendRaw(request: ApiRequest): String {
+                calls++
+                return """{"url":"/private-media/file?token=grant-$calls","expiresSec":60}"""
+            }
+        }
+
+        val repo = PrivateMediaUrlRepository(api)
+
+        repo.authorize(284, "uploads/u68/photo.jpg", viewerId = 68)
+        repo.clearCachedGrants()
+        repo.authorize(284, "uploads/u68/photo.jpg", viewerId = 68)
+
+        assertEquals(2, calls)
+    }
+
+
+    @Test fun concurrentRequestsShareSingleGrant() = runTest {
+        val counter = java.util.concurrent.atomic.AtomicInteger()
+
+        val api = object : ApiTransport {
+            override fun sendRaw(request: ApiRequest): String {
+                counter.incrementAndGet()
+                Thread.sleep(50)
+                return """{"url":"/private-media/file?token=shared","expiresSec":60}"""
+            }
+        }
+
+        val repo = PrivateMediaUrlRepository(api)
+
+        val results = (1..8).map {
+            async {
+                repo.authorize(
+                    284,
+                    "uploads/u68/photo.jpg",
+                    viewerId = 68
+                )
+            }
+        }.awaitAll()
+
+        assertEquals(1, counter.get())
+        assertEquals(1, results.toSet().size)
+        assertNotNull(results.first())
+    }
+
 }

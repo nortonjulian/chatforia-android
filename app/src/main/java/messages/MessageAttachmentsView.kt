@@ -66,12 +66,13 @@ private fun authorizedAttachmentUrl(
     original: String?,
     variant: String,
     secureMedia: PrivateMediaUrlRepository?,
-    viewerId: Int?
+    viewerId: Int?,
+    refresh: Boolean = true
 ): String? {
     val isPrivate = isLocalPrivateMessageMedia(original)
     val state by produceState<String?>(
         initialValue = if (isPrivate) null else original,
-        attachmentId, original, variant, secureMedia, viewerId
+        attachmentId, original, variant, secureMedia, viewerId, refresh
     ) {
         if (!isPrivate) {
             value = original
@@ -81,10 +82,13 @@ private fun authorizedAttachmentUrl(
         if (attachmentId == null || secureMedia == null || viewerId == null) return@produceState
         while (true) {
             value = try {
-                secureMedia.authorize(attachmentId, original, variant)
+                secureMedia.authorize(
+                    attachmentId, original, variant, viewerId = viewerId
+                )
             } catch (_: Exception) {
                 null // Never fall back to the unauthenticated media path.
             }
+            if (!refresh) break
             delay(40_000L) // Backend capability expires after 60 seconds.
         }
     }
@@ -98,14 +102,25 @@ private fun AttachmentCard(
     secureMedia: PrivateMediaUrlRepository?,
     viewerId: Int?
 ) {
-    val fullUrl = authorizedAttachmentUrl(
-        attachment.id, attachment.url, "file", secureMedia, viewerId
-    )
-    val thumbUrl = authorizedAttachmentUrl(
-        attachment.id, attachment.thumbUrl, "thumb", secureMedia, viewerId
-    )
     val kind = attachment.kind.uppercase()
     val mime = attachment.mimeType.orEmpty().lowercase()
+    val isImage = kind == "IMAGE" || kind == "GIF" ||
+        mime.startsWith("image/")
+
+    // Images use one authenticated full-file grant. Do not request
+    // a thumbnail and a full file simultaneously.
+    val fullUrl = authorizedAttachmentUrl(
+        attachment.id, attachment.url, "file",
+        secureMedia, viewerId, refresh = !isImage
+    )
+    val thumbUrl = if (isImage) {
+        null
+    } else {
+        authorizedAttachmentUrl(
+            attachment.id, attachment.thumbUrl, "thumb",
+            secureMedia, viewerId
+        )
+    }
     val url = fullUrl
 
     when {
