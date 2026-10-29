@@ -54,7 +54,9 @@ fun ChatMessageRow(
     val clipboard = LocalClipboardManager.current
 
     val attachments =
-        if (message.attachments.isNotEmpty()) {
+        if (message.deletedForAll == true) {
+            emptyList()
+        } else if (message.attachments.isNotEmpty()) {
             message.attachments
         } else {
             message.attachmentsInline

@@ -268,6 +268,116 @@ class MessageStoreTest {
         assertEquals(77, result.readBy.first().id)
     }
 
+    @Test
+    fun staleRefreshPreservesLocallyConfirmedOutgoingMessage() {
+        val store = MessageStore()
+
+        store.upsert(
+            message(
+                id = -210,
+                clientMessageId = "sent-to-regina",
+                chatRoomId = 85,
+                optimistic = true
+            )
+        )
+
+        store.upsertAck(
+            id = 2201,
+            clientMessageId = "sent-to-regina",
+            chatRoomId = 85,
+            createdAt = null
+        )
+
+        // A history request started before the send completed.
+        store.replaceRoomMessages(85, emptyList())
+
+        assertEquals(1, store.messages.value.size)
+        assertEquals(2201, store.messages.value.single().id)
+
+        // Server history eventually catches up.
+        store.replaceRoomMessages(
+            85,
+            listOf(
+                message(
+                    id = 2201,
+                    clientMessageId = "sent-to-regina",
+                    chatRoomId = 85
+                )
+            )
+        )
+
+        assertEquals(1, store.messages.value.size)
+        assertEquals(2201, store.messages.value.single().id)
+    }
+
+    @Test
+    fun roomRefreshPreservesPendingOptimisticMessage() {
+        val store = MessageStore()
+
+        store.upsert(
+            message(
+                id = -101,
+                clientMessageId = "pending-photo",
+                chatRoomId = 85,
+                optimistic = true
+            )
+        )
+
+        store.replaceRoomMessages(85, emptyList())
+
+        assertEquals(1, store.messages.value.size)
+        assertEquals(
+            "pending-photo",
+            store.messages.value.single().clientMessageId
+        )
+    }
+
+    @Test
+    fun roomRefreshDoesNotDuplicateConfirmedMessage() {
+        val store = MessageStore()
+
+        store.upsert(
+            message(
+                id = -102,
+                clientMessageId = "confirmed-photo",
+                chatRoomId = 85,
+                optimistic = true
+            )
+        )
+
+        store.replaceRoomMessages(
+            85,
+            listOf(
+                message(
+                    id = 1429,
+                    clientMessageId = "confirmed-photo",
+                    chatRoomId = 85
+                )
+            )
+        )
+
+        assertEquals(1, store.messages.value.size)
+        assertEquals(1429, store.messages.value.single().id)
+    }
+
+    @Test
+    fun roomRefreshDoesNotCarryPendingMessageIntoAnotherRoom() {
+        val store = MessageStore()
+
+        store.upsert(
+            message(
+                id = -103,
+                clientMessageId = "other-room",
+                chatRoomId = 85,
+                optimistic = true
+            )
+        )
+
+        store.replaceRoomMessages(86, emptyList())
+
+        assertTrue(store.messages.value.isEmpty())
+    }
+
     private fun message(
         id: Int,
         text: String? = "hello",

@@ -143,6 +143,8 @@ class ChatThreadViewModel(
     }
 
     private var activeRealtimeRoomId: Int? = null
+    private var activeHistoryRoomId: Int? = null
+    private var historyLoadGeneration = 0L
     private var activeSmsThreadId: Int? = null
     private var smsRealtimeConnected = false
     private var realtimeCollectorsStarted = false
@@ -318,6 +320,9 @@ class ChatThreadViewModel(
         roomId: Int,
         currentUserId: Int
     ) {
+        activeHistoryRoomId = roomId
+        val loadGeneration = ++historyLoadGeneration
+
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
@@ -333,8 +338,20 @@ class ChatThreadViewModel(
                     }
                     .sortedWith(messageSorter())
 
-                // Show messages immediately
-                messageStore.replaceAll(loaded)
+                // Ignore a response for a conversation that is no
+                // longer active. A slower request must not overwrite
+                // messages belonging to the newly selected room.
+                if (
+                    activeHistoryRoomId != roomId ||
+                    historyLoadGeneration != loadGeneration
+                ) {
+                    return@launch
+                }
+
+                // Preserve unconfirmed outgoing messages while
+                // reconciling the server's authoritative history.
+                messageStore.replaceRoomMessages(roomId, loaded)
+
                 _isLoading.value = false
 
                 analytics.capture(
@@ -381,6 +398,15 @@ class ChatThreadViewModel(
                                         currentUserId = currentUserId
                                     )
                                 }
+
+                            // A background delta request must not update
+                            // a conversation that is no longer active.
+                            if (
+                                activeHistoryRoomId != roomId ||
+                                historyLoadGeneration != loadGeneration
+                            ) {
+                                return@launch
+                            }
 
                             deltas.forEach { incoming ->
                                 messageStore.upsert(incoming)
