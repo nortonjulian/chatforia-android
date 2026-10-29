@@ -5,6 +5,8 @@ import com.chatforia.android.network.ApiTransport
 import com.chatforia.android.network.Environment
 import com.chatforia.android.network.HttpMethod
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -48,28 +50,99 @@ private data class PrivateMediaGrant(
 class PrivateMediaUrlRepository(
     private val api: ApiTransport,
     private val json: Json = Json { ignoreUnknownKeys = true },
-    private val apiBaseUrl: String = Environment.API_BASE_URL
+    private val apiBaseUrl: String = Environment.API_BASE_URL,
+    private val nowMillis: () -> Long = { System.nanoTime() / 1_000_000L }
 ) {
+    private data class CacheKey(
+        val viewerId: Int,
+        val attachmentId: Int,
+        val original: String,
+        val variant: String
+    )
+
+    private data class CachedGrant(
+        val url: String,
+        val expiresAtMillis: Long
+    )
+
+    private val mutex = Mutex()
+    private val grants = mutableMapOf<CacheKey, CachedGrant>()
+
     suspend fun authorize(
         attachmentId: Int,
         original: String?,
-        variant: String = "file"
+        variant: String = "file",
+        viewerId: Int? = null
     ): String? {
         if (original.isNullOrBlank()) return null
         if (!isLocalPrivateMessageMedia(original)) return original
         if (attachmentId <= 0 || variant !in setOf("file", "thumb")) return null
 
-        return withContext(Dispatchers.IO) {
-            val response = api.sendRaw(
-                ApiRequest(
-                    path = "private-media/message/$attachmentId?variant=$variant",
-                    method = HttpMethod.GET,
-                    requiresAuth = true
-                )
-            )
-            val grant = json.decodeFromString<PrivateMediaGrant>(response)
-            if (!grant.url.startsWith("/private-media/file?token=")) return@withContext null
-            apiBaseUrl.trimEnd('/') + grant.url
+        // Legacy callers without viewer identity must never share cached grants.
+        if (viewerId == null || viewerId <= 0) {
+            return requestGrant(attachmentId, variant)?.first
         }
+
+        val key = CacheKey(viewerId, attachmentId, original, variant)
+
+        return mutex.withLock {
+            val now = nowMillis()
+
+            grants.entries.removeAll { it.value.expiresAtMillis <= now }
+
+            grants[key]?.let { cached ->
+                return@withLock cached.url
+            }
+
+            val result = requestGrant(attachmentId, variant)
+                ?: return@withLock null
+
+            val (url, expiresSec) = result
+
+            // Leave at least 15 seconds of safety margin.
+            val lifetimeMillis =
+                (expiresSec - 15).coerceIn(0, 45) * 1000L
+
+            if (lifetimeMillis > 0) {
+                // Bound the number of retained capabilities.
+                if (grants.size >= 128) grants.clear()
+
+                grants[key] = CachedGrant(
+                    url = url,
+                    expiresAtMillis = nowMillis() + lifetimeMillis
+                )
+            }
+
+            url
+        }
+    }
+
+    suspend fun clearCachedGrants() {
+        mutex.withLock { grants.clear() }
+    }
+
+
+    private suspend fun requestGrant(
+        attachmentId: Int,
+        variant: String
+    ): Pair<String, Int>? = withContext(Dispatchers.IO) {
+        val response = api.sendRaw(
+            ApiRequest(
+                path = "private-media/message/$attachmentId?variant=$variant",
+                method = HttpMethod.GET,
+                requiresAuth = true
+            )
+        )
+
+        val grant = json.decodeFromString<PrivateMediaGrant>(response)
+
+        if (
+            !grant.url.startsWith("/private-media/file?token=") ||
+            grant.expiresSec <= 0
+        ) {
+            return@withContext null
+        }
+
+        (apiBaseUrl.trimEnd('/') + grant.url) to grant.expiresSec
     }
 }
