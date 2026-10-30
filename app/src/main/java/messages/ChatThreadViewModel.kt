@@ -33,6 +33,13 @@ private data class SmsApiErrorResponse(
     val message: String? = null
 )
 
+enum class ChatHistoryPhase { LOADING, LOADED, ERROR }
+
+data class ChatHistoryStatus(
+    val roomId: Int,
+    val phase: ChatHistoryPhase
+)
+
 class ChatThreadViewModel(
     private val repository: ChatThreadRepository,
     private val keyStorage: PrivateKeyReader,
@@ -79,6 +86,11 @@ class ChatThreadViewModel(
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _chatHistoryStatus =
+        MutableStateFlow<ChatHistoryStatus?>(null)
+    val chatHistoryStatus: StateFlow<ChatHistoryStatus?> =
+        _chatHistoryStatus
 
     private val _isSending = MutableStateFlow(false)
     val isSending: StateFlow<Boolean> = _isSending
@@ -322,6 +334,9 @@ class ChatThreadViewModel(
     ) {
         activeHistoryRoomId = roomId
         val loadGeneration = ++historyLoadGeneration
+        _chatHistoryStatus.value =
+            ChatHistoryStatus(roomId, ChatHistoryPhase.LOADING)
+        _isLoading.value = true
 
         viewModelScope.launch {
             _isLoading.value = true
@@ -352,6 +367,8 @@ class ChatThreadViewModel(
                 // reconciling the server's authoritative history.
                 messageStore.replaceRoomMessages(roomId, loaded)
 
+                _chatHistoryStatus.value =
+                    ChatHistoryStatus(roomId, ChatHistoryPhase.LOADED)
                 _isLoading.value = false
 
                 analytics.capture(
@@ -429,8 +446,16 @@ class ChatThreadViewModel(
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _error.value = chatAccessErrorMessage(e, "Failed to load messages.")
-                _isLoading.value = false
+                if (
+                    activeHistoryRoomId == roomId &&
+                    historyLoadGeneration == loadGeneration
+                ) {
+                    _error.value =
+                        chatAccessErrorMessage(e, "Failed to load messages.")
+                    _chatHistoryStatus.value =
+                        ChatHistoryStatus(roomId, ChatHistoryPhase.ERROR)
+                    _isLoading.value = false
+                }
             }
         }
     }

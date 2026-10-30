@@ -27,6 +27,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -46,6 +51,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.rememberCoroutineScope
 import com.chatforia.android.upload.UploadRepository
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import androidx.compose.ui.draw.clip
 import coil.compose.AsyncImage
 import androidx.compose.material.icons.filled.Close
@@ -116,6 +122,19 @@ fun ChatThreadScreen(
     val chatMessages by viewModel.messages.collectAsState()
     val smsMessages by viewModel.smsMessages.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val chatHistoryStatus by viewModel.chatHistoryStatus.collectAsState()
+
+    val awaitingInitialChatHistory =
+        conversation.kind == "chat" &&
+            (chatHistoryStatus?.roomId != conversation.id ||
+                chatHistoryStatus?.phase == ChatHistoryPhase.LOADING)
+
+    var initialHistoryRequested by remember(
+        conversation.id,
+        conversation.kind
+    ) {
+        mutableStateOf(false)
+    }
     val isSending by viewModel.isSending.collectAsState()
     val error by viewModel.error.collectAsState()
     val planEntitlements by PlanEntitlementsStore.state.collectAsState()
@@ -135,7 +154,12 @@ fun ChatThreadScreen(
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
-    val listState = rememberLazyListState()
+    val listState = androidx.compose.runtime.key(
+        conversation.id,
+        conversation.kind
+    ) {
+        rememberLazyListState()
+    }
 
     val messageItemCount =
         if (conversation.kind == "sms") {
@@ -154,16 +178,39 @@ fun ChatThreadScreen(
         messageItemCount
     ) {
         derivedStateOf {
-            val lastVisibleIndex =
-                listState.layoutInfo
-                    .visibleItemsInfo
-                    .lastOrNull()
-                    ?.index
+            val layout = listState.layoutInfo
+            val lastItem = layout.visibleItemsInfo.lastOrNull()
 
-            lastVisibleIndex == null ||
-                lastVisibleIndex >=
-                    (messageItemCount - 2)
-                        .coerceAtLeast(0)
+            if (lastItem == null) {
+                true
+            } else {
+                val isLastItem =
+                    lastItem.index == layout.totalItemsCount - 1
+
+                val bottomGap =
+                    layout.viewportEndOffset -
+                        (lastItem.offset + lastItem.size)
+
+                isLastItem && bottomGap >= -24
+            }
+        }
+    }
+
+    var followBottom by remember(conversation.id, conversation.kind) {
+        mutableStateOf(true)
+    }
+
+    val bottomScrollConnection = remember(conversation.id, conversation.kind) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                if (source == NestedScrollSource.UserInput && available.y > 0f) {
+                    followBottom = false
+                }
+                return Offset.Zero
+            }
         }
     }
 
@@ -357,6 +404,8 @@ fun ChatThreadScreen(
     LaunchedEffect(conversation.id, conversation.kind, currentUserId) {
         val userId = currentUserId ?: return@LaunchedEffect
 
+        initialHistoryRequested = true
+
         viewModel.loadConversation(
             conversation = conversation,
             currentUserId = userId
@@ -392,39 +441,95 @@ fun ChatThreadScreen(
                 ?.id == currentUserId
         }
 
+    /*
+     * Initial positioning is separate from ongoing bottom-follow.
+     * Wait until this room's history is complete AND LazyColumn has
+     * measured all message items before positioning the newest row.
+     * Never override an upward scroll initiated by the user.
+     */
     LaunchedEffect(
         conversation.id,
         conversation.kind,
+        chatHistoryStatus,
+        messageItemCount,
         isLoading,
-        latestMessageKey
+        initialHistoryRequested,
+        listState
     ) {
+        val historyReady =
+            if (conversation.kind == "sms") {
+                !isLoading && initialHistoryRequested
+            } else {
+                chatHistoryStatus?.roomId == conversation.id &&
+                    chatHistoryStatus?.phase == ChatHistoryPhase.LOADED
+            }
+
         if (
-            isLoading ||
-            messageItemCount <= 0
+            !historyReady ||
+            messageItemCount <= 0 ||
+            hasCompletedInitialBottomScroll
         ) {
             return@LaunchedEffect
         }
 
-        val shouldScroll =
-            !hasCompletedInitialBottomScroll ||
-                isNearMessageBottom ||
-                latestMessageIsMine
+        val targetCount = messageItemCount
 
-        if (!shouldScroll) {
+        snapshotFlow {
+            listState.layoutInfo.totalItemsCount
+        }.first { it == targetCount }
+
+        if (!followBottom || hasCompletedInitialBottomScroll) {
             return@LaunchedEffect
         }
 
-        listState.scrollToItem(
-            messageItemCount - 1
-        )
-
-        kotlinx.coroutines.delay(150)
-
-        listState.scrollToItem(
-            messageItemCount - 1
-        )
-
+        listState.scrollToItem(targetCount - 1)
         hasCompletedInitialBottomScroll = true
+
+    }
+
+    LaunchedEffect(
+        conversation.id,
+        conversation.kind,
+        listState,
+        messageItemCount,
+        isLoading
+    ) {
+        snapshotFlow {
+            val layout = listState.layoutInfo
+            val last = layout.visibleItemsInfo.lastOrNull()
+            val gap = last?.let {
+                layout.viewportEndOffset - (it.offset + it.size)
+            } ?: 0
+
+            Triple(
+                followBottom,
+                messageItemCount,
+                Triple(isLoading, layout.totalItemsCount, (last?.index ?: -1) to gap)
+            )
+        }.collect { (following, count, details) ->
+            val (loading, total, position) = details
+            val (lastIndex, gap) = position
+
+            if (
+                following &&
+                !loading &&
+                count > 0 &&
+                total == count &&
+                (lastIndex < count - 1 || gap < -24)
+            ) {
+                listState.scrollToItem(count - 1)
+            }
+        }
+    }
+
+    LaunchedEffect(conversation.id, conversation.kind, listState) {
+        snapshotFlow {
+            listState.isScrollInProgress to isNearMessageBottom
+        }.collect { (scrolling, atBottom) ->
+            if (!scrolling && atBottom) {
+                followBottom = true
+            }
+        }
     }
 
     /*
@@ -631,7 +736,10 @@ fun ChatThreadScreen(
                 modifier = Modifier.weight(1f)
             ) {
                 when {
-                    isLoading -> {
+                    isThreadEmpty &&
+                        (awaitingInitialChatHistory ||
+                            (conversation.kind == "sms" &&
+                                (!initialHistoryRequested || isLoading))) -> {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
@@ -639,6 +747,17 @@ fun ChatThreadScreen(
                             CircularProgressIndicator(
                                 color = ChatforiaColors.accent
                             )
+                        }
+                    }
+
+                    isThreadEmpty &&
+                        conversation.kind == "chat" &&
+                        chatHistoryStatus?.phase == ChatHistoryPhase.ERROR -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(error ?: "Failed to load conversation.")
                         }
                     }
 
@@ -654,7 +773,9 @@ fun ChatThreadScreen(
                     else -> {
                         LazyColumn(
                             state = listState,
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .nestedScroll(bottomScrollConnection),
                             verticalArrangement = Arrangement.spacedBy(
                                 10.dp,
                                 Alignment.Bottom
