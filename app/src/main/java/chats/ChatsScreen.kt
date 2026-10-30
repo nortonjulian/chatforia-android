@@ -540,7 +540,13 @@ fun ChatsScreen(
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(stringResource(R.string.android_chats_no_chats_yet))
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = ChatforiaColors.accent
+                    )
+                } else {
+                    Text(stringResource(R.string.android_chats_no_chats_yet))
+                }
             }
         } else {
             LazyColumn(

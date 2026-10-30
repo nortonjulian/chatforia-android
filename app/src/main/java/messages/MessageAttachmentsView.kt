@@ -80,16 +80,41 @@ private fun authorizedAttachmentUrl(
         }
         value = null
         if (attachmentId == null || secureMedia == null || viewerId == null) return@produceState
+        var failedAttempts = 0
+
         while (true) {
             value = try {
                 secureMedia.authorize(
                     attachmentId, original, variant, viewerId = viewerId
                 )
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
             } catch (_: Exception) {
-                null // Never fall back to the unauthenticated media path.
+                null // Never fall back to unauthenticated media.
             }
+
+            if (value == null) {
+                failedAttempts++
+
+                // Image grants: at most three authorization attempts.
+                // Other media retain their existing refresh policy.
+                if (!refresh && failedAttempts >= 3) break
+
+                delay(
+                    if (!refresh) {
+                        500L * failedAttempts
+                    } else {
+                        40_000L
+                    }
+                )
+                continue
+            }
+
+            failedAttempts = 0
+
             if (!refresh) break
-            delay(40_000L) // Backend capability expires after 60 seconds.
+
+            delay(40_000L)
         }
     }
     return state
@@ -124,14 +149,24 @@ private fun AttachmentCard(
     val url = fullUrl
 
     when {
-        kind == "GIF" || mime == "image/gif" -> {
-            if (url != null) ImageAttachment(url = url)
-        }
-
-        kind == "IMAGE" || mime.startsWith("image/") -> {
-            if ((thumbUrl ?: url) != null) ImageAttachment(
-                url = (thumbUrl ?: url)!!
-            )
+        kind == "GIF" || mime == "image/gif" ||
+            kind == "IMAGE" || mime.startsWith("image/") -> {
+            if (url != null) {
+                ImageAttachment(url = url)
+            } else {
+                Box(
+                    modifier = Modifier
+                        .width(260.dp)
+                        .height(190.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(ChatforiaColors.cardBackground),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = ChatforiaColors.accent
+                    )
+                }
+            }
         }
 
         kind == "VIDEO" || mime.startsWith("video/") -> {
