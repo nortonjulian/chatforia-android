@@ -176,6 +176,28 @@ class MessagesRepository(
         )
     }
 
+    override suspend fun acknowledgeSmsRead(
+        threadId: Int,
+        messageId: Int
+    ) {
+        require(threadId > 0) { "Invalid SMS thread ID" }
+        require(messageId > 0) { "Invalid SMS message ID" }
+
+        val bodyJson =
+            json.encodeToString(
+                SmsReadAcknowledgmentRequest(messageId)
+            )
+
+        sendRawRequest(
+            ApiRequest(
+                path = "sms/threads/$threadId/read",
+                method = HttpMethod.POST,
+                bodyJson = bodyJson,
+                requiresAuth = true
+            )
+        )
+    }
+
     override suspend fun loadSmsThread(
         threadId: Int
     ): SmsThreadDto {
