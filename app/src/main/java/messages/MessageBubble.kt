@@ -233,7 +233,7 @@ fun MessageBubble(
                     .background(bubbleBrush)
             ) {
                 Column(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                 ) {
                     Text(
                         text = buildLinkifiedMessageText(
