@@ -20,6 +20,13 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -121,6 +128,7 @@ fun ChatThreadScreen(
 ) {
     val chatMessages by viewModel.messages.collectAsState()
     val smsMessages by viewModel.smsMessages.collectAsState()
+    val loadedSmsThreadId by viewModel.loadedSmsThreadId.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val chatHistoryStatus by viewModel.chatHistoryStatus.collectAsState()
 
@@ -159,6 +167,122 @@ fun ChatThreadScreen(
         conversation.kind
     ) {
         rememberLazyListState()
+    }
+
+    var hasCompletedInitialBottomScroll by remember(
+        conversation.id,
+        conversation.kind
+    ) {
+        mutableStateOf(false)
+    }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    var isSmsScreenResumed by remember(lifecycleOwner) {
+        mutableStateOf(
+            lifecycleOwner.lifecycle.currentState.isAtLeast(
+                Lifecycle.State.RESUMED
+            )
+        )
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, _ ->
+            isSmsScreenResumed =
+                lifecycleOwner.lifecycle.currentState.isAtLeast(
+                    Lifecycle.State.RESUMED
+                )
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    LaunchedEffect(
+        conversation.id,
+        conversation.kind,
+        listState,
+        viewModel
+    ) {
+        val threadId = conversation.id
+
+        if (conversation.kind != "sms" || threadId == null) {
+            return@LaunchedEffect
+        }
+
+        snapshotFlow {
+            val layout = listState.layoutInfo
+
+            if (
+                !isSmsScreenResumed ||
+                isLoading ||
+                !hasCompletedInitialBottomScroll ||
+                loadedSmsThreadId != threadId ||
+                layout.totalItemsCount != smsMessages.size
+            ) {
+                null
+            } else {
+                val visibleIds =
+                    layout.visibleItemsInfo
+                        .filter { item ->
+                            item.offset < layout.viewportEndOffset &&
+                                item.offset + item.size >
+                                    layout.viewportStartOffset
+                        }
+                        .mapNotNull { it.key as? Int }
+                        .toSet()
+
+                smsMessages
+                    .asSequence()
+                    .filter { message ->
+                        message.id > 0 &&
+                            !message.isOutgoing &&
+                            message.id in visibleIds
+                    }
+                    .maxWithOrNull(
+                        compareBy<SmsMessageDto> { it.createdAt }
+                            .thenBy { it.id }
+                    )
+                    ?.id
+            }
+        }
+            .distinctUntilChanged()
+            .collectLatest { messageId ->
+                if (messageId == null) return@collectLatest
+
+                try {
+                    viewModel.acknowledgeVisibleSms(
+                        threadId = threadId,
+                        messageId = messageId
+                    )
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    println(
+                        "SMS read acknowledgment failed: ${e.message}"
+                    )
+                }
+            }
+    }
+
+    DisposableEffect(
+        conversation.id,
+        conversation.kind,
+        viewModel
+    ) {
+        val smsThreadId =
+            conversation.id?.takeIf {
+                conversation.kind == "sms"
+            }
+
+        onDispose {
+            smsThreadId?.let { threadId ->
+                viewModel.deactivateSmsThread(threadId)
+            }
+        }
     }
 
     val messageItemCount =
@@ -216,13 +340,6 @@ fun ChatThreadScreen(
 
     val isImeVisible =
         WindowInsets.isImeVisible
-
-    var hasCompletedInitialBottomScroll by remember(
-        conversation.id,
-        conversation.kind
-    ) {
-        mutableStateOf(false)
-    }
 
     var deletingMessage by remember { mutableStateOf<MessageDto?>(null) }
     var editingMessage by remember { mutableStateOf<MessageDto?>(null) }

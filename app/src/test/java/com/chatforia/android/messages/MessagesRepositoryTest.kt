@@ -172,6 +172,64 @@ class MessagesRepositoryTest {
     }
 
     @Test
+    fun acknowledgeSmsRead_postsVisibleIncomingMessageId() =
+        runTest {
+            val api = FakeApiTransport()
+            api.enqueueResponse("{\"ok\":true}")
+
+            val repository = MessagesRepository(
+                apiClient = api,
+                ioDispatcher = UnconfinedTestDispatcher(testScheduler)
+            )
+
+            repository.acknowledgeSmsRead(
+                threadId = 67,
+                messageId = 123
+            )
+
+            val request = api.requests.single()
+
+            assertEquals("sms/threads/67/read", request.path)
+            assertEquals(HttpMethod.POST, request.method)
+            assertTrue(request.requiresAuth)
+
+            val body = parseBody(request)
+            assertEquals(
+                123,
+                body["messageId"]?.jsonPrimitive?.int
+            )
+            assertEquals(setOf("messageId"), body.keys)
+        }
+
+    @Test
+    fun acknowledgeSmsRead_rejectsInvalidIdsWithoutNetworkRequest() =
+        runTest {
+            val api = FakeApiTransport()
+            val repository = MessagesRepository(
+                apiClient = api,
+                ioDispatcher = UnconfinedTestDispatcher(testScheduler)
+            )
+
+            var rejectedThread = false
+            try {
+                repository.acknowledgeSmsRead(0, 123)
+            } catch (_: IllegalArgumentException) {
+                rejectedThread = true
+            }
+
+            var rejectedMessage = false
+            try {
+                repository.acknowledgeSmsRead(67, 0)
+            } catch (_: IllegalArgumentException) {
+                rejectedMessage = true
+            }
+
+            assertTrue(rejectedThread)
+            assertTrue(rejectedMessage)
+            assertTrue(api.requests.isEmpty())
+        }
+
+    @Test
     fun markReadBulk_doesNothingWhenIdsAreEmpty() {
         runTest {
             val api = FakeApiTransport()
