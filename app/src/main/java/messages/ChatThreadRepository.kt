@@ -21,6 +21,10 @@ interface ChatThreadRepository : MessageQueueRepository {
         threadId: Int
     ): SmsThreadDto
 
+    // Only foreground-displayed inbound SMS messages are acknowledged.
+    // Default keeps existing test repositories source-compatible.
+    suspend fun acknowledgeVisibleSms(threadId: Int, messageId: Int) = Unit
+
     suspend fun sendSms(
         to: String,
         body: String? = null,
