@@ -484,8 +484,8 @@ class ChatThreadViewModel(
                     try {
                         repository.acknowledgeVisibleSms(threadId, lastVisibleInbound.id)
                         BadgeStateReconciler.refresh(appContext)
-                    } catch (_: kotlinx.coroutines.CancellationException) {
-                        throw kotlinx.coroutines.CancellationException()
+                    } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                        throw cancelled
                     } catch (_: Exception) {
                         // Keep the message visible; retry when thread is reloaded.
                     }
