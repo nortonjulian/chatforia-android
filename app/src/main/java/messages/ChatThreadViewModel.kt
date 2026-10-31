@@ -475,6 +475,21 @@ class ChatThreadViewModel(
 
                 _smsMessages.value = thread.sortedMessages
                 lastLoadedSmsThreadId = threadId
+
+                // This VM loads SMS history only for the open thread.
+                // A push/Chats-list refresh must never acknowledge messages.
+                val lastVisibleInbound = thread.sortedMessages
+                    .lastOrNull { !it.isOutgoing }
+                if (lastVisibleInbound != null && activeSmsThreadId == threadId) {
+                    try {
+                        repository.acknowledgeVisibleSms(threadId, lastVisibleInbound.id)
+                        BadgeStateReconciler.refresh(appContext)
+                    } catch (_: kotlinx.coroutines.CancellationException) {
+                        throw kotlinx.coroutines.CancellationException()
+                    } catch (_: Exception) {
+                        // Keep the message visible; retry when thread is reloaded.
+                    }
+                }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
