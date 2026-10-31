@@ -1629,7 +1629,7 @@ private fun SmsMessageBubble(
                     )
             ) {
                 Column(
-                    modifier = Modifier.padding(12.dp)
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
                 ) {
                     Text(
                         text = displayText,
