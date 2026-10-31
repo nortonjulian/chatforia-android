@@ -188,6 +188,20 @@ class MessagesRepository(
         )
     }
 
+    @Serializable
+    private data class SmsReadAckRequest(val messageId: Int)
+
+    override suspend fun acknowledgeVisibleSms(threadId: Int, messageId: Int) {
+        sendRawRequest(
+            ApiRequest(
+                path = "sms/threads/$threadId/read",
+                method = HttpMethod.POST,
+                bodyJson = json.encodeToString(SmsReadAckRequest(messageId)),
+                requiresAuth = true
+            )
+        )
+    }
+
     override suspend fun sendSms(
         to: String,
         body: String?,
