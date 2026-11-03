@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The license reader uses AppCompat; the main Compose theme is a platform theme. -->
+    <style name="Theme.Chatforia.Licenses" parent="Theme.AppCompat.DayNight.DarkActionBar">
+        <item name="colorAccent">#FFAB00</item>
+    </style>
+</resources>
