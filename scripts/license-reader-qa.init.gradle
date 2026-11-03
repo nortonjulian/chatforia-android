@@ -1,0 +1,22 @@
+// UI QA only: render the release inventory inside a locally installable debug APK.
+// This does not establish debug dependency coverage or replace release validation.
+gradle.projectsEvaluated {
+    def app = gradle.rootProject.project(':app')
+    def releaseNotices = app.tasks.named('releaseOssLicensesTask')
+    app.tasks.named('debugOssLicensesTask').configure {
+        dependsOn(releaseNotices)
+        outputs.upToDateWhen { false }
+        doLast {
+            def source = releaseNotices.get().generatedDirectory.get().asFile
+            def destination = generatedDirectory.get().asFile
+            ['third_party_licenses', 'third_party_license_metadata'].each { name ->
+                def target = new File(destination, "raw/${name}")
+                target.parentFile.mkdirs()
+                java.nio.file.Files.copy(
+                    new File(source, "raw/${name}").toPath(), target.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                )
+            }
+        }
+    }
+}

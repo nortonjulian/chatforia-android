@@ -1038,8 +1038,16 @@ fun ProfileScreen(
             HorizontalDivider(color = ChatforiaColors.border)
 
             LegalSupportRow(
-                title = "Open Source Licenses",
+                title = stringResource(R.string.technology_across_chatforia),
                 url = "https://chatforia.com/legal/open-source"
+            )
+            HorizontalDivider(color = ChatforiaColors.border)
+
+            LegalSupportActionRow(
+                title = stringResource(R.string.this_app_licenses),
+                onClick = {
+                    context.startActivity(Intent(context, LicenseReaderActivity::class.java))
+                }
             )
             HorizontalDivider(color = ChatforiaColors.border)
 
@@ -1921,13 +1929,20 @@ private fun LegalSupportRow(
 ) {
     val context = LocalContext.current
 
+    LegalSupportActionRow(title = title, onClick = {
+        context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+    })
+}
+
+@Composable
+private fun LegalSupportActionRow(
+    title: String,
+    onClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                val intent = Intent(Intent.ACTION_VIEW, url.toUri())
-                context.startActivity(intent)
-            }
+            .clickable(onClick = onClick)
             .padding(vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
