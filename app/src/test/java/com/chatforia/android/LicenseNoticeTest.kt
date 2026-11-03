@@ -4,6 +4,21 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class LicenseNoticeTest {
+    @Test fun collapsesOnlySameNameAndSameNotice() {
+        val bytes = "firstsecond".toByteArray()
+        val result = parseLicenseNotices(
+            "0:5 Library\n0:5 Library\n0:5 LIBRARY\n5:6 Library\n0:5 Other library",
+            bytes
+        )
+        assertEquals(
+            listOf(
+                LicenseNotice("Library", "first"),
+                LicenseNotice("Library", "second"),
+                LicenseNotice("Other library", "first")
+            ), result
+        )
+    }
+
     @Test fun offsetsAreBytesAndAttributionIsPreserved() {
         val first = "Copyright © Example\nPermission granted.\n"
         val second = "https://example.org/license"
