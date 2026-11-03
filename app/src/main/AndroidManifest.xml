@@ -136,11 +136,7 @@
         </service>
 
         <activity
-            android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Chatforia.Licenses" />
-        <activity
-            android:name="com.google.android.gms.oss.licenses.OssLicensesActivity"
+            android:name=".LicenseReaderActivity"
             android:exported="false"
             android:theme="@style/Theme.Chatforia.Licenses" />
 
