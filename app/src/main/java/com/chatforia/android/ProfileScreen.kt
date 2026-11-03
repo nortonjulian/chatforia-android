@@ -40,7 +40,6 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import com.chatforia.android.ui.components.ChatforiaSectionCard
 import com.chatforia.android.auth.UserDto
 import androidx.compose.runtime.remember
-import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import androidx.compose.ui.platform.LocalContext
 import com.chatforia.android.crypto.KeyBackupCrypto
 import com.chatforia.android.crypto.SecureMessageRecoveryScreen
@@ -1041,7 +1040,7 @@ fun ProfileScreen(
             LegalSupportActionRow(
                 title = stringResource(R.string.open_source_licenses),
                 onClick = {
-                    context.startActivity(Intent(context, OssLicensesMenuActivity::class.java))
+                    context.startActivity(Intent(context, LicenseReaderActivity::class.java))
                 }
             )
             HorizontalDivider(color = ChatforiaColors.border)
