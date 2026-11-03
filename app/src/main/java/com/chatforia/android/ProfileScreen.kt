@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import com.chatforia.android.ui.components.ChatforiaSectionCard
 import com.chatforia.android.auth.UserDto
 import androidx.compose.runtime.remember
+import com.google.android.gms.oss.licenses.v2.OssLicensesMenuActivity
 import androidx.compose.ui.platform.LocalContext
 import com.chatforia.android.crypto.KeyBackupCrypto
 import com.chatforia.android.crypto.SecureMessageRecoveryScreen
@@ -1037,9 +1038,11 @@ fun ProfileScreen(
             )
             HorizontalDivider(color = ChatforiaColors.border)
 
-            LegalSupportRow(
-                title = "Open Source Licenses",
-                url = "https://chatforia.com/legal/open-source"
+            LegalSupportActionRow(
+                title = stringResource(R.string.open_source_licenses),
+                onClick = {
+                    context.startActivity(Intent(context, OssLicensesMenuActivity::class.java))
+                }
             )
             HorizontalDivider(color = ChatforiaColors.border)
 
@@ -1921,13 +1924,20 @@ private fun LegalSupportRow(
 ) {
     val context = LocalContext.current
 
+    LegalSupportActionRow(title = title, onClick = {
+        context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+    })
+}
+
+@Composable
+private fun LegalSupportActionRow(
+    title: String,
+    onClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                val intent = Intent(Intent.ACTION_VIEW, url.toUri())
-                context.startActivity(intent)
-            }
+            .clickable(onClick = onClick)
             .padding(vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
