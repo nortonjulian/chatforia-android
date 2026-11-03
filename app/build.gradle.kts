@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     kotlin("plugin.serialization") version "2.2.10"
     id("com.google.gms.google-services")
+    id("com.google.android.gms.oss-licenses-plugin")
 }
 
 val chatforiaUploadStoreFile =
@@ -111,6 +112,7 @@ android {
 }
 
 dependencies {
+    implementation("com.google.android.gms:play-services-oss-licenses:17.5.3")
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
