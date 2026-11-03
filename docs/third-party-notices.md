@@ -2,7 +2,7 @@
 
 Profile → Legal & Support → Open Source Licenses launches Google's in-app notices activity. The existing row style and other legal links are preserved.
 
-The pinned Google OSS plugin (0.13.0) processes dependency license metadata during the build. The matching documented reader dependency is play-services-oss-licenses 17.5.3, using its v2 activity. These versions and the Kotlin DSL resolution strategy follow https://developers.google.com/android/guides/opensource (reviewed November 2, 2026).
+The pinned Google OSS plugin (0.13.0) processes dependency license metadata during the build. The matching documented reader dependency is play-services-oss-licenses 17.1.0, using its classic AppCompat activity. The Kotlin DSL resolution strategy follows https://developers.google.com/android/guides/opensource (reviewed November 2, 2026).
 
 ## Coverage limits
 
@@ -17,3 +17,7 @@ This integration is not a completed license inventory. Google documents that ord
 5. Confirm Privacy, Terms, SMS Policy, and Contact Support still open their original destinations.
 
 Environment limitation: Gradle failed before project configuration because services.gradle.org was unreachable while downloading Gradle 9.4.1. No dependency resolution, Kotlin compilation, APK generation, instrumented tests, or completeness claim is made. XML parsing and git diff --check passed. Keep the PR draft until the build and coverage checks above are complete.
+
+## API 36 compatibility correction
+
+The first Mac build reached Kotlin compilation but failed checkDebugAarMetadata: reader 17.5.3 introduced Material3 Adaptive 1.3.0 modules requiring compileSdk 37. Pin the reader to 17.1.0 and use its non-v2 activity, preserving compileSdk/targetSdk/minSdk. Inspected Google's published 17.1.0 POM and AAR: no Compose Adaptive dependency, minSdk 21, both classic activity classes declared. The menu class references AppCompatActivity, so both activities use a dedicated AppCompat DayNight action-bar theme, without changing the main app theme. AppCompat 1.7.0 is already a direct app dependency. XML parsing and diff checks pass; the corrected Mac build and UI still need verification.
