@@ -112,7 +112,7 @@ android {
 }
 
 dependencies {
-    implementation("com.google.android.gms:play-services-oss-licenses:17.5.3")
+    implementation("com.google.android.gms:play-services-oss-licenses:17.1.0")
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
