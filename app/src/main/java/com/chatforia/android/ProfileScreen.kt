@@ -1037,8 +1037,14 @@ fun ProfileScreen(
             )
             HorizontalDivider(color = ChatforiaColors.border)
 
+            LegalSupportRow(
+                title = stringResource(R.string.technology_across_chatforia),
+                url = "https://chatforia.com/legal/open-source"
+            )
+            HorizontalDivider(color = ChatforiaColors.border)
+
             LegalSupportActionRow(
-                title = stringResource(R.string.open_source_licenses),
+                title = stringResource(R.string.this_app_licenses),
                 onClick = {
                     context.startActivity(Intent(context, LicenseReaderActivity::class.java))
                 }
