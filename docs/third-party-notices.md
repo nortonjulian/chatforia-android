@@ -1,6 +1,6 @@
 # Android third-party notices
 
-Profile → Legal & Support → Open Source Licenses opens a native Compose reader using Chatforia's persisted theme, typography and rounded cards. List and detail content are confined below the header and safe system insets. Back returns from a notice to the preserved list position, then to Profile. Notice text is selectable. HTTP(S) URL-only entries explicitly disclose their network requirement and offer an external-browser action.
+Profile → Legal & Support now offers Technology Across Chatforia (the shared website overview of web, backend, iOS and Android) and This App’s Licenses (the native reader). The shared overview does not replace this app’s bundled notices.
 
 Google OSS plugin 0.13.0 still generates the raw notice resources. The reader parses metadata offsets as UTF-8 byte ranges, validates bounds and preserves text. The pinned 17.1.0 dependency remains in the inventory; its stock activities are no longer launched. No SDK level, signing or version changes.
 
