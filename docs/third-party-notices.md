@@ -1,23 +1,29 @@
 # Android third-party notices
 
-Profile → Legal & Support → Open Source Licenses launches Google's in-app notices activity. The existing row style and other legal links are preserved.
+Profile → Legal & Support → Open Source Licenses opens a native Compose reader using Chatforia's persisted theme, typography and rounded cards. List and detail content are confined below the header and safe system insets. Back returns from a notice to the preserved list position, then to Profile. Notice text is selectable. HTTP(S) URL-only entries explicitly disclose their network requirement and offer an external-browser action.
 
-The pinned Google OSS plugin (0.13.0) processes dependency license metadata during the build. The matching documented reader dependency is play-services-oss-licenses 17.1.0, using its classic AppCompat activity. The Kotlin DSL resolution strategy follows https://developers.google.com/android/guides/opensource (reviewed November 2, 2026).
+Google OSS plugin 0.13.0 still generates the raw notice resources. The reader parses metadata offsets as UTF-8 byte ranges, validates bounds and preserves text. The pinned 17.1.0 dependency remains in the inventory; its stock activities are no longer launched. No SDK level, signing or version changes.
+
+## Build and device evidence
+
+The previous classic viewer compiled and installed on the user's emulator. Release notice generation succeeded. Uploaded release resources contained 281 entries / 1,260,963 text bytes, with all ranges in bounds; 179 entries contained only URLs. The debug generator produced a 126-byte Debug License Info placeholder. This is why a normal debug build did not display the release inventory.
+
+The previous viewer displayed the release list after a QA-only resource substitution, but had status-bar overlap and stock styling. This revision replaces that UI. It has not yet been compiled or exercised on Android: the editing environment has no Android SDK. XML and whitespace checks pass. Keep this PR draft pending the checks below.
+
+## Reproducible emulator UI QA
+
+Run from this branch's checkout:
+
+```sh
+./gradlew :app:assembleDebug -I scripts/license-reader-qa.init.gradle --no-configuration-cache --no-daemon
+```
+
+This opt-in script lets the debug generator finish, then copies freshly generated release notices into its output before packaging. Do not exclude debugOssLicensesTask: AGP consumes its task-backed resource provider. This is a UI preview of release notices, not verification of the debug inventory. Normal builds do not use the substitution.
+
+Install the resulting debug APK on the chosen test emulator, then open the row through Profile (do not launch a different Android Studio project). Verify list scrolling, an embedded-text detail, a URL-only detail, back navigation/list position, rotation, large text, a dark Chatforia theme, and airplane-mode reading of embedded text. Check status/navigation icons and camera-cutout clearance. Verify other legal links retain their destinations.
+
+Before merge, build and inspect the actual release artifact using the existing local signing configuration; verify resources and the same UI flows. Never share signing secrets.
 
 ## Coverage limits
 
-This integration is not a completed license inventory. Google documents that ordinary Maven POM entries contribute license names/links; its own transitive OSS notices may include full text. A working in-app screen is not proof that every copyright/NOTICE file is present or available offline. Audit the actual generated release output, and add missing attribution/full text from the corresponding artifacts or upstream releases. Separately review Twilio, JNA/LazySodium native binaries, fonts/assets, and SDK-specific notices. Do not present proprietary SDKs as open source based on their wrappers.
-
-## Validation required before merge
-
-1. In the normal Android checkout with its existing local SDK/signing configuration, run `./gradlew :app:assembleDebug :app:assembleRelease --no-daemon`. Do not change or share signing secrets to run the review.
-2. Confirm plugin compatibility with this repository's AGP 9.2.1 / Gradle 9.4.1 and that generated license resources are packaged for both variants. Inspect build warnings and dependency coverage.
-3. Install the debug build. Open Profile → Legal & Support → Open Source Licenses, open several library entries, and return to Profile. Check large text and dark mode.
-4. Repeat without network access. Record entries that depend on a web link; supplement full text/attribution as required.
-5. Confirm Privacy, Terms, SMS Policy, and Contact Support still open their original destinations.
-
-Environment limitation: Gradle failed before project configuration because services.gradle.org was unreachable while downloading Gradle 9.4.1. No dependency resolution, Kotlin compilation, APK generation, instrumented tests, or completeness claim is made. XML parsing and git diff --check passed. Keep the PR draft until the build and coverage checks above are complete.
-
-## API 36 compatibility correction
-
-The first Mac build reached Kotlin compilation but failed checkDebugAarMetadata: reader 17.5.3 introduced Material3 Adaptive 1.3.0 modules requiring compileSdk 37. Pin the reader to 17.1.0 and use its non-v2 activity, preserving compileSdk/targetSdk/minSdk. Inspected Google's published 17.1.0 POM and AAR: no Compose Adaptive dependency, minSdk 21, both classic activity classes declared. The menu class references AppCompatActivity, so both activities use a dedicated AppCompat DayNight action-bar theme, without changing the main app theme. AppCompat 1.7.0 is already a direct app dependency. XML parsing and diff checks pass; the corrected Mac build and UI still need verification.
+This is not a completed license inventory. Many Maven POM entries provide license links only. A populated list does not prove copyright/NOTICE completeness or offline availability. Review exact shipped artifacts and supplement missing attribution, including native binaries (Twilio, JNA/LazySodium), fonts/assets and proprietary SDK notices. Do not label a proprietary SDK open source based on its wrapper.
