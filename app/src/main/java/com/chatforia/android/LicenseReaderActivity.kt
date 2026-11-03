@@ -59,7 +59,7 @@ internal fun parseLicenseNotices(metadata: String, bytes: ByteArray): List<Licen
         val length = match.groupValues[2].toLong()
         require(offset <= bytes.size && length <= bytes.size.toLong() - offset)
         LicenseNotice(match.groupValues[3], String(bytes, offset.toInt(), length.toInt(), Charsets.UTF_8))
-    }.toList()
+    }.distinctBy { it.name.lowercase(java.util.Locale.ROOT) to it.text }.toList()
 
 @Composable
 private fun LicenseReader(onClose: () -> Unit) {
