@@ -7,4 +7,6 @@
     <string name="license_link_explanation">This entry provides a license link. Opening it requires an internet connection.</string>
     <string name="license_open_link">Open license website</string>
     <string name="license_link_failed">Unable to open the link. You can copy the address above.</string>
+    <string name="technology_across_chatforia">Technology Across Chatforia</string>
+    <string name="this_app_licenses">This App’s Licenses</string>
 </resources>
