@@ -40,7 +40,7 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import com.chatforia.android.ui.components.ChatforiaSectionCard
 import com.chatforia.android.auth.UserDto
 import androidx.compose.runtime.remember
-import com.google.android.gms.oss.licenses.v2.OssLicensesMenuActivity
+import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import androidx.compose.ui.platform.LocalContext
 import com.chatforia.android.crypto.KeyBackupCrypto
 import com.chatforia.android.crypto.SecureMessageRecoveryScreen
