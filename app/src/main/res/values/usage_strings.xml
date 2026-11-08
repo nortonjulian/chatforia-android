@@ -1,0 +1,18 @@
+<resources>
+    <string name="usage_title">Monthly usage</string>
+    <string name="usage_ai">Shared AI actions</string>
+    <string name="usage_translation">Translation characters</string>
+    <string name="usage_app_calls">App-call participant-minutes</string>
+    <string name="usage_sms">SMS and MMS messages</string>
+    <string name="usage_phone">Phone-call minutes</string>
+    <string name="usage_forwarding">Forwarding minutes</string>
+    <string name="usage_voice_notes">Voice-note transcription minutes</string>
+    <string name="usage_voicemail">Voicemail transcription minutes</string>
+    <string name="usage_error">Usage is unavailable. Please retry.</string>
+    <string name="usage_balance">%1$s of %2$s remaining</string>
+    <string name="usage_reset">Resets %1$s at 00:00 UTC.</string>
+    <string name="usage_refresh">Refresh usage</string>
+    <string name="usage_explanation">AI tools share one action allowance. Translation counts processed characters. Voice-note transcription and live captions share recorded usage; voicemail is separate. A zero limit means no included allowance. Feature eligibility still depends on your plan.</string>
+    <string name="usage_call_explanation">App calls count each connected person\'s time against the caller\'s allowance. Two people calling for one minute use two participant-minutes.</string>
+    <string name="usage_exhaustion">Reaching a limit pauses that feature until reset. It does not stop ordinary in-app text chat. Usage updates after processing; refresh for the latest balance.</string>
+</resources>
