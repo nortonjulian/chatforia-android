@@ -47,6 +47,9 @@ import com.chatforia.android.messages.ChatThreadViewModel
 import com.chatforia.android.socket.SocketManager
 import com.chatforia.android.contacts.AddContactScreen
 import android.Manifest
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -100,18 +103,46 @@ fun ContactsScreen(
 
     var showingImportContacts by remember { mutableStateOf(false) }
     var phoneContactsToImport by remember { mutableStateOf<List<PhoneContactDto>>(emptyList()) }
+    var contactsPermissionDenied by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
+            contactsPermissionDenied = false
             val reader = PhoneContactsReader(context)
             coroutineScope.launch {
                 val contacts = reader.readContacts()
                 phoneContactsToImport = contacts
                 showingImportContacts = true
             }
+        } else {
+            contactsPermissionDenied = true
         }
+    }
+
+    if (contactsPermissionDenied) {
+        AlertDialog(
+            onDismissRequest = { contactsPermissionDenied = false },
+            title = { Text(stringResource(R.string.android_import_phone_contacts_import_contacts)) },
+            text = { Text(stringResource(R.string.android_import_phone_contacts_permission_denied)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    contactsPermissionDenied = false
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.parse("package:${context.packageName}")
+                    }
+                    context.startActivity(intent)
+                }) {
+                    Text(stringResource(R.string.android_import_phone_contacts_open_settings))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { contactsPermissionDenied = false }) {
+                    Text(stringResource(R.string.android_plan_back))
+                }
+            }
+        )
     }
 
     val searchText = state.searchText
@@ -427,7 +458,12 @@ fun ContactsScreen(
                 viewModel.importPhoneContacts(selectedContacts)
                 showingImportContacts = false
             },
-            onBack = { showingImportContacts = false }
+            onBack = { showingImportContacts = false },
+            onAddContact = {
+                showingImportContacts = false
+                viewModel.clearPeopleSelection()
+                showingAddContact = true
+            }
         )
         return
     }

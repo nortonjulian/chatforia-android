@@ -277,6 +277,11 @@
     <string name="android_import_phone_contacts_clear">Clear</string>
     <string name="android_import_phone_contacts_import_contacts">Import Contacts</string>
     <string name="android_import_phone_contacts_select_all">Select All</string>
+    <string name="android_import_phone_contacts_empty_title">No phone contacts available</string>
+    <string name="android_import_phone_contacts_empty_help">You do not need an email account. To import contacts from a SIM card or .vcf file, first add them using the Contacts app on your phone. Then return to Chatforia and try importing again.</string>
+    <string name="android_import_phone_contacts_add_manually">Add contact manually</string>
+    <string name="android_import_phone_contacts_permission_denied">Contacts access is off. Allow Chatforia to access contacts in Android Settings to import them, or add contacts manually.</string>
+    <string name="android_import_phone_contacts_open_settings">Open settings</string>
     <string name="android_incoming_call_accept">Accept</string>
     <string name="android_incoming_call_accept_call">Accept call</string>
     <string name="android_incoming_call_decline">Decline</string>
