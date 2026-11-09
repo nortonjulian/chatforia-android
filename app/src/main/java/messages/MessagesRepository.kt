@@ -178,14 +178,16 @@ class MessagesRepository(
 
     override suspend fun acknowledgeSmsRead(
         threadId: Int,
-        messageId: Int
+        messageIds: List<Int>
     ) {
         require(threadId > 0) { "Invalid SMS thread ID" }
-        require(messageId > 0) { "Invalid SMS message ID" }
+        val distinctIds = messageIds.distinct()
+        require(distinctIds.isNotEmpty() && distinctIds.size <= 100 &&
+            distinctIds.all { it > 0 }) { "Invalid SMS message IDs" }
 
         val bodyJson =
             json.encodeToString(
-                SmsReadAcknowledgmentRequest(messageId)
+                SmsReadAcknowledgmentRequest(distinctIds)
             )
 
         sendRawRequest(

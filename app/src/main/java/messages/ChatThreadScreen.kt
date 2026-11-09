@@ -235,29 +235,20 @@ fun ChatThreadScreen(
                         .mapNotNull { it.key as? Int }
                         .toSet()
 
-                smsMessages
-                    .asSequence()
-                    .filter { message ->
-                        message.id > 0 &&
-                            !message.isOutgoing &&
-                            message.id in visibleIds
-                    }
-                    .maxWithOrNull(
-                        compareBy<SmsMessageDto> { it.createdAt }
-                            .thenBy { it.id }
-                    )
-                    ?.id
+                visibleIncomingSmsMessageIds(smsMessages, visibleIds)
             }
         }
             .distinctUntilChanged()
-            .collectLatest { messageId ->
-                if (messageId == null) return@collectLatest
+            .collectLatest { messageIds ->
+                if (messageIds.isNullOrEmpty()) return@collectLatest
 
                 try {
-                    viewModel.acknowledgeVisibleSms(
-                        threadId = threadId,
-                        messageId = messageId
-                    )
+                    messageIds.chunked(100).forEach { batch ->
+                        viewModel.acknowledgeVisibleSms(
+                            threadId = threadId,
+                            messageIds = batch
+                        )
+                    }
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {

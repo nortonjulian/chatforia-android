@@ -23,7 +23,7 @@ interface ChatThreadRepository : MessageQueueRepository {
 
     suspend fun acknowledgeSmsRead(
         threadId: Int,
-        messageId: Int
+        messageIds: List<Int>
     )
 
     suspend fun sendSms(

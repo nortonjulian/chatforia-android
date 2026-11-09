@@ -172,7 +172,7 @@ class MessagesRepositoryTest {
     }
 
     @Test
-    fun acknowledgeSmsRead_postsVisibleIncomingMessageId() =
+    fun acknowledgeSmsRead_postsDistinctVisibleIncomingMessageIds() =
         runTest {
             val api = FakeApiTransport()
             api.enqueueResponse("{\"ok\":true}")
@@ -184,7 +184,7 @@ class MessagesRepositoryTest {
 
             repository.acknowledgeSmsRead(
                 threadId = 67,
-                messageId = 123
+                messageIds = listOf(123, 124, 123)
             )
 
             val request = api.requests.single()
@@ -195,10 +195,10 @@ class MessagesRepositoryTest {
 
             val body = parseBody(request)
             assertEquals(
-                123,
-                body["messageId"]?.jsonPrimitive?.int
+                listOf(123, 124),
+                body["messageIds"]?.jsonArray?.map { it.jsonPrimitive.int }
             )
-            assertEquals(setOf("messageId"), body.keys)
+            assertEquals(setOf("messageIds"), body.keys)
         }
 
     @Test
@@ -212,14 +212,14 @@ class MessagesRepositoryTest {
 
             var rejectedThread = false
             try {
-                repository.acknowledgeSmsRead(0, 123)
+                repository.acknowledgeSmsRead(0, listOf(123))
             } catch (_: IllegalArgumentException) {
                 rejectedThread = true
             }
 
             var rejectedMessage = false
             try {
-                repository.acknowledgeSmsRead(67, 0)
+                repository.acknowledgeSmsRead(67, listOf(0))
             } catch (_: IllegalArgumentException) {
                 rejectedMessage = true
             }
