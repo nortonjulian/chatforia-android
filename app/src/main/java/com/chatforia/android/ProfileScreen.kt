@@ -166,7 +166,7 @@ fun ProfileScreen(
 
     var showForwarding by remember { mutableStateOf(false) }
 
-    val forwardingViewModel = remember {
+    val forwardingViewModel = remember(user.id, apiClient) {
         ForwardingSettingsViewModel(
             ForwardingSettingsRepository(apiClient)
         )

@@ -73,6 +73,10 @@ data class ForwardingSettingsState(
 
             if (quietStartInvalid || quietEndInvalid) {
                 errors["quiet"] = "Quiet hours must be between 0 and 23."
+            } else if ((forwardQuietHoursStart == null) != (forwardQuietHoursEnd == null)) {
+                errors["quiet"] = "Set both quiet hours or clear both."
+            } else if (forwardQuietHoursStart != null && forwardQuietHoursStart == forwardQuietHoursEnd) {
+                errors["quiet"] = "Quiet hours start and end must differ."
             }
 
             return errors
@@ -83,7 +87,7 @@ data class ForwardingSettingsState(
 }
 
 class ForwardingSettingsViewModel(
-    private val repository: ForwardingSettingsRepository
+    private val repository: ForwardingSettingsStore
 ) : ViewModel() {
     private val _state = MutableStateFlow(ForwardingSettingsState())
     val state: StateFlow<ForwardingSettingsState> = _state

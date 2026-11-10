@@ -29,7 +29,7 @@ fun ForwardingSettingsView(
 ) {
     val state by viewModel.state.collectAsState()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(viewModel) {
         viewModel.load()
     }
 
