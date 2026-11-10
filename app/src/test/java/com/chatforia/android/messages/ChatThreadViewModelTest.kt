@@ -39,6 +39,56 @@ import kotlinx.serialization.json.Json
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChatThreadViewModelTest {
 
+    @Test
+    fun reopenAndReconnectExcludeExpiredHistoryAndDoNotMarkItRead() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val live = message(501, 99, "live")
+            val expired = message(502, 99, "expired")
+                .copy(expiresAt = "2020-01-01T00:00:00Z")
+            repository.messagesToLoad = listOf(live, expired)
+            val realtime = FakeRealtimeEvents()
+            val viewModel = createViewModel(repository)
+
+            viewModel.loadMessages(roomId = 10, currentUserId = 1)
+            advanceUntilIdle()
+            assertEquals(listOf(501), viewModel.messages.value.map { it.id })
+            assertEquals(listOf(listOf(501)), repository.markReadCalls)
+
+            repository.deltasToLoad = listOf(expired.copy(id = 503))
+            viewModel.connectRealtime(roomId = 10, socketManager = realtime, currentUserId = 1)
+            runCurrent()
+            realtime.emitSocketConnected()
+            advanceUntilIdle()
+            assertEquals(listOf(501), viewModel.messages.value.map { it.id })
+            assertEquals(listOf(listOf(501)), repository.markReadCalls)
+        }
+
+    @Test
+    fun reconnectAfterAllMessagesExpireReloadsNewHistory() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            val expired = message(504, 99, "old")
+                .copy(expiresAt = "2020-01-01T00:00:00Z")
+            repository.messagesToLoad = listOf(expired)
+            val realtime = FakeRealtimeEvents()
+            val viewModel = createViewModel(repository)
+
+            viewModel.loadMessages(roomId = 10, currentUserId = 1)
+            advanceUntilIdle()
+            assertTrue(viewModel.messages.value.isEmpty())
+            assertTrue(repository.markReadCalls.isEmpty())
+
+            repository.messagesToLoad = listOf(expired, message(505, 99, "new"))
+            viewModel.connectRealtime(roomId = 10, socketManager = realtime, currentUserId = 1)
+            runCurrent()
+            realtime.emitSocketConnected()
+            advanceUntilIdle()
+
+            assertEquals(listOf(505), viewModel.messages.value.map { it.id })
+            assertEquals(listOf(listOf(505)), repository.markReadCalls)
+        }
+
     private val realtimeJson = Json {
         ignoreUnknownKeys = true
         explicitNulls = false
@@ -974,7 +1024,7 @@ class ChatThreadViewModelTest {
         }
 
     @Test
-    fun realtimeExpired_marksMessageDeleted() =
+    fun realtimeExpired_removesMessageAndRejectsPrematureOrForeignNotice() =
         runTest(mainDispatcherRule.testDispatcher) {
             val repository = FakeChatThreadRepository()
             val realtime = FakeRealtimeEvents()
@@ -1001,21 +1051,27 @@ class ChatThreadViewModelTest {
             advanceUntilIdle()
 
             realtime.emitMessageExpired(
+                """{"messageId":101,"chatRoomId":11,"expiresAt":"2020-01-01T00:00:00Z"}"""
+            )
+            realtime.emitMessageExpired(
+                """{"messageId":101,"chatRoomId":10,"expiresAt":"2099-01-01T00:00:00Z"}"""
+            )
+            advanceUntilIdle()
+            assertEquals(101, viewModel.messages.value.single().id)
+
+            realtime.emitMessageExpired(
                 """
             {
               "messageId": 101,
               "chatRoomId": 10,
-              "deletedAt": "2026-01-01T00:03:00Z"
+              "expiresAt": "2020-01-01T00:00:00Z"
             }
             """.trimIndent()
             )
 
             advanceUntilIdle()
 
-            val expired = viewModel.messages.value.single()
-
-            assertEquals(101, expired.id)
-            assertEquals("2026-01-01T00:03:00Z", expired.deletedAt)
+            assertTrue(viewModel.messages.value.isEmpty())
         }
 
     @Test

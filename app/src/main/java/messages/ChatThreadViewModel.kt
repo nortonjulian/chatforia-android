@@ -53,6 +53,10 @@ class ChatThreadViewModel(
 
     private val messageStore = MessageStore()
 
+    fun pruneExpiredMessages(now: Instant = Instant.now()) {
+        messageStore.pruneExpired(now)
+    }
+
     private val analytics: AnalyticsTracker = AnalyticsManager
 
     private val messageDecryptor: DisplayMessageDecryptor by lazy {
@@ -268,7 +272,7 @@ class ChatThreadViewModel(
             socketManager.messageExpired.collect { payloadJson ->
                 val activeRoomId = activeRealtimeRoomId ?: return@collect
 
-                applyDeletedOrExpiredPayload(
+                applyExpiredPayload(
                     payloadJson = payloadJson,
                     roomId = activeRoomId
                 )
@@ -351,6 +355,7 @@ class ChatThreadViewModel(
                             currentUserId = currentUserId
                         )
                     }
+                    .filterNot { it.isExpired() }
                     .sortedWith(messageSorter())
 
                 // Ignore a response for a conversation that is no
@@ -415,6 +420,7 @@ class ChatThreadViewModel(
                                         currentUserId = currentUserId
                                     )
                                 }
+                                .filterNot { it.isExpired() }
 
                             // A background delta request must not update
                             // a conversation that is no longer active.
@@ -1212,6 +1218,19 @@ class ChatThreadViewModel(
         }
     }
 
+    private fun applyExpiredPayload(payloadJson: String, roomId: Int) {
+        try {
+            val payload = json.decodeFromString<MessageLifecyclePayload>(payloadJson)
+            if ((payload.chatRoomId ?: payload.roomId) != roomId) return
+            val id = payload.id ?: payload.messageId ?: return
+            if (id > 0 && isElapsedDeadline(payload.expiresAt)) {
+                messageStore.expire(id)
+            }
+        } catch (e: Exception) {
+            println("❌ Failed to decode message expiry payload: ${e.message}")
+        }
+    }
+
     private fun reconcileSentSms(
         optimisticMessageId: Int,
         response: SendSmsResponse
@@ -1358,7 +1377,10 @@ class ChatThreadViewModel(
                 if (message.id > 0) message.id else null
             }
             .maxOrNull()
-            ?: return
+        if (highestId == null) {
+            loadMessages(roomId = roomId, currentUserId = currentUserId)
+            return
+        }
 
         val deltas = repository
             .loadDeltas(
@@ -1371,6 +1393,7 @@ class ChatThreadViewModel(
                     currentUserId = currentUserId
                 )
             }
+            .filterNot { it.isExpired() }
 
         deltas.forEach { incoming ->
             messageStore.upsert(incoming)
@@ -1412,7 +1435,8 @@ data class MessageLifecyclePayload(
     val messageId: Int? = null,
     val chatRoomId: Int? = null,
     val roomId: Int? = null,
-    val deletedAt: String? = null
+    val deletedAt: String? = null,
+    val expiresAt: String? = null
 )
 
 @Serializable

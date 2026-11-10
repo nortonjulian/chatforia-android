@@ -3,6 +3,8 @@ package com.chatforia.android.chats
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chatforia.android.messages.MessageDto
+import com.chatforia.android.messages.isElapsedDeadline
+import com.chatforia.android.messages.isExpired
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -19,6 +21,14 @@ class ChatsViewModel(
     private val keyStorage: KeyStorage,
     private val messageDecryptor: MessageDecryptor = MessageDecryptor()
 ) : ViewModel() {
+
+    fun pruneExpiredPreviews() {
+        val current = _conversations.value
+        if (current.any { isElapsedDeadline(it.last?.expiresAt) }) {
+            _conversations.value = withoutExpiredPreviews(current)
+            refreshConversations()
+        }
+    }
 
     private val _conversations =
         MutableStateFlow<List<ConversationDto>>(emptyList())
@@ -57,7 +67,9 @@ class ChatsViewModel(
 
                 _conversations.value =
                     sortConversations(
-                        hydrateEncryptedPreviews(loaded)
+                        withoutExpiredPreviews(
+                            hydrateEncryptedPreviews(withoutExpiredPreviews(loaded))
+                        )
                     )
 
             } catch (e: Exception) {
@@ -214,14 +226,12 @@ class ChatsViewModel(
             val roomId = conversation.id
                 ?: return@map conversation
 
+            val targetId = conversation.last?.messageId ?: return@map conversation
             val latestMessage =
                 try {
                     repository
                         .loadRecentMessages(roomId = roomId, limit = 10)
-                        .maxWithOrNull(
-                            compareBy<MessageDto> { it.createdAt }
-                                .thenBy { it.id }
-                        )
+                        .firstOrNull { it.id == targetId && !it.isExpired() }
                 } catch (e: Exception) {
                     null
                 } ?: return@map conversation
@@ -260,6 +270,7 @@ class ChatsViewModel(
                     text = previewText,
                     messageId = latestMessage.id.takeIf { it > 0 }
                         ?: conversation.last?.messageId,
+                    expiresAt = latestMessage.expiresAt,
                     at = latestMessage.createdAt,
                     hasMedia =
                         latestMessage.attachments.isNotEmpty() ||
@@ -300,6 +311,10 @@ class ChatsViewModel(
                 !encryptedKeys.isNullOrEmpty()
     }
     private fun applyRealtimeMessage(message: MessageDto) {
+        if (message.isExpired()) {
+            refreshConversations()
+            return
+        }
         val roomId =
             message.chatRoomId ?: return
 
@@ -357,6 +372,7 @@ class ChatsViewModel(
                 updatedAt = timestamp,
                 last = ConversationLastDto(
                     text = previewText,
+                    expiresAt = message.expiresAt,
                     messageId =
                         if (message.id > 0) {
                             message.id
@@ -399,6 +415,15 @@ class ChatsViewModel(
             }
         )
     }
+}
+
+internal fun withoutExpiredPreviews(
+    conversations: List<ConversationDto>,
+    now: Instant = Instant.now()
+): List<ConversationDto> = conversations.map { conversation ->
+    if (isElapsedDeadline(conversation.last?.expiresAt, now)) {
+        conversation.copy(last = null)
+    } else conversation
 }
 /**
  * Update unread badges without altering the current live previews,
