@@ -58,6 +58,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.rememberCoroutineScope
 import com.chatforia.android.upload.UploadRepository
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import androidx.compose.ui.draw.clip
 import coil.compose.AsyncImage
@@ -127,6 +128,14 @@ fun ChatThreadScreen(
     onBack: () -> Unit
 ) {
     val chatMessages by viewModel.messages.collectAsState()
+    LaunchedEffect(viewModel, conversation.id, conversation.kind) {
+        if (conversation.kind == "chat") {
+            while (true) {
+                viewModel.pruneExpiredMessages()
+                delay(1_000)
+            }
+        }
+    }
     val smsMessages by viewModel.smsMessages.collectAsState()
     val loadedSmsThreadId by viewModel.loadedSmsThreadId.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
