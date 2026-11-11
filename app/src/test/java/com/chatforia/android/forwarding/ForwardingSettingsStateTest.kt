@@ -5,6 +5,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ForwardingSettingsStateTest {
+    @Test fun zoneMustBeAnIanaIdentifier() {
+        assertTrue(ForwardingSettingsState(forwardQuietHoursTimeZone = "MST").validationErrors.containsKey("timeZone"))
+        assertTrue(ForwardingSettingsState(forwardQuietHoursTimeZone = "+07:00").validationErrors.containsKey("timeZone"))
+        assertFalse(ForwardingSettingsState(forwardQuietHoursTimeZone = "America/Denver").validationErrors.containsKey("timeZone"))
+    }
     @Test fun destinationsAreRequiredOnlyWhenEnabled() {
         assertTrue(ForwardingSettingsState(forwardSmsToEmail = true).validationErrors.isEmpty())
         assertTrue(ForwardingSettingsState(forwardingEnabledSms = true).validationErrors.containsKey("smsToggle"))

@@ -12,5 +12,6 @@ data class ForwardingSettingsDto(
     val forwardingEnabledCalls: Boolean = false,
     val forwardToPhoneE164: String = "",
     val forwardQuietHoursStart: Int? = null,
-    val forwardQuietHoursEnd: Int? = null
+    val forwardQuietHoursEnd: Int? = null,
+    val forwardQuietHoursTimeZone: String? = null
 )

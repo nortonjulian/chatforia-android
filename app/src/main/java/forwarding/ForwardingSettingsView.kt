@@ -234,6 +234,23 @@ fun ForwardingSettingsView(
                     ErrorText(it)
                 }
 
+                ForwardingTextField(
+                    "Quiet-hours time zone (IANA)",
+                    value = state.forwardQuietHoursTimeZone,
+                    placeholder = "America/Denver",
+                    error = state.validationErrors["timeZone"],
+                    onValueChange = { value ->
+                        viewModel.update { it.copy(forwardQuietHoursTimeZone = value) }
+                    }
+                )
+                Text(
+                    if (state.initial.forwardQuietHoursTimeZone == null)
+                        "Device time zone suggested. Save to use it across devices; existing quiet hours use the server time zone until saved."
+                    else "Saved for this account across devices. Daylight-saving changes follow this zone.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = ChatforiaColors.secondaryText
+                )
+
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Row(
