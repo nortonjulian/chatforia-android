@@ -1015,7 +1015,7 @@ fun ChatThreadScreen(
                         )
                         LANGUAGES.forEach { language ->
                             DropdownMenuItem(
-                                text = { Text(language.name) },
+                                text = { Text(TypingLanguagePreferences.localizedName(context, language)) },
                                 trailingIcon = {
                                     if (typingLanguage == language.code) Icon(Icons.Default.Check, contentDescription = null)
                                 },

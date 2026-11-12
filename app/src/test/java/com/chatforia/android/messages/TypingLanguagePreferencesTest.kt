@@ -1,6 +1,7 @@
 package com.chatforia.android.messages
 
 import android.content.Context
+import android.content.res.Configuration
 import androidx.test.core.app.ApplicationProvider
 import com.chatforia.android.chats.ConversationDto
 import com.chatforia.android.auth.AppLocaleManager
@@ -10,6 +11,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.Locale
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
@@ -65,6 +67,7 @@ class TypingLanguagePreferencesTest {
         LANGUAGES.forEach { language ->
             TypingLanguagePreferences.save(context, 501, chat(1), language.code)
             assertEquals(language.code, TypingLanguagePreferences.read(context, 501, chat(1)))
+            assertTrue(language.code, TypingLanguagePreferences.localizedName(context, language).isNotBlank())
             val hint = TypingLanguagePreferences.hintLocales(language.code)
             assertNotNull(language.code, hint)
             assertTrue(language.code, hint!!.all { it.toLanguageTag() != "und" })
@@ -97,5 +100,18 @@ class TypingLanguagePreferencesTest {
         context.getSharedPreferences("chatforia_typing_language_v1", Context.MODE_PRIVATE)
             .edit().putString("601:chat:2", "zz").commit()
         assertNull(TypingLanguagePreferences.read(context, 601, chat(2)))
+    }
+
+    @Test fun keyboardMenuUsesLocalizedNamesAndPortugueseHintStaysGeneric() {
+        val config = Configuration(context.resources.configuration).apply { setLocale(Locale.forLanguageTag("es")) }
+        val spanishContext = context.createConfigurationContext(config)
+        val portuguese = LANGUAGES.first { it.code == "pt" }
+        val kurmanji = LANGUAGES.first { it.code == "ku" }
+        assertEquals("Portugués", TypingLanguagePreferences.localizedName(spanishContext, portuguese))
+        assertEquals("Kurdo (Kurmanji)", TypingLanguagePreferences.localizedName(spanishContext, kurmanji))
+        assertEquals("pt", TypingLanguagePreferences.hintLocales("pt")!![0].toLanguageTag())
+        assertNull(TypingLanguagePreferences.hintLocales("pt-BR"))
+        assertEquals("Sugerencia de idioma de escritura. Es posible que el teclado ignore esta preferencia.",
+            spanishContext.getString(com.chatforia.android.R.string.android_chat_thread_typing_language))
     }
 }

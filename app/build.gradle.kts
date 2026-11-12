@@ -18,6 +18,8 @@ android {
     namespace = "com.chatforia.android"
     compileSdk = 36
 
+    testOptions.unitTests.isIncludeAndroidResources = true
+
     defaultConfig {
         applicationId = "com.chatforia.android"
         minSdk = 26

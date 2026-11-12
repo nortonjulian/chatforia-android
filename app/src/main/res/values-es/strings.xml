@@ -197,6 +197,8 @@
     <string name="android_chat_thread_edited">Editado</string>
     <string name="android_chat_thread_failed_to_send">No se ha podido enviar</string>
     <string name="android_chat_thread_no_messages_yet">Aún no hay mensajes</string>
+    <string name="android_chat_thread_typing_language">Sugerencia de idioma de escritura. Es posible que el teclado ignore esta preferencia.</string>
+    <string name="android_chat_thread_system_keyboard">Teclado del sistema (sin sugerencia)</string>
     <string name="android_chat_thread_remove_gif">Eliminar GIF</string>
     <string name="android_chat_thread_rewrite_with_ria">Reescribir con Ria</string>
     <string name="android_chat_thread_search_in_chat">Buscar en el chat</string>
