@@ -3323,5 +3323,5 @@
     <!-- AI-generated keyboard translation; unreviewed. -->
     <string name="android_chat_thread_system_keyboard">صفحه کلید سیستم (بدون اشاره)</string>
     <!-- AI-generated keyboard translation; unreviewed. -->
-    <string name="android_chat_thread_typing_language">راهنمایی زبان تایپ صفحه کلید شما ممکن است این اولویت را نادیده بگیرد.</string>
+    <string name="android_chat_thread_typing_language">رهنمای زبان تایپ. صفحه‌کلید شما ممکن است این ترجیح را نادیده بگیرد.</string>
 </resources>

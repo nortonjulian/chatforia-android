@@ -3321,7 +3321,7 @@
     <string name="wireless_phone_number">Numero sa telepono</string>
     <string name="wireless_phone_number_description">Dumala sa imong Chatforia nga numero sa telepono.</string>
     <!-- AI-generated keyboard translation; unreviewed. -->
-    <string name="android_chat_thread_system_keyboard">System keyboard (walay pahibalo)</string>
+    <string name="android_chat_thread_system_keyboard">System keyboard (walay pahiwatig sa pag-type sa pinulongan)</string>
     <!-- AI-generated keyboard translation; unreviewed. -->
     <string name="android_chat_thread_typing_language">Tip sa pinulongan sa pag-type. Mahimong ibaliwala sa imong keyboard kini nga gusto.</string>
 </resources>

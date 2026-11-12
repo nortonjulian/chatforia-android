@@ -76,7 +76,7 @@
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
       "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "variant_review_note": "Generic Arabic app choice; Arabic-script copy and ar keyboard hint; no region selected."
     },
     {
       "app_language_code": "ar",
@@ -87,7 +87,7 @@
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
       "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "variant_review_note": "Generic Arabic app choice; Arabic-script copy and ar keyboard hint; no region selected."
     },
     {
       "app_language_code": "as",
@@ -358,10 +358,10 @@
       "resource_key": "android_chat_thread_system_keyboard",
       "target_locale_or_resource_dir": "values-ceb",
       "source_sha256": "d34cb499400a19ba7572fb4b94bda35cbd2127c9005c4b2ecfaab5476ad7c069",
-      "translation_sha256": "5b56da229bb9e1a9bc433b516c488e326a2763e2b4d60cda66d2a214db2e989a",
+      "translation_sha256": "522b35cb628a70f9689572bebd9c21d5fb241947356f36cba9bacda3a699e344",
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
-      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
+      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed. Final review correction checked by back-translation; human linguistic review remains open.",
       "variant_review_note": ""
     },
     {
@@ -963,10 +963,10 @@
       "resource_key": "android_chat_thread_typing_language",
       "target_locale_or_resource_dir": "values-hmn",
       "source_sha256": "d90c2ad5dc15e2dc582cfa9ba01149ca92169d496c64367d05bfd5813a64adfd",
-      "translation_sha256": "48ba246f564330228f8ba83ea24f21450380a995b9ea0b5d3ab274fbe6376bc4",
+      "translation_sha256": "9b654cf896fa56ff513d59543fcf0abf6cbcac6ae6d166006959810338a2c88f",
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
-      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
+      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed. Final review correction checked by back-translation; human linguistic review remains open.",
       "variant_review_note": ""
     },
     {
@@ -1117,10 +1117,10 @@
       "resource_key": "android_chat_thread_typing_language",
       "target_locale_or_resource_dir": "values-ilo",
       "source_sha256": "d90c2ad5dc15e2dc582cfa9ba01149ca92169d496c64367d05bfd5813a64adfd",
-      "translation_sha256": "0ab617b1ef86d9e105853e212a45de873e7331091b78c49e66d77901594908a2",
+      "translation_sha256": "e63f03db0bd124ade1e171218597ac300fd00486052c4d71223a31010c033449",
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
-      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
+      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed. Final review correction checked by back-translation; human linguistic review remains open.",
       "variant_review_note": ""
     },
     {
@@ -1352,18 +1352,18 @@
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
       "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "variant_review_note": "Kurmanji Android choice ku resolves values-ku; native hint order remains kmr then ku, not Sorani ckb."
     },
     {
       "app_language_code": "ku",
       "resource_key": "android_chat_thread_typing_language",
       "target_locale_or_resource_dir": "values-ku",
       "source_sha256": "d90c2ad5dc15e2dc582cfa9ba01149ca92169d496c64367d05bfd5813a64adfd",
-      "translation_sha256": "9b21ece90b9ef0aa2729848b5e86f19af87733ba3fbb8f2e0ae22dd7e6f27652",
+      "translation_sha256": "afab2684c531c3ff23620f634d8c9f0e1612b03bcba3204831c4e268ee4ba235",
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
-      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed. Final review correction checked by back-translation; human linguistic review remains open.",
+      "variant_review_note": "Kurmanji Android choice ku resolves values-ku; native hint order remains kmr then ku, not Sorani ckb."
     },
     {
       "app_language_code": "ky",
@@ -1682,7 +1682,7 @@
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
       "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "variant_review_note": "Meitei-script text retained; Android app resource maps to values-mni while native tag retains Mtei."
     },
     {
       "app_language_code": "mni-Mtei",
@@ -1693,7 +1693,7 @@
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
       "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "variant_review_note": "Meitei-script text retained; Android app resource maps to values-mni while native tag retains Mtei."
     },
     {
       "app_language_code": "mr",
@@ -1836,7 +1836,7 @@
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
       "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "variant_review_note": "Norwegian app choice uses Bokmål values-nb; native hint retains nb then no."
     },
     {
       "app_language_code": "no",
@@ -1847,7 +1847,7 @@
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
       "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "variant_review_note": "Norwegian app choice uses Bokmål values-nb; native hint retains nb then no."
     },
     {
       "app_language_code": "nso",
@@ -1865,10 +1865,10 @@
       "resource_key": "android_chat_thread_typing_language",
       "target_locale_or_resource_dir": "values-nso",
       "source_sha256": "d90c2ad5dc15e2dc582cfa9ba01149ca92169d496c64367d05bfd5813a64adfd",
-      "translation_sha256": "5031f452be0594f176f605084e012be901c47fd7deffb8514ce6ca0fdbef299c",
+      "translation_sha256": "3d3f115db0bb0845192d49170eff412f421d54b8c75a715fa2cbbba46cbb644a",
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
-      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
+      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed. Final review correction checked by back-translation; human linguistic review remains open.",
       "variant_review_note": ""
     },
     {
@@ -1946,7 +1946,7 @@
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
       "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "variant_review_note": "Generic Punjabi choice uses existing Gurmukhi UI resource; keyboard hint remains pa with no forced script."
     },
     {
       "app_language_code": "pa",
@@ -1957,7 +1957,7 @@
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
       "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "variant_review_note": "Generic Punjabi choice uses existing Gurmukhi UI resource; keyboard hint remains pa with no forced script."
     },
     {
       "app_language_code": "pam",
@@ -2034,18 +2034,18 @@
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
       "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "variant_review_note": "Dari choice retains prs; Android app resource uses fa-AF, not generic Persian fa."
     },
     {
       "app_language_code": "prs",
       "resource_key": "android_chat_thread_typing_language",
       "target_locale_or_resource_dir": "values-fa-rAF",
       "source_sha256": "d90c2ad5dc15e2dc582cfa9ba01149ca92169d496c64367d05bfd5813a64adfd",
-      "translation_sha256": "b7af2e1a8ca01ffbaec2a2da672c5a3c54e865bf8da965c750ad470b5e4ac005",
+      "translation_sha256": "f365e6b395a559db3dfcb8df70039ffd02181556330ce467891bfd860cc116de",
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
-      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed. Final review correction checked by back-translation; human linguistic review remains open.",
+      "variant_review_note": "Dari choice retains prs; Android app resource uses fa-AF, not generic Persian fa."
     },
     {
       "app_language_code": "ps",
@@ -2151,10 +2151,10 @@
       "resource_key": "android_chat_thread_typing_language",
       "target_locale_or_resource_dir": "values-rw",
       "source_sha256": "d90c2ad5dc15e2dc582cfa9ba01149ca92169d496c64367d05bfd5813a64adfd",
-      "translation_sha256": "726bf6f970404a33303273632af727fac3cf255f9736a581ead3ff3944ce59ae",
+      "translation_sha256": "05ead58972f0331d8aab37566b5adbb5255836792aeb3b32986637482a28748e",
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
-      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected; semantic correction applied. Human linguistic review not performed.",
+      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected; semantic correction applied. Human linguistic review not performed. Final review correction checked by back-translation; human linguistic review remains open.",
       "variant_review_note": ""
     },
     {
@@ -2316,10 +2316,10 @@
       "resource_key": "android_chat_thread_system_keyboard",
       "target_locale_or_resource_dir": "values-sn",
       "source_sha256": "d34cb499400a19ba7572fb4b94bda35cbd2127c9005c4b2ecfaab5476ad7c069",
-      "translation_sha256": "e8e48bdcb2820795ab03cce022862ba099409d9831f57f519598f5baa312c1b5",
+      "translation_sha256": "8d2b9286407d2e77a3bf342e36414e24f2bd6277c46a32dcaa9f6704a8900ce9",
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
-      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
+      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed. Final review correction checked by back-translation; human linguistic review remains open.",
       "variant_review_note": ""
     },
     {
@@ -2386,7 +2386,7 @@
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
       "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "variant_review_note": "Generic Serbian choice uses existing Cyrillic UI resource; keyboard hint remains sr with no forced script."
     },
     {
       "app_language_code": "sr",
@@ -2397,7 +2397,7 @@
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
       "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "variant_review_note": "Generic Serbian choice uses existing Cyrillic UI resource; keyboard hint remains sr with no forced script."
     },
     {
       "app_language_code": "ss",
@@ -2426,10 +2426,10 @@
       "resource_key": "android_chat_thread_system_keyboard",
       "target_locale_or_resource_dir": "values-st",
       "source_sha256": "d34cb499400a19ba7572fb4b94bda35cbd2127c9005c4b2ecfaab5476ad7c069",
-      "translation_sha256": "294606cbc7bc90ec404ed9d0d35c0d0bfd1e849d620172fa911b4679e65645e5",
+      "translation_sha256": "87f30ae7bae4e17c4fdfce25096e012316bf7929fb8c29fcf778b27fdf51adb5",
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
-      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
+      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed. Final review correction checked by back-translation; human linguistic review remains open.",
       "variant_review_note": ""
     },
     {
@@ -2690,11 +2690,11 @@
       "resource_key": "android_chat_thread_system_keyboard",
       "target_locale_or_resource_dir": "values-tl",
       "source_sha256": "d34cb499400a19ba7572fb4b94bda35cbd2127c9005c4b2ecfaab5476ad7c069",
-      "translation_sha256": "bf8a53462beb017b35254fb5ecfc76a37f88ba84cba32ef11b722a8470d049c6",
+      "translation_sha256": "f2f2a6c8e6e826db000c1cf89f05805b44587621b89e2a9386d5780bf2c5406b",
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
-      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed. Final review correction checked by back-translation; human linguistic review remains open.",
+      "variant_review_note": "Tagalog choice retains tl; exact iOS tl and Android values-tl lookup confirmed; fil app alias remains separate."
     },
     {
       "app_language_code": "tl",
@@ -2705,7 +2705,7 @@
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
       "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "variant_review_note": "Tagalog choice retains tl; exact iOS tl and Android values-tl lookup confirmed; fil app alias remains separate."
     },
     {
       "app_language_code": "tn",
@@ -3075,10 +3075,10 @@
       "resource_key": "android_chat_thread_typing_language",
       "target_locale_or_resource_dir": "values-zgh",
       "source_sha256": "d90c2ad5dc15e2dc582cfa9ba01149ca92169d496c64367d05bfd5813a64adfd",
-      "translation_sha256": "fc555708bf9b24c13a20b620eece584924264e910af7e8a35cca0109879a4a3d",
+      "translation_sha256": "437ac56e27ff4bd995722ca48ab860b8d7ea56c6dddf40691855193f2188bff1",
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
-      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
+      "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed. Final review correction checked by back-translation; human linguistic review remains open.",
       "variant_review_note": ""
     },
     {
@@ -3090,7 +3090,7 @@
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
       "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "variant_review_note": "Simplified Chinese regional app choice; native hint remains zh-Hans-CN with zh-CN fallback."
     },
     {
       "app_language_code": "zh-CN",
@@ -3101,7 +3101,7 @@
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
       "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "variant_review_note": "Simplified Chinese regional app choice; native hint remains zh-Hans-CN with zh-CN fallback."
     },
     {
       "app_language_code": "zh-TW",
@@ -3112,7 +3112,7 @@
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
       "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "variant_review_note": "Traditional Chinese regional app choice; native hint remains zh-Hant-TW with zh-TW fallback."
     },
     {
       "app_language_code": "zh-TW",
@@ -3123,7 +3123,7 @@
       "status": "AI-generated, structurally validated, unreviewed",
       "uncertain": true,
       "second_pass_note": "Structural, protected-term, Unicode, and script checks passed; individual back-translation inspected. Human linguistic review not performed.",
-      "variant_review_note": "AI draft uses the exact app language identifier and target resource variant; native keyboard availability and regional wording remain device review items."
+      "variant_review_note": "Traditional Chinese regional app choice; native hint remains zh-Hant-TW with zh-TW fallback."
     },
     {
       "app_language_code": "zu",

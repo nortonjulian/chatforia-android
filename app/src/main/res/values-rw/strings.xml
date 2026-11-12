@@ -2811,5 +2811,5 @@
     <!-- AI-generated keyboard translation; unreviewed. -->
     <string name="android_chat_thread_system_keyboard">Mwandikisho ya sisitemu (nta gitekerezo)</string>
     <!-- AI-generated keyboard translation; unreviewed. -->
-    <string name="android_chat_thread_typing_language">Kwandika igitekerezo cyururimi. Mwandikisho irashobora kwirengagiza iri hitamo.</string>
+    <string name="android_chat_thread_typing_language">Kwandika igitekerezo cyururimi. Clavier yawe irashobora kwirengagiza aya mahitamo.</string>
 </resources>

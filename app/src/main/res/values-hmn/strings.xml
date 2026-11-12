@@ -2811,5 +2811,5 @@
     <!-- AI-generated keyboard translation; unreviewed. -->
     <string name="android_chat_thread_system_keyboard">System keyboard (tsis muaj lus qhia)</string>
     <!-- AI-generated keyboard translation; unreviewed. -->
-    <string name="android_chat_thread_typing_language">Typing lus hint. Koj cov keyboard yuav tsis quav ntsej qhov kev nyiam no.</string>
+    <string name="android_chat_thread_typing_language">Lus qhia txog hom lus ntaus ntawv. Tej zaum koj cov keyboard yuav tsis quav ntsej qhov kev nyiam no.</string>
 </resources>

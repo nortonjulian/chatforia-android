@@ -2811,5 +2811,5 @@
     <!-- AI-generated keyboard translation; unreviewed. -->
     <string name="android_chat_thread_system_keyboard">Teklado ti sistema (awan ti pammalubos) .</string>
     <!-- AI-generated keyboard translation; unreviewed. -->
-    <string name="android_chat_thread_typing_language">Pammalubos ti pagsasao nga ag-type. Mabalin a di ikankano ti keyboard-mo daytoy a kaykayat.</string>
+    <string name="android_chat_thread_typing_language">Singasing ti pagsasao nga ag-type. Mabalin a di ikankano ti keyboard-mo daytoy a pili.</string>
 </resources>
