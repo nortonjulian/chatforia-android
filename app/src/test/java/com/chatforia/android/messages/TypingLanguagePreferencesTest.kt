@@ -4,8 +4,11 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.chatforia.android.chats.ConversationDto
 import com.chatforia.android.auth.AppLocaleManager
+import com.chatforia.android.auth.LANGUAGES
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -54,5 +57,45 @@ class TypingLanguagePreferencesTest {
         TypingLanguagePreferences.save(context, 401, chat(9), "ja")
         assertEquals("fr", AppLocaleManager.readLanguage(context))
         assertEquals("ja", TypingLanguagePreferences.read(context, 401, chat(9)))
+    }
+
+    @Test fun everySupportedChoicePersistsAndProducesARepresentableImeTag() {
+        assertEquals(147, LANGUAGES.size)
+        assertEquals(147, LANGUAGES.map { it.code }.distinct().size)
+        LANGUAGES.forEach { language ->
+            TypingLanguagePreferences.save(context, 501, chat(1), language.code)
+            assertEquals(language.code, TypingLanguagePreferences.read(context, 501, chat(1)))
+            val hint = TypingLanguagePreferences.hintLocales(language.code)
+            assertNotNull(language.code, hint)
+            assertTrue(language.code, hint!!.all { it.toLanguageTag() != "und" })
+        }
+    }
+
+    @Test fun writingSystemsAndScriptRegionalVariantsKeepTheirIntendedTags() {
+        val expected = mapOf(
+            "es" to "es", "ru" to "ru", "ar" to "ar", "hi" to "hi",
+            "ja" to "ja", "ko" to "ko", "am" to "am", "he" to "he",
+            "th" to "th", "mni-Mtei" to "mni-Mtei", "prs" to "prs",
+            "zh-CN" to "zh-Hans-CN", "zh-TW" to "zh-Hant-TW",
+            "ku" to "kmr", "no" to "nb", "pt" to "pt"
+        )
+        expected.forEach { (choice, nativeTag) ->
+            assertEquals(choice, nativeTag,
+                TypingLanguagePreferences.hintLocales(choice)!![0].toLanguageTag())
+        }
+        assertEquals("zh-CN", TypingLanguagePreferences.hintLocales("zh-CN")!![1].toLanguageTag())
+        assertEquals("zh-TW", TypingLanguagePreferences.hintLocales("zh-TW")!![1].toLanguageTag())
+    }
+
+    @Test fun caseNormalizationAndUnsupportedCodesFallBackWithoutChangingSelection() {
+        TypingLanguagePreferences.save(context, 601, chat(1), "ZH_cn")
+        assertEquals("zh-CN", TypingLanguagePreferences.read(context, 601, chat(1)))
+        assertEquals("mni-Mtei", TypingLanguagePreferences.hintLocales("MNI_mtei")!![0].toLanguageTag())
+        TypingLanguagePreferences.save(context, 601, chat(1), "zz")
+        assertEquals("zh-CN", TypingLanguagePreferences.read(context, 601, chat(1)))
+        assertNull(TypingLanguagePreferences.hintLocales("zz"))
+        context.getSharedPreferences("chatforia_typing_language_v1", Context.MODE_PRIVATE)
+            .edit().putString("601:chat:2", "zz").commit()
+        assertNull(TypingLanguagePreferences.read(context, 601, chat(2)))
     }
 }
