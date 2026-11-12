@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Sheba liphutheloana tsa data tsa eSIM \'me u laole likarolo tsa wireless.</string>
     <string name="wireless_phone_number">Nomoro ea mohala</string>
     <string name="wireless_phone_number_description">Laola nomoro ea hau ea mohala ea Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Keyboard ea sistimi (ha e na leseli)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Tlhahiso ea puo ea ho ngola. Keyboard ea hau e kanna ea iphapanyetsa khetho ena.</string>
 </resources>

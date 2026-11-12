@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">ਈ-ਸਿਮ ਡਾਟਾ ਪੈਕ ਵੇਖੋ ਅਤੇ ਵਾਇਰਲੈੱਸ ਫੀਚਰਾਂ ਦਾ ਪ੍ਰਬੰਧ ਕਰੋ।</string>
     <string name="wireless_phone_number">ਫੋਨ ਨੰਬਰ</string>
     <string name="wireless_phone_number_description">ਆਪਣਾ Chatforia ਫੋਨ ਨੰਬਰ ਪ੍ਰਬੰਧਿਤ ਕਰੋ।</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">ਸਿਸਟਮ ਕੀਬੋਰਡ (ਕੋਈ ਸੰਕੇਤ ਨਹੀਂ)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">ਟਾਈਪਿੰਗ ਭਾਸ਼ਾ ਸੰਕੇਤ. ਤੁਹਾਡਾ ਕੀਬੋਰਡ ਇਸ ਤਰਜੀਹ ਨੂੰ ਨਜ਼ਰਅੰਦਾਜ਼ ਕਰ ਸਕਦਾ ਹੈ।</string>
 </resources>

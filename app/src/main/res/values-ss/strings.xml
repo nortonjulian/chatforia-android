@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Dlulisa emehlo emaphakethe emininingwane ye-eSIM bese ulawula tici letingenantambo.</string>
     <string name="wireless_phone_number">Inombolo yelucingo</string>
     <string name="wireless_phone_number_description">Lawula inombolo yakho yelucingo lwe-Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Ikhibhodi yeluhlelo (kute umkhondvo)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Umkhondvo welulwimi lwekuthayipha. Ikhibhodi yakho ingahle ingakunaki lokukhetsako.</string>
 </resources>

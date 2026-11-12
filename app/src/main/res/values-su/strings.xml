@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Ningali paket data eSIM sareng ngatur fitur nirkabel.</string>
     <string name="wireless_phone_number">Nomer telepon</string>
     <string name="wireless_phone_number_description">Atur nomer telepon Chatforia anjeun.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Keyboard sistem (teu aya petunjuk)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Tip basa ngetik. Kibor anjeun tiasa malire karesep ieu.</string>
 </resources>

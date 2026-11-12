@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Jereo ny fonosan-drakitra eSIM ary tantano ny endri-javatra tsy misy tariby.</string>
     <string name="wireless_phone_number">Laharana an-telefaonina</string>
     <string name="wireless_phone_number_description">Tantano ny laharan-telefaoninao Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Kitendry rafitra (tsy misy soso-kevitra)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Soso-kevitra amin\'ny fiteny fanoratana. Mety tsy hiraharaha an\'io safidy io ny klaviero.</string>
 </resources>

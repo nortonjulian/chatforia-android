@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">இ-சிம் டேட்டா பேக்குகளைப் பார்வையிட்டு, வயர்லெஸ் அம்சங்களை நிர்வகிக்கவும்.</string>
     <string name="wireless_phone_number">தொலைபேசி எண்</string>
     <string name="wireless_phone_number_description">உங்கள் Chatforia தொலைபேசி எண்ணை நிர்வகிக்கவும்.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">கணினி விசைப்பலகை (குறிப்பு இல்லை)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">தட்டச்சு மொழி குறிப்பு. உங்கள் விசைப்பலகை இந்த விருப்பத்தை புறக்கணிக்கலாம்.</string>
 </resources>

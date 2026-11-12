@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Прелистајте ги пакетите со податоци за eSIM и управувајте со безжичните функции.</string>
     <string name="wireless_phone_number">Телефонски број</string>
     <string name="wireless_phone_number_description">Управувајте со вашиот Chatforia телефонски број.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Системска тастатура (без навестување)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Совет за јазик за пишување. Вашата тастатура може да ја игнорира оваа претпочитаност.</string>
 </resources>

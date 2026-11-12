@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Esploru eSIM-datumajn pakaĵojn kaj administru sendratajn funkciojn.</string>
     <string name="wireless_phone_number">Telefona numero</string>
     <string name="wireless_phone_number_description">Administru vian Chatforian telefonnumeron.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Sistema klavaro (neniu sugesto)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Tajpa lingvosugesto. Via klavaro eble ignoros ĉi tiun preferon.</string>
 </resources>

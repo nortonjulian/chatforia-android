@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Праглядайце пакеты даных eSIM і кіруйце бесправаднымі функцыямі.</string>
     <string name="wireless_phone_number">Нумар тэлефона</string>
     <string name="wireless_phone_number_description">Кіруйце сваім нумарам тэлефона Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Сістэмная клавіятура (без падказкі)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Падказка па мове ўводу. Ваша клавіятура можа ігнараваць гэты параметр.</string>
 </resources>

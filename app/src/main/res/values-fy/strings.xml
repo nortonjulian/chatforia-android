@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Blêdzje troch eSIM-datapakketten en beheare draadloze funksjes.</string>
     <string name="wireless_phone_number">Telefoannûmer</string>
     <string name="wireless_phone_number_description">Behear jo Chatforia tillefoannûmer.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Systeem toetseboerd (gjin hint)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Typtaal hint. Jo toetseboerd kin dizze foarkar negearje.</string>
 </resources>

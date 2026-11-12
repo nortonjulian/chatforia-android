@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Talá ba packs ya données ya eSIM mpe sangá ba fonctionnalités ya sans fil.</string>
     <string name="wireless_phone_number">Nimero ya telefone</string>
     <string name="wireless_phone_number_description">Kamba nimero na yo ya telefone ya Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Clavier ya système (indiction moko te) .</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Toli ya monoko ya kokoma. Clavier na yo ekoki ko ignorer préférence oyo.</string>
 </resources>

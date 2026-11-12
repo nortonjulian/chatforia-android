@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">eSIM деректер пакеттерін қарап шығып, сымсыз мүмкіндіктерді басқарыңыз.</string>
     <string name="wireless_phone_number">Телефон нөмірі</string>
     <string name="wireless_phone_number_description">Chatforia телефон нөміріңізді басқарыңыз.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Жүйелік пернетақта (кеңес жоқ)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Теру тілінің анықтамасы. Пернетақта бұл таңдауды елемеуі мүмкін.</string>
 </resources>

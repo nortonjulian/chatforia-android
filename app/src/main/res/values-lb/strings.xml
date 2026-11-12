@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Blättert duerch eSIM-Datenpaketer a verwalt drahtlos Funktiounen.</string>
     <string name="wireless_phone_number">Telefonsnummer</string>
     <string name="wireless_phone_number_description">Verwalt deng Chatforia-Telefonsnummer.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">System Tastatur (keen Hiweis)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Tipp Sprooch Hiweis. Är Tastatur kann dës Preferenz ignoréieren.</string>
 </resources>

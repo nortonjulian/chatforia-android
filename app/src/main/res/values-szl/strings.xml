@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Przeglōnuj pakiety danych eSIM i zarzōndzaj funkcyjami bezprzewodowymi.</string>
     <string name="wireless_phone_number">Numer telefōnu</string>
     <string name="wireless_phone_number_description">Zarzōndzaj swojim numerym telefōnu Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Klawiatura systymowo (bez podpowiedzi)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Podpowiydź na jynzyk pisanio. Klawiatura może zignorować ta preferyncyjo.</string>
 </resources>

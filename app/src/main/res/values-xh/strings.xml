@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Jonga iipakethe zedatha ze-eSIM kwaye ulawule iimpawu ze-wireless.</string>
     <string name="wireless_phone_number">Inombolo yefowuni</string>
     <string name="wireless_phone_number_description">Lawula inombolo yakho yefowuni yaseChatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Indlela yekhibhodi (akukho luthi)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Ukuchwetheza ingcebiso yolwimi. Ikhibhodi yakho inokungahoyi olu khetho.</string>
 </resources>

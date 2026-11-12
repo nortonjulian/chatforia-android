@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Seetal paketi done eSIM yi te saytu melokaanu wireless yi.</string>
     <string name="wireless_phone_number">Nimero telefon</string>
     <string name="wireless_phone_number_description">Saytu sa nimero telefong Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Klaweer sistem (amul tegtal)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Hint làkku bind. Sa klaweer mën na baña nangu tànneef bii.</string>
 </resources>

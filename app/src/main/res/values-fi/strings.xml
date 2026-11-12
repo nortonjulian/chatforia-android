@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Selaa eSIM-datapaketteja ja hallitse langattomia ominaisuuksia.</string>
     <string name="wireless_phone_number">Puhelinnumero</string>
     <string name="wireless_phone_number_description">Hallitse Chatforia-puhelinnumeroasi.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Järjestelmän näppäimistö (ei vihjettä)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Kirjoituskielen vihje. Näppäimistösi saattaa jättää tämän asetuksen huomiotta.</string>
 </resources>

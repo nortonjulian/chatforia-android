@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">eSIM ဒေတာပက်များကို ကြည့်ရှုပြီး ကြိုးမဲ့အင်္ဂါရပ်များကို စီမံခန့်ခွဲပါ။</string>
     <string name="wireless_phone_number">ဖုန်းနံပါတ်</string>
     <string name="wireless_phone_number_description">သင့် Chatforia ဖုန်းနံပါတ်ကို စီမံခန့်ခွဲပါ။</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">စနစ်ကီးဘုတ် (အရိပ်အမြွက်မျှ)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">စာရိုက်ဘာသာစကား အရိပ်အမြွက်။ သင့်ကီးဘုတ်သည် ဤဦးစားပေးကို လျစ်လျူရှုနိုင်သည်။</string>
 </resources>

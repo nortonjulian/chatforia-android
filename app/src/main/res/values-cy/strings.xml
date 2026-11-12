@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Poriwch becynnau data eSIM a rheolwch nodweddion diwifr.</string>
     <string name="wireless_phone_number">Rhif ffôn</string>
     <string name="wireless_phone_number_description">Rheoli eich rhif ffôn Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Bysellfwrdd system (dim awgrym)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Teipio awgrym iaith. Mae\'n bosib y bydd eich bysellfwrdd yn anwybyddu\'r dewis hwn.</string>
 </resources>

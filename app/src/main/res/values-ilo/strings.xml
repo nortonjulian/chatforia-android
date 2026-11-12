@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">I-browse dagiti eSIM data pack ken imanehar dagiti wireless features.</string>
     <string name="wireless_phone_number">Numero ti telepono</string>
     <string name="wireless_phone_number_description">Imanehar ti numero ti telepono ti Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Teklado ti sistema (awan ti pammalubos) .</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Pammalubos ti pagsasao nga ag-type. Mabalin a di ikankano ti keyboard-mo daytoy a kaykayat.</string>
 </resources>

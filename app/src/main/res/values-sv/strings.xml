@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Bläddra bland eSIM-datapaket och hantera trådlösa funktioner.</string>
     <string name="wireless_phone_number">Telefonnummer</string>
     <string name="wireless_phone_number_description">Hantera ditt Chatforia-telefonnummer.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Systemtangentbord (ingen ledtråd)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Tips på skrivspråk. Ditt tangentbord kanske ignorerar denna inställning.</string>
 </resources>

@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Lukluk long ol eSIM data pek na menesim ol samting bilong wayales.</string>
     <string name="wireless_phone_number">Namba bilong fon</string>
     <string name="wireless_phone_number_description">Bosim Chatforia fon namba bilong yu.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Sistem kibod (no gat toksave)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Hint bilong tok ples bilong taip. Kibod bilong yu i ken sakim dispela laik.</string>
 </resources>

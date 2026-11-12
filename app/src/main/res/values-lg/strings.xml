@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Browse eSIM data packs era oddukanya ebikozesebwa ebitaliiko waya.</string>
     <string name="wireless_phone_number">Ennamba y’essimu</string>
     <string name="wireless_phone_number_description">Dukanya ennamba yo ey\'essimu eya Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Kiiboodi y\'enkola (tewali kulaga) .</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Okuwandiika olulimi hint. Kiiboodi yo eyinza okubuusa amaaso okwagala kuno.</string>
 </resources>

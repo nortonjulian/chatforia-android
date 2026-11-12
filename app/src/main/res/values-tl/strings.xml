@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Mag-browse ng mga eSIM data pack at pamahalaan ang mga wireless na tampok.</string>
     <string name="wireless_phone_number">Numero ng telepono</string>
     <string name="wireless_phone_number_description">Pamamahalaan ang iyong Chatforia na numero ng telepono.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">System keyboard (walang pahiwatig)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Pahiwatig ng wika sa pagta-type. Maaaring balewalain ng iyong keyboard ang kagustuhang ito.</string>
 </resources>

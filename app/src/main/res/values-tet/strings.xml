@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Buka pakote dadus eSIM no jere funsaun sira sem fiu nian.</string>
     <string name="wireless_phone_number">Númeru telefone</string>
     <string name="wireless_phone_number_description">Jere Ita-boot nia númeru telefone Chatforia nian.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Tekladu sistema nian (la iha sugestaun)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Sujestaun kona-ba linguajen ketik nian. Ita-boot nia keyboard bele ignora preferénsia ida-ne\'e.</string>
 </resources>

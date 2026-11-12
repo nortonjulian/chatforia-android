@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">เรียกดูแพ็กเกจข้อมูล eSIM และจัดการคุณสมบัติไร้สาย</string>
     <string name="wireless_phone_number">หมายเลขโทรศัพท์</string>
     <string name="wireless_phone_number_description">จัดการหมายเลขโทรศัพท์ Chatforia ของคุณ</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">แป้นพิมพ์ระบบ (ไม่มีคำใบ้)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">การพิมพ์คำใบ้ภาษา แป้นพิมพ์ของคุณอาจเพิกเฉยต่อการตั้งค่านี้</string>
 </resources>

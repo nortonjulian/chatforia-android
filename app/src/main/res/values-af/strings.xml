@@ -3409,4 +3409,8 @@
     <string name="wireless_esim_description">Foon nommer</string>
     <string name="wireless_phone_number">Bestuur jou Chatforia-foon nommer.</string>
     <string name="wireless_phone_number_description">Outomatiese vertaling van boodskappe</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Stelselsleutelbord (geen wenk nie)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Tiktaalwenk. Jou sleutelbord kan hierdie voorkeur ignoreer.</string>
 </resources>

@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Περιηγηθείτε σε πακέτα δεδομένων eSIM και διαχειριστείτε τις ασύρματες λειτουργίες.</string>
     <string name="wireless_phone_number">Αριθμός τηλεφώνου</string>
     <string name="wireless_phone_number_description">Διαχειριστείτε τον τηλεφωνικό σας αριθμό Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Πληκτρολόγιο συστήματος (χωρίς υπόδειξη)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Υπόδειξη γλώσσας πληκτρολόγησης. Το πληκτρολόγιό σας μπορεί να αγνοήσει αυτήν την προτίμηση.</string>
 </resources>

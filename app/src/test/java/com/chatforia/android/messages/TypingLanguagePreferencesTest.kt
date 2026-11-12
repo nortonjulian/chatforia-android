@@ -114,4 +114,19 @@ class TypingLanguagePreferencesTest {
         assertEquals("Sugerencia de idioma de escritura. Es posible que el teclado ignore esta preferencia.",
             spanishContext.getString(com.chatforia.android.R.string.android_chat_thread_typing_language))
     }
+
+    @Test fun keyboardCopyIsLocalizedForEverySupportedAppLanguage() {
+        val englishHint = "Typing language hint. Your keyboard may ignore this preference."
+        val englishSystem = "System keyboard (no hint)"
+        val failures = mutableListOf<String>()
+        LANGUAGES.filter { it.code != "en" }.forEach { language ->
+            AppLocaleManager.saveLanguage(context, language.code)
+            val localized = AppLocaleManager.wrapContext(context)
+            val hint = localized.getString(com.chatforia.android.R.string.android_chat_thread_typing_language)
+            val system = localized.getString(com.chatforia.android.R.string.android_chat_thread_system_keyboard)
+            if (hint.equals(englishHint, ignoreCase = true)) failures += "${language.code}: typing hint"
+            if (system.equals(englishSystem, ignoreCase = true)) failures += "${language.code}: system option"
+        }
+        assertTrue("English fallback: $failures", failures.isEmpty())
+    }
 }

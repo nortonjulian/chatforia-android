@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Sfoglia i pacchetti di dati eSIM è gestisci e funzioni wireless.</string>
     <string name="wireless_phone_number">Numeru di telefonu</string>
     <string name="wireless_phone_number_description">Gestite u vostru numeru di telefunu Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Tastiera di u sistema (senza suggerimentu)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Cunsigliu di lingua di scrive. U vostru teclatu pò ignurà sta preferenza.</string>
 </resources>

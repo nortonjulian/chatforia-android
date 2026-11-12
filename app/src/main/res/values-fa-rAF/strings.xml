@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">بسته داده‌های eSIM را مرور کنید و ویژگی‌های بی‌سیم را مدیریت کنید.</string>
     <string name="wireless_phone_number">شماره تلفن</string>
     <string name="wireless_phone_number_description">شماره تلفن Chatforia خود را مدیریت کنید.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">صفحه کلید سیستم (بدون اشاره)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">راهنمایی زبان تایپ صفحه کلید شما ممکن است این اولویت را نادیده بگیرد.</string>
 </resources>

@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">រកមើលកញ្ចប់ទិន្នន័យ eSIM និងគ្រប់គ្រងមុខងារឥតខ្សែ។</string>
     <string name="wireless_phone_number">លេខទូរស័ព្ទ</string>
     <string name="wireless_phone_number_description">គ្រប់គ្រងលេខទូរស័ព្ទ Chatforia របស់អ្នក។</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">ក្តារចុចប្រព័ន្ធ (គ្មានជំនួយ)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">ការណែនាំភាសាវាយអក្សរ។ ក្តារចុចរបស់អ្នកអាចមិនអើពើនឹងចំណូលចិត្តនេះ។</string>
 </resources>

@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Brayz eSIM data pak ɛn manej wayales ficha dɛn.</string>
     <string name="wireless_phone_number">Fɔn nɔmba</string>
     <string name="wireless_phone_number_description">Manej yu Chatforia fon nɔmba.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Sistem kibod (no hint) .</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Tayp langwej hint. Yu kibɔd kin ignore dis prɛfɛkshɔn.</string>
 </resources>

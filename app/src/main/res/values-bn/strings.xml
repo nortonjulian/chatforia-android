@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">ই-সিম ডেটা প্যাকগুলো ব্রাউজ করুন এবং ওয়্যারলেস ফিচারগুলো পরিচালনা করুন।</string>
     <string name="wireless_phone_number">ফোন নম্বর</string>
     <string name="wireless_phone_number_description">আপনার Chatforia ফোন নম্বর পরিচালনা করুন।</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">সিস্টেম কীবোর্ড (কোন ইঙ্গিত নেই)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">টাইপিং ভাষা ইঙ্গিত. আপনার কীবোর্ড এই পছন্দ উপেক্ষা করতে পারে.</string>
 </resources>

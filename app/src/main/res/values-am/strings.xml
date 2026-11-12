@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">የኢሲም የውሂብ ጥቅሎችን ያስሱ እና የገመድ አልባ ባህሪያትን ያቀናብሩ።</string>
     <string name="wireless_phone_number">የስልክ ቁጥር</string>
     <string name="wireless_phone_number_description">የቻትፎሪያ ስልክ ቁጥርዎን ያቀናብሩ።</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">የስርዓት ቁልፍ ሰሌዳ (ምንም ፍንጭ የለም)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">የቋንቋ ፍንጭ በመተየብ ላይ። የቁልፍ ሰሌዳዎ ይህንን ምርጫ ችላ ሊለው ይችላል።</string>
 </resources>

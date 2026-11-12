@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Shfleto paketat e të dhënave eSIM dhe menaxho veçoritë pa tela.</string>
     <string name="wireless_phone_number">Numri i telefonit</string>
     <string name="wireless_phone_number_description">Menaxhoni numrin tuaj të telefonit Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Tastiera e sistemit (pa sugjerim)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Këshillë për gjuhën e shkrimit. Tastiera juaj mund ta injorojë këtë preferencë.</string>
 </resources>

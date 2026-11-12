@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Arakatu eSIM datu-paketeak eta kudeatu haririk gabeko ezaugarriak.</string>
     <string name="wireless_phone_number">Telefono zenbakia</string>
     <string name="wireless_phone_number_description">Kudeatu zure Chatforia telefono-zenbakia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Sistemaren teklatua (iradokizunik ez)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Idazketa hizkuntza aholkua. Baliteke zure teklatuak hobespen horri ez ikusiarena egitea.</string>
 </resources>

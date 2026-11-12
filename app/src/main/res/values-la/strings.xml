@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Percurre fasciculos datorum eSIM et administra proprietates sine filis.</string>
     <string name="wireless_phone_number">Numerus telephonicus</string>
     <string name="wireless_phone_number_description">Gubernā numerum tuum telephonicum Chatforiānum.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Ratio claviaturae (nullum indicium)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Linguae typing admonitus. Claviaturae tuae hanc potius ignorare possunt.</string>
 </resources>

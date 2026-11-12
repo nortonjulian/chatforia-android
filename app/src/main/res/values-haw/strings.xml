@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">E nānā i nā pūʻolo ʻikepili eSIM a hoʻokele i nā hiʻohiʻona uea ʻole.</string>
     <string name="wireless_phone_number">Helu kelepona</string>
     <string name="wireless_phone_number_description">E hoʻokele i kāu helu kelepona Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Papa keyboard nenoaiu (ʻaʻohe ʻōlelo kuhikuhi)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Manaʻo ʻōlelo paʻi. Hiki i kāu kīpī ke haʻalele i kēia makemake.</string>
 </resources>

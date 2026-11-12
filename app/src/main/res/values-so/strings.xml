@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Baadh xirmooyinka xogta eSIM oo maamul sifooyinka wireless-ka.</string>
     <string name="wireless_phone_number">Lambarka taleefanka</string>
     <string name="wireless_phone_number_description">Maaree lambarka taleefankaaga Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Kiiboodhka nidaamka (wax tilmaam ah ma jiraan)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Qorista tilmaanta luqadda. Kiiboodhkaagu waxa laga yaabaa inuu iska indhatiro dookhan.</string>
 </resources>

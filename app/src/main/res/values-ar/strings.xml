@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">تصفح حزم بيانات eSIM وإدارة الميزات اللاسلكية.</string>
     <string name="wireless_phone_number">رقم الهاتف</string>
     <string name="wireless_phone_number_description">إدارة رقم هاتف Chatforia الخاص بك.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">لوحة مفاتيح النظام (بدون تلميح)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">تلميح لغة الكتابة. قد تتجاهل لوحة المفاتيح هذا التفضيل.</string>
 </resources>

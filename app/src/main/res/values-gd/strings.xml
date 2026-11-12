@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Brobhs pacaidean dàta eSIM agus stiùirich feartan gun uèir.</string>
     <string name="wireless_phone_number">Àireamh fòn</string>
     <string name="wireless_phone_number_description">Stiùirich an àireamh fòn Chatforia agad.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Meur-chlàr an t-siostaim (gun sanas)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">A’ sgrìobhadh sanas cànain. Faodaidh gum bi am meur-chlàr agad a’ seachnadh an roghainn seo.</string>
 </resources>

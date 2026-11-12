@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Пакетҳои додаҳои eSIM-ро баррасӣ кунед ва хусусиятҳои бесимро идора кунед.</string>
     <string name="wireless_phone_number">Рақами телефон</string>
     <string name="wireless_phone_number_description">Рақами телефони Chatforia-и худро идора кунед.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Клавиатураи система (бе маслиҳат)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Маслиҳати чопкунии забони. Клавиатураи шумо метавонад ин афзалиятро рад кунад.</string>
 </resources>

@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Duba fakitin bayanai na eSIM kuma sarrafa fasalolin mara waya.</string>
     <string name="wireless_phone_number">Lambar waya</string>
     <string name="wireless_phone_number_description">Sarrafa lambar wayarka ta Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Allon madannai na tsari (babu ambato)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Buga alamar harshe. Maɓallin madannai na iya yin watsi da wannan zaɓin.</string>
 </resources>

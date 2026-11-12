@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Layari pek data eSIM dan urus ciri wayarles.</string>
     <string name="wireless_phone_number">Nombor telefon</string>
     <string name="wireless_phone_number_description">Kelola nombor telefon Chatforia anda.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Papan kekunci sistem (tiada petunjuk)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Pembayang bahasa menaip. Papan kekunci anda mungkin mengabaikan keutamaan ini.</string>
 </resources>

@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">eSIM ڈیٹا پیک دیکھیں اور وائرلیس خصوصیات کا انتظام کریں۔</string>
     <string name="wireless_phone_number">فون نمبر</string>
     <string name="wireless_phone_number_description">اپنا Chatforia فون نمبر منظم کریں۔</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">سسٹم کی بورڈ (کوئی اشارہ نہیں)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">ٹائپنگ زبان کا اشارہ۔ آپ کا کی بورڈ اس ترجیح کو نظر انداز کر سکتا ہے۔</string>
 </resources>

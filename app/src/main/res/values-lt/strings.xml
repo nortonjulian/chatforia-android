@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Naršykite eSIM duomenų paketus ir tvarkykite belaidžio ryšio funkcijas.</string>
     <string name="wireless_phone_number">Telefono numeris</string>
     <string name="wireless_phone_number_description">Tvarkykite savo \"Chatforia\" telefono numerį.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Sistemos klaviatūra (be užuominos)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Rašymo kalbos užuomina. Jūsų klaviatūra gali nepaisyti šios nuostatos.</string>
 </resources>

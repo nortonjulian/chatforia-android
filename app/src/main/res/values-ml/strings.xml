@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">eSIM ഡാറ്റാ പാക്കുകൾ ബ്രൗസ് ചെയ്യുകയും വയർലെസ് ഫീച്ചറുകൾ നിയന്ത്രിക്കുകയും ചെയ്യുക.</string>
     <string name="wireless_phone_number">ഫോൺ നമ്പർ</string>
     <string name="wireless_phone_number_description">നിങ്ങളുടെ ചാറ്റ്ഫോറിയ ഫോൺ നമ്പർ നിയന്ത്രിക്കുക.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">സിസ്റ്റം കീബോർഡ് (സൂചനയില്ല)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">ടൈപ്പിംഗ് ഭാഷാ സൂചന. നിങ്ങളുടെ കീബോർഡ് ഈ മുൻഗണന അവഗണിച്ചേക്കാം.</string>
 </resources>

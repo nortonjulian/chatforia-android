@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">eSIM ଡାଟା ପ୍ୟାକ୍ ବ୍ରାଉଜ୍ କରନ୍ତୁ ଏବଂ ୱାୟାରଲେସ୍ ବୈଶିଷ୍ଟ୍ୟଗୁଡ଼ିକୁ ପରିଚାଳନା କରନ୍ତୁ।</string>
     <string name="wireless_phone_number">ଫୋନ୍ ନମ୍ବର</string>
     <string name="wireless_phone_number_description">ଆପଣଙ୍କର ଚାଟଫୋରିଆ ଫୋନ୍ ନମ୍ବର ପରିଚାଳନା କରନ୍ତୁ।</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">ସିଷ୍ଟମ୍ କୀବୋର୍ଡ୍ (କ h ଣସି ସୂଚନା ନାହିଁ)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">ଭାଷା ସୂଚନା ଟାଇପ୍ କରିବା | ଆପଣଙ୍କର କୀବୋର୍ଡ୍ ଏହି ପସନ୍ଦକୁ ଅଣଦେଖା କରିପାରେ |</string>
 </resources>

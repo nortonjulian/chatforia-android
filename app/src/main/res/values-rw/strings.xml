@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Reba paki z\'amakuru za eSIM hanyuma ucunge ibikoresho bya wireless.</string>
     <string name="wireless_phone_number">Nimero ya terefone</string>
     <string name="wireless_phone_number_description">Genzura nimero yawe ya terefone ya Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Mwandikisho ya sisitemu (nta gitekerezo)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Kwandika igitekerezo cyururimi. Mwandikisho irashobora kwirengagiza iri hitamo.</string>
 </resources>

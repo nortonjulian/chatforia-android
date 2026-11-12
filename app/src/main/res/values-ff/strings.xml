@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Yeewtu paɗe dokke eSIM e ƴeewndo geɗe wireless.</string>
     <string name="wireless_phone_number">Limoore telefoŋ</string>
     <string name="wireless_phone_number_description">Njuɓɓudi limoore telefoŋ maa Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Keyboard system (alaa ko holliti)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Hinnde ɗemngal binndol. Keyboard maa ina waawi yejjiteede e ndee ɓural.</string>
 </resources>

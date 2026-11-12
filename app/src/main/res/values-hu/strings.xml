@@ -2968,4 +2968,8 @@
     <string name="wireless_esim_description">Böngésszen az eSIM-adatcsomagok között, és kezelje a vezeték nélküli funkciókat.</string>
     <string name="wireless_phone_number">Telefonszám</string>
     <string name="wireless_phone_number_description">Chatforia telefonszámának kezelése.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Rendszerbillentyűzet (nincs utalás)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Gépelési nyelvi tipp. Előfordulhat, hogy billentyűzete figyelmen kívül hagyja ezt a beállítást.</string>
 </resources>
