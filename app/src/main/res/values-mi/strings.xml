@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Tirohia ngā pākete raraunga eSIM, ā, whakahaerehia ngā āhuatanga ahokore.</string>
     <string name="wireless_phone_number">Nama waea</string>
     <string name="wireless_phone_number_description">Whakahaerehia tō nama waea Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Papapātuhi Pūnaha (kaore he tohu)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Tohu reo pato. Ka wareware pea to papapātuhi i tenei manakohanga.</string>
 </resources>

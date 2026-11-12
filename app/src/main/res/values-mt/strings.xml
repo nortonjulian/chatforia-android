@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Esplora pakketti ta\' data eSIM u immaniġġja l-karatteristiċi mingħajr fili.</string>
     <string name="wireless_phone_number">Numru tat-telefon</string>
     <string name="wireless_phone_number_description">Immaniġġja n-numru tat-telefon Chatforia tiegħek.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Tastiera tas-sistema (l-ebda ħjiel)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Ittajpjar ħjiel tal-lingwa. It-tastiera tiegħek tista\' tinjora din il-preferenza.</string>
 </resources>

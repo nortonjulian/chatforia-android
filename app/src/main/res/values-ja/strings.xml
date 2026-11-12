@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">eSIMデータパックを閲覧し、ワイヤレス機能を管理。</string>
     <string name="wireless_phone_number">電話番号</string>
     <string name="wireless_phone_number_description">チャットフォリアの電話番号を管理</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">システムキーボード（ヒントなし）</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">入力言語のヒント。キーボードがこの設定を無視する場合があります。</string>
 </resources>

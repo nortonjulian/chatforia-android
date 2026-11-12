@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">د eSIM ډیټا پیکونه وپلټئ او بې سیم ځانګړتیاوې اداره کړئ.</string>
     <string name="wireless_phone_number">د تلیفون شمېره</string>
     <string name="wireless_phone_number_description">خپله چټفوریا ټلیفون شمیره اداره کړئ.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">د سیسټم کیبورډ (نه اشاره)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">د ژبې اشاره ټایپ کول. ستاسو کیبورډ ممکن دا غوره توب له پامه غورځوي.</string>
 </resources>

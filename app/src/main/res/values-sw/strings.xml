@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Tafuta vifurushi vya data vya eSIM na usimamie vipengele vya wireless.</string>
     <string name="wireless_phone_number">Nambari ya simu</string>
     <string name="wireless_phone_number_description">Dhibiti nambari yako ya simu ya Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Kibodi ya mfumo (hakuna kidokezo)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Kuandika kidokezo cha lugha. Kibodi yako inaweza kupuuza mapendeleo haya.</string>
 </resources>

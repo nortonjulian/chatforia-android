@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Mag-browse ka kareng eSIM data packs ampo mag-manage kareng wireless features.</string>
     <string name="wireless_phone_number">Numeru ning teleponu</string>
     <string name="wireless_phone_number_description">pamahalaan me ing kekang chatforia phone number.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">System keyboard (ala yang hint)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Typing language hint. Malyari neng e pansinan ning kekang keyboard ing kagustuan a ini.</string>
 </resources>

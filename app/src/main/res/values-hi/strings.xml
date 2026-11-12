@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">ई-सिम डेटा पैक ब्राउज़ करें और वायरलेस सुविधाओं का प्रबंधन करें।</string>
     <string name="wireless_phone_number">फ़ोन नंबर</string>
     <string name="wireless_phone_number_description">अपने Chatforia फोन नंबर का प्रबंधन करें।</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">सिस्टम कीबोर्ड (कोई संकेत नहीं)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">टाइपिंग भाषा संकेत. आपका कीबोर्ड इस प्राथमिकता को अनदेखा कर सकता है.</string>
 </resources>

@@ -3160,4 +3160,8 @@
     <string name="wireless_esim_description">ই-চিম ডেটা পেকেজসমূহ চাওক আৰু ৱায়াৰলেচ সুবিধাসমূহ পৰিচালনা কৰক।</string>
     <string name="wireless_phone_number">ফোন নম্বৰ</string>
     <string name="wireless_phone_number_description">আপোনাৰ Chatforia ফোন নম্বৰ পৰিচালনা কৰক।</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">চিস্টেম কিবৰ্ড (কোনো ইংগিত নাই)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">টাইপিং ভাষাৰ ইংগিত। আপোনাৰ কিবৰ্ডে এই পছন্দক আওকাণ কৰিব পাৰে।</string>
 </resources>

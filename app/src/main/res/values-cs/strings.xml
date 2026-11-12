@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Procházejte datové balíčky eSIM a spravujte bezdrátové funkce.</string>
     <string name="wireless_phone_number">Telefonní číslo</string>
     <string name="wireless_phone_number_description">Spravujte své telefonní číslo Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Systémová klávesnice (bez nápovědy)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Tip pro psaní jazyka. Vaše klávesnice může tuto předvolbu ignorovat.</string>
 </resources>

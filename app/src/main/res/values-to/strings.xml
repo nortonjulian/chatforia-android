@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Vakai ki he ngaahi puha fakamatala eSIM mo pule\'i \'a e ngaahi fotunga uaealesi.</string>
     <string name="wireless_phone_number">Fika telefoni</string>
     <string name="wireless_phone_number_description">Pule\'i ho\'o fika telefoni Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Kiipioti \'o e sisitemi (\'ikai ha fakahinohino)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Fakahinohino ki he lea taipe. Mahalo ʻe taʻetokangaʻi ʻe hoʻo kiipioti ʻa e manako ko ʻení.</string>
 </resources>

@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">ई-सिम् दत्तपेटिकाः अवलोकयन्तु तथा ताररहितविशेषताः व्यवस्थापयन्तु।</string>
     <string name="wireless_phone_number">दूरवाणीसंख्या</string>
     <string name="wireless_phone_number_description">स्वस्य चैट्फोरिया दूरवाणीसंख्यां व्यवस्थापय।</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">सिस्टम् कीबोर्ड (कोऽपि संकेतः नास्ति) .</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">भाषासंकेतः टङ्कनम्। भवतः कीबोर्ड् एतत् प्राधान्यं उपेक्षितुं शक्नोति ।</string>
 </resources>

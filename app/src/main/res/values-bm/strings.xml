@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">eSIM data packs lajɛ ani ka wireless features ɲɛnabɔ.</string>
     <string name="wireless_phone_number">Telefɔni nimɔrɔ</string>
     <string name="wireless_phone_number_description">I ka Chatforia telefɔni nimɔrɔ ɲɛnabɔ.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Sistɛmu klaviyeti (a ma fɔ) .</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Sɛbɛnni kanko hakilina. I ka klaviyeti bɛ se ka o fɛɛrɛ in jate.</string>
 </resources>

@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Gennemse eSIM-datapakker og administrer trådløse funktioner.</string>
     <string name="wireless_phone_number">Telefonnummer</string>
     <string name="wireless_phone_number_description">Administrer dit Chatforia-telefonnummer.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Systemtastatur (ingen tip)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Tip til skrivesprog. Dit tastatur ignorerer muligvis denne præference.</string>
 </resources>

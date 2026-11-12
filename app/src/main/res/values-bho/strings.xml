@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">ई-सिम डेटा पैक देखीं आ वायरलेस फीचर सभ के प्रबंध करीं।</string>
     <string name="wireless_phone_number">फोन नंबर</string>
     <string name="wireless_phone_number_description">अपने Chatforia फोन नंबर के प्रबंध करीं।</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">सिस्टम कीबोर्ड (कोई संकेत ना)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">टाइपिंग भाषा के संकेत दिहल गइल बा. हो सकेला कि राउर कीबोर्ड एह पसंद के अनदेखी कर देव.</string>
 </resources>

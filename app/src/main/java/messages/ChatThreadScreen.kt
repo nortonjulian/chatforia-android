@@ -74,6 +74,8 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Check
 import com.chatforia.android.ria.RiaRepository
 import com.chatforia.android.ria.RiaRewriteSheet
 import androidx.compose.foundation.clickable
@@ -91,6 +93,7 @@ import android.content.ContextWrapper
 import com.chatforia.android.ads.InterstitialAdManager
 import com.chatforia.android.billing.PlanEntitlementsStore
 import com.chatforia.android.billing.resolveAiRewriteLevel
+import com.chatforia.android.auth.LANGUAGES
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -260,6 +263,12 @@ fun ChatThreadScreen(
     var voiceDraft by remember { mutableStateOf<VoiceNoteDraft?>(null) }
 
     val context = LocalContext.current
+    var typingLanguage by remember(context, currentUserId, conversation.kind, conversation.id) {
+        mutableStateOf(TypingLanguagePreferences.read(context, currentUserId, conversation))
+    }
+    var showTypingLanguages by remember(currentUserId, conversation.kind, conversation.id) {
+        mutableStateOf(false)
+    }
     val secureMedia = remember(context) {
         PrivateMediaUrlRepository(ApiClient(TokenStorage(context.applicationContext)))
     }
@@ -968,6 +977,61 @@ fun ChatThreadScreen(
                     )
                 }
 
+                Box {
+                    IconButton(
+                        onClick = { showTypingLanguages = true },
+                        enabled = currentUserId != null && conversation.id != null
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Default.Language,
+                                contentDescription = stringResource(R.string.android_chat_thread_typing_language) +
+                                    ": " + (typingLanguage?.let { code ->
+                                        LANGUAGES.firstOrNull { it.code == code }
+                                            ?.let { TypingLanguagePreferences.localizedName(context, it) }
+                                    } ?: stringResource(R.string.android_chat_thread_system_keyboard))
+                            )
+                            typingLanguage?.let {
+                                Text(it.uppercase(), style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                    }
+                    DropdownMenu(
+                        expanded = showTypingLanguages,
+                        onDismissRequest = { showTypingLanguages = false }
+                    ) {
+                        Text(
+                            stringResource(R.string.android_chat_thread_typing_language),
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.android_chat_thread_system_keyboard)) },
+                            trailingIcon = {
+                                if (typingLanguage == null) Icon(Icons.Default.Check, contentDescription = null)
+                            },
+                            onClick = {
+                                typingLanguage = null
+                                TypingLanguagePreferences.save(context, currentUserId, conversation, null)
+                                showTypingLanguages = false
+                            }
+                        )
+                        LANGUAGES.forEach { language ->
+                            DropdownMenuItem(
+                                text = { Text(TypingLanguagePreferences.localizedName(context, language)) },
+                                trailingIcon = {
+                                    if (typingLanguage == language.code) Icon(Icons.Default.Check, contentDescription = null)
+                                },
+                                onClick = {
+                                    typingLanguage = language.code
+                                    TypingLanguagePreferences.save(context, currentUserId, conversation, language.code)
+                                    showTypingLanguages = false
+                                }
+                            )
+                        }
+                    }
+                }
+
                 OutlinedTextField(
                     value = draft,
                     onValueChange = { draft = it },
@@ -996,7 +1060,8 @@ fun ChatThreadScreen(
                     shape = RoundedCornerShape(24.dp),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Send
+                        imeAction = ImeAction.Send,
+                        hintLocales = TypingLanguagePreferences.hintLocales(typingLanguage)
                     ),
                     keyboardActions = KeyboardActions(
                         onSend = {

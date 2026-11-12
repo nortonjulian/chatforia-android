@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Sekaseka diphakete tsa data tsa eSIM mme o laole ditiriso tsa wireless.</string>
     <string name="wireless_phone_number">Nomoro ya mogala</string>
     <string name="wireless_phone_number_description">Laola nomoro ya gago ya mogala ya Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Khiiboto ya tsamaiso (ga go na tlhagiso)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Tlhagiso ya puo ya go thaepa. Khiiboto ya gago e ka nna ya itlhokomolosa se o se ratang.</string>
 </resources>

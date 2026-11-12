@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">eSIM willay huñukunata qhaway hinaspa mana yawrayuq llamk\'aykunata kamachiy.</string>
     <string name="wireless_phone_number">Karu rimana yupay</string>
     <string name="wireless_phone_number_description">Chatforia telefonoyki yupayta kamachiy.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Sistema teclado (mana ima yuyaychaypas) .</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Qillqanapaq simi yuyaychay. Tecladoykiqa kay munasqaykita mana qhawanmanchu.</string>
 </resources>

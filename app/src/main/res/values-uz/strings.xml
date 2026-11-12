@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">eSIM ma\'lumot paketlarini ko\'rib chiqing va simsiz funksiyalarni boshqaring.</string>
     <string name="wireless_phone_number">Telefon raqami</string>
     <string name="wireless_phone_number_description">Chatforia telefon raqamingizni boshqaring.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Tizim klaviaturasi (maslahat yo\'q)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Yozish tili bo\'yicha maslahat. Klaviaturangiz bu parametrni e\'tiborsiz qoldirishi mumkin.</string>
 </resources>

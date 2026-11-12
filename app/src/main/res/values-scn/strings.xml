@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Sfogghia i pacchetti di dati eSIM e gestisci li funzioni senza fili.</string>
     <string name="wireless_phone_number">Nùmmaru di telefonu</string>
     <string name="wireless_phone_number_description">Gestisci u tò numaru di telefonu Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Tastiera di sistema (senza suggerimentu)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Suggirimentu pâ lingua di scrittura. La tastiera putissi ignurari sta prifirenza.</string>
 </resources>

@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Ehecha eSIM marandu vore ha emohenda umi mba\'e ndive\'ỹva.</string>
     <string name="wireless_phone_number">Pumbyry papaha</string>
     <string name="wireless_phone_number_description">Eisambyhy nde papaha Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Teclado sistema rehegua (ndaipóri pista) .</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Ñe’ẽ jehai ñe’ẽ’aty. Ikatu nde teclado omboyke ko preferencia.</string>
 </resources>

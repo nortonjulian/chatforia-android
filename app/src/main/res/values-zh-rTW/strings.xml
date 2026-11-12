@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">浏览 eSIM 数据包并管理无线功能。</string>
     <string name="wireless_phone_number">电话号码</string>
     <string name="wireless_phone_number_description">管理您的 Chatforia 电话号码。</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">系統鍵盤（無提示）</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">鍵入語言提示。您的鍵盤可能會忽略此首選項。</string>
 </resources>

@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Ṣawakiri awọn akopọ data eSIM ki o ṣakoso awọn ẹya alailowaya.</string>
     <string name="wireless_phone_number">Nomba fonu</string>
     <string name="wireless_phone_number_description">Ṣakoso nọmba foonu Chatforia rẹ.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Àtẹ bọ́tìnnì ètò (kò sí ìtọ́kasí)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Titẹ awọn ofiri ede. Àtẹ bọ́tìnnì rẹ le kọbi ara sí àyàn yìí.</string>
 </resources>

@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Browse eSIM ya data diphuthelwana le laola dikarolo waelese.</string>
     <string name="wireless_phone_number">Nomoro ya mogala</string>
     <string name="wireless_phone_number_description">Laola nomoro ya gago ya mogala ya Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Khibote ya tshepedišo (ga go na tšhupetšo) .</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Tšhišinyo ya polelo ya go thaepa. Keyboard ya gago e ka hlokomologa kgetho ye.</string>
 </resources>

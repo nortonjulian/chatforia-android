@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Դիտեք eSIM տվյալների փաթեթները և կառավարեք անլար հնարավորությունները։</string>
     <string name="wireless_phone_number">Հեռախոսի համարը</string>
     <string name="wireless_phone_number_description">Կառավարեք ձեր Chatforia հեռախոսահամարը։</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Համակարգի ստեղնաշար (առանց ակնարկի)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Մուտքագրման լեզվի հուշում: Ձեր ստեղնաշարը կարող է անտեսել այս նախապատվությունը:</string>
 </resources>

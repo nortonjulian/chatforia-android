@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">ናይ ኢሲም ዳታ ፓክስ ምድህሳስን ገመድ ኣልቦ ባህርያት ምምሕዳርን።</string>
     <string name="wireless_phone_number">ቁጽሪ ተሌፎን።</string>
     <string name="wireless_phone_number_description">ቁጽሪ ተሌፎን ቻትፎርያኻ ኣመሓድር።</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">ስርዓት ቁልፊ ሰሌዳ (ምልክት የለን)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">ናይ ምጽሓፍ ቋንቋ ምልክት። ቁልፊ ሰሌዳኻ ነዚ ምርጫ ሸለል ክብሎ ይኽእል እዩ።</string>
 </resources>

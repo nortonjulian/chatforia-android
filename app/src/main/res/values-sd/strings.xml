@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">eSIM ڊيٽا پيڪ براؤز ڪريو ۽ وائرليس فيچرز کي منظم ڪريو.</string>
     <string name="wireless_phone_number">فون نمبر</string>
     <string name="wireless_phone_number_description">پنهنجو چيٽفوريا فون نمبر منظم ڪريو.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">سسٽم ڪيبورڊ (نه اشارو)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">ٽائپنگ ٻولي اشارو. توھان جو ڪيبورڊ ھن ترجيح کي نظرانداز ڪري سگھي ٿو.</string>
 </resources>

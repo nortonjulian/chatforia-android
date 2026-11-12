@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Lelee ngwugwu data eSIM ma jikwaa atụmatụ enweghị eriri.</string>
     <string name="wireless_phone_number">Nọmba ekwentị</string>
     <string name="wireless_phone_number_description">Jikwaa nọmba ekwentị Chatforia gị.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Ahụigodo sistemu (enweghị ihe atụ)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Ịpị akara ngosi asụsụ. Ahụigodo gị nwere ike ileghara mmasị a anya.</string>
 </resources>

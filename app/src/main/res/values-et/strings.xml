@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Sirvige eSIM-andmepakette ja hallake traadita funktsioone.</string>
     <string name="wireless_phone_number">Telefoninumber</string>
     <string name="wireless_phone_number_description">Haldage oma Chatforia telefoninumbrit.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Süsteemi klaviatuur (pole vihje)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Tippimiskeele vihje. Teie klaviatuur võib seda eelistust ignoreerida.</string>
 </resources>

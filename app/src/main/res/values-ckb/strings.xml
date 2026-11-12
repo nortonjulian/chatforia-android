@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">پاکێجەکانی داتای eSIM وێڕا بکە و تایبەتمەندییە بێتەلەکان بەڕێوەبەرە.</string>
     <string name="wireless_phone_number">ژمارەی تەلەفۆن</string>
     <string name="wireless_phone_number_description">ژمارەی تەلەفۆنی چاتفۆریات بەڕێوەبەرە.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">کیبۆردێکی سیستەم (بێ ئاماژە)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">ئاماژەی زمانی تایپکردن. لەوانەیە کیبۆردەکەت ئەم هەڵبژاردنە پشتگوێ بخات.</string>
 </resources>

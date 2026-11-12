@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">בלעטערט eSIM דאַטן־פּאַקס און פאַרוואַלטן וויירלאָזע פֿעיִקייטן.</string>
     <string name="wireless_phone_number">טעלעפֿאָן־נומער</string>
     <string name="wireless_phone_number_description">פֿאַרוואַלטן אײַער טשאַטפֿאָריאַ טעלעפֿאָן־נומער.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">סיסטעם קלאַוויאַטור (קיין אָנצוהערעניש)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">טייפּינג שפּראַך אָנצוהערעניש. דיין קלאַוויאַטור קען איגנאָרירן דעם ייבערהאַנט.</string>
 </resources>

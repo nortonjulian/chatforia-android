@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Breathnaigh ar phacáistí sonraí eSIM agus bainistigh gnéithe gan sreang.</string>
     <string name="wireless_phone_number">Uimhir theileafóin</string>
     <string name="wireless_phone_number_description">Bainistigh d\'uimhir theileafóin Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Méarchlár córais (gan leid)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Leid teanga a chlóscríobh. Seans go ndéanfaidh do mhéarchlár neamhaird den rogha seo.</string>
 </resources>

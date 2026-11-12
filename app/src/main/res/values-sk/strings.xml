@@ -2968,4 +2968,8 @@
     <string name="wireless_esim_description">Prehľadávajte dátové balíky eSIM a spravujte bezdrôtové funkcie.</string>
     <string name="wireless_phone_number">Telefónne číslo</string>
     <string name="wireless_phone_number_description">Spravujte svoje telefónne číslo Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Systémová klávesnica (bez nápovedy)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Tip na písanie. Vaša klávesnica môže túto predvoľbu ignorovať.</string>
 </resources>

@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">ຊອກຫາຊຸດຂໍ້ມູນ eSIM ແລະ ຈັດການຄຸນສົມບັດໄຮ້ສາຍ.</string>
     <string name="wireless_phone_number">ເບີໂທລະສັບ</string>
     <string name="wireless_phone_number_description">ຈັດການເບີໂທລະສັບ Chatforia ຂອງທ່ານ.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">ແປ້ນພິມລະບົບ (ບໍ່ມີຄໍາແນະນໍາ)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">ການພິມພາສາຄໍາແນະນໍາ. ແປ້ນພິມຂອງທ່ານອາດບໍ່ສົນໃຈການຕັ້ງຄ່ານີ້.</string>
 </resources>

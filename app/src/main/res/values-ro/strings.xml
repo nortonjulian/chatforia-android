@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Răsfoiți pachetele de date eSIM și gestionați caracteristicile wireless.</string>
     <string name="wireless_phone_number">Număr de telefon</string>
     <string name="wireless_phone_number_description">Gestionați numărul dvs. de telefon Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Tastatură de sistem (fără indiciu)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Sugestie de limbă de tastare. Tastatura dvs. poate ignora această preferință.</string>
 </resources>

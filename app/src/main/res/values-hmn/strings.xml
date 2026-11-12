@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Xauj cov pob ntaub ntawv eSIM thiab tswj cov yam ntxwv wireless.</string>
     <string name="wireless_phone_number">Tus xov tooj</string>
     <string name="wireless_phone_number_description">Tswj koj tus xov tooj Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">System keyboard (tsis muaj lus qhia)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Lus qhia txog hom lus ntaus ntawv. Tej zaum koj cov keyboard yuav tsis quav ntsej qhov kev nyiam no.</string>
 </resources>

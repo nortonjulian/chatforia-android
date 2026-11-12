@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Blader door eSIM-datapakketten en beheer draadloze functies.</string>
     <string name="wireless_phone_number">Telefoonnummer</string>
     <string name="wireless_phone_number_description">Uw Chatforia-telefoonnummer beheren.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Systeemtoetsenbord (geen hint)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Tip voor het typen van taal. Het is mogelijk dat uw toetsenbord deze voorkeur negeert.</string>
 </resources>

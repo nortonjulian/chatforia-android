@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Skoðaðu eSIM gagnapakka og stjórnaðu þráðlausum eiginleikum.</string>
     <string name="wireless_phone_number">Símanúmer</string>
     <string name="wireless_phone_number_description">Stjórnaðu Chatforia símanúmerinu þínu.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Kerfislyklaborð (engin vísbending)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Vísbending um vélritun. Lyklaborðið þitt gæti hunsað þessa valkost.</string>
 </resources>

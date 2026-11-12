@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">eSIM datos paquetenaka uñakipaña ukat inalámbrico lurawinaka apnaqaña.</string>
     <string name="wireless_phone_number">Jaysawin jakhu</string>
     <string name="wireless_phone_number_description">Chatforia celular jakhumaru apnaqama.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Teclado del sistema (janiw kuna iwxt’as utjkiti) .</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Qillqañ aru iwxt’awi. Teclado ukax inas uka munañarux jan yäqkchiti.</string>
 </resources>

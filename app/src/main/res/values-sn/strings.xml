@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Tarisa ma eSIM data packs uye gadzirisa maficha asina waya.</string>
     <string name="wireless_phone_number">Nhamba yenhare</string>
     <string name="wireless_phone_number_description">Ronga nhamba yako yefoni yeChatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Sistimu kiyibhodhi (pasina mazano)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Kutaipa zano remutauro. Kiibhodhi yako inogona kufuratira sarudzo iyi.</string>
 </resources>

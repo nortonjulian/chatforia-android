@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">eSIM డేటా ప్యాక్‌లను బ్రౌజ్ చేయండి మరియు వైర్‌లెస్ ఫీచర్‌లను నిర్వహించండి.</string>
     <string name="wireless_phone_number">ఫోన్ నంబర్</string>
     <string name="wireless_phone_number_description">మీ చాట్‌ఫోరియా ఫోన్ నంబర్‌ను నిర్వహించండి.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">సిస్టమ్ కీబోర్డ్ (సూచన లేదు)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">టైపింగ్ భాష సూచన. మీ కీబోర్డ్ ఈ ప్రాధాన్యతను విస్మరించవచ్చు.</string>
 </resources>

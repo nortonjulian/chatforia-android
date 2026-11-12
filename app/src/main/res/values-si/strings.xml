@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">eSIM දත්ත ඇසුරුම් පිරික්සන්න සහ රැහැන් රහිත විශේෂාංග කළමනාකරණය කරන්න.</string>
     <string name="wireless_phone_number">දුරකථන අංකය</string>
     <string name="wireless_phone_number_description">ඔබේ Chatforia දුරකථන අංකය කළමනාකරණය කරන්න.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">පද්ධති යතුරු පුවරුව (ඉඟිය නැත)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">ටයිප් කිරීමේ භාෂා ඉඟිය. ඔබගේ යතුරු පුවරුව මෙම මනාපය නොසලකා හැරිය හැක.</string>
 </resources>

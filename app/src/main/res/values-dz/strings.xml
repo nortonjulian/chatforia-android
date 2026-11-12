@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">eSIM གནད་སྡུད་ཐུམ་སྒྲིལ་ཚུ་བརྡ་འཚོལ་འབད་དེ་ རྒྱུན་ཐག་མེད་པའི་ཁྱད་རྣམ་ཚུ་འཛིན་སྐྱོང་འཐབ།</string>
     <string name="wireless_phone_number">ཁ་པར་ཨང་གྲངས།</string>
     <string name="wireless_phone_number_description">ཁྱོད་རའི་ Chatforia ཁ་པར་ཨང་གྲངས་འཛིན་སྐྱོང་འཐབ།</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">རིམ་ལུགས་ལྡེ་སྒྲོམ་ (བརྡ་སྟོན་མེད།)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">ཡིག་དཔར་རྐྱབ་ནིའི་སྐད་ཡིག་བརྡ་སྟོན། ཁྱོད་ཀྱི་ལྡེ་སྒྲོམ་འདི་གིས་ དགའ་གདམ་འདི་སྣང་མེད་བཞག་འོང་།</string>
 </resources>

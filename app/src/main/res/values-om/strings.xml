@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Paakeejjii daataa eSIM sakatta\'i fi amaloota wayaarlesii bulchi.</string>
     <string name="wireless_phone_number">Lakkoofsa bilbilaa</string>
     <string name="wireless_phone_number_description">Lakkoofsa bilbilaa Chatforia kee bulchi.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Kiiboodii sirnaa (hint afaanii malee) .</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Afaan barreessuu akeekkachiisa. Kiiboodiin kee filannoo kana tuffachuu danda\'a.</string>
 </resources>

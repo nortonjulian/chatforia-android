@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Jelajahi paket data eSIM dan kelola fitur nirkabel.</string>
     <string name="wireless_phone_number">Nomor telepon</string>
     <string name="wireless_phone_number_description">Kelola nomor telepon Chatforia Anda.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Keyboard sistem (tidak ada petunjuk)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Petunjuk bahasa pengetikan. Keyboard Anda mungkin mengabaikan preferensi ini.</string>
 </resources>

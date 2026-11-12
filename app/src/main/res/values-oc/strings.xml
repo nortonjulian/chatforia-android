@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Exploratz los paquets de donadas eSIM e gerissètz las foncionalitats sens fial.</string>
     <string name="wireless_phone_number">Numèro de telefòn</string>
     <string name="wireless_phone_number_description">Gerir vòstre numèro de telefòn Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Clavièr sistèma (pas cap d\'entresenha)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Indici de lenga de mecanografia. Vòstre clavièr pòt ignorar aquesta preferéncia.</string>
 </resources>

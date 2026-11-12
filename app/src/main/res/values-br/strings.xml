@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Furchit e pakadoù roadennoù eSIM ha merit ar perzhioù hep fun.</string>
     <string name="wireless_phone_number">Niverenn bellgomz</string>
     <string name="wireless_phone_number_description">Merañ ho niverenn bellgomz Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Klavier ar reizhiad (netra da c\'houzout)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Kinnig yezh skrivañ. Marteze e vo lezet a-gostez an dibab-mañ gant ho klavier.</string>
 </resources>

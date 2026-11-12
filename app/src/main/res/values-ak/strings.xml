@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Browse eSIM data packs na hwɛ wireless nneɛma so.</string>
     <string name="wireless_phone_number">Telefon nɔma</string>
     <string name="wireless_phone_number_description">Hwɛ wo Chatforia telefon nɔma so.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">System keyboard (a kasa ho nkyerɛkyerɛmu biara nni mu) .</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Type kasa hint. Ebia wo keyboard no bebu n’ani agu saa apɛde yi so.</string>
 </resources>

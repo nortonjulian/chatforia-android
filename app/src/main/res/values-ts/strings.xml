@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Languta tiphakeji ta datha ta eSIM naswona u lawula swihlawulekisi swa wireless.</string>
     <string name="wireless_phone_number">Nomboro ya riqingho</string>
     <string name="wireless_phone_number_description">Lawula nomboro ya wena ya riqingho ya Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Xikhibhodi xa sisiteme (ku hava xitsundzuxo) .</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Xitsundzuxo xa ririmi xo thayipa. Khibhodi ya wena yi nga ha honisa ku tsakela loku.</string>
 </resources>

@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Pārlūkojiet eSIM datu paketes un pārvaldiet bezvadu funkcijas.</string>
     <string name="wireless_phone_number">Tālruņa numurs</string>
     <string name="wireless_phone_number_description">Pārvaldiet savu Chatforia tālruņa numuru.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Sistēmas tastatūra (bez mājiena)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Rakstīšanas valodas padoms. Jūsu tastatūra var ignorēt šo preferenci.</string>
 </resources>

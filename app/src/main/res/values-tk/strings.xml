@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">eSIM maglumat paketlerini gözden geçiriň we simsiz aýratynlyklary dolandyryň.</string>
     <string name="wireless_phone_number">Telefon belgisi</string>
     <string name="wireless_phone_number_description">Chatforia telefon nomeriňizi dolandryň.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Ulgam klawiaturasy (yşarat ýok)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Dil görkezmek. Klawiaturaňyz bu ileri tutmany äsgermezlik edip biler.</string>
 </resources>

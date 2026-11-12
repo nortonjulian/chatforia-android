@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Explora paquetes de datos eSIM e xestiona funcións sen fíos.</string>
     <string name="wireless_phone_number">Número de teléfono</string>
     <string name="wireless_phone_number_description">Xestiona o teu número de teléfono de Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Teclado do sistema (sen suxestión)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Suxestión de idioma para escribir. É posible que o teu teclado ignore esta preferencia.</string>
 </resources>

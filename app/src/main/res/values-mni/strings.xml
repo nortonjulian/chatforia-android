@@ -2968,4 +2968,8 @@
     <string name="wireless_esim_description">Browse eSIM data packs and manage wireless features.</string>
     <string name="wireless_phone_number">Phone number</string>
     <string name="wireless_phone_number_description">Manage your Chatforia phone number.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">ꯁꯤꯁ꯭ꯇꯦꯃꯒꯤ ꯀꯤꯕꯣꯔꯗ (ꯅꯣ ꯍꯤꯟꯇ)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">ꯇꯥꯏꯞ ꯇꯧꯕꯥ ꯂꯣꯂꯒꯤ ꯍꯤꯟꯇ꯫ ꯅꯍꯥꯛꯀꯤ ꯀꯤꯕꯣꯔꯗꯅꯥ ꯃꯁꯤꯒꯤ ꯄꯁꯟꯗ ꯑꯁꯤ ꯏꯒꯅꯣꯔ ꯇꯧꯕꯥ ꯌꯥꯏ꯫</string>
 </resources>

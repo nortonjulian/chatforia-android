@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">eSIM ડેટા પેક્સ બ્રાઉઝ કરો અને વાયરલેસ સુવિધાઓનું સંચાલન કરો.</string>
     <string name="wireless_phone_number">ફોન નંબર</string>
     <string name="wireless_phone_number_description">તમારો Chatforia ફોન નંબર સંચાલિત કરો.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">સિસ્ટમ કીબોર્ડ (કોઈ સંકેત નથી)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">ટાઈપિંગ ભાષા સંકેત. તમારું કીબોર્ડ આ પસંદગીને અવગણી શકે છે.</string>
 </resources>

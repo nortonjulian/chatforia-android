@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Gade pake done eSIM yo epi jere karakteristik san fil yo.</string>
     <string name="wireless_phone_number">Nimewo telefòn</string>
     <string name="wireless_phone_number_description">Jere nimewo telefòn Chatforia ou.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Klavye sistèm (pa gen okenn allusion)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Sijesyon lang tape. Klavye ou ka inyore preferans sa a.</string>
 </resources>

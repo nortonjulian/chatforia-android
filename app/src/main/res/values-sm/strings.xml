@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">Su\'esu\'e afifi fa\'amaumauga eSIM ma pulea foliga fa\'aeletoronika.</string>
     <string name="wireless_phone_number">Numera telefoni</string>
     <string name="wireless_phone_number_description">Pulea lau numera telefoni a Chatforia.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Pisi komepiuta (leai se fa\'ailoga)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Fa\'ata\'ita\'iga o le gagana ta\'i. E ono le amana\'ia e lau piano lea mea e fiafia i ai.</string>
 </resources>

@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">އީސިމް ޑޭޓާ ޕެކްތައް ބްރައުޒްކޮށް ވައިލެސް ފީޗާސް މެނޭޖްކުރުން.</string>
     <string name="wireless_phone_number">ފޯނު ނަންބަރެވެ</string>
     <string name="wireless_phone_number_description">ޗެޓްފޯރިއާ ފޯނު ނަންބަރު މެނޭޖް ކުރާށެވެ.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">ސިސްޓަމް ކީބޯޑް (ނޯ ހިންޓް)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">ޓައިޕިންގ ލޭންގުއޭޖް ހިންޓް. މި އިސްތިގުލާލަށް ތިބާގެ ކީބޯޑުން އަޅާނުލެވިދާނެއެވެ.</string>
 </resources>

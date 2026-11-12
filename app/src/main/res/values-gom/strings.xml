@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">ई-सिम डेटा पॅक्स पळयात आनी वायरलेस फिचर्स वेवस्थापीत करात।</string>
     <string name="wireless_phone_number">फोन नंबर</string>
     <string name="wireless_phone_number_description">तुमचो चॅटफोरिया फोन नंबर व्यवस्थापीत करात।</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">प्रणाली कीबोर्ड (कोनो संकेत ना)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">टायपिंग भास संकेत. तुमचो कीबोर्ड हे पसंतीकडेन दुर्लक्ष करूंक शकता.</string>
 </resources>

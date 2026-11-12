@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">eSIM ಡೇಟಾ ಪ್ಯಾಕ್‌ಗಳನ್ನು ಬ್ರೌಸ್ ಮಾಡಿ ಮತ್ತು ವೈರ್‌ಲೆಸ್ ವೈಶಿಷ್ಟ್ಯಗಳನ್ನು ನಿರ್ವಹಿಸಿ.</string>
     <string name="wireless_phone_number">ದೂರವಾಣಿ ಸಂಖ್ಯೆ</string>
     <string name="wireless_phone_number_description">ನಿಮ್ಮ Chatforia ಫೋನ್ ಸಂಖ್ಯೆಯನ್ನು ನಿರ್ವಹಿಸಿ.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">ಸಿಸ್ಟಮ್ ಕೀಬೋರ್ಡ್ (ಸುಳಿವು ಇಲ್ಲ)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">ಟೈಪಿಂಗ್ ಭಾಷೆಯ ಸುಳಿವು. ನಿಮ್ಮ ಕೀಬೋರ್ಡ್ ಈ ಆದ್ಯತೆಯನ್ನು ನಿರ್ಲಕ್ಷಿಸಬಹುದು.</string>
 </resources>

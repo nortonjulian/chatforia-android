@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">Khám phá các gói dữ liệu eSIM và quản lý các tính năng kết nối không dây.</string>
     <string name="wireless_phone_number">Số điện thoại</string>
     <string name="wireless_phone_number_description">Quản lý số điện thoại Chatforia của bạn.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Bàn phím hệ thống (không có gợi ý)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Gợi ý ngôn ngữ gõ. Bàn phím của bạn có thể bỏ qua tùy chọn này.</string>
 </resources>

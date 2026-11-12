@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="android_chat_thread_typing_language">Sugestão de idioma de escrita. O teclado pode ignorar esta preferência.</string>
+    <string name="android_chat_thread_system_keyboard">Teclado do sistema (sem sugestão)</string>
     <string name="app_name">Chatforia</string>
     <string name="a11y_skipToMain">Ir para o conteúdo principal</string>
     <string name="about_accessDesc">O Chatforia ajuda as pessoas a se conectarem em vários idiomas, dispositivos e fronteiras.</string>

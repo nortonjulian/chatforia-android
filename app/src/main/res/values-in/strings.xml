@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- AI-generated keyboard translation; unreviewed; legacy Android locale alias. -->
+    <string name="android_chat_thread_system_keyboard">Keyboard sistem (tidak ada petunjuk)</string>
+    <!-- AI-generated keyboard translation; unreviewed; legacy Android locale alias. -->
+    <string name="android_chat_thread_typing_language">Petunjuk bahasa pengetikan. Keyboard Anda mungkin mengabaikan preferensi ini.</string>
+</resources>

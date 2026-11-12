@@ -3320,4 +3320,8 @@
     <string name="wireless_esim_description">eSIM дата багцуудыг үзэж, утасгүй функцуудыг удирдаарай.</string>
     <string name="wireless_phone_number">Утасны дугаар</string>
     <string name="wireless_phone_number_description">Chatforia утасны дугаараа удирдаарай.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">Системийн гар (санавар байхгүй)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">Бичих хэлний зөвлөгөө. Таны гар энэ тохиргоог үл тоомсорлож магадгүй.</string>
 </resources>

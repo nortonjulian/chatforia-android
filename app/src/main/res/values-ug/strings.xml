@@ -2808,4 +2808,8 @@
     <string name="wireless_esim_description">eSIM سانلىق مەلۇمات بوغچىلىرىنى كۆرۈڭ ۋە سىمسىز ئىقتىدارلارنى باشقۇرۇڭ.</string>
     <string name="wireless_phone_number">تېلېفون نومۇرى</string>
     <string name="wireless_phone_number_description">Chatforia تېلېفون نومۇرىڭىزنى باشقۇرۇڭ.</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_system_keyboard">سىستېما كۇنۇپكا تاختىسى (ھېچقانداق كۆرسەتمە يوق)</string>
+    <!-- AI-generated keyboard translation; unreviewed. -->
+    <string name="android_chat_thread_typing_language">خەت يېزىش. كۇنۇپكا تاختىڭىز بۇ مايىللىقنى نەزەردىن ساقىت قىلىشى مۇمكىن.</string>
 </resources>
