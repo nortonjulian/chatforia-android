@@ -986,7 +986,10 @@ fun ChatThreadScreen(
                             Icon(
                                 imageVector = Icons.Default.Language,
                                 contentDescription = stringResource(R.string.android_chat_thread_typing_language) +
-                                    ": " + (typingLanguage ?: stringResource(R.string.android_chat_thread_system_keyboard))
+                                    ": " + (typingLanguage?.let { code ->
+                                        LANGUAGES.firstOrNull { it.code == code }
+                                            ?.let { TypingLanguagePreferences.localizedName(context, it) }
+                                    } ?: stringResource(R.string.android_chat_thread_system_keyboard))
                             )
                             typingLanguage?.let {
                                 Text(it.uppercase(), style = MaterialTheme.typography.labelSmall)
