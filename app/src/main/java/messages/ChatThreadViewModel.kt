@@ -53,6 +53,10 @@ class ChatThreadViewModel(
 
     private val messageStore = MessageStore()
 
+    fun pruneExpiredMessages(now: Instant = Instant.now()) {
+        messageStore.pruneExpired(now)
+    }
+
     private val analytics: AnalyticsTracker = AnalyticsManager
 
     private val messageDecryptor: DisplayMessageDecryptor by lazy {
@@ -83,6 +87,9 @@ class ChatThreadViewModel(
 
     private val _smsMessages = MutableStateFlow<List<SmsMessageDto>>(emptyList())
     val smsMessages: StateFlow<List<SmsMessageDto>> = _smsMessages
+
+    private val _loadedSmsThreadId = MutableStateFlow<Int?>(null)
+    val loadedSmsThreadId: StateFlow<Int?> = _loadedSmsThreadId
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
@@ -158,6 +165,8 @@ class ChatThreadViewModel(
     private var activeHistoryRoomId: Int? = null
     private var historyLoadGeneration = 0L
     private var activeSmsThreadId: Int? = null
+    private var smsLoadGeneration = 0L
+    private var smsEventsDuringLoad: MutableList<SmsMessageDto>? = null
     private var smsRealtimeConnected = false
     private var realtimeCollectorsStarted = false
 
@@ -268,7 +277,7 @@ class ChatThreadViewModel(
             socketManager.messageExpired.collect { payloadJson ->
                 val activeRoomId = activeRealtimeRoomId ?: return@collect
 
-                applyDeletedOrExpiredPayload(
+                applyExpiredPayload(
                     payloadJson = payloadJson,
                     roomId = activeRoomId
                 )
@@ -288,6 +297,12 @@ class ChatThreadViewModel(
         smsRealtimeConnected = true
 
         viewModelScope.launch {
+            socketManager.socketConnected.collect {
+                activeSmsThreadId?.let(::loadSmsThread)
+            }
+        }
+
+        viewModelScope.launch {
             socketManager.smsMessages.collect { smsJson ->
                 try {
                     val event =
@@ -297,6 +312,7 @@ class ChatThreadViewModel(
                         return@collect
                     }
 
+                    smsEventsDuringLoad?.add(event.message)
                     mergeIncomingSms(event.message)
                 } catch (e: Exception) {
                     println("❌ Failed to decode sms:message:new ${e.message}")
@@ -351,6 +367,7 @@ class ChatThreadViewModel(
                             currentUserId = currentUserId
                         )
                     }
+                    .filterNot { it.isExpired() }
                     .sortedWith(messageSorter())
 
                 // Ignore a response for a conversation that is no
@@ -415,6 +432,7 @@ class ChatThreadViewModel(
                                         currentUserId = currentUserId
                                     )
                                 }
+                                .filterNot { it.isExpired() }
 
                             // A background delta request must not update
                             // a conversation that is no longer active.
@@ -460,10 +478,46 @@ class ChatThreadViewModel(
         }
     }
 
+    suspend fun acknowledgeVisibleSms(
+        threadId: Int,
+        messageIds: List<Int>
+    ) {
+        if (threadId <= 0 || messageIds.isEmpty()) return
+        if (activeSmsThreadId != threadId) return
+        if (_loadedSmsThreadId.value != threadId) return
+
+        val distinctIds = messageIds.distinct()
+        if (distinctIds.size > 100 || distinctIds.any { it <= 0 }) return
+        val loadedIncomingIds =
+            _smsMessages.value.filter { message ->
+                    message.threadId?.let { it == threadId } != false &&
+                    !message.isOutgoing
+            }.map { it.id }.toSet()
+
+        if (distinctIds.any { it !in loadedIncomingIds }) return
+
+        repository.acknowledgeSmsRead(
+            threadId = threadId,
+            messageIds = distinctIds
+        )
+    }
+
+    fun deactivateSmsThread(threadId: Int) {
+        if (activeSmsThreadId != threadId) return
+
+        activeSmsThreadId = null
+        smsLoadGeneration++
+        smsEventsDuringLoad = null
+        _loadedSmsThreadId.value = null
+    }
+
     private var lastLoadedSmsThreadId: Int? = null
 
     fun loadSmsThread(threadId: Int) {
         activeSmsThreadId = threadId
+        val generation = ++smsLoadGeneration
+        smsEventsDuringLoad = mutableListOf()
+        _loadedSmsThreadId.value = null
 
         viewModelScope.launch {
             _isLoading.value = lastLoadedSmsThreadId != threadId
@@ -471,18 +525,23 @@ class ChatThreadViewModel(
 
             try {
                 val thread = repository.loadSmsThread(threadId)
-                if (activeSmsThreadId != threadId) return@launch
+                if (activeSmsThreadId != threadId || generation != smsLoadGeneration) return@launch
 
                 _smsMessages.value = thread.sortedMessages
+                val liveEvents = smsEventsDuringLoad.orEmpty()
+                smsEventsDuringLoad = null
+                liveEvents.forEach(::mergeIncomingSms)
                 lastLoadedSmsThreadId = threadId
+                _loadedSmsThreadId.value = threadId
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
-                if (activeSmsThreadId == threadId) {
+                if (activeSmsThreadId == threadId && generation == smsLoadGeneration) {
                     _error.value = e.message ?: "Failed to load SMS thread."
                 }
             } finally {
-                if (activeSmsThreadId == threadId) {
+                if (activeSmsThreadId == threadId && generation == smsLoadGeneration) {
+                    smsEventsDuringLoad = null
                     _isLoading.value = false
                 }
             }
@@ -1212,6 +1271,19 @@ class ChatThreadViewModel(
         }
     }
 
+    private fun applyExpiredPayload(payloadJson: String, roomId: Int) {
+        try {
+            val payload = json.decodeFromString<MessageLifecyclePayload>(payloadJson)
+            if ((payload.chatRoomId ?: payload.roomId) != roomId) return
+            val id = payload.id ?: payload.messageId ?: return
+            if (id > 0 && isElapsedDeadline(payload.expiresAt)) {
+                messageStore.expire(id)
+            }
+        } catch (e: Exception) {
+            println("❌ Failed to decode message expiry payload: ${e.message}")
+        }
+    }
+
     private fun reconcileSentSms(
         optimisticMessageId: Int,
         response: SendSmsResponse
@@ -1292,6 +1364,17 @@ class ChatThreadViewModel(
         if (index >= 0) {
             val existing = current[index]
 
+            if (existing.id == incoming.id && !existing.optimistic) {
+                val existingRevision = runCatching {
+                    Instant.parse(existing.editedAt ?: existing.createdAt)
+                }.getOrNull()
+                val incomingRevision = runCatching {
+                    Instant.parse(incoming.editedAt ?: incoming.createdAt)
+                }.getOrNull()
+                if (existingRevision != null && incomingRevision != null &&
+                    incomingRevision.isBefore(existingRevision)) return
+            }
+
             current[index] = existing.copy(
                 id = if (incoming.id > 0) incoming.id else existing.id,
                 threadId = incoming.threadId ?: existing.threadId,
@@ -1358,7 +1441,10 @@ class ChatThreadViewModel(
                 if (message.id > 0) message.id else null
             }
             .maxOrNull()
-            ?: return
+        if (highestId == null) {
+            loadMessages(roomId = roomId, currentUserId = currentUserId)
+            return
+        }
 
         val deltas = repository
             .loadDeltas(
@@ -1371,6 +1457,7 @@ class ChatThreadViewModel(
                     currentUserId = currentUserId
                 )
             }
+            .filterNot { it.isExpired() }
 
         deltas.forEach { incoming ->
             messageStore.upsert(incoming)
@@ -1412,7 +1499,8 @@ data class MessageLifecyclePayload(
     val messageId: Int? = null,
     val chatRoomId: Int? = null,
     val roomId: Int? = null,
-    val deletedAt: String? = null
+    val deletedAt: String? = null,
+    val expiresAt: String? = null
 )
 
 @Serializable

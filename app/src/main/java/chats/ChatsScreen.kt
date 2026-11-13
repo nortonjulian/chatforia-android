@@ -47,6 +47,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.delay
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.chatforia.android.random.RandomChatViewModel
 import com.chatforia.android.random.RandomMatchingView
@@ -107,6 +108,13 @@ fun ChatsScreen(
 
     var selectedConversation by remember {
         mutableStateOf<ConversationDto?>(null)
+    }
+
+    LaunchedEffect(viewModel) {
+        while (true) {
+            viewModel.pruneExpiredPreviews()
+            delay(1_000)
+        }
     }
 
     LaunchedEffect(selectedConversation != null) {

@@ -172,6 +172,64 @@ class MessagesRepositoryTest {
     }
 
     @Test
+    fun acknowledgeSmsRead_postsDistinctVisibleIncomingMessageIds() =
+        runTest {
+            val api = FakeApiTransport()
+            api.enqueueResponse("{\"ok\":true}")
+
+            val repository = MessagesRepository(
+                apiClient = api,
+                ioDispatcher = UnconfinedTestDispatcher(testScheduler)
+            )
+
+            repository.acknowledgeSmsRead(
+                threadId = 67,
+                messageIds = listOf(123, 124, 123)
+            )
+
+            val request = api.requests.single()
+
+            assertEquals("sms/threads/67/read", request.path)
+            assertEquals(HttpMethod.POST, request.method)
+            assertTrue(request.requiresAuth)
+
+            val body = parseBody(request)
+            assertEquals(
+                listOf(123, 124),
+                body["messageIds"]?.jsonArray?.map { it.jsonPrimitive.int }
+            )
+            assertEquals(setOf("messageIds"), body.keys)
+        }
+
+    @Test
+    fun acknowledgeSmsRead_rejectsInvalidIdsWithoutNetworkRequest() =
+        runTest {
+            val api = FakeApiTransport()
+            val repository = MessagesRepository(
+                apiClient = api,
+                ioDispatcher = UnconfinedTestDispatcher(testScheduler)
+            )
+
+            var rejectedThread = false
+            try {
+                repository.acknowledgeSmsRead(0, listOf(123))
+            } catch (_: IllegalArgumentException) {
+                rejectedThread = true
+            }
+
+            var rejectedMessage = false
+            try {
+                repository.acknowledgeSmsRead(67, listOf(0))
+            } catch (_: IllegalArgumentException) {
+                rejectedMessage = true
+            }
+
+            assertTrue(rejectedThread)
+            assertTrue(rejectedMessage)
+            assertTrue(api.requests.isEmpty())
+        }
+
+    @Test
     fun markReadBulk_doesNothingWhenIdsAreEmpty() {
         runTest {
             val api = FakeApiTransport()

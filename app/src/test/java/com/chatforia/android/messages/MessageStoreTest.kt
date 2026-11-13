@@ -5,8 +5,33 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.Instant
 
 class MessageStoreTest {
+
+    @Test
+    fun expiredHistoryAndReconnectUpsertsNeverReturn() {
+        val store = MessageStore()
+        val expired = message(id = 400, text = "expired", expiresAt = "2020-01-01T00:00:00Z")
+        val live = message(id = 401, text = "live", expiresAt = "2099-01-01T00:00:00Z")
+        store.replaceRoomMessages(10, listOf(expired, live))
+        assertEquals(listOf(401), store.messages.value.map { it.id })
+        store.upsert(expired)
+        store.upsertMany(listOf(expired))
+        assertEquals(listOf(401), store.messages.value.map { it.id })
+    }
+
+    @Test
+    fun viewingDeadlinePrunesContentAndLateStaleUpsertCannotRestoreIt() {
+        val store = MessageStore()
+        val expiring = message(id = 402, text = "secret", expiresAt = "2099-01-01T00:00:00Z")
+        store.replaceAll(listOf(expiring))
+        assertEquals(1, store.messages.value.size)
+        store.pruneExpired(Instant.parse("2099-01-01T00:00:00Z"))
+        assertTrue(store.messages.value.isEmpty())
+        store.upsert(expiring.copy(expiresAt = null))
+        assertTrue(store.messages.value.isEmpty())
+    }
 
     @Test
     fun replaceAll_sortsMessagesByCreatedAtThenId() {
@@ -386,7 +411,8 @@ class MessageStoreTest {
         senderId: Int = 1,
         chatRoomId: Int? = 10,
         optimistic: Boolean = false,
-        failed: Boolean = false
+        failed: Boolean = false,
+        expiresAt: String? = null
     ): MessageDto {
         return MessageDto(
             id = id,
@@ -395,6 +421,7 @@ class MessageStoreTest {
             translatedForMe = null,
             decryptedContent = text,
             createdAt = createdAt,
+            expiresAt = expiresAt,
             sender = SenderDto(
                 id = senderId,
                 username = "user-$senderId"

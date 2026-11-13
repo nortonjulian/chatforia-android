@@ -63,6 +63,7 @@ class ComposeSmokeTest {
             MaterialTheme {
                 AccessibilitySettingsScreen(
                     state = SettingsUiState(),
+                    isPremium = false,
                     onBack = {},
                     onUpdate = {},
                     onSave = {},
@@ -91,7 +92,8 @@ class ComposeSmokeTest {
                     onToggleMute = {},
                     onToggleSpeaker = {},
                     onSendDigit = {},
-                    onEndCall = {}
+                    onEndCall = {},
+                    onAddParticipant = {}
                 )
             }
         }
