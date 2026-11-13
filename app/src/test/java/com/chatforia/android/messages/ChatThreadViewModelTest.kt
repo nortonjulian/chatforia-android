@@ -1167,6 +1167,168 @@ class ChatThreadViewModelTest {
         }
 
     @Test
+    fun smsRead_acknowledgesLoadedIncomingMessage() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            repository.smsThreadToLoad = SmsThreadDto(
+                id = 20,
+                messages = listOf(
+                    SmsMessageDto(
+                        id = 200,
+                        threadId = 20,
+                        direction = "in",
+                        createdAt = "2026-01-01T00:00:00Z"
+                    )
+                )
+            )
+
+            val viewModel = createViewModel(repository)
+            viewModel.loadSmsThread(20)
+            advanceUntilIdle()
+
+            assertEquals(20, viewModel.loadedSmsThreadId.value)
+
+            viewModel.acknowledgeVisibleSms(20, 200)
+
+            assertEquals(
+                listOf(20 to 200),
+                repository.smsReadAckCalls
+            )
+        }
+
+    @Test
+    fun smsRead_rejectsOutgoingAndUnloadedMessages() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            repository.smsThreadToLoad = SmsThreadDto(
+                id = 20,
+                messages = listOf(
+                    SmsMessageDto(
+                        id = 200,
+                        threadId = 20,
+                        direction = "in",
+                        createdAt = "2026-01-01T00:00:00Z"
+                    ),
+                    SmsMessageDto(
+                        id = 201,
+                        threadId = 20,
+                        direction = "out",
+                        createdAt = "2026-01-01T00:00:01Z"
+                    )
+                )
+            )
+
+            val viewModel = createViewModel(repository)
+
+            // Loading alone must not acknowledge anything.
+            viewModel.loadSmsThread(20)
+            advanceUntilIdle()
+
+            assertTrue(repository.smsReadAckCalls.isEmpty())
+
+            viewModel.acknowledgeVisibleSms(20, 201)
+            viewModel.acknowledgeVisibleSms(20, 999)
+            viewModel.acknowledgeVisibleSms(20, -1)
+            viewModel.acknowledgeVisibleSms(0, 200)
+
+            assertTrue(repository.smsReadAckCalls.isEmpty())
+        }
+
+    @Test
+    fun smsRead_rejectsPreviousThreadAfterSwitch() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+            repository.smsThreadToLoad = SmsThreadDto(
+                id = 20,
+                messages = listOf(
+                    SmsMessageDto(
+                        id = 200,
+                        threadId = 20,
+                        direction = "in",
+                        createdAt = "2026-01-01T00:00:00Z"
+                    )
+                )
+            )
+
+            val viewModel = createViewModel(repository)
+            viewModel.loadSmsThread(20)
+            advanceUntilIdle()
+
+            repository.smsThreadToLoad = SmsThreadDto(
+                id = 21,
+                messages = listOf(
+                    SmsMessageDto(
+                        id = 210,
+                        threadId = 21,
+                        direction = "in",
+                        createdAt = "2026-01-01T00:01:00Z"
+                    )
+                )
+            )
+
+            viewModel.loadSmsThread(21)
+
+            // The previous thread is invalidated immediately.
+            viewModel.acknowledgeVisibleSms(20, 200)
+            assertTrue(repository.smsReadAckCalls.isEmpty())
+
+            advanceUntilIdle()
+
+            viewModel.acknowledgeVisibleSms(20, 200)
+            viewModel.acknowledgeVisibleSms(21, 210)
+
+            assertEquals(
+                listOf(21 to 210),
+                repository.smsReadAckCalls
+            )
+        }
+
+    @Test
+    fun smsRead_deactivationPreventsAcknowledgmentUntilReopened() =
+        runTest(mainDispatcherRule.testDispatcher) {
+            val repository = FakeChatThreadRepository()
+
+            repository.smsThreadToLoad = SmsThreadDto(
+                id = 20,
+                messages = listOf(
+                    SmsMessageDto(
+                        id = 200,
+                        threadId = 20,
+                        direction = "in",
+                        createdAt = "2026-01-01T00:00:00Z"
+                    )
+                )
+            )
+
+            val viewModel = createViewModel(repository)
+
+            viewModel.loadSmsThread(20)
+            advanceUntilIdle()
+
+            assertEquals(20, viewModel.loadedSmsThreadId.value)
+
+            // Closing the conversation invalidates its read state.
+            viewModel.deactivateSmsThread(20)
+
+            assertEquals(null, viewModel.loadedSmsThreadId.value)
+
+            viewModel.acknowledgeVisibleSms(20, 200)
+
+            assertTrue(repository.smsReadAckCalls.isEmpty())
+
+            // Reopening must restore acknowledgment capability.
+            viewModel.loadSmsThread(20)
+            advanceUntilIdle()
+
+            viewModel.acknowledgeVisibleSms(20, 200)
+
+            assertEquals(
+                listOf(20 to 200),
+                repository.smsReadAckCalls
+            )
+        }
+
+    @Test
     fun smsRealtime_incomingMessageIsAdded() =
         runTest(mainDispatcherRule.testDispatcher) {
             val repository = FakeChatThreadRepository()
@@ -1403,6 +1565,7 @@ class ChatThreadViewModelTest {
         var sendSmsShouldFail = false
 
         val markReadCalls = mutableListOf<List<Int>>()
+        val smsReadAckCalls = mutableListOf<Pair<Int, Int>>()
         val loadDeltasCalls = mutableListOf<Pair<Int, Int>>()
         val deleteCalls = mutableListOf<Pair<Int, Boolean>>()
 
@@ -1435,6 +1598,13 @@ class ChatThreadViewModelTest {
             ids: List<Int>
         ) {
             markReadCalls.add(ids)
+        }
+
+        override suspend fun acknowledgeSmsRead(
+            threadId: Int,
+            messageId: Int
+        ) {
+            smsReadAckCalls.add(threadId to messageId)
         }
 
         override suspend fun loadDeltas(

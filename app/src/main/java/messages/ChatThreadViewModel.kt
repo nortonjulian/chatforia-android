@@ -84,6 +84,9 @@ class ChatThreadViewModel(
     private val _smsMessages = MutableStateFlow<List<SmsMessageDto>>(emptyList())
     val smsMessages: StateFlow<List<SmsMessageDto>> = _smsMessages
 
+    private val _loadedSmsThreadId = MutableStateFlow<Int?>(null)
+    val loadedSmsThreadId: StateFlow<Int?> = _loadedSmsThreadId
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
@@ -460,10 +463,41 @@ class ChatThreadViewModel(
         }
     }
 
+    suspend fun acknowledgeVisibleSms(
+        threadId: Int,
+        messageId: Int
+    ) {
+        if (threadId <= 0 || messageId <= 0) return
+        if (activeSmsThreadId != threadId) return
+        if (_loadedSmsThreadId.value != threadId) return
+
+        val incomingIsLoaded =
+            _smsMessages.value.any { message ->
+                message.id == messageId &&
+                    message.threadId?.let { it == threadId } != false &&
+                    !message.isOutgoing
+            }
+
+        if (!incomingIsLoaded) return
+
+        repository.acknowledgeSmsRead(
+            threadId = threadId,
+            messageId = messageId
+        )
+    }
+
+    fun deactivateSmsThread(threadId: Int) {
+        if (activeSmsThreadId != threadId) return
+
+        activeSmsThreadId = null
+        _loadedSmsThreadId.value = null
+    }
+
     private var lastLoadedSmsThreadId: Int? = null
 
     fun loadSmsThread(threadId: Int) {
         activeSmsThreadId = threadId
+        _loadedSmsThreadId.value = null
 
         viewModelScope.launch {
             _isLoading.value = lastLoadedSmsThreadId != threadId
@@ -475,6 +509,7 @@ class ChatThreadViewModel(
 
                 _smsMessages.value = thread.sortedMessages
                 lastLoadedSmsThreadId = threadId
+                _loadedSmsThreadId.value = threadId
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
