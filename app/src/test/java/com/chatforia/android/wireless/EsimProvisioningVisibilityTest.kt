@@ -48,4 +48,11 @@ class EsimProvisioningVisibilityTest {
             shouldShowEsimProvisioningDetails("PENDING")
         )
     }
+
+    @Test
+    fun unlimitedPackDoesNotDependOnZeroMbFields() {
+        assertTrue(isUnlimitedPack(true, null))
+        assertTrue(isUnlimitedPack(null, "chatforia_esim_global_unlimited_premium"))
+        assertFalse(isUnlimitedPack(false, "chatforia_esim_global_5_premium"))
+    }
 }

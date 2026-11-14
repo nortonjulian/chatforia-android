@@ -621,6 +621,9 @@ internal fun maskedEsimIccid(iccid: String?): String? =
     iccid?.trim()?.takeIf { it.length >= 4 }
         ?.let { "•••• •••• •••• ${it.takeLast(4)}" }
 
+internal fun isUnlimitedPack(unlimited: Boolean?, addonKind: String?): Boolean =
+    unlimited == true || addonKind?.contains("_unlimited", ignoreCase = true) == true
+
 @Composable
 private fun EsimActivationSheet(
     esim: EsimSubscriberDto,
@@ -656,7 +659,7 @@ private fun EsimActivationSheet(
                     "Open your phone’s SIM settings and choose to add an eSIM. " +
                         "If Android asks for carrier details, use the information below."
                 } else {
-                    "Your Chatforia eSIM is installed and your mobile service is active."
+                    "Your Chatforia data eSIM is installed and active."
                 },
             color = ChatforiaColors.secondaryText
         )
@@ -741,6 +744,26 @@ private fun EsimActivationSheet(
                 style = MaterialTheme.typography.bodyMedium
             )
         }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Text(
+            text = "For mobile data, select this eSIM in Settings > Network & internet > SIMs, " +
+                "enable data roaming for it, and leave network selection on Automatic. " +
+                "Keep your preferred SIM for ordinary cellular calls and texts.",
+            color = ChatforiaColors.secondaryText,
+            style = MaterialTheme.typography.bodySmall
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "If data still fails, check your pack and destination, then restart the phone. " +
+                "If an APN is requested, ask Chatforia support for the correct value. " +
+                "Chatforia calls and SMS use the app over an internet connection.",
+            color = ChatforiaColors.secondaryText,
+            style = MaterialTheme.typography.bodySmall
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -929,6 +952,33 @@ private fun UsageSection(
                 )
             }
 
+            status?.source != null &&
+                    isUnlimitedPack(status.source.unlimited, status.source.addonKind) -> {
+                Text(
+                    text = "Unlimited data",
+                    color = ChatforiaColors.primaryText,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Speed and fair-use terms depend on your data package.",
+                    color = ChatforiaColors.secondaryText,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                status.source.daysRemaining?.let {
+                    Text(
+                        text = "Expires in $it day${if (it == 1) "" else "s"}",
+                        color = ChatforiaColors.secondaryText
+                    )
+                }
+                if (status.queuedPacks.isNotEmpty()) {
+                    Text(
+                        text = "${status.queuedPacks.size} data pack${if (status.queuedPacks.size == 1) "" else "s"} queued",
+                        color = ChatforiaColors.secondaryText
+                    )
+                }
+            }
+
             status?.source?.totalDataMb != null &&
                     status.source.remainingDataMb != null &&
                     status.source.totalDataMb > 0 -> {
@@ -968,7 +1018,8 @@ private fun UsageSection(
                 status.queuedPacks.firstOrNull()?.let { queuedPack ->
                     val queuedRemaining = queuedPack.remainingDataMb
 
-                    if (queuedRemaining != null && queuedRemaining > 0) {
+                    if ((queuedRemaining != null && queuedRemaining > 0) ||
+                        isUnlimitedPack(queuedPack.unlimited, queuedPack.addonKind)) {
                         Spacer(modifier = Modifier.height(18.dp))
 
                         Text(
@@ -980,7 +1031,9 @@ private fun UsageSection(
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Text(
-                            text = "${formatGb(queuedRemaining)} · Queued",
+                            text = if (isUnlimitedPack(queuedPack.unlimited, queuedPack.addonKind))
+                                "Unlimited · Queued"
+                            else "${formatGb(queuedRemaining ?: 0)} · Queued",
                             color = ChatforiaColors.primaryText,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
@@ -1061,17 +1114,9 @@ private fun PackListSection(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                FeatureRow(
-                    stringResource(
-                        R.string.android_wireless_activates_automatically_on_first_data_connection
-                    )
-                )
+                FeatureRow("Install the eSIM to activate data service")
 
-                FeatureRow(
-                    stringResource(
-                        R.string.android_wireless_valid_for_30_days_from_first_data_connection
-                    )
-                )
+                FeatureRow("Valid for 30 days; check your pack expiry after purchase")
 
                 FeatureRow(
                     stringResource(
@@ -1141,7 +1186,7 @@ private fun packsFor(
 ): List<DataPackOption> {
     return when (scope) {
         EsimScope.LOCAL -> listOf(
-            DataPackOption("chatforia_esim_local_unlimited_premium", scope, "Local Unlimited", "Unlimited", "$59.99", "Best for heavy usage, streaming, and never worrying about data limits.", "US"),
+            DataPackOption("chatforia_esim_local_unlimited_premium", scope, "Local Unlimited", "Unlimited", "$59.99", "For heavy use in supported destinations; speed terms depend on the data package.", "US"),
             DataPackOption("chatforia_esim_local_3_premium", scope, "Local 3GB", "3 GB", "$9.99", "Perfect for short trips and light browsing.", "US"),
             DataPackOption("chatforia_esim_local_5_premium", scope, "Local 5GB", "5 GB", "$14.99", "Great for travel, messaging, maps, and everyday use.", "US"),
             DataPackOption("chatforia_esim_local_10_premium", scope, "Local 10GB", "10 GB", "$24.99", "Ideal for heavier travel usage and streaming.", "US"),
@@ -1149,17 +1194,17 @@ private fun packsFor(
         )
 
         EsimScope.EUROPE -> listOf(
-            DataPackOption("chatforia_esim_europe_unlimited_premium", scope, "Europe Unlimited", "Unlimited", "$69.99", "Best for heavy usage, streaming, and never worrying about data limits.", "EU"),
+            DataPackOption("chatforia_esim_europe_unlimited_premium", scope, "Europe Unlimited", "Unlimited", "$69.99", "For heavy use in supported destinations; speed terms depend on the data package.", "EU"),
             DataPackOption("chatforia_esim_europe_3_premium", scope, "Europe 3GB", "3 GB", "$12.99", "Light browsing and messaging across Europe.", "EU"),
             DataPackOption("chatforia_esim_europe_5_premium", scope, "Europe 5GB", "5 GB", "$19.99", "Great for maps, messaging, and travel.", "EU"),
             DataPackOption("chatforia_esim_europe_10_premium", scope, "Europe 10GB", "10 GB", "$32.99", "More room for streaming and longer trips.", "EU"),
-            DataPackOption("chatforia_esim_europe_20_premium", scope, "Europe 20GB", "20 GB", "$49.99", "Maximum Europe coverage for heavy usage.", "EU")
+            DataPackOption("chatforia_esim_europe_20_premium", scope, "Europe 20GB", "20 GB", "$49.99", "More data for extended trips in supported European destinations.", "EU")
         )
 
         EsimScope.GLOBAL -> listOf(
-            DataPackOption("chatforia_esim_global_unlimited_premium", scope, "Global Unlimited", "Unlimited", "$79.99", "Best for heavy usage, streaming, and never worrying about data limits.", "GLOBAL"),
+            DataPackOption("chatforia_esim_global_unlimited_premium", scope, "Global Unlimited", "Unlimited", "$79.99", "For heavy use in supported destinations; speed terms depend on the data package.", "GLOBAL"),
             DataPackOption("chatforia_esim_global_3_premium", scope, "Global 3GB", "3 GB", "$21.99", "Light global travel data.", "GLOBAL"),
-            DataPackOption("chatforia_esim_global_5_premium", scope, "Global 5GB", "5 GB", "$32.99", "Everyday travel coverage around the world.", "GLOBAL"),
+            DataPackOption("chatforia_esim_global_5_premium", scope, "Global 5GB", "5 GB", "$32.99", "Everyday travel data in supported global destinations.", "GLOBAL"),
             DataPackOption("chatforia_esim_global_10_premium", scope, "Global 10GB", "10 GB", "$49.99", "More data for extended global trips.", "GLOBAL")
         )
     }

@@ -19,6 +19,7 @@ data class WirelessStatusResponse(
 data class WirelessQueuedPackDto(
     val id: Int? = null,
     val addonKind: String? = null,
+    val unlimited: Boolean? = null,
     val totalDataMb: Int? = null,
     val remainingDataMb: Int? = null,
     val expiresAt: String? = null
@@ -29,6 +30,7 @@ data class WirelessStatusSourceDto(
     val type: String? = null,
     val id: Int? = null,
     val addonKind: String? = null,
+    val unlimited: Boolean? = null,
     val totalDataMb: Int? = null,
     val remainingDataMb: Int? = null,
     val expiresAt: String? = null,
