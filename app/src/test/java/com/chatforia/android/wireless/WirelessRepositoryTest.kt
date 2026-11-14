@@ -7,6 +7,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Test
 
 class WirelessRepositoryTest {
@@ -71,6 +72,108 @@ class WirelessRepositoryTest {
             assertEquals(HttpMethod.GET, request.method)
             assertTrue(request.requiresAuth)
         }
+
+    @Test
+    fun getPurchasedPackages_decodesAllStatesAndServerReplacementEligibility() = runTest {
+        val api = FakeApiTransport()
+        api.enqueueResponse(
+            """
+            {
+              "packages": [
+                {"id":42,"state":"EXPIRED","providerStatus":"ACTIVE","totalDataMb":3072,"remainingDataMb":3072,"paid":true,"expiresAt":"2026-11-13T03:33:20.000Z"},
+                {"id":43,"state":"AWAITING_ACTIVATION","providerStatus":"NOT_ACTIVE","totalDataMb":3072,"remainingDataMb":3072,"paid":true},
+                {"id":44,"state":"AWAITING_PROVISIONING","totalDataMb":3072,"remainingDataMb":3072,"paid":true},
+                {"id":45,"state":"ACTIVE","totalDataMb":5120,"remainingDataMb":4096,"paid":true},
+                {"id":46,"state":"TERMINATED","totalDataMb":3072,"remainingDataMb":0,"paid":true}
+              ],
+              "replacementEligibility": {
+                "eligible":false,
+                "purchaseId":null,
+                "reason":"Multiple or pending data packages may share this eSIM."
+              }
+            }
+            """.trimIndent()
+        )
+
+        val result = WirelessRepository(api).getPurchasedPackages()
+
+        assertEquals(listOf(42, 43, 44, 45, 46), result.packages.map { it.id })
+        assertEquals("NOT_ACTIVE", result.packages[1].providerStatus)
+        assertEquals(43, result.awaitingActivationPackages().single().id)
+        assertEquals(3072, result.packages[0].remainingDataMb)
+        assertNull(result.eligibleReplacementPurchaseId())
+        assertTrue(result.replacementEligibility?.reason?.contains("Multiple") == true)
+        assertEquals("api/wireless/purchases", api.requests.single().path)
+        assertEquals(HttpMethod.GET, api.requests.single().method)
+        assertTrue(api.requests.single().requiresAuth)
+    }
+
+    @Test
+    fun statusHistoryKeepsQueuedPurchaseWhenCurrentPackageExpires() {
+        val expired = WirelessStatusResponse(
+            mode = "INDIVIDUAL",
+            state = "EXPIRED",
+            expired = true,
+            source = WirelessStatusSourceDto(id = 42, remainingDataMb = 3072)
+        )
+        val history = WirelessPurchasesResponse(
+            packages = listOf(
+                WirelessPurchasedPackageDto(id = 42, state = "EXPIRED", remainingDataMb = 3072),
+                WirelessPurchasedPackageDto(id = 43, state = "AWAITING_ACTIVATION", remainingDataMb = 3072)
+            )
+        )
+
+        assertFalse(expired.hasUsableCurrentPack())
+        assertFalse(expired.canPresentCurrentPack(history))
+        assertEquals(43, history.awaitingActivationPackages().single().id)
+        assertEquals(2, history.packages.size)
+    }
+
+    @Test
+    fun replacementOnlyUsesExplicitBackendEligibility() {
+        val active = WirelessStatusResponse(
+            state = "OK",
+            source = WirelessStatusSourceDto(id = 42, remainingDataMb = 2048)
+        )
+        val multiple = WirelessPurchasesResponse(
+            replacementEligibility = EsimReplacementEligibilityDto(
+                eligible = false,
+                purchaseId = 42,
+                reason = "Multiple packages cannot be transferred."
+            )
+        )
+        val eligible = WirelessPurchasesResponse(
+            replacementEligibility = EsimReplacementEligibilityDto(
+                eligible = true,
+                purchaseId = 42
+            )
+        )
+
+        assertTrue(active.hasUsableCurrentPack())
+        assertTrue(active.canPresentCurrentPack(null))
+        assertFalse(
+            active.canPresentCurrentPack(
+                WirelessPurchasesResponse(
+                    packages = listOf(WirelessPurchasedPackageDto(id = 42, state = "EXPIRED"))
+                )
+            )
+        )
+        assertTrue(
+            active.canPresentCurrentPack(
+                WirelessPurchasesResponse(
+                    packages = listOf(WirelessPurchasedPackageDto(id = 42, state = "ACTIVE"))
+                )
+            )
+        )
+        assertNull(multiple.eligibleReplacementPurchaseId())
+        assertEquals(42, eligible.eligibleReplacementPurchaseId())
+        assertNull(WirelessPurchasesResponse().eligibleReplacementPurchaseId())
+        assertNull(
+            WirelessPurchasesResponse(
+                replacementEligibility = EsimReplacementEligibilityDto(true, 0)
+            ).eligibleReplacementPurchaseId()
+        )
+    }
 
     @Test
     fun replaceEsim_rejectsInvalidPurchaseIdBeforeNetworkCall() =

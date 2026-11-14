@@ -39,6 +39,18 @@ class WirelessRepository(
         }
     }
 
+    suspend fun getPurchasedPackages(): WirelessPurchasesResponse {
+        return withContext(Dispatchers.IO) {
+            send(
+                ApiRequest(
+                    path = "api/wireless/purchases",
+                    method = HttpMethod.GET,
+                    requiresAuth = true
+                )
+            )
+        }
+    }
+
     suspend fun getCurrentEsim(): CurrentEsimResponse {
         return withContext(Dispatchers.IO) {
             send(

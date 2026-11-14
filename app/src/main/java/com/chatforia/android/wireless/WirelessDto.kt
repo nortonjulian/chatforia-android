@@ -152,6 +152,57 @@ data class WirelessCheckoutPurchaseDto(
     val expiresAt: String? = null
 )
 
+@Serializable
+data class WirelessPurchasesResponse(
+    val packages: List<WirelessPurchasedPackageDto> = emptyList(),
+    val replacementEligibility: EsimReplacementEligibilityDto? = null
+)
+
+@Serializable
+data class WirelessPurchasedPackageDto(
+    val id: Int,
+    val addonKind: String? = null,
+    val state: String = "PROVIDER_UNVERIFIED",
+    val providerStatus: String? = null,
+    val unlimited: Boolean = false,
+    val totalDataMb: Int = 0,
+    val remainingDataMb: Int = 0,
+    val purchasedAt: String? = null,
+    val activatedAt: String? = null,
+    val expiresAt: String? = null,
+    val paid: Boolean = false
+)
+
+@Serializable
+data class EsimReplacementEligibilityDto(
+    val eligible: Boolean = false,
+    val purchaseId: Int? = null,
+    val reason: String? = null
+)
+
+internal fun WirelessStatusResponse.hasUsableCurrentPack(): Boolean =
+    source != null &&
+        expired != true &&
+        exhausted != true &&
+        state?.uppercase() in setOf("OK", "LOW")
+
+internal fun WirelessStatusResponse.canPresentCurrentPack(
+    purchases: WirelessPurchasesResponse?
+): Boolean {
+    if (!hasUsableCurrentPack()) return false
+    val recorded = purchases?.packages?.find { it.id == source?.id }
+    return recorded == null || recorded.state == "ACTIVE"
+}
+
+internal fun WirelessPurchasesResponse.eligibleReplacementPurchaseId(): Int? =
+    replacementEligibility
+        ?.takeIf { it.eligible }
+        ?.purchaseId
+        ?.takeIf { it > 0 }
+
+internal fun WirelessPurchasesResponse.awaitingActivationPackages(): List<WirelessPurchasedPackageDto> =
+    packages.filter { it.state == "AWAITING_ACTIVATION" }
+
 data class DataPackOption(
     val product: String,
     val scope: EsimScope,

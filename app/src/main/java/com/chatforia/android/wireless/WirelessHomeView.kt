@@ -33,6 +33,10 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import java.util.UUID
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,18 +57,20 @@ fun WirelessHomeView(
         }
 
     var selectedScope by remember { mutableStateOf(EsimScope.LOCAL) }
-    var status by remember { mutableStateOf<WirelessStatusResponse?>(null) }
-    var esim by remember { mutableStateOf<EsimSubscriberDto?>(null) }
-    var showEsimActivationSheet by remember { mutableStateOf(false) }
-    var showReplaceEsimConfirmation by remember { mutableStateOf(false) }
-    var isReplacingEsim by remember { mutableStateOf(false) }
-    var replacementError by remember { mutableStateOf<String?>(null) }
-    var replacementIdempotencyKey by remember { mutableStateOf<String?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
+    var status by remember(currentUserId) { mutableStateOf<WirelessStatusResponse?>(null) }
+    var esim by remember(currentUserId) { mutableStateOf<EsimSubscriberDto?>(null) }
+    var purchases by remember(currentUserId) { mutableStateOf<WirelessPurchasesResponse?>(null) }
+    var purchasesError by remember(currentUserId) { mutableStateOf(false) }
+    var showEsimActivationSheet by remember(currentUserId) { mutableStateOf(false) }
+    var showReplaceEsimConfirmation by remember(currentUserId) { mutableStateOf(false) }
+    var isReplacingEsim by remember(currentUserId) { mutableStateOf(false) }
+    var replacementError by remember(currentUserId) { mutableStateOf<String?>(null) }
+    var replacementIdempotencyKey by remember(currentUserId) { mutableStateOf<String?>(null) }
+    var isLoading by remember(currentUserId) { mutableStateOf(true) }
     var isPurchasing by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
+    var error by remember(currentUserId) { mutableStateOf<String?>(null) }
 
-    var pendingCheckout by remember {
+    var pendingCheckout by remember(currentUserId) {
         mutableStateOf(checkoutStore.load(currentUserId))
     }
 
@@ -139,9 +145,18 @@ fun WirelessHomeView(
                 esim = repository.getCurrentEsim().subscriber
             } catch (e: Exception) {
                 error = e.message ?: "Could not load wireless details."
-            } finally {
-                isLoading = false
             }
+
+            try {
+                purchases = repository.getPurchasedPackages()
+                purchasesError = false
+            } catch (_: Exception) {
+                // Fail closed: stale eligibility must never enable replacement.
+                purchases = null
+                purchasesError = true
+            }
+
+            isLoading = false
         }
     }
 
@@ -149,15 +164,10 @@ fun WirelessHomeView(
         reload()
     }
 
-    val canReplaceEsim =
-        esim != null &&
-            (status?.source?.id ?: 0) > 0 &&
-            status?.exhausted != true &&
-            status?.expired != true &&
-            status?.source?.remainingDataMb != 0 &&
-            status?.source?.addonKind
-                ?.uppercase()
-                ?.contains("UNLIMITED") != true
+    val replacementPurchaseId =
+        purchases?.eligibleReplacementPurchaseId()
+            ?.takeIf { esim?.status?.uppercase() == "ACTIVE" }
+    val canReplaceEsim = replacementPurchaseId != null
 
     val lifecycleOwner =
         LocalLifecycleOwner.current
@@ -246,7 +256,16 @@ fun WirelessHomeView(
         UsageSection(
             isLoading = isLoading,
             error = error,
-            status = status
+            status = status,
+            purchases = purchases
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        PurchasedPackagesSection(
+            packages = purchases?.packages,
+            isLoading = isLoading,
+            loadFailed = purchasesError
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -440,6 +459,14 @@ fun WirelessHomeView(
                 ) {
                     Text("Request eSIM for a new phone")
                 }
+            } else if (esim != null) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = purchases?.replacementEligibility?.reason
+                        ?: stringResource(R.string.esim_transfer_unavailable),
+                    color = ChatforiaColors.secondaryText,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
 
 //            Spacer(modifier = Modifier.height(10.dp))
@@ -500,8 +527,7 @@ fun WirelessHomeView(
                         }
 
                         val purchaseId =
-                            status?.source?.id
-                                ?.takeIf { it > 0 }
+                            replacementPurchaseId
                                 ?: return@TextButton
 
                         val key =
@@ -538,21 +564,25 @@ fun WirelessHomeView(
                                 // Re-read canonical state instead of
                                 // treating the replacement response as
                                 // the long-term subscriber state.
-                                status =
-                                    repository.getWirelessStatus()
+                                try {
+                                    status = repository.getWirelessStatus()
+                                    esim = repository.getCurrentEsim().subscriber
+                                    purchases = repository.getPurchasedPackages()
+                                    purchasesError = false
 
-                                esim =
-                                    repository.getCurrentEsim()
-                                        .subscriber
-
-                                if (esim != null) {
-                                    showEsimActivationSheet = true
-                                } else {
-                                    replacementError =
-                                        "Your replacement eSIM was created, " +
-                                            "but its installation details " +
-                                            "could not be loaded. Please try " +
-                                            "Manage Wireless again."
+                                    if (esim != null) {
+                                        showEsimActivationSheet = true
+                                    } else {
+                                        error = "Your replacement eSIM was created, " +
+                                            "but installation details could not be loaded. " +
+                                            "Please open Manage Wireless again."
+                                    }
+                                } catch (_: Exception) {
+                                    purchases = null
+                                    purchasesError = true
+                                    error = "Your replacement eSIM was created, " +
+                                        "but its latest details could not be loaded. " +
+                                        "Please open Manage Wireless again."
                                 }
                             } catch (e: Exception) {
                                 // Keep the idempotency key for this
@@ -659,7 +689,7 @@ private fun EsimActivationSheet(
                     "Open your phone’s SIM settings and choose to add an eSIM. " +
                         "If Android asks for carrier details, use the information below."
                 } else {
-                    "Your Chatforia data eSIM is installed and active."
+                    stringResource(R.string.esim_profile_active_subtitle)
                 },
             color = ChatforiaColors.secondaryText
         )
@@ -930,7 +960,8 @@ private fun EsimSection(
 private fun UsageSection(
     isLoading: Boolean,
     error: String?,
-    status: WirelessStatusResponse?
+    status: WirelessStatusResponse?,
+    purchases: WirelessPurchasesResponse?
 ) {
     ChatforiaSectionCard(title = stringResource(R.string.android_wireless_home_current_usage)) {
         when {
@@ -952,7 +983,8 @@ private fun UsageSection(
                 )
             }
 
-            status?.source != null &&
+            status?.canPresentCurrentPack(purchases) == true &&
+                status.source != null &&
                     isUnlimitedPack(status.source.unlimited, status.source.addonKind) -> {
                 Text(
                     text = "Unlimited data",
@@ -979,7 +1011,8 @@ private fun UsageSection(
                 }
             }
 
-            status?.source?.totalDataMb != null &&
+            status?.canPresentCurrentPack(purchases) == true &&
+                    status.source?.totalDataMb != null &&
                     status.source.remainingDataMb != null &&
                     status.source.totalDataMb > 0 -> {
                 val total = status.source.totalDataMb
@@ -1041,6 +1074,13 @@ private fun UsageSection(
                     }
                 }
 
+                status.queuedDataMb?.takeIf { it > 0 }?.let { queuedMb ->
+                    Text(
+                        text = stringResource(R.string.esim_queued_data_amount, formatGb(queuedMb)),
+                        color = ChatforiaColors.secondaryText
+                    )
+                }
+
                 status.totalAvailableDataMb?.let { totalAvailable ->
                     if (totalAvailable > remaining) {
                         Spacer(modifier = Modifier.height(18.dp))
@@ -1063,9 +1103,9 @@ private fun UsageSection(
                 }
             }
 
-            status?.mode == "NONE" -> {
+            status?.source != null || status?.mode == "NONE" -> {
                 Text(
-                    text = stringResource(R.string.android_wireless_home_no_active_data_pack_yet_buy_a_pack_below_to_star),
+                    text = stringResource(R.string.esim_no_active_data_pack),
                     color = ChatforiaColors.secondaryText
                 )
             }
@@ -1077,8 +1117,134 @@ private fun UsageSection(
                 )
             }
         }
+
+
+        if (status?.canPresentCurrentPack(purchases) != true) {
+            purchases?.awaitingActivationPackages()?.firstOrNull()?.let { next ->
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.esim_next_data_pack),
+                    color = ChatforiaColors.secondaryText,
+                    style = MaterialTheme.typography.labelLarge
+                )
+                Text(
+                    text = if (next.unlimited)
+                        stringResource(R.string.esim_unlimited_awaiting_activation)
+                    else
+                        stringResource(
+                            R.string.esim_amount_awaiting_activation,
+                            formatGb(next.remainingDataMb)
+                        ),
+                    color = ChatforiaColors.primaryText,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        }
     }
 }
+
+@Composable
+private fun PurchasedPackagesSection(
+    packages: List<WirelessPurchasedPackageDto>?,
+    isLoading: Boolean,
+    loadFailed: Boolean
+) {
+    ChatforiaSectionCard(title = stringResource(R.string.esim_purchased_data_packages)) {
+        when {
+            isLoading && packages == null -> Text(stringResource(R.string.esim_loading_purchases))
+            loadFailed -> Text(
+                stringResource(R.string.esim_purchases_load_failed),
+                color = MaterialTheme.colorScheme.error
+            )
+            packages.isNullOrEmpty() -> Text(stringResource(R.string.esim_no_purchases))
+            else -> packages.forEachIndexed { index, purchase ->
+                if (index > 0) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    HorizontalDivider()
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
+                Text(
+                    text = stringResource(R.string.esim_purchase_title, purchase.id),
+                    color = ChatforiaColors.primaryText,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = stringResource(purchaseStateLabelRes(purchase.state)),
+                    color = ChatforiaColors.secondaryText
+                )
+                purchaseScopeLabelRes(purchase.addonKind)?.let { scopeLabel ->
+                    Text(
+                        text = stringResource(R.string.esim_purchase_scope, stringResource(scopeLabel)),
+                        color = ChatforiaColors.secondaryText
+                    )
+                }
+                Text(
+                    text = if (purchase.unlimited)
+                        stringResource(R.string.esim_allowance_unlimited)
+                    else
+                        stringResource(R.string.esim_allowance_amount, formatGb(purchase.totalDataMb)),
+                    color = ChatforiaColors.secondaryText
+                )
+                if (!purchase.unlimited) {
+                    Text(
+                        text = stringResource(
+                            R.string.esim_recorded_remaining,
+                            formatGb(purchase.remainingDataMb)
+                        ),
+                        color = ChatforiaColors.secondaryText
+                    )
+                }
+                purchase.purchasedAt?.let {
+                    Text(
+                        text = stringResource(R.string.esim_purchased_at, formatPurchaseDate(it)),
+                        color = ChatforiaColors.secondaryText
+                    )
+                }
+                purchase.activatedAt?.let {
+                    Text(
+                        text = stringResource(R.string.esim_activated_at, formatPurchaseDate(it)),
+                        color = ChatforiaColors.secondaryText
+                    )
+                }
+                purchase.expiresAt?.let {
+                    Text(
+                        text = stringResource(R.string.esim_expires_at, formatPurchaseDate(it)),
+                        color = ChatforiaColors.secondaryText
+                    )
+                }
+            }
+        }
+    }
+}
+
+internal fun purchaseStateLabelRes(state: String): Int = when (state.uppercase()) {
+    "ACTIVE" -> R.string.esim_status_active
+    "AWAITING_ACTIVATION" -> R.string.esim_status_awaiting_activation
+    "AWAITING_PROVISIONING" -> R.string.esim_status_awaiting_provisioning
+    "PROVISIONING_NEEDS_REVIEW" -> R.string.esim_status_provisioning_needs_review
+    "PAYMENT_UNVERIFIED" -> R.string.esim_status_payment_unverified
+    "EXPIRED" -> R.string.esim_status_expired
+    "EXPIRY_NEEDS_REVIEW" -> R.string.esim_status_expiry_needs_review
+    "BALANCE_NEEDS_REVIEW" -> R.string.esim_status_balance_needs_review
+    "EXHAUSTED" -> R.string.esim_status_exhausted
+    "TERMINATED" -> R.string.esim_status_terminated
+    else -> R.string.esim_status_provider_unverified
+}
+
+internal fun purchaseScopeLabelRes(addonKind: String?): Int? = when {
+    addonKind?.contains("_esim_local_", ignoreCase = true) == true -> R.string.esim_scope_local
+    addonKind?.contains("_esim_europe_", ignoreCase = true) == true -> R.string.esim_scope_europe
+    addonKind?.contains("_esim_global_", ignoreCase = true) == true -> R.string.esim_scope_global
+    else -> null
+}
+
+internal fun formatPurchaseDate(value: String): String =
+    runCatching {
+        DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+            .format(Instant.parse(value).atZone(ZoneId.systemDefault()))
+    }.getOrDefault(value)
 
 @Composable
 private fun PackListSection(
