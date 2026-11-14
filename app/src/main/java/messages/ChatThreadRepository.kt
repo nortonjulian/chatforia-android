@@ -21,6 +21,11 @@ interface ChatThreadRepository : MessageQueueRepository {
         threadId: Int
     ): SmsThreadDto
 
+    suspend fun acknowledgeSmsRead(
+        threadId: Int,
+        messageIds: List<Int>
+    )
+
     suspend fun sendSms(
         to: String,
         body: String? = null,

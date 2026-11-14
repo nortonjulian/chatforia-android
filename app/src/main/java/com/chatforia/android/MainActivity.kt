@@ -1194,6 +1194,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            launch {
+                socketManager.messageExpired.collect { payloadJson ->
+                    chatsViewModel.applyRealtimeDeleteJson(payloadJson)
+                }
+            }
+
             // SMS realtime was wired to the open thread but not the Chats list.
             // Refresh from the canonical conversation API so preview text,
             // unread count, and ordering update without a manual refresh.

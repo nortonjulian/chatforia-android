@@ -68,6 +68,7 @@ data class ConversationAvatarUserDto(
 data class ConversationLastDto(
     val text: String? = null,
     val messageId: Int? = null,
+    val expiresAt: String? = null,
     val at: String? = null,
     val hasMedia: Boolean? = null,
     val mediaCount: Int? = null,

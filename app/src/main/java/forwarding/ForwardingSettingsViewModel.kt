@@ -6,6 +6,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.ZoneId
+
+private fun deviceIanaZone(): String {
+    val zone = ZoneId.systemDefault().id
+    return if (zone == "UTC" || zone == "GMT" || zone.contains('/')) zone else "UTC"
+}
 
 data class ForwardingSettingsState(
     val forwardingEnabledSms: Boolean = false,
@@ -17,6 +23,7 @@ data class ForwardingSettingsState(
     val forwardToPhoneE164: String = "",
     val forwardQuietHoursStart: Int? = null,
     val forwardQuietHoursEnd: Int? = null,
+    val forwardQuietHoursTimeZone: String = deviceIanaZone(),
 
     val initial: ForwardingSettingsDto = ForwardingSettingsDto(),
 
@@ -35,7 +42,8 @@ data class ForwardingSettingsState(
             forwardingEnabledCalls = forwardingEnabledCalls,
             forwardToPhoneE164 = forwardToPhoneE164,
             forwardQuietHoursStart = forwardQuietHoursStart,
-            forwardQuietHoursEnd = forwardQuietHoursEnd
+            forwardQuietHoursEnd = forwardQuietHoursEnd,
+            forwardQuietHoursTimeZone = forwardQuietHoursTimeZone.trim()
         )
 
     val hasChanges: Boolean
@@ -73,6 +81,16 @@ data class ForwardingSettingsState(
 
             if (quietStartInvalid || quietEndInvalid) {
                 errors["quiet"] = "Quiet hours must be between 0 and 23."
+            } else if ((forwardQuietHoursStart == null) != (forwardQuietHoursEnd == null)) {
+                errors["quiet"] = "Set both quiet hours or clear both."
+            } else if (forwardQuietHoursStart != null && forwardQuietHoursStart == forwardQuietHoursEnd) {
+                errors["quiet"] = "Quiet hours start and end must differ."
+            }
+            val zone = forwardQuietHoursTimeZone.trim()
+            if (zone.length > 64 ||
+                !Regex("^(UTC|GMT|[A-Za-z0-9._+-]+(/[A-Za-z0-9._+-]+)+)$").matches(zone) ||
+                runCatching { ZoneId.of(zone) }.isFailure) {
+                errors["timeZone"] = "Enter a valid IANA time zone, such as America/Denver."
             }
 
             return errors
@@ -83,7 +101,7 @@ data class ForwardingSettingsState(
 }
 
 class ForwardingSettingsViewModel(
-    private val repository: ForwardingSettingsRepository
+    private val repository: ForwardingSettingsStore
 ) : ViewModel() {
     private val _state = MutableStateFlow(ForwardingSettingsState())
     val state: StateFlow<ForwardingSettingsState> = _state
@@ -178,6 +196,7 @@ class ForwardingSettingsViewModel(
                 forwardToPhoneE164 = dto.forwardToPhoneE164,
                 forwardQuietHoursStart = dto.forwardQuietHoursStart,
                 forwardQuietHoursEnd = dto.forwardQuietHoursEnd,
+                forwardQuietHoursTimeZone = dto.forwardQuietHoursTimeZone ?: deviceIanaZone(),
                 initial = dto,
                 errorMessage = null
             )

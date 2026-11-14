@@ -3,12 +3,14 @@ package com.chatforia.android.messages
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import java.time.Instant
 
 class MessageStore {
     companion object {
         private val locallyRemovedMessageIds = mutableSetOf<Int>()
     }
     private val _messages = MutableStateFlow<List<MessageDto>>(emptyList())
+    private val expiredMessageIds = mutableSetOf<Int>()
     val messages: StateFlow<List<MessageDto>> = _messages
 
     private val _deliveryStates =
@@ -18,7 +20,7 @@ class MessageStore {
         _deliveryStates
 
     fun replaceAll(messages: List<MessageDto>) {
-        _messages.value = messages
+        _messages.value = activeMessages(messages)
             .filterNot { message ->
                 message.id > 0 &&
                         locallyRemovedMessageIds.contains(message.id)
@@ -31,7 +33,7 @@ class MessageStore {
         messages: List<MessageDto>
     ) {
         _messages.update { current ->
-            val loaded = messages.filterNot { message ->
+            val loaded = activeMessages(messages).filterNot { message ->
                 message.id > 0 &&
                     locallyRemovedMessageIds.contains(message.id)
             }
@@ -71,14 +73,19 @@ class MessageStore {
                 }
             }
 
-            (loaded + retained).dedupeAndSort()
+            activeMessages(loaded + retained).dedupeAndSort()
         }
     }
 
     fun upsert(message: MessageDto) {
+        if (message.isExpired()) {
+            if (message.id > 0) expiredMessageIds.add(message.id)
+            _messages.update { rows -> rows.filterNot { it.id == message.id } }
+            return
+        }
         if (
             message.id > 0 &&
-            locallyRemovedMessageIds.contains(message.id)
+            (locallyRemovedMessageIds.contains(message.id) || expiredMessageIds.contains(message.id))
         ) {
             return
         }
@@ -92,7 +99,7 @@ class MessageStore {
 
     fun upsertMany(messages: List<MessageDto>) {
         val filtered =
-            messages.filterNot { message ->
+            activeMessages(messages).filterNot { message ->
                 message.id > 0 &&
                         locallyRemovedMessageIds.contains(message.id)
             }
@@ -100,7 +107,7 @@ class MessageStore {
         if (filtered.isEmpty()) return
 
         _messages.update { current ->
-            var next = current
+            var next = current.filterNot { it.id > 0 && expiredMessageIds.contains(it.id) }
 
             filtered.forEach { message ->
                 next = next.upsertMessage(message)
@@ -140,6 +147,24 @@ class MessageStore {
                 message.id == messageId
             }
         }
+    }
+
+    fun expire(messageId: Int) {
+        if (messageId > 0) expiredMessageIds.add(messageId)
+        _messages.update { rows -> rows.filterNot { it.id == messageId } }
+    }
+
+    fun pruneExpired(now: Instant = Instant.now()) {
+        _messages.update { rows -> activeMessages(rows, now) }
+    }
+
+    private fun activeMessages(
+        rows: List<MessageDto>,
+        now: Instant = Instant.now()
+    ): List<MessageDto> = rows.filterNot { message ->
+        val expired = message.isExpired(now)
+        if (expired && message.id > 0) expiredMessageIds.add(message.id)
+        expired || (message.id > 0 && expiredMessageIds.contains(message.id))
     }
 
     fun upsertAck(
