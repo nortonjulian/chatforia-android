@@ -633,6 +633,13 @@ fun WirelessHomeView(
             ) {
                 EsimActivationSheet(
                     esim = currentEsim,
+                    replacementPurchaseId = replacementPurchaseId,
+                    replacementReason = purchases?.replacementEligibility?.reason,
+                    onRequestReplacement = {
+                        showEsimActivationSheet = false
+                        replacementError = null
+                        showReplaceEsimConfirmation = true
+                    },
                     onClose = {
                         showEsimActivationSheet = false
                     }
@@ -657,6 +664,9 @@ internal fun isUnlimitedPack(unlimited: Boolean?, addonKind: String?): Boolean =
 @Composable
 private fun EsimActivationSheet(
     esim: EsimSubscriberDto,
+    replacementPurchaseId: Int?,
+    replacementReason: String?,
+    onRequestReplacement: () -> Unit,
     onClose: () -> Unit
 ) {
     val clipboard = LocalClipboardManager.current
@@ -699,6 +709,30 @@ private fun EsimActivationSheet(
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "ICCID: $maskedIccid",
+                    color = ChatforiaColors.secondaryText,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+
+        if (esim.status?.uppercase() == "ACTIVE") {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.esim_transfer_title),
+                color = ChatforiaColors.primaryText,
+                style = MaterialTheme.typography.titleMedium
+            )
+            if (replacementPurchaseId != null) {
+                OutlinedButton(
+                    onClick = onRequestReplacement,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.esim_request_new_phone))
+                }
+            } else {
+                Text(
+                    text = replacementReason
+                        ?: stringResource(R.string.esim_transfer_unavailable),
                     color = ChatforiaColors.secondaryText,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -1202,15 +1236,29 @@ private fun PurchasedPackagesSection(
                         color = ChatforiaColors.secondaryText
                     )
                 }
-                purchase.activatedAt?.let {
+                if (purchase.activatedAt != null) {
                     Text(
-                        text = stringResource(R.string.esim_activated_at, formatPurchaseDate(it)),
+                        text = stringResource(
+                            R.string.esim_activated_at,
+                            formatPurchaseDate(purchase.activatedAt)
+                        ),
+                        color = ChatforiaColors.secondaryText
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.esim_activation_time_unknown),
                         color = ChatforiaColors.secondaryText
                     )
                 }
                 purchase.expiresAt?.let {
                     Text(
                         text = stringResource(R.string.esim_expires_at, formatPurchaseDate(it)),
+                        color = ChatforiaColors.secondaryText
+                    )
+                }
+                if (purchase.state == "EXPIRED") {
+                    Text(
+                        text = stringResource(R.string.esim_expired_balance_unavailable),
                         color = ChatforiaColors.secondaryText
                     )
                 }

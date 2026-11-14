@@ -3509,4 +3509,8 @@
     <string name="esim_amount_awaiting_activation">%1$s · Awaiting activation</string>
     <string name="esim_transfer_unavailable">eSIM transfer is unavailable until package eligibility can be confirmed.</string>
     <string name="esim_profile_active_subtitle">Your eSIM profile is active. Check Purchased Data Packages for each data pack status.</string>
+    <string name="esim_transfer_title">Move eSIM to a new phone</string>
+    <string name="esim_request_new_phone">Request eSIM for a new phone</string>
+    <string name="esim_activation_time_unknown">Package activation time not reported</string>
+    <string name="esim_expired_balance_unavailable">Unused data is unavailable after the recorded expiration.</string>
 </resources>
