@@ -135,6 +135,11 @@
 
         </service>
 
+        <activity
+            android:name=".LicenseReaderActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Chatforia.Licenses" />
+
     </application>
 
 </manifest>

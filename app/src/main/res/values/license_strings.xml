@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="open_source_licenses">Open Source Licenses</string>
+    <string name="license_back">Back</string>
+    <string name="license_intro">Third-party software notices included with this app. Select a library to read its notice.</string>
+    <string name="license_unavailable">Notices are unavailable in this build.</string>
+    <string name="license_link_explanation">This entry provides a license link. Opening it requires an internet connection.</string>
+    <string name="license_open_link">Open license website</string>
+    <string name="license_link_failed">Unable to open the link. You can copy the address above.</string>
+    <string name="technology_across_chatforia">Technology Across Chatforia</string>
+    <string name="this_app_licenses">This App’s Licenses</string>
+</resources>
