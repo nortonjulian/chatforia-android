@@ -27,6 +27,7 @@ import analytics.AnalyticsTracker
 @Composable
 fun PlanView(
     user: UserDto,
+    apiClient: com.chatforia.android.network.ApiClient,
     onBack: () -> Unit,
     onUpgrade: () -> Unit,
     analytics: AnalyticsTracker = AnalyticsManager
@@ -83,6 +84,8 @@ fun PlanView(
                 .padding(horizontal = 18.dp)
                 .padding(bottom = 28.dp)
         ) {
+            androidx.compose.runtime.key(user.id) { MonthlyUsageCard(apiClient) }
+            Spacer(modifier = Modifier.height(16.dp))
             ChatforiaSectionCard(title = stringResource(R.string.android_plan_my_plan)) {
                 Text(
                     text = stringResource(R.string.android_plan_current_plan),

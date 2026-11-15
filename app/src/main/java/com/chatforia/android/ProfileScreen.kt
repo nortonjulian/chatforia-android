@@ -384,6 +384,7 @@ fun ProfileScreen(
     if (showPlan) {
         PlanView(
             user = user,
+            apiClient = apiClient,
             onBack = { showPlan = false },
             onUpgrade = {
                 showPlan = false

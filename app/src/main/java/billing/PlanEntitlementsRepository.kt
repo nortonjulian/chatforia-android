@@ -38,6 +38,7 @@ data class PlanEntitlementsResponse(
     val plan: String,
     val entitlements: AppPlanEntitlementsSnapshot,
     val monthKey: String,
+    val resetAt: String? = null,
     val usage: Map<String, PlanUsageSnapshot>
 )
 
@@ -72,11 +73,11 @@ fun resolveAiRewriteLevel(
 class PlanEntitlementsRepository(
     private val apiClient: ApiClient
 ) {
-    suspend fun fetch(): PlanEntitlementsResponse =
+    suspend fun fetch(usageOnly: Boolean = false): PlanEntitlementsResponse =
         withContext(Dispatchers.IO) {
             apiClient.send(
                 ApiRequest(
-                    path = "premium/entitlements",
+                    path = if (usageOnly) "premium/usage" else "premium/entitlements",
                     method = HttpMethod.GET,
                     requiresAuth = true
                 )
