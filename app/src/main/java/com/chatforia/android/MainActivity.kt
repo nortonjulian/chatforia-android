@@ -24,6 +24,9 @@ import androidx.compose.runtime.*
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import androidx.compose.runtime.CompositionLocalProvider
+import com.chatforia.android.ui.theme.accessibilityFontScaleMultiplier
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.chatforia.android.ui.theme.ChatforiaTheme
@@ -740,6 +743,17 @@ class MainActivity : ComponentActivity() {
                                 activeTheme = theme
                             }
 
+                            // Preserve system font scaling and physical dp dimensions.
+                            val baseDensity = LocalDensity.current
+                            val multiplier = accessibilityFontScaleMultiplier(
+                                loggedInState.user.a11yUiFont
+                            )
+                            CompositionLocalProvider(
+                                LocalDensity provides Density(
+                                    density = baseDensity.density,
+                                    fontScale = baseDensity.fontScale * multiplier
+                                )
+                            ) {
                             ChatforiaApp(
                                 user = loggedInState.user,
                                 apiClient = apiClient,
@@ -774,6 +788,7 @@ class MainActivity : ComponentActivity() {
                                     authViewModel.logout()
                                 }
                             )
+                            }
                         }
 
                         is AuthState.NeedsKeyRestore -> {
