@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,8 +24,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chatforia.android.chats.StartChatViewModel
 import com.chatforia.android.ui.theme.ChatforiaColors
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import com.chatforia.android.contacts.ContactDto
 import androidx.compose.ui.res.stringResource
@@ -42,10 +43,22 @@ fun StartChatView(
                 state.isGroupMode ||
                 state.selectedContacts.isNotEmpty()
 
+    val scrollState = rememberScrollState()
+    // New search results should start at the top rather than an old scroll offset.
+    LaunchedEffect(state.username, state.isGroupMode) {
+        scrollState.scrollTo(0)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(ChatforiaColors.screenBackground)
+            // MainActivity uses adjustNothing for chat threads. This screen must
+            // account for the IME itself instead of letting it cover contacts.
+            .imePadding()
+            // When searching, make the *whole* form scrollable. A nested,
+            // height-capped LazyColumn leaves the contact rows below the IME.
+            .then(if (isSearching) Modifier.verticalScroll(scrollState) else Modifier)
             .padding(horizontal = 16.dp)
     ) {
         Row(
@@ -278,12 +291,10 @@ fun StartChatView(
                 modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
             )
 
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 320.dp)
-            ) {
-                items(state.contactResults) { contact ->
+            // Search returns at most 20 contacts; a simple Column avoids nested
+            // scroll containers and lets the whole screen scroll above the IME.
+            Column(modifier = Modifier.fillMaxWidth()) {
+                state.contactResults.forEach { contact ->
                     val contactUserId = contact.user?.id ?: contact.userId
 
                     val selected =
