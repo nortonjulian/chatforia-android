@@ -183,8 +183,10 @@ class NotificationCoordinator(
         val rawName =
             messageToneRawResourceName(filename)
 
+        val preferVibration =
+            AccessibilityAlertPreferences.vibrate(context)
         val channelId =
-            "chatforia_messages_v4_$rawName"
+            "chatforia_messages_v5_${rawName}_${if (preferVibration) "vib" else "quiet"}"
 
         if (manager.getNotificationChannel(channelId) == null) {
             val displayName =
@@ -196,7 +198,8 @@ class NotificationCoordinator(
                 createMessageChannel(
                     channelId = channelId,
                     filename = filename,
-                    channelName = "Messages – $displayName"
+                    channelName = "Messages – $displayName",
+                    vibrate = preferVibration
                 )
             )
         }
@@ -207,7 +210,8 @@ class NotificationCoordinator(
     private fun createMessageChannel(
         channelId: String,
         filename: String,
-        channelName: String
+        channelName: String,
+        vibrate: Boolean = false
     ): NotificationChannel {
         val rawName =
             messageToneRawResourceName(filename)
@@ -219,7 +223,7 @@ class NotificationCoordinator(
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = "New Chatforia message alerts"
-                enableVibration(true)
+                enableVibration(vibrate || rawName == "vibrate")
                 setShowBadge(true)
             }
 

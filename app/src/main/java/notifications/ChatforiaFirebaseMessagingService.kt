@@ -382,6 +382,17 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                     )
 
                     if (ChatforiaAppState.isInForeground) {
+                        // Optional additional visual cue; never show message
+                        // contents from E2EE push payloads.
+                        if (AccessibilityAlertPreferences.visual(applicationContext)) {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                android.widget.Toast.makeText(
+                                    applicationContext,
+                                    "New message",
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
                         Log.d(
                             "ChatforiaFCM",
                             "App is foreground; playing selected Chatforia message tone"
@@ -391,6 +402,12 @@ class ChatforiaFirebaseMessagingService : FirebaseMessagingService() {
                             .playSavedMessageToneShared(
                                 applicationContext
                             )
+                        if (AccessibilityAlertPreferences.vibrate(applicationContext) &&
+                            !AudioPlayerService.savedMessageTone(applicationContext)
+                                .equals("Vibrate.mp3", ignoreCase = true)
+                        ) {
+                            AudioPlayerService.vibrateMessageAlert(applicationContext)
+                        }
                     } else {
                         NotificationCoordinator(
                             applicationContext
