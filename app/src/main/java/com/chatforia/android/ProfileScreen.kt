@@ -703,6 +703,7 @@ fun ProfileScreen(
                 showChevron = true,
                 onClick = {
                     showAccessibility = true
+                    settingsViewModel.refreshAccessibility(user.id, onUserUpdated)
                 }
             )
 

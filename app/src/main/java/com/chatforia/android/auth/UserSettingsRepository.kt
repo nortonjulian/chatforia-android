@@ -1,6 +1,8 @@
 package com.chatforia.android.auth
 
 interface UserSettingsRepository {
+    suspend fun getCurrentUser(): UserDto
+
     suspend fun updateUsername(
         username: String
     ): UserDto
