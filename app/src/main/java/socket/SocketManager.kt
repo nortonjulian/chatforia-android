@@ -12,8 +12,10 @@ import io.socket.client.IO
 import io.socket.client.Socket
 import io.socket.engineio.client.transports.WebSocket
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.OkHttpClient
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import org.json.JSONArray
 import org.json.JSONObject
@@ -24,6 +26,9 @@ import com.chatforia.android.calls.CallRealtimeEvents
 class SocketManager(
     context: Context
 ) : ChatRealtimeEvents, CallRealtimeEvents {
+    companion object {
+        internal const val RANDOM_CHAT_PROTOCOL = 2
+    }
     private val connectivityManager =
         context.applicationContext.getSystemService(
             Context.CONNECTIVITY_SERVICE
@@ -35,6 +40,7 @@ class SocketManager(
     private val recoveryPolicy =
         SocketRecoveryPolicy()
     private val randomSearchIntent = RandomSearchIntent()
+    private val randomResumeTracker = RandomResumeTracker()
 
     private var socket: Socket? = null
     private var transportClient: OkHttpClient? = null
@@ -164,6 +170,12 @@ class SocketManager(
     val randomChatMatched: SharedFlow<String> =
         _randomChatMatched.asSharedFlow()
 
+    private val _randomChatResumed = MutableStateFlow<String?>(null)
+    val randomChatResumed: StateFlow<String?> = _randomChatResumed
+
+    private val _randomChatNone = MutableSharedFlow<Int>(extraBufferCapacity = 16)
+    val randomChatNone: SharedFlow<Int> = _randomChatNone.asSharedFlow()
+
     private val _randomChatWaiting =
         MutableSharedFlow<String>(extraBufferCapacity = 64)
 
@@ -262,8 +274,9 @@ class SocketManager(
             )
 
             emitJoinRooms()
+            resumeRandomChat()
             if (randomSearchIntent.shouldJoin(socket?.connected() == true)) {
-                socket?.emit("random:join")
+                emitRandomJoin()
             }
             _socketConnected.tryEmit(Unit)
         }
@@ -407,8 +420,11 @@ class SocketManager(
         }
 
         socket?.on("random:ended") { args ->
-            args.firstOrNull()?.let {
-                _randomChatEnded.tryEmit(it.toString())
+            (args.firstOrNull() as? JSONObject)?.let { event ->
+                if (randomResumeTracker.ended(event.optInt("roomId", 0))) {
+                    _randomChatResumed.value = null
+                    _randomChatEnded.tryEmit(event.toString())
+                }
             }
         }
 
@@ -420,14 +436,49 @@ class SocketManager(
 
         socket?.on("random:matched") { args ->
             randomSearchIntent.clear()
-            args.firstOrNull()?.let {
-                _randomChatMatched.tryEmit(it.toString())
+            (args.firstOrNull() as? JSONObject)?.let { event ->
+                val roomId = event.optInt("chatRoomId", event.optInt("roomId", 0))
+                if (roomId > 0) {
+                    randomResumeTracker.matched(roomId)
+                    // Keep the current session available if the view model was
+                    // briefly absent when the match event arrived.
+                    _randomChatResumed.value = event.toString()
+                    _randomChatMatched.tryEmit(event.toString())
+                }
+            }
+        }
+
+        socket?.on("random:resumed") { args ->
+            (args.firstOrNull() as? JSONObject)?.let { event ->
+                val roomId = event.optInt("chatRoomId", event.optInt("roomId", 0))
+                val requestId = event.optString("requestId").takeIf { it.isNotBlank() }
+                if (roomId > 0 && randomResumeTracker.acceptResumed(requestId, roomId)) {
+                    randomSearchIntent.clear()
+                    _randomChatResumed.value = event.toString()
+                }
+            }
+        }
+
+        socket?.on("random:none") { args ->
+            val requestId = (args.firstOrNull() as? JSONObject)
+                ?.optString("requestId")?.takeIf { it.isNotBlank() }
+            val expiredRoomId = randomResumeTracker.acceptNone(requestId)
+            if (expiredRoomId != null) {
+                _randomChatResumed.value = null
+                _randomChatNone.tryEmit(expiredRoomId)
             }
         }
 
         socket?.on("random:error") { args ->
-            args.firstOrNull()?.let {
-                _randomChatError.tryEmit(it.toString())
+            args.firstOrNull()?.let { raw ->
+                val event = raw as? JSONObject
+                if (event?.optString("code") == "UPDATE_REQUIRED") {
+                    val requestId = event.optString("requestId").takeIf { it.isNotBlank() }
+                    if (randomResumeTracker.acceptNone(requestId) == null) return@on
+                    randomSearchIntent.clear()
+                    _randomChatResumed.value = null
+                }
+                _randomChatError.tryEmit(raw.toString())
             }
         }
 
@@ -437,6 +488,8 @@ class SocketManager(
     fun disconnect() {
         currentToken = null
         randomSearchIntent.clear()
+        randomResumeTracker.clear()
+        _randomChatResumed.value = null
         cancelScheduledRecovery()
         unregisterNetworkCallback()
         networkAccessBlocked = false
@@ -626,13 +679,29 @@ class SocketManager(
     fun startRandomChat() {
         randomSearchIntent.request()
         if (randomSearchIntent.shouldJoin(socket?.connected() == true)) {
-            socket?.emit("random:join")
+            emitRandomJoin()
         }
+    }
+
+    private fun emitRandomJoin() {
+        socket?.emit("random:join", JSONObject()
+            .put("requestId", randomResumeTracker.begin())
+            .put("randomChatProtocol", RANDOM_CHAT_PROTOCOL))
     }
 
     fun cancelRandomChat() {
         randomSearchIntent.clear()
+        randomResumeTracker.clear()
+        _randomChatResumed.value = null
         if (socket?.connected() == true) socket?.emit("random:leave")
+    }
+
+    fun resumeRandomChat() {
+        if (socket?.connected() != true) return
+        val requestId = randomResumeTracker.begin()
+        socket?.emit("random:resume", JSONObject()
+            .put("requestId", requestId)
+            .put("randomChatProtocol", RANDOM_CHAT_PROTOCOL))
     }
 
     fun sendRandomMessage(roomId: Int, text: String) {
@@ -644,6 +713,8 @@ class SocketManager(
 
     fun skipRandomChat() {
         randomSearchIntent.clear()
+        randomResumeTracker.clear()
+        _randomChatResumed.value = null
         if (socket?.connected() == true) socket?.emit("random:skip")
     }
 
