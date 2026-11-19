@@ -21,6 +21,7 @@ import com.chatforia.android.R
 @Composable
 fun RandomMatchingView(
     error: String?,
+    updateRequired: Boolean = false,
     onCancel: () -> Unit
 ) {
     Surface(
@@ -39,14 +40,19 @@ fun RandomMatchingView(
         ) {
             Spacer(modifier = Modifier.height(28.dp))
 
-            CircularProgressIndicator(
-                color = ChatforiaColors.accent
-            )
+            if (!updateRequired) {
+                CircularProgressIndicator(
+                    color = ChatforiaColors.accent
+                )
+            }
 
             Spacer(modifier = Modifier.height(28.dp))
 
             Text(
-                text = stringResource(R.string.android_random_matching_finding_someone),
+                text = stringResource(
+                    if (updateRequired) R.string.android_random_update_required_title
+                    else R.string.android_random_matching_finding_someone
+                ),
                 style = MaterialTheme.typography.headlineSmall,
                 color = ChatforiaColors.primaryText,
                 fontWeight = FontWeight.Bold

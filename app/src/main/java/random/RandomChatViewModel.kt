@@ -80,8 +80,13 @@ class RandomChatViewModel(
 
         viewModelScope.launch {
             socketManager.randomChatError.collect { raw ->
+                val updateRequired = runCatching {
+                    JSONObject(raw).optString("code") == "UPDATE_REQUIRED"
+                }.getOrDefault(false)
                 val message =
-                    try {
+                    if (updateRequired) {
+                        "Update Chatforia to use Random Chat."
+                    } else try {
                         JSONObject(raw).optString(
                             "message",
                             "Could not find a random chat."
@@ -92,7 +97,8 @@ class RandomChatViewModel(
 
                 _state.value = RandomChatUiState(
                     isSearching = false,
-                    error = message
+                    error = message,
+                    updateRequired = updateRequired
                 )
             }
         }

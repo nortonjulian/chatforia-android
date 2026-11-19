@@ -758,6 +758,7 @@ fun ChatsScreen(
         ) {
             RandomMatchingView(
                 error = randomState.error,
+                updateRequired = randomState.updateRequired,
                 onCancel = {
                     randomChatViewModel.cancelSearch()
                     showRandomMatching = false

@@ -26,6 +26,9 @@ import com.chatforia.android.calls.CallRealtimeEvents
 class SocketManager(
     context: Context
 ) : ChatRealtimeEvents, CallRealtimeEvents {
+    companion object {
+        internal const val RANDOM_CHAT_PROTOCOL = 2
+    }
     private val connectivityManager =
         context.applicationContext.getSystemService(
             Context.CONNECTIVITY_SERVICE
@@ -467,8 +470,15 @@ class SocketManager(
         }
 
         socket?.on("random:error") { args ->
-            args.firstOrNull()?.let {
-                _randomChatError.tryEmit(it.toString())
+            args.firstOrNull()?.let { raw ->
+                val event = raw as? JSONObject
+                if (event?.optString("code") == "UPDATE_REQUIRED") {
+                    val requestId = event.optString("requestId").takeIf { it.isNotBlank() }
+                    if (randomResumeTracker.acceptNone(requestId) == null) return@on
+                    randomSearchIntent.clear()
+                    _randomChatResumed.value = null
+                }
+                _randomChatError.tryEmit(raw.toString())
             }
         }
 
@@ -674,7 +684,9 @@ class SocketManager(
     }
 
     private fun emitRandomJoin() {
-        socket?.emit("random:join", JSONObject().put("requestId", randomResumeTracker.begin()))
+        socket?.emit("random:join", JSONObject()
+            .put("requestId", randomResumeTracker.begin())
+            .put("randomChatProtocol", RANDOM_CHAT_PROTOCOL))
     }
 
     fun cancelRandomChat() {
@@ -687,7 +699,9 @@ class SocketManager(
     fun resumeRandomChat() {
         if (socket?.connected() != true) return
         val requestId = randomResumeTracker.begin()
-        socket?.emit("random:resume", JSONObject().put("requestId", requestId))
+        socket?.emit("random:resume", JSONObject()
+            .put("requestId", requestId)
+            .put("randomChatProtocol", RANDOM_CHAT_PROTOCOL))
     }
 
     fun sendRandomMessage(roomId: Int, text: String) {

@@ -575,6 +575,7 @@
     <string name="android_random_chat_send">Send</string>
     <string name="android_random_chat_skip">Skip</string>
     <string name="android_random_matching_finding_someone">Finding someone</string>
+    <string name="android_random_update_required_title">Update required</string>
     <string name="android_register_already_have_an_account">Already have an account?</string>
     <string name="android_register_confirm_password">Confirm password</string>
     <string name="android_register_create_your_account">Create your account</string>

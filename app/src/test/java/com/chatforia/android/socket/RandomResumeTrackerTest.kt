@@ -46,4 +46,15 @@ class RandomResumeTrackerTest {
         assertNull(tracker.acceptNone(pending))
         assertTrue(tracker.ended(42))
     }
+
+    @Test
+    fun staleUpdateRequiredCannotClearAReboundSession() {
+        val tracker = RandomResumeTracker()
+        val stale = tracker.begin()
+        tracker.matched(43)
+        assertNull(tracker.acceptNone(stale))
+        val current = tracker.begin()
+        assertEquals(43, tracker.acceptNone(current))
+        assertFalse(tracker.ended(43))
+    }
 }
