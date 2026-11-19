@@ -50,6 +50,7 @@ import androidx.compose.runtime.LaunchedEffect
 import kotlinx.coroutines.delay
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.chatforia.android.random.RandomChatViewModel
+import com.chatforia.android.random.RandomSession
 import com.chatforia.android.random.RandomMatchingView
 import com.chatforia.android.auth.UserDto
 import com.chatforia.android.calls.AndroidCallManager
@@ -188,26 +189,9 @@ fun ChatsScreen(
 
         socketManager.joinRoom(session.roomId)
 
-        val randomTitle =
-            session.partnerAlias
-                .takeIf { it.isNotBlank() }
-                ?: "Someone"
-
-        selectedConversation =
-            ConversationDto(
-                kind = "chat",
-                id = session.roomId,
-                title = randomTitle,
-                displayName = randomTitle,
-                isRandomChat = true,
-                randomChatRoomId = session.randomChatRoomId,
-                randomChat = RandomChatDto(
-                    chatRoomId = session.roomId,
-                    id = session.randomChatRoomId,
-                    myAlias = session.myAlias,
-                    partnerAlias = randomTitle
-                )
-            )
+        if (selectedConversation == null || selectedConversation?.id == session.roomId) {
+            selectedConversation = temporaryRandomConversation(session)
+        }
 
         viewModel.loadConversations()
     }
@@ -324,7 +308,9 @@ fun ChatsScreen(
             conversation = room,
             viewModel = threadViewModel,
             currentUserId = currentUserId,
-            currentUsername = currentUsername,
+            currentUsername = if (isTemporaryRandomChat) {
+                randomState.session?.myAlias ?: room.randomChat?.myAlias ?: "You"
+            } else currentUsername,
             currentUser = currentUser,
             androidCallManager = androidCallManager,
             socketManager = socketManager,
@@ -457,8 +443,17 @@ fun ChatsScreen(
                         contentDescription = stringResource(R.string.android_chats_random_chat),
                         onClick = {
                             if (isEditing || isDeleting) return@ChatforiaAction
-                            showRandomMatching = true
-                            randomChatViewModel.startSearch()
+                            val session = randomState.session
+                            if (session != null) {
+                                showRandomMatching = false
+                                activeRandomTitle = session.partnerAlias
+                                selectedConversation = temporaryRandomConversation(session)
+                                socketManager.joinRoom(session.roomId)
+                                socketManager.resumeRandomChat()
+                            } else {
+                                showRandomMatching = true
+                                randomChatViewModel.startSearch()
+                            }
                         }
                     )
                 )
@@ -770,6 +765,24 @@ fun ChatsScreen(
             )
         }
     }
+}
+
+private fun temporaryRandomConversation(session: RandomSession): ConversationDto {
+    val title = session.partnerAlias.takeIf { it.isNotBlank() } ?: "Someone"
+    return ConversationDto(
+        kind = "chat",
+        id = session.roomId,
+        title = title,
+        displayName = title,
+        isRandomChat = true,
+        randomChatRoomId = session.randomChatRoomId,
+        randomChat = RandomChatDto(
+            chatRoomId = session.roomId,
+            id = session.randomChatRoomId,
+            myAlias = session.myAlias,
+            partnerAlias = title
+        )
+    )
 }
 
 private fun formatConversationTime(
